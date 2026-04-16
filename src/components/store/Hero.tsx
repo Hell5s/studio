@@ -1,10 +1,9 @@
-
 "use client";
 
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { PlaceHolderImages } from '@/lib/placeholder-utils';
 import {
   Carousel,
   CarouselContent,
@@ -33,7 +32,7 @@ export function Hero() {
     {
       id: 'hero-3',
       title: "Sinta a leveza da nova estação.",
-      subtitle: "Uma seleção pensada para a mulher real que não abre mão da presença visual.",
+      subtitle: "Uma selection pensada para a mulher real que não abre mão da presença visual.",
       tag: "Trend Alert",
       highlight: "Glow Minimal"
     }

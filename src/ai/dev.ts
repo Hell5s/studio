@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/admin-generate-product-description-flow.ts';
+import '@/ai/flows/admin-generate-product-description-flow';
