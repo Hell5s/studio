@@ -9,12 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 
 interface ProductCardProps {
-  id: number;
+  id: string;
   name: string;
-  price: string;
-  oldPrice?: string;
+  price: number;
+  oldPrice?: number;
   badge?: string;
-  category: string;
   image: string;
   onAddToCart?: () => void;
 }
@@ -24,10 +23,16 @@ export function ProductCard({
   price,
   oldPrice,
   badge,
-  category,
   image,
   onAddToCart
 }: ProductCardProps) {
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
+
   return (
     <Card className="group relative overflow-hidden rounded-[2rem] border-none bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
       <div className="relative aspect-[3/4] overflow-hidden">
@@ -46,12 +51,11 @@ export function ProductCard({
         )}
       </div>
       <div className="p-6">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">{category}</p>
         <h4 className="text-lg font-headline font-semibold text-foreground line-clamp-1">{name}</h4>
         <div className="mt-3 flex items-center gap-3">
-          <span className="text-xl font-bold text-primary">{price}</span>
+          <span className="text-xl font-bold text-primary">{formatCurrency(price)}</span>
           {oldPrice && (
-            <span className="text-sm text-muted-foreground line-through decoration-brand-wine/30">{oldPrice}</span>
+            <span className="text-sm text-muted-foreground line-through decoration-brand-wine/30">{formatCurrency(oldPrice)}</span>
           )}
         </div>
         <Button 

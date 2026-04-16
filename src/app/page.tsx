@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Search, ShoppingBag, User, ArrowRight, Instagram, Facebook, Heart, Truck } from 'lucide-react';
+import { Search, ShoppingBag, User, ArrowRight, Instagram, Facebook, Heart, Truck, Loader2 } from 'lucide-react';
 import { LogoMark } from '@/components/store/LogoMark';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -10,57 +10,28 @@ import { Newsletter } from '@/components/store/Newsletter';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 
 export default function TodaBelaStorefront() {
-  const [activeCategory, setActiveCategory] = useState("Novidades");
+  const db = useFirestore();
+  const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
 
-  const categories = [
-    "Novidades",
-    "Vestidos",
-    "Conjuntos",
-    "Blusas",
-    "Calças",
-    "Acessórios",
-  ];
+  // Fetch Categories
+  const categoriesQuery = useMemoFirebase(() => {
+    return query(collection(db, 'categories'), orderBy('order', 'asc'));
+  }, [db]);
+  const { data: categories, isLoading: categoriesLoading } = useCollection(categoriesQuery);
 
-  const products = [
-    {
-      id: 1,
-      name: "Vestido Midi Elegance",
-      price: "R$ 149,90",
-      oldPrice: "R$ 199,90",
-      badge: "Mais vendido",
-      category: "Vestidos",
-      image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: 2,
-      name: "Conjunto Soft Chic",
-      price: "R$ 169,90",
-      oldPrice: "R$ 219,90",
-      badge: "Novo",
-      category: "Conjuntos",
-      image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: 3,
-      name: "Blusa Minimal Glow",
-      price: "R$ 89,90",
-      oldPrice: "R$ 119,90",
-      badge: "Oferta",
-      category: "Blusas",
-      image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: 4,
-      name: "Calça Wide Urban",
-      price: "R$ 129,90",
-      oldPrice: "R$ 169,90",
-      badge: "Trend",
-      category: "Calças",
-      image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80",
-    },
-  ];
+  // Fetch Products (Limited to 12 for the storefront)
+  const productsQuery = useMemoFirebase(() => {
+    let q = query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(12));
+    if (activeCategoryId !== "all") {
+      q = query(collection(db, 'products'), where('categoryId', '==', activeCategoryId), orderBy('createdAt', 'desc'), limit(12));
+    }
+    return q;
+  }, [db, activeCategoryId]);
+  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,7 +59,7 @@ export default function TodaBelaStorefront() {
             </Button>
             <Button className="rounded-full bg-primary px-5 py-6 text-sm font-semibold shadow-lg shadow-primary/10 group">
               <ShoppingBag className="mr-2 h-4 w-4 transition-transform group-hover:-rotate-12" />
-              Carrinho (2)
+              Carrinho
             </Button>
           </div>
         </div>
@@ -108,27 +79,50 @@ export default function TodaBelaStorefront() {
             </div>
             
             <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
+              <Button
+                onClick={() => setActiveCategoryId("all")}
+                variant={activeCategoryId === "all" ? "default" : "outline"}
+                className={`rounded-full px-6 py-5 text-sm font-semibold transition-all duration-300 ${
+                  activeCategoryId === "all" 
+                    ? "shadow-md shadow-primary/20 scale-105" 
+                    : "bg-white/50 border-primary/20 text-primary hover:bg-brand-blush"
+                }`}
+              >
+                Todas
+              </Button>
+              {!categoriesLoading && categories?.map((category) => (
                 <Button
-                  key={category}
-                  onClick={() => setActiveCategory(category)}
-                  variant={activeCategory === category ? "default" : "outline"}
+                  key={category.id}
+                  onClick={() => setActiveCategoryId(category.id)}
+                  variant={activeCategoryId === category.id ? "default" : "outline"}
                   className={`rounded-full px-6 py-5 text-sm font-semibold transition-all duration-300 ${
-                    activeCategory === category 
+                    activeCategoryId === category.id 
                       ? "shadow-md shadow-primary/20 scale-105" 
                       : "bg-white/50 border-primary/20 text-primary hover:bg-brand-blush"
                   }`}
                 >
-                  {category}
+                  {category.name}
                 </Button>
               ))}
             </div>
           </div>
 
-          <div id="novidades" className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
+          <div id="novidades" className="relative min-h-[400px]">
+            {productsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : products && products.length > 0 ? (
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                {products.map((product) => (
+                  <ProductCard key={product.id} {...product} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 text-muted-foreground">
+                Nenhum produto encontrado nesta categoria.
+              </div>
+            )}
           </div>
 
           <div className="mt-20 flex justify-center">
@@ -167,39 +161,6 @@ export default function TodaBelaStorefront() {
                   <p className="mt-4 leading-relaxed text-muted-foreground">{item.text}</p>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="container mx-auto px-4 py-24 md:px-8">
-          <div className="relative overflow-hidden rounded-[3.5rem] bg-foreground text-background px-8 py-16 md:px-20 md:py-24">
-            <div className="absolute top-0 right-0 h-64 w-64 bg-brand-plum/20 blur-[100px]" />
-            <div className="relative grid gap-12 lg:grid-cols-2 items-center">
-              <div>
-                <Badge className="bg-brand-plum text-white mb-6 uppercase tracking-widest text-[10px] font-bold py-1.5 px-4 rounded-full border-none">
-                  Campanha Essência
-                </Badge>
-                <h3 className="text-4xl md:text-6xl font-headline font-semibold leading-[1.1]">Toda Bela para todos os momentos.</h3>
-                <p className="mt-8 text-xl text-background/70 leading-relaxed max-w-lg">
-                  Looks para o trabalho, passeio, jantar e final de semana. Uma loja feminina que une tendência, praticidade e presença visual.
-                </p>
-                <Button className="mt-10 rounded-full px-10 py-8 bg-brand-rose text-foreground hover:bg-white transition-colors font-bold text-lg">
-                  Conheça a Campanha
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                {[
-                  { value: "+120", label: "produtos exclusivos" },
-                  { value: "24h", label: "para novidades" },
-                  { value: "100%", label: "segurança total" },
-                  { value: "Sempre", label: "perto de você" },
-                ].map((stat, idx) => (
-                  <div key={idx} className="rounded-[2.5rem] bg-white/5 p-8 border border-white/10 hover:bg-white/10 transition-colors text-center lg:text-left">
-                    <p className="text-4xl md:text-5xl font-headline font-bold text-brand-rose">{stat.value}</p>
-                    <p className="mt-2 text-sm text-background/60 font-medium uppercase tracking-widest">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </section>

@@ -5,20 +5,36 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase';
 
 export function Newsletter() {
   const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const db = useFirestore();
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+
+    setIsSubmitting(true);
     
+    // Save to newsletter_subscribers collection
+    const subscribersRef = collection(db, 'newsletter_subscribers');
+    addDocumentNonBlocking(subscribersRef, {
+      email,
+      subscriptionDate: new Date().toISOString(),
+    });
+
     toast({
       title: "Bem-vinda ao Clube!",
       description: "Você receberá nossas novidades em breve.",
     });
+    
     setEmail('');
+    setIsSubmitting(false);
   };
 
   return (
@@ -44,9 +60,13 @@ export function Newsletter() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isSubmitting}
             />
-            <Button className="h-14 rounded-full px-10 text-base font-semibold shadow-lg shadow-primary/10 transition-transform active:scale-95">
-              Quero participar
+            <Button 
+              className="h-14 rounded-full px-10 text-base font-semibold shadow-lg shadow-primary/10 transition-transform active:scale-95"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Enviando..." : "Quero participar"}
             </Button>
           </form>
           
