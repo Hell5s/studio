@@ -1,0 +1,253 @@
+{
+  "entities": {
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a single product available in the store catalog.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "The current selling price of the product."
+        },
+        "oldPrice": {
+          "type": "number",
+          "description": "The previous price of the product, typically for showing discounts. (Optional)"
+        },
+        "badge": {
+          "type": "string",
+          "description": "A promotional badge or label for the product (e.g., 'Mais vendido', 'Novo', 'Oferta', 'Trend'). (Optional)"
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to the Category this product belongs to. (Relationship: Category 1:N Product)"
+        },
+        "image": {
+          "type": "string",
+          "description": "URL to the main image of the product.",
+          "format": "uri"
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product."
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Indicates if the product is highlighted as a featured item."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the product record was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "price",
+        "categoryId",
+        "image",
+        "description",
+        "featured",
+        "createdAt"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a category for organizing products in the storefront.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product category (e.g., 'Vestidos', 'Blusas')."
+        },
+        "order": {
+          "type": "number",
+          "description": "A numerical value to define the display order of categories."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "order"
+      ]
+    },
+    "Banner": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Banner",
+      "type": "object",
+      "description": "Represents a promotional banner displayed on the storefront's hero section.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Banner entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The main title text for the banner."
+        },
+        "subtitle": {
+          "type": "string",
+          "description": "Secondary descriptive text accompanying the banner title."
+        },
+        "image": {
+          "type": "string",
+          "description": "URL to the banner's main image.",
+          "format": "uri"
+        },
+        "campaign": {
+          "type": "string",
+          "description": "The name or theme of the campaign associated with the banner."
+        },
+        "campaignText": {
+          "type": "string",
+          "description": "A short descriptive text for the banner's campaign."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Indicates if the banner is currently active and should be displayed."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "subtitle",
+        "image",
+        "campaign",
+        "campaignText",
+        "active"
+      ]
+    },
+    "NewsletterSubscriber": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "NewsletterSubscriber",
+      "type": "object",
+      "description": "Represents a subscriber to the store's newsletter.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the NewsletterSubscriber entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the newsletter subscriber.",
+          "format": "email"
+        },
+        "subscriptionDate": {
+          "type": "string",
+          "description": "Timestamp indicating when the user subscribed to the newsletter.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "subscriptionDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores individual product listings. Documents include denormalized 'categoryName' for efficient filtering and display, 'createdAt' for ordering, and 'featured' for highlighting. Publicly readable for storefront, admin-only write access.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for a specific product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Manages product categories for organization and navigation. Includes an 'order' field for explicit sorting. Publicly readable for storefront, admin-only write access.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "The unique identifier for a product category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/banners/{bannerId}",
+        "definition": {
+          "entityName": "Banner",
+          "schema": {
+            "$ref": "#/backend/entities/Banner"
+          },
+          "description": "Holds promotional banner content for the storefront's hero section. Includes an 'active' field to control visibility. Publicly readable for storefront, admin-only write access.",
+          "params": [
+            {
+              "name": "bannerId",
+              "description": "The unique identifier for a promotional banner."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/newsletter_subscribers/{subscriberId}",
+        "definition": {
+          "entityName": "NewsletterSubscriber",
+          "schema": {
+            "$ref": "#/backend/entities/NewsletterSubscriber"
+          },
+          "description": "Collects email addresses for newsletter subscriptions. Allows anonymous/authenticated users to create new subscriptions. Read and delete access restricted to administrators.",
+          "params": [
+            {
+              "name": "subscriberId",
+              "description": "The unique identifier for a newsletter subscriber (e.g., generated UUID)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{adminUid}",
+        "definition": {
+          "entityName": "UserRole",
+          "schema": {
+            "$ref": "#/backend/entities/UserRole"
+          },
+          "description": "Designates users with administrative privileges. The existence of a document at this path for a specific UID grants admin access to manage products, categories, banners, and newsletter subscribers. Only accessible for read by the adminUid itself.",
+          "params": [
+            {
+              "name": "adminUid",
+              "description": "The Firebase Authentication UID of a user with administrative rights."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure for the 'Toda Bela Storefront' prioritizes public readability and administrative control, adhering to core design principles for security, scalability, and debuggability. The primary data entities—products, categories, and banners—are housed in top-level collections (`/products`, `/categories`, `/banners`) to ensure direct and efficient public access for storefront display. Authorization Independence is achieved by making these collections fully public for reads, removing the need for complex, hierarchical rule dependencies (`get()`) that could break atomic operations. For example, a product's access doesn't depend on fetching its category's document; the relevant `categoryName` is denormalized into the product document itself, simplifying queries and rules.\n\nStructural Segregation is applied by keeping data with different security postures in distinct collections. All `/products`, `/categories`, and `/banners` documents share the same public read security requirements, allowing for simple 'allow read: true' rules. Administrative write access to these collections is enforced via a separate `/roles_admin/{adminUid}` collection, where only the existence of a document for a given UID grants administrative privileges. This avoids custom claims and centralizes role management within the database (DBAC). Newsletter subscriptions are managed in `/newsletter_subscribers/{subscriberId}`, which permits anonymous/authenticated writes but restricts reads and deletes to administrators. This separation prevents any mix of public and private data within the same collection, simplifying security rules and enhancing clarity of intent.\n\nQAPs (Queries Are Not Filters) are inherently supported because the public-facing collections (`/products`, `/categories`, `/banners`) are designed for complete public readability. List operations on these collections are secure and efficient, as all documents are intended to be exposed to the public for browsing. Queries for products can leverage denormalized fields like `categoryName` and `featured` directly, as well as `createdAt` for ordering, without requiring rule-level filtering or expensive cross-collection lookups. Similarly, categories are ordered by an explicit `order` field. This structure ensures that client-side queries can fetch exactly what they need without relying on security rules to 'filter' data that should not have been returned in the first place."
+  }
+}
