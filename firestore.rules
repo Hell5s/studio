@@ -3,8 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA
-     * Permite leitura pública para o catálogo e restringe escrita a administradores.
+     * TODA BELA - REGRAS DE SEGURANÇA ATUALIZADAS
+     * Garante leitura pública para o catálogo e acesso administrativo via coleção roles_admin.
      */
 
     function isSignedIn() {
@@ -15,20 +15,20 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    // Regra para produtos (Leitura pública total)
-    match /products/{productId} {
+    // Regra para produtos (Leitura pública total, incluindo listagem)
+    match /products/{allPaths=**} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
     // Regra para categorias
-    match /categories/{categoryId} {
+    match /categories/{allPaths=**} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
     // Regra para banners
-    match /banners/{bannerId} {
+    match /banners/{allPaths=**} {
       allow read: if true;
       allow write: if isAdmin();
     }

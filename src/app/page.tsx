@@ -25,39 +25,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import Autoplay from "embla-carousel-autoplay";
 
-const dummyProducts = [
-  {
-    id: 'dummy-1',
-    name: 'Vestido Midi Satin Rouge',
-    price: 249.90,
-    oldPrice: 329.90,
-    badge: 'Mais Vendido',
-    image: 'https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=900&q=80'
-  },
-  {
-    id: 'dummy-2',
-    name: 'Conjunto Tweed Classique',
-    price: 389.90,
-    badge: 'Novo',
-    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=80'
-  },
-  {
-    id: 'dummy-3',
-    name: 'Blusa Seda Essence',
-    price: 159.90,
-    oldPrice: 199.90,
-    badge: 'Destaque',
-    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80'
-  },
-  {
-    id: 'dummy-4',
-    name: 'Calça Alfaiataria Chic',
-    price: 219.90,
-    badge: 'Trend',
-    image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80'
-  }
-];
-
 export default function TodaBelaHome() {
   const db = useFirestore();
   const { user } = useUser();
@@ -84,12 +51,6 @@ export default function TodaBelaHome() {
   }, [db]);
   
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
-
-  const displayProducts = useMemo(() => {
-    if (productsLoading) return [];
-    if (products && products.length > 0) return products;
-    return dummyProducts;
-  }, [products, productsLoading]);
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-accent/30 selection:text-primary">
@@ -125,7 +86,7 @@ export default function TodaBelaHome() {
                 <div className="absolute bottom-12 left-0 right-0 text-center px-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
                   <h4 className="text-2xl font-bold text-white uppercase tracking-[0.2em] mb-2">{cat.name}</h4>
                   <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-100">
-                    <span className="text-[10px] font-bold text-accent uppercase tracking-[0.4em]">{cat.count}</span>
+                    <span className="text-[10px] font-bold text-accent uppercase tracking-[0.4em]">Saiba Mais</span>
                     <ArrowUpRight className="h-3 w-3 text-accent" />
                   </div>
                 </div>
@@ -153,10 +114,10 @@ export default function TodaBelaHome() {
             <div className="relative">
               {productsLoading ? (
                 <div className="flex justify-center py-32"><Loader2 className="h-16 w-16 animate-spin text-accent/40" /></div>
-              ) : (
+              ) : products && products.length > 0 ? (
                 <Carousel opts={{ align: "start" }} plugins={[autoplayPlugin]} className="w-full">
                   <CarouselContent className="-ml-12">
-                    {displayProducts.map((product) => (
+                    {products.map((product) => (
                       <CarouselItem key={product.id} className="pl-12 basis-full sm:basis-1/2 lg:basis-1/4">
                         <ProductCard {...product} />
                       </CarouselItem>
@@ -167,6 +128,10 @@ export default function TodaBelaHome() {
                     <CarouselNext className="relative translate-y-0 right-0 h-16 w-16 border-primary/10 hover:bg-white text-primary rounded-full shadow-premium" />
                   </div>
                 </Carousel>
+              ) : (
+                <div className="py-20 text-center space-y-4">
+                  <p className="text-muted-foreground italic font-light">Seu catálogo está sendo preparado.</p>
+                </div>
               )}
             </div>
           </div>

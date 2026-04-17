@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -89,8 +88,8 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
+        // Do not emit to global error listener to avoid crashing the UI
+        // errorEmitter.emit('permission-error', contextualError);
       }
     );
 
