@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -37,31 +38,26 @@ export function Newsletter() {
   };
 
   return (
-    <section id="newsletter" className="container mx-auto px-4 py-48 md:px-12">
-      <div className="relative overflow-hidden rounded-[7rem] bg-primary p-20 md:p-40 text-center shadow-premium">
-        {/* Abstract Light Orbs */}
-        <div className="absolute top-0 left-0 h-[500px] w-[500px] bg-accent/20 blur-[150px] -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-        <div className="absolute bottom-0 right-0 h-[500px] w-[500px] bg-white/5 blur-[150px] translate-x-1/2 translate-y-1/2" />
+    <section id="newsletter" className="container mx-auto px-4 py-32 md:px-12">
+      <div className="relative overflow-hidden rounded-[5rem] bg-white border border-primary/5 p-16 md:p-24 text-center shadow-xl">
+        <div className="absolute top-0 left-0 h-96 w-96 bg-accent/5 blur-[100px] -translate-x-1/2 -translate-y-1/2" />
         
-        <div className="relative max-w-5xl mx-auto space-y-16">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-3 bg-white/5 px-6 py-2 rounded-full border border-white/10">
-              <Sparkles className="h-4 w-4 text-accent" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">L'Invitation Exclusive</span>
-            </div>
-            <h3 className="text-6xl md:text-[9rem] font-headline font-bold text-white text-editorial leading-[0.9] tracking-tighter">Sinta a Essência Toda Bela</h3>
-            <p className="text-xl md:text-2xl text-white/70 leading-relaxed font-light italic max-w-2xl mx-auto">
-              Inscreva-se para receber convites para pré-lançamentos, editoriais de moda inéditos e benefícios reservados ao nosso círculo mais íntimo.
+        <div className="relative max-w-4xl mx-auto space-y-12">
+          <div className="space-y-6">
+            <p className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Clube Toda Bela</p>
+            <h3 className="text-4xl md:text-6xl font-headline font-bold text-primary tracking-tighter">Receba lançamentos e curadorias exclusivas</h3>
+            <p className="text-lg text-muted-foreground leading-relaxed font-light italic max-w-2xl mx-auto">
+              Capte o essencial da moda. Junte-se ao nosso círculo íntimo e receba convites antecipados para novas coleções e editoriais.
             </p>
           </div>
           
-          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-6 pt-12 max-w-3xl mx-auto relative group">
+          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 pt-6 max-w-2xl mx-auto">
             <div className="relative flex-1">
-              <Mail className="absolute left-10 top-1/2 -translate-y-1/2 h-5 w-5 text-white/30" />
+              <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
               <Input
                 type="email"
-                placeholder="Seu endereço de e-mail exclusivo"
-                className="h-24 flex-1 rounded-full border-white/10 bg-white/5 text-white placeholder:text-white/30 px-20 focus:ring-accent focus:border-accent text-xl backdrop-blur-2xl transition-all duration-500 focus:bg-white/10"
+                placeholder="Seu melhor endereço de e-mail"
+                className="h-16 flex-1 rounded-full border-primary/10 bg-secondary/20 text-primary placeholder:text-muted-foreground/40 px-14 focus:ring-accent focus:bg-white transition-all"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -69,19 +65,16 @@ export function Newsletter() {
               />
             </div>
             <Button 
-              className="h-24 rounded-full px-20 text-[12px] font-bold uppercase tracking-[0.5em] bg-accent text-white hover:bg-white hover:text-primary shadow-2xl transition-all duration-700 hover:scale-105 active:scale-95 whitespace-nowrap"
+              className="h-16 rounded-full px-12 text-[10px] font-bold uppercase tracking-[0.3em] bg-primary text-white hover:bg-accent shadow-xl transition-all duration-500 hover:scale-105 active:scale-95 whitespace-nowrap"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Enviando..." : "Fazer Parte"}
+              {isSubmitting ? "Enviando..." : "Quero Participar"}
             </Button>
           </form>
           
-          <div className="flex flex-col items-center gap-4 pt-12">
-            <p className="text-[10px] text-white/30 uppercase tracking-[0.6em] font-bold">
-              Privacidade absoluta. Maison Toda Bela.
-            </p>
-            <div className="h-px w-24 bg-white/10" />
-          </div>
+          <p className="text-[9px] text-muted-foreground/50 uppercase tracking-[0.4em] font-bold pt-8">
+            Privacidade absoluta. Maison Toda Bela © 2024.
+          </p>
         </div>
       </div>
     </section>

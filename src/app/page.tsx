@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { ShoppingBag, ArrowRight, Truck, Loader2, Star, Instagram, Facebook, Quote, Sparkles, ShieldCheck, Heart, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Loader2, Star, Instagram, Facebook, Quote, Sparkles, ShieldCheck, Truck, CheckCircle2 } from 'lucide-react';
 import { LogoMark } from '@/components/store/LogoMark';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -33,6 +33,7 @@ export default function TodaBelaHome() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Novidades");
 
   const autoplayPlugin = useMemo(
     () => Autoplay({ delay: 5000, stopOnInteraction: true }),
@@ -46,12 +47,25 @@ export default function TodaBelaHome() {
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
+  // Categories query
+  const categoriesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'categories'), orderBy('order', 'asc'));
+  }, [db]);
+  const { data: categories } = useCollection(categoriesQuery);
+
+  // Products query
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(12));
   }, [db]);
-  
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
+
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    if (selectedCategory === "Novidades") return products;
+    return products.filter(p => p.category === selectedCategory);
+  }, [products, selectedCategory]);
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-accent/30 selection:text-primary">
@@ -60,262 +74,147 @@ export default function TodaBelaHome() {
       <main>
         <Hero />
 
-        {/* 1. Categorias Visuais (Editorial Grid) */}
-        <section id="colecoes" className="container mx-auto px-4 py-32 md:px-12">
-          <div className="flex flex-col items-center mb-24 text-center space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="h-0.5 w-10 bg-accent/40" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Curadoria Exclusiva</span>
-              <div className="h-0.5 w-10 bg-accent/40" />
+        {/* Categories / Styles Explorer */}
+        <section id="colecao" className="container mx-auto px-4 py-24 md:px-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+            <div className="space-y-4">
+              <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Coleções</span>
+              <h3 className="text-4xl md:text-6xl font-headline font-bold text-primary tracking-tighter">Explore por Estilo</h3>
+              <p className="max-w-xl text-muted-foreground/70 font-light italic text-lg">
+                Nossa curadoria é organizada para facilitar sua busca pela peça que define seu momento.
+              </p>
             </div>
-            <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary text-editorial">Onde o Estilo se Torna Legado</h3>
-            <p className="text-muted-foreground/70 italic font-light max-w-lg mx-auto">
-              Territórios de design desenhados para elevar sua presença em cada capítulo da sua história.
-            </p>
           </div>
 
-          <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { name: "Vestidos", img: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=800&q=80", count: "18 Peças" },
-              { name: "Conjuntos", img: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80", count: "12 Peças" },
-              { name: "Moda Festa", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80", count: "24 Peças" },
-              { name: "Alfaiataria", img: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=80", count: "15 Peças" },
-            ].map((cat, idx) => (
-              <div key={idx} className="group relative overflow-hidden rounded-[4rem] aspect-[3/4.5] cursor-pointer shadow-premium transition-all duration-700">
-                <Image src={cat.img} alt={cat.name} fill className="object-cover transition-transform duration-[1.5s] group-hover:scale-110 grayscale-[0.2] group-hover:grayscale-0" />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-700" />
-                <div className="absolute bottom-12 left-0 right-0 text-center px-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
-                  <h4 className="text-2xl font-bold text-white uppercase tracking-[0.2em] mb-2">{cat.name}</h4>
-                  <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-100">
-                    <span className="text-[10px] font-bold text-accent uppercase tracking-[0.4em]">Sentir o Universo</span>
-                    <ArrowUpRight className="h-3 w-3 text-accent" />
-                  </div>
-                </div>
-              </div>
+          <div className="flex flex-wrap gap-4 mb-16">
+            {["Novidades", ...(categories?.map(c => c.name) || [])].map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`rounded-full px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500 border ${
+                  selectedCategory === category
+                    ? "bg-primary text-white border-primary shadow-xl"
+                    : "border-primary/10 bg-white text-primary hover:bg-secondary"
+                }`}
+              >
+                {category}
+              </button>
             ))}
+          </div>
+
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            {productsLoading ? (
+              <div className="col-span-full flex justify-center py-20"><Loader2 className="h-12 w-12 animate-spin text-accent/20" /></div>
+            ) : filteredProducts.length > 0 ? (
+              filteredProducts.map((product) => (
+                <ProductCard key={product.id} {...product} />
+              ))
+            ) : (
+              <div className="col-span-full py-20 text-center space-y-4 rounded-[4rem] border-2 border-dashed border-primary/5">
+                <p className="text-muted-foreground italic font-light">Nenhum item nesta categoria no momento.</p>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* 2. Mais Vendidos (Premium Grid) */}
-        <section id="mais-vendidos" className="bg-secondary/20 py-32 md:py-40">
+        {/* Featured Carousel */}
+        <section id="mais-vendidos" className="bg-secondary/20 py-32">
           <div className="container mx-auto px-4 md:px-12">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-24 gap-12">
-              <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-px w-12 bg-accent/40" />
-                  <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">A Alquimia da Estação</span>
-                </div>
-                <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary text-editorial">Objetos de Desejo</h3>
-              </div>
-              <Button variant="outline" className="rounded-full border-primary/20 text-primary font-bold uppercase tracking-[0.4em] text-[10px] h-16 px-12 group hover:bg-white hover:border-primary/40 shadow-sm transition-all duration-500">
-                Ver Catálogo Completo <ArrowRight className="ml-4 h-4 w-4 group-hover:translate-x-3 transition-transform" />
-              </Button>
+            <div className="flex flex-col items-center mb-20 text-center space-y-6">
+              <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Destaques da Semana</span>
+              <h3 className="text-5xl md:text-7xl font-headline font-bold text-primary tracking-tighter">Os Mais Desejados</h3>
             </div>
 
             <div className="relative">
               {productsLoading ? (
-                <div className="flex justify-center py-32"><Loader2 className="h-16 w-16 animate-spin text-accent/40" /></div>
+                <div className="flex justify-center py-20"><Loader2 className="h-12 w-12 animate-spin text-accent/20" /></div>
               ) : products && products.length > 0 ? (
                 <Carousel opts={{ align: "start" }} plugins={[autoplayPlugin]} className="w-full">
-                  <CarouselContent className="-ml-12">
-                    {products.map((product) => (
-                      <CarouselItem key={product.id} className="pl-12 basis-full sm:basis-1/2 lg:basis-1/4">
+                  <CarouselContent className="-ml-10">
+                    {products.slice(0, 8).map((product) => (
+                      <CarouselItem key={product.id} className="pl-10 basis-full sm:basis-1/2 lg:basis-1/4">
                         <ProductCard {...product} />
                       </CarouselItem>
                     ))}
                   </CarouselContent>
-                  <div className="flex justify-center gap-6 mt-20">
-                    <CarouselPrevious className="relative translate-y-0 left-0 h-16 w-16 border-primary/10 hover:bg-white text-primary rounded-full shadow-premium" />
-                    <CarouselNext className="relative translate-y-0 right-0 h-16 w-16 border-primary/10 hover:bg-white text-primary rounded-full shadow-premium" />
+                  <div className="flex justify-center gap-6 mt-16">
+                    <CarouselPrevious className="relative translate-y-0 left-0 h-14 w-14 border-primary/10 bg-white text-primary rounded-full shadow-premium" />
+                    <CarouselNext className="relative translate-y-0 right-0 h-14 w-14 border-primary/10 bg-white text-primary rounded-full shadow-premium" />
                   </div>
                 </Carousel>
-              ) : (
-                <div className="py-20 text-center space-y-4">
-                  <p className="text-muted-foreground italic font-light">Seu catálogo está sendo preparado.</p>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         </section>
 
-        {/* 3. Banner de Campanha Editorial */}
-        <section className="py-24">
-          <div className="container mx-auto px-4 md:px-12">
-            <div className="relative h-[85vh] rounded-[6rem] overflow-hidden group shadow-premium">
-              <Image 
-                src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80" 
-                alt="Campanha Maison Toda Bela" 
-                fill 
-                className="object-cover scale-105 group-hover:scale-100 transition-all duration-[2s] brightness-[0.85]"
-              />
-              <div className="absolute inset-0 bg-primary/20 mix-blend-multiply" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12">
-                <div className="space-y-8 max-w-5xl animate-in fade-in zoom-in duration-1000">
-                  <div className="inline-flex items-center gap-4 bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20">
-                    <Sparkles className="h-4 w-4 text-accent" />
-                    <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-white">Preview Fall 2024</span>
-                  </div>
-                  <h3 className="text-6xl md:text-[10rem] font-headline font-bold text-white text-editorial leading-[0.8] tracking-tighter">O Poder da Atemporalidade</h3>
-                  <p className="text-xl md:text-2xl text-white/90 font-light italic max-w-2xl mx-auto leading-relaxed">
-                    "A moda passa, mas a alma da mulher Toda Bela é eterna." Descubra a poesia em cada costura.
-                  </p>
-                  <Button className="mt-12 rounded-full bg-white text-primary hover:bg-accent hover:text-white px-16 py-10 text-[11px] font-bold uppercase tracking-[0.5em] shadow-2xl transition-all duration-700 hover:scale-110 active:scale-95">
-                    Sentir a Coleção
-                  </Button>
+        {/* Benefits Grid from template */}
+        <section className="bg-background py-24 border-y border-primary/5">
+          <div className="container mx-auto px-4 md:px-12 grid gap-10 md:grid-cols-3">
+            {[
+              {
+                title: "Curadoria Premium",
+                text: "Layout refinado com estética editorial, experiência de marca forte e alto valor percebido em cada peça.",
+                icon: <Sparkles className="h-8 w-8 text-accent" />
+              },
+              {
+                title: "Atendimento Sublime",
+                text: "Uma jornada de compra fluida e personalizada para garantir que sua experiência Maison seja perfeita.",
+                icon: <Quote className="h-8 w-8 text-accent rotate-180" />
+              },
+              {
+                title: "Logística VIP",
+                text: "Entrega segura e rápida para todo o país, com o carinho que a sua nova conquista merece.",
+                icon: <Truck className="h-8 w-8 text-accent" />
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-[3rem] border border-primary/5 bg-white p-10 shadow-sm transition-all hover:shadow-xl group">
+                <div className="mb-6 h-16 w-16 rounded-3xl bg-secondary/50 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-6">
+                  {item.icon}
                 </div>
+                <h4 className="text-2xl font-headline font-bold text-primary mb-4">{item.title}</h4>
+                <p className="text-muted-foreground/80 leading-relaxed font-light italic">{item.text}</p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 5. Storytelling de Moda (L'Essence) */}
-        <section className="py-40 bg-white overflow-hidden">
-          <div className="container mx-auto px-4 md:px-12">
-            <div className="grid lg:grid-cols-2 gap-32 items-center">
-              <div className="space-y-16">
-                <div className="space-y-8">
-                  <div className="flex items-center gap-4">
-                    <div className="h-px w-16 bg-accent/40" />
-                    <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">L’Essence Maison</span>
-                  </div>
-                  <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary leading-[0.9] tracking-tighter">A Curadoria que Define sua História</h3>
-                  <p className="text-lg md:text-xl text-muted-foreground/80 leading-relaxed font-light italic">
-                    Nascemos para traduzir em tecidos o que as palavras não alcançam. Oferecemos ferramentas de autoconfiança para a mulher que decide ser a única protagonista da própria narrativa.
-                  </p>
-                </div>
-                
-                <div className="grid sm:grid-cols-2 gap-10">
-                  {[
-                    { icon: <ShieldCheck className="h-8 w-8 text-accent" />, title: "Selo de Excelência", desc: "Curadoria rigorosa de tecidos que abraçam o corpo com luxo." },
-                    { icon: <Truck className="h-8 w-8 text-accent" />, title: "Logística Sublime", desc: "Sua nova conquista chega com a rapidez que sua presença merece." }
-                  ].map((item, i) => (
-                    <div key={i} className="p-12 rounded-[4rem] bg-secondary/30 border border-primary/5 space-y-6 hover:shadow-xl transition-all duration-500">
-                      <div className="bg-white h-16 w-16 rounded-3xl flex items-center justify-center shadow-sm">
-                        {item.icon}
-                      </div>
-                      <h5 className="font-bold text-primary uppercase tracking-[0.2em] text-sm">{item.title}</h5>
-                      <p className="text-xs text-muted-foreground/70 leading-relaxed italic">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className="aspect-square rounded-[6rem] overflow-hidden border-[20px] border-secondary shadow-premium group">
-                  <Image 
-                    src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=80" 
-                    alt="Lifestyle Maison Toda Bela" 
-                    fill 
-                    className="object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
-                  />
-                </div>
-                {/* 4. Prova Social (Testemunho Flutuante) */}
-                <div className="absolute -left-12 -bottom-12 glass p-12 rounded-[4rem] shadow-premium max-w-md border-white/60 animate-float">
-                  <Quote className="h-12 w-12 text-accent/30 mb-6" />
-                  <p className="text-primary italic font-medium leading-relaxed mb-8 text-lg">
-                    "O atendimento da Toda Bela é impecável, mas o vestido... me senti em um red carpet. Elegância sem esforço."
-                  </p>
-                  <div className="flex items-center gap-5">
-                    <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-2 border-white">
-                      <Image src="https://picsum.photos/seed/face-99/100/100" alt="Avatar" width={48} height={48} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Helena Silveira</p>
-                      <div className="flex text-accent mt-1">
-                        {[1,2,3,4,5].map(i => <Star key={i} className="h-3 w-3 fill-current" />)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 7. Instagram / Lifestyle Grid */}
-        <section className="py-32 bg-background border-y border-primary/5">
-          <div className="container mx-auto px-4 md:px-12">
-            <div className="flex flex-col items-center mb-20 text-center space-y-6">
-              <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">O Reflexo da Maison</span>
-              <h3 className="text-5xl md:text-7xl font-headline font-bold text-primary">@MaisonTodaBela</h3>
-              <p className="text-muted-foreground/70 italic font-light max-w-lg mx-auto">Siga nossa jornada e torne-se parte da nossa inspiração diária.</p>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-              {[1,2,3,4,5,6].map((i) => (
-                <div key={i} className="aspect-square relative rounded-3xl overflow-hidden group cursor-pointer">
-                  <Image 
-                    src={`https://picsum.photos/seed/insta-${i+10}/600/600`} 
-                    alt="Instagram Post" 
-                    fill 
-                    className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-3" 
-                  />
-                  <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                    <Instagram className="text-white h-8 w-8" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
         </section>
 
         <Newsletter />
       </main>
 
-      <footer className="bg-primary text-primary-foreground py-40">
+      <footer className="bg-white border-t border-primary/5 py-32">
         <div className="container mx-auto px-4 md:px-12">
-          <div className="grid md:grid-cols-4 gap-20 mb-32 border-b border-white/5 pb-32">
-            <div className="md:col-span-1 space-y-10">
+          <div className="grid md:grid-cols-4 gap-16 mb-24">
+            <div className="md:col-span-2 space-y-8">
               <LogoMark />
-              <p className="text-sm font-light italic opacity-60 leading-relaxed max-w-xs">
-                Maison Toda Bela: Redefinindo a elegância contemporânea através de uma curadoria exclusiva para a mulher protagonista.
+              <p className="text-lg font-light italic text-muted-foreground/70 leading-relaxed max-w-md">
+                Moda feminina moderna com leveza, elegância e atitude. Nascemos para vestir mulheres que decidem ser protagonistas.
               </p>
-              <div className="flex gap-6">
-                <button className="h-14 w-14 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500 group"><Instagram className="h-5 w-5 group-hover:scale-110" /></button>
-                <button className="h-14 w-14 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500 group"><Facebook className="h-5 w-5 group-hover:scale-110" /></button>
-              </div>
             </div>
             
             <div>
-              <h5 className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent mb-12">Maison</h5>
-              <ul className="space-y-6 text-sm font-light opacity-60">
-                <li className="hover:opacity-100 hover:text-accent transition-all cursor-pointer flex items-center gap-2 group"><CheckCircle2 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Novidades</li>
-                <li className="hover:opacity-100 hover:text-accent transition-all cursor-pointer flex items-center gap-2 group"><CheckCircle2 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Coleções</li>
-                <li className="hover:opacity-100 hover:text-accent transition-all cursor-pointer flex items-center gap-2 group"><CheckCircle2 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Editorial</li>
-                <li className="hover:opacity-100 hover:text-accent transition-all cursor-pointer flex items-center gap-2 group"><CheckCircle2 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Showroom</li>
+              <h5 className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent mb-8">Nossa Maison</h5>
+              <ul className="space-y-4 text-sm font-light italic text-muted-foreground/60">
+                <li className="hover:text-primary transition-colors cursor-pointer">Novidades</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Vestidos</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Conjuntos</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Promoções</li>
               </ul>
             </div>
 
             <div>
-              <h5 className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent mb-12">Atendimento</h5>
-              <ul className="space-y-6 text-sm font-light opacity-60">
-                <li className="hover:opacity-100 hover:text-accent transition-all cursor-pointer flex items-center gap-2 group" onClick={() => setIsTrackOpen(true)}>Rastrear Pedido</li>
-                <li className="hover:opacity-100 hover:text-accent transition-all cursor-pointer">Trocas e Devoluções</li>
-                <li className="hover:opacity-100 hover:text-accent transition-all cursor-pointer">Privacidade</li>
-                <li className="hover:opacity-100 hover:text-accent transition-all cursor-pointer">Termos de Uso</li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent mb-12">Contato</h5>
-              <ul className="space-y-6 text-sm font-light opacity-60">
-                <li className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent/60">WhatsApp VIP</span>
-                  <span>(11) 99999-9999</span>
-                </li>
-                <li className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent/60">Concierge Digital</span>
-                  <span>maison@todabela.com</span>
-                </li>
+              <h5 className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent mb-8">Atendimento</h5>
+              <ul className="space-y-4 text-sm font-light italic text-muted-foreground/60">
+                <li className="hover:text-primary transition-colors cursor-pointer" onClick={() => setIsTrackOpen(true)}>Rastrear Pedido</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Prazos e Entrega</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">Trocas e Devoluções</li>
+                <li className="hover:text-primary transition-colors cursor-pointer">WhatsApp VIP</li>
               </ul>
             </div>
           </div>
           
-          <div className="flex flex-col md:flex-row justify-between items-center gap-12 opacity-30 text-[10px] font-bold uppercase tracking-[0.5em]">
+          <div className="pt-16 border-t border-primary/5 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] font-bold uppercase tracking-[0.5em] text-muted-foreground/40">
             <p>© 2024 Maison Toda Bela. Todos os direitos reservados.</p>
-            <div className="flex gap-12">
-              {isAdmin && <button onClick={() => setIsAdminOpen(true)} className="hover:text-accent transition-colors">Portal Administrativo</button>}
-            </div>
+            {isAdmin && <button onClick={() => setIsAdminOpen(true)} className="hover:text-accent transition-colors">Portal Administrativo</button>}
           </div>
         </div>
       </footer>
@@ -330,7 +229,7 @@ export default function TodaBelaHome() {
               </DialogHeader>
               <AdminDashboard 
                 productsCount={products?.length || 0} 
-                categoriesCount={4} 
+                categoriesCount={categories?.length || 0} 
                 onOpenAI={() => setIsAIGeneratorOpen(true)} 
               />
             </DialogContent>
