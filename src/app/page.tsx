@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -13,7 +14,7 @@ import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, where, doc } from 'firebase/firestore';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import Image from 'next/image';
 import {
   Carousel,
@@ -61,26 +62,30 @@ const dummyProducts = [
 
 export default function TodaBelaHome() {
   const db = useFirestore();
-  const auth = getAuth();
   const { user } = useUser();
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
 
-  const plugin = React.useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: true })
+  // Memoize the plugin to avoid hydration mismatches or re-initialization crashes
+  const autoplayPlugin = useMemo(
+    () => Autoplay({ delay: 5000, stopOnInteraction: true }),
+    []
   );
 
   const adminDocRef = useMemo(() => {
-    return user ? doc(db, 'roles_admin', user.uid) : null;
+    return (user && db) ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
+  
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
   const productsQuery = useMemoFirebase(() => {
+    if (!db) return null;
     return query(collection(db, 'products'), where('published', '==', true), orderBy('createdAt', 'desc'), limit(12));
   }, [db]);
+  
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
   const displayProducts = useMemo(() => {
@@ -142,7 +147,7 @@ export default function TodaBelaHome() {
               {productsLoading ? (
                 <div className="flex justify-center py-20"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
               ) : (
-                <Carousel opts={{ align: "start" }} plugins={[plugin.current]} className="w-full">
+                <Carousel opts={{ align: "start" }} plugins={[autoplayPlugin]} className="w-full">
                   <CarouselContent className="-ml-10">
                     {displayProducts.map((product) => (
                       <CarouselItem key={product.id} className="pl-10 basis-full sm:basis-1/2 lg:basis-1/4">

@@ -1,10 +1,11 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { Functions } from 'firebase/functions';
+import { Functions, getFunctions } from 'firebase/functions';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
 interface FirebaseProviderProps {
@@ -71,7 +72,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   });
 
   const functions = useMemo(() => {
-    const { getFunctions } = require('firebase/functions');
     return getFunctions(firebaseApp, 'southamerica-east1');
   }, [firebaseApp]);
 
@@ -90,7 +90,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { 
-        console.error("FirebaseProvider: onAuthStateChanged error:", error);
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
@@ -173,7 +172,6 @@ export const useFunctions = (): Functions => {
  * Hook to memoize Firestore references or queries safely.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  // We no longer mutate the object with __memo to avoid errors with frozen Firestore objects.
   return useMemo(factory, deps);
 }
 
