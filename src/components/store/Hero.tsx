@@ -19,7 +19,7 @@ import { Loader2 } from 'lucide-react';
 export function Hero() {
   const db = useFirestore();
 
-  // Fetch Banners
+  // Fetch Banners from Firestore
   const bannersQuery = useMemoFirebase(() => {
     return query(collection(db, 'banners'), where('active', '==', true));
   }, [db]);
@@ -37,7 +37,7 @@ export function Hero() {
     );
   }
 
-  // Fallback if no active banners found
+  // Expanded fallbacks for a dynamic rotating experience
   const displayBanners = banners && banners.length > 0 ? banners : [
     {
       id: 'fallback-1',
@@ -46,6 +46,30 @@ export function Hero() {
       campaign: "Essência Urbana",
       campaignText: "Coleção Primavera-Verão 2024",
       image: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=1200&q=80"
+    },
+    {
+      id: 'fallback-2',
+      title: "Sinta a leveza da estação em cada look.",
+      subtitle: "Tecidos fluidos e cores suaves que realçam sua beleza natural com sofisticação.",
+      campaign: "Brisa de Verão",
+      campaignText: "Lançamento Exclusivo",
+      image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80"
+    },
+    {
+      id: 'fallback-3',
+      title: "Noites inesquecíveis pedem looks poderosos.",
+      subtitle: "Brilho, recortes e modelagens que celebram sua presença em qualquer evento.",
+      campaign: "Glow Night",
+      campaignText: "Moda Festa",
+      image: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=1200&q=80"
+    },
+    {
+      id: 'fallback-4',
+      title: "Minimalismo que fala por si só.",
+      subtitle: "Peças essenciais e atemporais para a mulher que valoriza o clean e o sofisticado.",
+      campaign: "Pure Minimal",
+      campaignText: "Essenciais",
+      image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80"
     }
   ];
 
@@ -112,7 +136,7 @@ export function Hero() {
                             src={banner.image}
                             alt={banner.campaign || "Banner Toda Bela"}
                             fill
-                            className="object-cover"
+                            className="object-cover transition duration-700 group-hover:scale-105"
                             priority={index === 0}
                             data-ai-hint="fashion banner"
                           />

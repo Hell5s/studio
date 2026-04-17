@@ -3,6 +3,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({
+  id,
   name,
   price,
   oldPrice,
@@ -35,7 +37,7 @@ export function ProductCard({
 
   return (
     <Card className="group relative overflow-hidden rounded-[2rem] border-none bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
-      <div className="relative aspect-[3/4] overflow-hidden">
+      <Link href={`/products/${id}`} className="block relative aspect-[3/4] overflow-hidden cursor-pointer">
         <Image
           src={image}
           alt={name}
@@ -49,9 +51,13 @@ export function ProductCard({
             {badge}
           </Badge>
         )}
-      </div>
+      </Link>
       <div className="p-6">
-        <h4 className="text-lg font-headline font-semibold text-foreground line-clamp-1">{name}</h4>
+        <Link href={`/products/${id}`} className="block group/title">
+          <h4 className="text-lg font-headline font-semibold text-foreground line-clamp-1 transition-colors group-hover/title:text-primary">
+            {name}
+          </h4>
+        </Link>
         <div className="mt-3 flex items-center gap-3">
           <span className="text-xl font-bold text-primary">{formatCurrency(price)}</span>
           {oldPrice && (
@@ -59,7 +65,10 @@ export function ProductCard({
           )}
         </div>
         <Button 
-          onClick={onAddToCart}
+          onClick={(e) => {
+            e.preventDefault();
+            onAddToCart?.();
+          }}
           className="mt-5 w-full rounded-full bg-foreground text-background hover:bg-primary transition-colors py-6 font-semibold"
         >
           <ShoppingBag className="mr-2 h-4 w-4" />
