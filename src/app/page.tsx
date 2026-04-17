@@ -85,10 +85,22 @@ export default function TodaBelaStorefront() {
             </a>
             
             {user ? (
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-primary gap-2">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sair</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setIsAdminOpen(true)} 
+                    className="rounded-full text-primary hover:bg-primary/5"
+                  >
+                    <Settings className="h-5 w-5" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-primary gap-2">
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">Sair</span>
+                </Button>
+              </div>
             ) : (
               <Button variant="ghost" size="icon" onClick={() => setIsLoginOpen(true)} className="rounded-full text-foreground/70">
                 <User className="h-5 w-5" />
@@ -277,7 +289,11 @@ export default function TodaBelaStorefront() {
       )}
 
       {/* Login Dialog */}
-      <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
+      <LoginDialog 
+        open={isLoginOpen} 
+        onOpenChange={setIsLoginOpen} 
+        onAdminLogin={() => setIsAdminOpen(true)}
+      />
     </div>
   );
 }

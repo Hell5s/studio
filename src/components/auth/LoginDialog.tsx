@@ -1,28 +1,50 @@
 
 "use client";
 
-import React, { useState } from 'react';
-import { useAuth } from '@/firebase';
+import React, { useState, useEffect } from 'react';
+import { useAuth, useUser, useDoc, useFirestore } from '@/firebase';
 import { signInWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
+import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Lock, User, Copy, Check, ShieldCheck } from 'lucide-react';
+import { Loader2, Lock, User, Copy, Check, ShieldCheck, ArrowRight } from 'lucide-react';
 
 interface LoginDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAdminLogin?: () => void;
 }
 
-export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
+export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogProps) {
   const auth = useAuth();
+  const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const [loggedInUser, setLoggedInUser] = useState<{ email: string | null, uid: string } | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Verificação de Admin para fechar automaticamente se já for admin
+  const adminDocRef = React.useMemo(() => {
+    return user ? doc(db, 'roles_admin', user.uid) : null;
+  }, [db, user]);
+  const { data: adminRole } = useDoc(adminDocRef);
+  const isAdmin = !!adminRole;
+
+  // Fecha o login automaticamente se o usuário logado já for reconhecido como Admin
+  useEffect(() => {
+    if (open && user && isAdmin) {
+      onOpenChange(false);
+      onAdminLogin?.();
+      toast({
+        title: "Bem-vinda de volta!",
+        description: "Acesso administrativo liberado.",
+      });
+    }
+  }, [user, isAdmin, open, onOpenChange, onAdminLogin, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,12 +52,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
     setLoading(true);
     try {
-      const result = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      setLoggedInUser({ email: result.user.email, uid: result.user.uid });
-      toast({ 
-        title: "Login realizado!", 
-        description: "Agora você pode copiar seu UID para o cadastro administrativo." 
-      });
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
     } catch (error: any) {
       toast({ 
         title: "Erro no login", 
@@ -48,8 +65,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   };
 
   const copyUid = () => {
-    if (loggedInUser) {
-      navigator.clipboard.writeText(loggedInUser.uid);
+    if (user) {
+      navigator.clipboard.writeText(user.uid);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast({ title: "UID Copiado!", description: "Cole este ID na coleção roles_admin do Firestore." });
@@ -61,36 +78,44 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] border-none shadow-2xl overflow-hidden">
         <DialogHeader className="items-center text-center p-6 bg-secondary/20">
           <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-4">
-            {loggedInUser ? <ShieldCheck className="h-8 w-8" /> : <Lock className="h-8 w-8" />}
+            {user ? <ShieldCheck className="h-8 w-8" /> : <Lock className="h-8 w-8" />}
           </div>
           <DialogTitle className="text-2xl font-headline font-bold">
-            {loggedInUser ? "Perfil Identificado" : "Acesso Toda Bela"}
+            {user ? "Perfil Identificado" : "Acesso Toda Bela"}
           </DialogTitle>
           <DialogDescription className="text-sm">
-            {loggedInUser ? "Copie seu identificador abaixo para liberar o painel admin." : "Entre para gerenciar sua boutique ou acompanhar pedidos."}
+            {user ? "Identificamos sua conta na boutique." : "Entre para gerenciar sua boutique ou acompanhar pedidos."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="p-6 space-y-6">
-          {loggedInUser ? (
+          {user ? (
             <div className="space-y-6">
-              <div className="p-4 rounded-2xl bg-white border border-primary/10 shadow-sm">
-                <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-2">Seu Identificador Único (UID):</p>
-                <div className="flex items-center justify-between gap-3 bg-secondary/30 p-3 rounded-xl border border-primary/5">
-                  <code className="text-xs break-all text-primary font-mono font-medium">{loggedInUser.uid}</code>
-                  <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0 hover:bg-white" onClick={copyUid}>
-                    {copied ? <Check className="h-5 w-5 text-green-600" /> : <Copy className="h-5 w-5 text-primary" />}
-                  </Button>
+              {!isAdmin ? (
+                <>
+                  <div className="p-4 rounded-2xl bg-white border border-primary/10 shadow-sm">
+                    <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-2">Seu Identificador (UID):</p>
+                    <div className="flex items-center justify-between gap-3 bg-secondary/30 p-3 rounded-xl border border-primary/5">
+                      <code className="text-xs break-all text-primary font-mono font-medium">{user.uid}</code>
+                      <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0 hover:bg-white" onClick={copyUid}>
+                        {copied ? <Check className="h-5 w-5 text-green-600" /> : <Copy className="h-5 w-5 text-primary" />}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="rounded-2xl bg-amber-50 p-4 text-xs text-amber-800 leading-relaxed border border-amber-200">
+                    <p className="font-semibold mb-1">Aguardando Permissão:</p>
+                    Seu acesso administrativo ainda não foi ativado. Solicite a inclusão do UID acima na coleção <span className="font-mono">roles_admin</span>.
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">Você já possui permissão de administrador.</p>
                 </div>
-              </div>
+              )}
               
-              <div className="rounded-2xl bg-primary/5 p-4 text-xs text-muted-foreground leading-relaxed border border-primary/10">
-                <p className="font-semibold text-primary mb-1">Próximo Passo:</p>
-                No console do Firebase, crie o documento <span className="font-mono bg-white px-1">roles_admin/{loggedInUser.uid}</span> para ativar o ícone de gestão.
-              </div>
-
               <Button className="w-full rounded-full h-14 font-semibold shadow-lg shadow-primary/10" onClick={() => onOpenChange(false)}>
-                Entendido
+                Fechar
               </Button>
             </div>
           ) : (
