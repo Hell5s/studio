@@ -25,7 +25,7 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
   const [copied, setCopied] = useState(false);
 
   // Verificação de Admin para fechar automaticamente se já for admin
@@ -51,6 +51,15 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
     e.preventDefault();
     if (!formData.email || !formData.password) return;
 
+    if (isRegistering && formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Erro no cadastro",
+        description: "As senhas não coincidem.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       if (isRegistering) {
@@ -68,7 +77,7 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
         errorMessage = "Este e-mail já está em uso.";
       } else if (error.code === 'auth/weak-password') {
         errorMessage = "A senha deve ter pelo menos 6 caracteres.";
-      } else if (error.code === 'auth/invalid-credential') {
+      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
         errorMessage = "Credenciais inválidas. Verifique seu e-mail e senha.";
       }
 
@@ -148,6 +157,7 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
                     className="rounded-full h-12 border-primary/10 bg-secondary/20 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all px-6"
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -159,10 +169,25 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
                     className="rounded-full h-12 border-primary/10 bg-secondary/20 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all px-6"
                     value={formData.password}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    required
                   />
                 </div>
+                {isRegistering && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" size="sm" className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Confirmar Senha</Label>
+                    <Input 
+                      id="confirmPassword" 
+                      type="password" 
+                      placeholder="••••••••"
+                      className="rounded-full h-12 border-primary/10 bg-secondary/20 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all px-6"
+                      value={formData.confirmPassword}
+                      onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      required
+                    />
+                  </div>
+                )}
                 <Button type="submit" className="w-full rounded-full h-14 font-semibold text-lg shadow-xl shadow-primary/20 mt-4 bg-primary text-white hover:bg-primary/90 transition-all" disabled={loading}>
-                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : isRegistering ? "Criar Conta" : "Entrar"}
+                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : isRegistering ? "Criar Minha Conta" : "Entrar"}
                 </Button>
               </form>
 
@@ -172,7 +197,7 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
                   onClick={() => setIsRegistering(!isRegistering)}
                   className="text-sm font-medium text-primary hover:underline underline-offset-4"
                 >
-                  {isRegistering ? "Já tem uma conta? Entre aqui" : "Ainda não tem conta? Cadastre-se"}
+                  {isRegistering ? "Já tem uma conta? Entre aqui" : "Ainda não tem conta? Cadastre-se agora"}
                 </button>
               </div>
 
