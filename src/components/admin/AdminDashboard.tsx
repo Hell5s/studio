@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -22,7 +21,8 @@ import {
   PlusCircle,
   Eye,
   ArrowUpRight,
-  Clock
+  Clock,
+  Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { AdminShopeeImport } from './AdminShopeeImport';
 
 interface AdminDashboardProps {
   productsCount: number;
@@ -38,7 +39,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'banner' | 'config'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'banner' | 'shopee' | 'config'>('dashboard');
   const db = useFirestore();
 
   const recentProductsQuery = useMemoFirebase(() => {
@@ -49,6 +50,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
   const tabs = [
     { id: 'dashboard', label: 'Visão Geral', icon: <LayoutDashboard className="h-4 w-4" /> },
     { id: 'produtos', label: 'Produtos', icon: <Package className="h-4 w-4" /> },
+    { id: 'shopee', label: 'Importar Shopee', icon: <Download className="h-4 w-4" /> },
     { id: 'categorias', label: 'Coleções', icon: <Layers className="h-4 w-4" /> },
     { id: 'banner', label: 'Banners', icon: <FileText className="h-4 w-4" /> },
     { id: 'config', label: 'Ajustes', icon: <Settings className="h-4 w-4" /> },
@@ -88,7 +90,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
         </nav>
 
         <div className="p-4 rounded-2xl bg-secondary/50 border border-primary/5 mt-auto">
-          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary/60 mb-3">Status</p>
+          <p className="text-[10px] uppercase font-bold tracking-[0.25em] text-primary/60 mb-3">Status</p>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
             <p className="text-sm font-bold text-foreground">Loja Online</p>
@@ -240,6 +242,10 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
             </Card>
           )}
 
+          {activeTab === 'shopee' && (
+            <AdminShopeeImport />
+          )}
+
           {(activeTab === 'categorias' || activeTab === 'banner' || activeTab === 'config') && (
             <Card className="min-h-[400px] rounded-[3rem] border-dashed border-2 border-primary/10 flex flex-col items-center justify-center text-center bg-white/40 p-12">
               <div className="h-20 w-20 rounded-full bg-white flex items-center justify-center mb-6 shadow-sm">
@@ -249,7 +255,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
               <p className="text-sm font-medium text-muted-foreground mt-2 max-w-xs">
                 Estamos finalizando esta seção para oferecer o melhor controle administrativo da sua boutique.
               </p>
-              <Button variant="outline" className="mt-8 rounded-full border-primary/20 text-primary px-8">
+              <Button variant="outline" className="mt-8 rounded-full border-primary/20 text-primary px-8" onClick={() => setActiveTab('dashboard')}>
                 Voltar ao Dashboard
               </Button>
             </Card>
