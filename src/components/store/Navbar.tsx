@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -98,7 +99,7 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
                   <Button className="rounded-full bg-primary text-primary-foreground font-bold px-8 h-12 shadow-xl shadow-primary/10 hover:scale-105 transition-all duration-500 overflow-hidden group">
                     <ShoppingBag className="mr-3 h-4 w-4 relative z-10" />
                     <span className="text-[10px] uppercase tracking-[0.2em] relative z-10">Carrinho</span>
-                    <div className="absolute inset-0 bg-accent translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-accent translate-y-[101%] group-hover:translate-y-0 transition-transform duration-500" />
                   </Button>
                 </div>
               </div>
