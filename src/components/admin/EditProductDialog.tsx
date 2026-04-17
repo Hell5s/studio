@@ -10,7 +10,8 @@ import {
   Sparkles,
   ChevronRight,
   ChevronLeft,
-  Layout
+  Layout,
+  Link as LinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     description: '',
     category: '',
     badge: '',
+    image: '',
     published: true,
     featured: false
   });
@@ -59,6 +61,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         description: product.description || '',
         category: product.category || '',
         badge: product.badge || '',
+        image: product.image || product.images?.[0] || '',
         published: product.published !== false,
         featured: !!product.featured
       });
@@ -96,8 +99,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
             <DialogDescription>Ajuste os detalhes da sua curadoria.</DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-md">
-              <img src={product?.image || product?.images?.[0]} className="h-full w-full object-cover" />
+            <div className="h-16 w-16 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-md border border-white/10">
+              <img src={formData.image} className="h-full w-full object-cover" alt="Preview" />
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Edição de Curadoria</p>
@@ -109,7 +112,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         <div className="p-10 grid md:grid-cols-2 gap-10">
           <div className="space-y-8">
             <div className="space-y-4">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Identificação</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Identificação e Mídia</Label>
               <div className="space-y-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-name">Nome do Produto</Label>
@@ -119,6 +122,19 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     className="rounded-2xl border-primary/5 bg-secondary/20 h-12 focus:bg-white transition-all"
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-image">URL da Imagem Principal</Label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      id="edit-image" 
+                      value={formData.image}
+                      onChange={(e) => setFormData({...formData, image: e.target.value})}
+                      className="rounded-2xl border-primary/5 bg-secondary/20 h-12 pl-12 focus:bg-white transition-all"
+                      placeholder="https://..."
+                    />
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-category">Categoria</Label>
