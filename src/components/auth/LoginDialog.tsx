@@ -3,14 +3,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth, useUser, useDoc, useFirestore } from '@/firebase';
-import { signInWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Lock, User, Copy, Check, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Loader2, Lock, User, Copy, Check, ShieldCheck, UserPlus, LogIn } from 'lucide-react';
 
 interface LoginDialogProps {
   open: boolean;
@@ -24,6 +24,7 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
   const { user } = useUser();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [copied, setCopied] = useState(false);
 
@@ -46,17 +47,34 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
     }
   }, [user, isAdmin, open, onOpenChange, onAdminLogin, toast]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email || !formData.password) return;
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      if (isRegistering) {
+        await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Bem-vinda à Toda Bela Boutique.",
+        });
+      } else {
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      }
     } catch (error: any) {
+      let errorMessage = "Erro na autenticação. Verifique seus dados.";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "Este e-mail já está em uso.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "A senha deve ter pelo menos 6 caracteres.";
+      } else if (error.code === 'auth/invalid-credential') {
+        errorMessage = "Credenciais inválidas. Verifique seu e-mail e senha.";
+      }
+
       toast({ 
-        title: "Erro no login", 
-        description: "Credenciais inválidas ou acesso negado.", 
+        title: isRegistering ? "Erro ao criar conta" : "Erro no login", 
+        description: errorMessage, 
         variant: "destructive" 
       });
     } finally {
@@ -75,20 +93,20 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] border-none shadow-2xl overflow-hidden">
-        <DialogHeader className="items-center text-center p-6 bg-secondary/20">
-          <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-4">
-            {user ? <ShieldCheck className="h-8 w-8" /> : <Lock className="h-8 w-8" />}
+      <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] border-none shadow-2xl overflow-hidden p-0">
+        <DialogHeader className="items-center text-center p-8 bg-secondary/30">
+          <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center text-primary mb-4 shadow-sm">
+            {user ? <ShieldCheck className="h-8 w-8" /> : isRegistering ? <UserPlus className="h-8 w-8" /> : <Lock className="h-8 w-8" />}
           </div>
-          <DialogTitle className="text-2xl font-headline font-bold">
-            {user ? "Perfil Identificado" : "Acesso Toda Bela"}
+          <DialogTitle className="text-2xl font-headline font-bold text-primary">
+            {user ? "Perfil Identificado" : isRegistering ? "Criar Minha Conta" : "Acesso Toda Bela"}
           </DialogTitle>
-          <DialogDescription className="text-sm">
-            {user ? "Identificamos sua conta na boutique." : "Entre para gerenciar sua boutique ou acompanhar pedidos."}
+          <DialogDescription className="text-sm text-muted-foreground mt-2">
+            {user ? "Identificamos sua conta na boutique." : isRegistering ? "Junte-se ao nosso clube exclusivo de moda." : "Entre para gerenciar sua boutique ou acompanhar pedidos."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="p-6 space-y-6">
+        <div className="p-8 space-y-6">
           {user ? (
             <div className="space-y-6">
               {!isAdmin ? (
@@ -103,59 +121,77 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
                     </div>
                   </div>
                   
-                  <div className="rounded-2xl bg-amber-50 p-4 text-xs text-amber-800 leading-relaxed border border-amber-200">
+                  <div className="rounded-2xl bg-amber-50 p-4 text-xs text-amber-800 leading-relaxed border border-amber-200 shadow-sm">
                     <p className="font-semibold mb-1">Aguardando Permissão:</p>
-                    Seu acesso administrativo ainda não foi ativado. Solicite a inclusão do UID acima na coleção <span className="font-mono">roles_admin</span>.
+                    Seu acesso administrativo ainda não foi ativado. Solicite a inclusão do UID acima na coleção <span className="font-mono bg-amber-100 px-1 rounded">roles_admin</span> para gerenciar a loja.
                   </div>
                 </>
               ) : (
                 <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">Você já possui permissão de administrador.</p>
+                  <p className="text-sm font-medium text-primary">Você já possui permissão de administrador e acesso total ao painel.</p>
                 </div>
               )}
               
-              <Button className="w-full rounded-full h-14 font-semibold shadow-lg shadow-primary/10" onClick={() => onOpenChange(false)}>
+              <Button className="w-full rounded-full h-14 font-semibold shadow-lg shadow-primary/10 bg-primary hover:bg-primary/90 text-white" onClick={() => onOpenChange(false)}>
                 Fechar
               </Button>
             </div>
           ) : (
             <>
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleAuth} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-xs font-semibold ml-1">E-mail</Label>
+                  <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">E-mail</Label>
                   <Input 
                     id="email" 
                     type="email" 
                     placeholder="exemplo@email.com" 
-                    className="rounded-full h-12 border-primary/10 bg-secondary/20 focus:bg-white transition-all"
+                    className="rounded-full h-12 border-primary/10 bg-secondary/20 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all px-6"
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" size="sm" className="text-xs font-semibold ml-1">Senha</Label>
+                  <Label htmlFor="password" size="sm" className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Senha</Label>
                   <Input 
                     id="password" 
                     type="password" 
-                    className="rounded-full h-12 border-primary/10 bg-secondary/20 focus:bg-white transition-all"
+                    placeholder="••••••••"
+                    className="rounded-full h-12 border-primary/10 bg-secondary/20 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all px-6"
                     value={formData.password}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                   />
                 </div>
-                <Button type="submit" className="w-full rounded-full h-14 font-semibold text-lg shadow-xl shadow-primary/20 mt-2" disabled={loading}>
-                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "Entrar"}
+                <Button type="submit" className="w-full rounded-full h-14 font-semibold text-lg shadow-xl shadow-primary/20 mt-4 bg-primary text-white hover:bg-primary/90 transition-all" disabled={loading}>
+                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : isRegistering ? "Criar Conta" : "Entrar"}
                 </Button>
               </form>
 
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-primary/5" /></div>
-                <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest"><span className="bg-white px-3 text-muted-foreground">Ou</span></div>
+              <div className="text-center">
+                <button 
+                  type="button"
+                  onClick={() => setIsRegistering(!isRegistering)}
+                  className="text-sm font-medium text-primary hover:underline underline-offset-4"
+                >
+                  {isRegistering ? "Já tem uma conta? Entre aqui" : "Ainda não tem conta? Cadastre-se"}
+                </button>
               </div>
 
-              <Button variant="outline" className="w-full rounded-full h-14 font-semibold text-primary border-primary/20 hover:bg-primary/5" onClick={() => signInAnonymously(auth)} disabled={loading}>
-                <User className="mr-2 h-5 w-5" />
-                Acessar como Visitante
-              </Button>
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-primary/10" /></div>
+                <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em]"><span className="bg-white px-4 text-muted-foreground">Ou</span></div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full rounded-full h-14 font-semibold text-primary border-primary/20 hover:bg-primary/5 transition-all" 
+                  onClick={() => signInAnonymously(auth)} 
+                  disabled={loading}
+                >
+                  <User className="mr-2 h-5 w-5" />
+                  Acessar como Visitante
+                </Button>
+              </div>
             </>
           )}
         </div>
