@@ -42,8 +42,8 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
         )}
       >
         <div className="container mx-auto">
-          {/* Desktop Layout - 3 Columns Grid */}
-          <div className="hidden lg:grid grid-cols-[1fr_auto_1fr] items-center gap-8">
+          {/* Desktop Layout - 3 Columns Grid for Perfect Centering */}
+          <div className="hidden lg:grid grid-cols-3 items-center">
             
             {/* Left Column: Navigation */}
             <nav className="flex items-center gap-10">
@@ -60,9 +60,11 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
             </nav>
 
             {/* Center Column: Logo */}
-            <Link href="/" className="transition-transform hover:scale-105 duration-700">
-              <LogoMark />
-            </Link>
+            <div className="flex justify-center">
+              <Link href="/" className="transition-transform hover:scale-105 duration-700">
+                <LogoMark />
+              </Link>
+            </div>
 
             {/* Right Column: Actions */}
             <div className="flex items-center justify-end gap-6">
@@ -104,7 +106,7 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
           </div>
 
           {/* Mobile Layout */}
-          <div className="lg:hidden flex items-center justify-between h-12">
+          <div className="lg:hidden relative flex items-center justify-between h-12">
             <button 
               className="p-2 text-primary"
               onClick={() => setMobileMenuOpen(true)}
