@@ -320,7 +320,7 @@ export default function TodaBelaHome() {
             <div className="flex items-center justify-between p-10 border-b border-primary/5">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">L'Art de Shopper</p>
-                <h3 className="text-2xl font-headline font-bold text-primary">Sacola de Curadoria</h3>
+                <h3 className="text-2xl font-headline font-bold text-primary">Carrinho de Curadoria</h3>
               </div>
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setCartOpen(false)}>
                 <X className="h-6 w-6" />
@@ -331,7 +331,7 @@ export default function TodaBelaHome() {
               {!cartItems.length ? (
                 <div className="h-80 rounded-[4rem] border-2 border-dashed border-primary/5 flex flex-col items-center justify-center text-center space-y-6">
                   <ShoppingBag className="h-12 w-12 text-primary/10" />
-                  <p className="text-muted-foreground italic font-light">Sua sacola aguarda por sua primeira escolha, Chérie.</p>
+                  <p className="text-muted-foreground italic font-light">Seu carrinho aguarda por sua primeira escolha, Chérie.</p>
                 </div>
               ) : (
                 cartItems.map((item) => (

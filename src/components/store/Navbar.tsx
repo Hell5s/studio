@@ -96,7 +96,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
                 >
                   <ShoppingBag className="mr-3 h-4 w-4 relative z-10" />
                   <span className="text-[10px] uppercase tracking-[0.2em] relative z-10">
-                    Sacola {cartCount > 0 && `(${cartCount})`}
+                    Carrinho {cartCount > 0 && `(${cartCount})`}
                   </span>
                 </Button>
               </div>
