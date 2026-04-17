@@ -24,6 +24,39 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import Autoplay from "embla-carousel-autoplay";
 
+const dummyProducts = [
+  {
+    id: 'dummy-1',
+    name: 'Vestido Midi Elegance',
+    price: 149.90,
+    oldPrice: 199.90,
+    badge: 'Mais vendido',
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80'
+  },
+  {
+    id: 'dummy-2',
+    name: 'Conjunto Soft Chic',
+    price: 189.90,
+    badge: 'Novo',
+    image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80'
+  },
+  {
+    id: 'dummy-3',
+    name: 'Blusa Minimal Glow',
+    price: 89.90,
+    oldPrice: 119.90,
+    badge: 'Oferta',
+    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80'
+  },
+  {
+    id: 'dummy-4',
+    name: 'Calça Wide Urban',
+    price: 129.90,
+    badge: 'Trend',
+    image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80'
+  }
+];
+
 export default function TodaBelaStorefront() {
   const db = useFirestore();
   const auth = getAuth();
@@ -59,6 +92,13 @@ export default function TodaBelaStorefront() {
     return q;
   }, [db, activeCategoryId]);
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
+
+  const displayProducts = useMemo(() => {
+    if (productsLoading) return [];
+    if (products && products.length > 0) return products;
+    // Só mostra dummy se estiver na categoria "Todas" e o banco estiver vazio
+    return activeCategoryId === "all" ? dummyProducts : [];
+  }, [products, productsLoading, activeCategoryId]);
 
   const handleLogout = () => {
     signOut(auth);
@@ -161,7 +201,7 @@ export default function TodaBelaStorefront() {
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : products && products.length > 0 ? (
+            ) : displayProducts.length > 0 ? (
               <Carousel
                 opts={{
                   align: "start",
@@ -171,7 +211,7 @@ export default function TodaBelaStorefront() {
                 className="w-full"
               >
                 <CarouselContent className="-ml-4">
-                  {products.map((product) => (
+                  {displayProducts.map((product) => (
                     <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/4">
                       <div className="p-1">
                         <ProductCard {...product} />
