@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Toda Bela - Palette Premium & Editorial */
+    /* Toda Bela - Palette Editorial Deluxe */
     --background: 15 100% 99%; /* Creme #FFF9F7 */
     --foreground: 343 16% 15%; /* Texto #2A1F22 */
     
@@ -36,7 +36,7 @@
     --input: 347 20% 92%;
     --ring: 347 29% 34%;
     
-    --radius: 1.5rem;
+    --radius: 2rem;
   }
 
   .dark {
@@ -55,32 +55,40 @@
     @apply bg-background text-foreground font-body antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline tracking-tighter;
+    @apply font-headline tracking-tight;
   }
 }
 
-.glass {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+.text-editorial {
+  letter-spacing: -0.04em;
+  line-height: 0.95;
 }
 
-.text-editorial {
-  line-height: 0.85;
-  letter-spacing: -0.05em;
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.shadow-editorial {
+  box-shadow: 0 30px 60px -12px rgba(110, 60, 71, 0.08);
 }
 
 @keyframes float {
   0% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
+  50% { transform: translateY(-10px); }
   100% { transform: translateY(0px); }
 }
 
-.animate-float {
-  animation: float 8s ease-in-out infinite;
+.animate-float-editorial {
+  animation: float 6s ease-in-out infinite;
 }
 
-.shadow-premium {
-  box-shadow: 0 20px 50px -12px rgba(110, 60, 71, 0.12);
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
