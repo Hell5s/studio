@@ -257,6 +257,30 @@ export default function TodaBelaStorefront() {
               </ul>
             </div>
           </div>
+
+          <div className="mt-16 pt-8 border-t border-primary/5 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-8 gap-y-2 text-sm text-muted-foreground">
+              <p>© 2024 Toda Bela Storefront. Todos os direitos reservados.</p>
+              <div className="flex gap-4">
+                <span className="hover:text-primary cursor-pointer transition-colors">Termos de Uso</span>
+                <span className="hover:text-primary cursor-pointer transition-colors">Privacidade</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {isAdmin && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsAdminOpen(true)}
+                  className="text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-full transition-all"
+                  title="Acessar Painel Administrativo"
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </footer>
 
