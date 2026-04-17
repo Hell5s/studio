@@ -1,143 +1,149 @@
 
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useDoc, useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { Button } from '@/components/ui/button';
-import { ShoppingBag, ArrowLeft, Heart, Share2, ShieldCheck, Truck } from 'lucide-react';
-import Image from 'next/image';
-import { LogoMark } from '@/components/store/LogoMark';
+import { useDoc, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, collection, query, where, limit } from 'firebase/firestore';
+import { Navbar } from '@/components/store/Navbar';
 import { Newsletter } from '@/components/store/Newsletter';
+import { ProductGallery } from '@/components/store/product-detail/ProductGallery';
+import { ProductInfo } from '@/components/store/product-detail/ProductInfo';
+import { ProductTabs } from '@/components/store/product-detail/ProductTabs';
+import { RelatedProducts } from '@/components/store/product-detail/RelatedProducts';
+import { LoginDialog } from '@/components/auth/LoginDialog';
+import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
+import { Loader2, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const db = useFirestore();
-  
-  const productRef = React.useMemo(() => {
+  const [isLoginOpen, setIsLoginOpen] = React.useState(false);
+  const [isTrackOpen, setIsTrackOpen] = React.useState(false);
+
+  const productRef = useMemo(() => {
     if (!db || !id) return null;
     return doc(db, 'products', id as string);
   }, [db, id]);
 
   const { data: product, isLoading } = useDoc(productRef);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+  const relatedQuery = useMemoFirebase(() => {
+    if (!db || !product) return null;
+    return query(
+      collection(db, 'products'),
+      where('category', '==', product.category || ''),
+      limit(4)
+    );
+  }, [db, product]);
+
+  const { data: relatedProducts } = useCollection(relatedQuery);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-creme">
+        <Loader2 className="h-12 w-12 animate-spin text-primary/40" />
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <h1 className="text-2xl font-semibold">Produto não encontrado</h1>
-        <Button onClick={() => router.push('/')}>Voltar para a loja</Button>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-creme">
+        <h1 className="text-3xl font-headline font-bold text-primary">Objeto de desejo não encontrado</h1>
+        <Button onClick={() => router.push('/')} variant="outline" className="rounded-full px-12">
+          Voltar para a Maison
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 w-full border-b border-primary/10 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8">
-          <Link href="/">
-            <LogoMark />
-          </Link>
-          <Button onClick={() => router.push('/')} variant="ghost" className="rounded-full">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-12 md:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Imagem do Produto */}
-          <div className="relative aspect-[3/4] overflow-hidden rounded-[3rem] shadow-2xl border-8 border-white">
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover"
-              priority
-            />
+    <div className="min-h-screen bg-background selection:bg-accent/30 selection:text-primary">
+      <Navbar onOpenLogin={() => setIsLoginOpen(true)} onOpenTrack={() => setIsTrackOpen(true)} />
+      
+      <main className="pt-32 pb-20">
+        <div className="container mx-auto px-4 md:px-12">
+          {/* Breadcrumb / Back */}
+          <div className="mb-12">
+            <Link href="/" className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground hover:text-primary transition-colors">
+              <ArrowLeft className="h-3 w-3 transition-transform group-hover:-translate-x-1" />
+              Voltar para Coleções
+            </Link>
           </div>
 
-          {/* Detalhes do Produto */}
-          <div className="space-y-8">
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/60">
-                {product.badge || "Exclusivo"}
-              </span>
-              <h1 className="mt-4 text-4xl md:text-5xl font-headline font-bold text-foreground leading-tight">
-                {product.name}
-              </h1>
-              <div className="mt-6 flex items-center gap-4">
-                <span className="text-3xl font-bold text-primary">{formatCurrency(product.price)}</span>
-                {product.oldPrice && (
-                  <span className="text-lg text-muted-foreground line-through decoration-brand-wine/30">
-                    {formatCurrency(product.oldPrice)}
-                  </span>
-                )}
-              </div>
+          <div className="grid lg:grid-cols-12 gap-16 xl:gap-24 items-start">
+            {/* Gallery Column */}
+            <div className="lg:col-span-7 xl:col-span-8">
+              <ProductGallery 
+                images={product.images || [product.image]} 
+                name={product.name} 
+              />
             </div>
 
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {product.description}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="flex-1 rounded-full py-8 text-lg font-semibold shadow-xl shadow-primary/20">
-                <ShoppingBag className="mr-2 h-5 w-5" />
-                Adicionar ao Carrinho
-              </Button>
-              <Button size="icon" variant="outline" className="rounded-full h-16 w-16 border-primary/20">
-                <Heart className="h-6 w-6 text-primary" />
-              </Button>
-              <Button size="icon" variant="outline" className="rounded-full h-16 w-16 border-primary/20">
-                <Share2 className="h-6 w-6 text-primary" />
-              </Button>
-            </div>
-
-            <div className="grid gap-4 pt-8">
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-brand-blush/30 border border-white/60">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <Truck className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-semibold text-primary">Frete Grátis</p>
-                  <p className="text-xs text-muted-foreground">Em compras acima de R$ 299,00</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-brand-blush/30 border border-white/60">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-semibold text-primary">Compra Segura</p>
-                  <p className="text-xs text-muted-foreground">Sua privacidade e segurança são nossa prioridade</p>
-                </div>
-              </div>
+            {/* Info Column */}
+            <div className="lg:col-span-5 xl:col-span-4 sticky top-32">
+              <ProductInfo product={product} />
             </div>
           </div>
+
+          {/* Detailed Content Section */}
+          <div className="mt-32 grid lg:grid-cols-12 gap-16 xl:gap-24 border-t border-primary/5 pt-32">
+            <div className="lg:col-span-7 xl:col-span-8 space-y-24">
+              <section>
+                <div className="flex items-center gap-4 mb-12">
+                  <div className="h-px w-12 bg-accent/40" />
+                  <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">L'Essence du Produit</span>
+                </div>
+                <div className="prose prose-primary max-w-none">
+                  <h3 className="text-4xl font-headline font-bold text-primary mb-8">Elegância em cada detalhe</h3>
+                  <div className="text-lg text-muted-foreground/80 leading-relaxed font-light italic whitespace-pre-line">
+                    {product.longDescription || product.description}
+                  </div>
+                </div>
+              </section>
+
+              <section className="bg-secondary/20 rounded-[4rem] p-12 md:p-20">
+                <div className="grid md:grid-cols-2 gap-16">
+                  <div>
+                    <h4 className="text-xl font-headline font-bold text-primary uppercase tracking-widest mb-6">Como Usar</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed italic">
+                      Ideal para eventos que exigem uma presença marcante e sofisticada. Combine com acessórios dourados Toda Bela para um look completo de gala.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-headline font-bold text-primary uppercase tracking-widest mb-6">Diferenciais Maison</h4>
+                    <ul className="space-y-4 text-sm text-muted-foreground font-light italic">
+                      <li className="flex items-center gap-3"><div className="h-1.5 w-1.5 rounded-full bg-accent" /> Modelagem que esculpe a silhueta</li>
+                      <li className="flex items-center gap-3"><div className="h-1.5 w-1.5 rounded-full bg-accent" /> Tecido com toque de seda premium</li>
+                      <li className="flex items-center gap-3"><div className="h-1.5 w-1.5 rounded-full bg-accent" /> Acabamento artesanal invisível</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <div className="lg:col-span-5 xl:col-span-4">
+              <ProductTabs product={product} />
+            </div>
+          </div>
+
+          {/* Related Products */}
+          {relatedProducts && relatedProducts.length > 0 && (
+            <div className="mt-40">
+              <RelatedProducts products={relatedProducts} />
+            </div>
+          )}
         </div>
       </main>
 
       <Newsletter />
+      
+      <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
+      <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
     </div>
   );
 }
-
-// Helper Link component to avoid errors if not imported properly
-import Link from 'next/link';
