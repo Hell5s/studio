@@ -9,6 +9,7 @@ import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
+import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, where, doc } from 'firebase/firestore';
@@ -66,6 +67,7 @@ export default function TodaBelaStorefront() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
+  const [isTrackOpen, setIsTrackOpen] = useState(false);
 
   const plugin = React.useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
@@ -112,23 +114,27 @@ export default function TodaBelaStorefront() {
         </p>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-brand-wine/5 bg-white/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 w-full border-b border-brand-wine/5 bg-white/70 backdrop-blur-xl">
         <div className="container mx-auto flex h-24 items-center justify-between px-4 md:px-8">
           
           <nav className="hidden lg:flex items-center gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-wine/60">
             <a href="#colecao" className="transition-colors hover:text-brand-wine border-b border-transparent hover:border-brand-wine pb-1">Novidades</a>
             <a href="#colecoes" className="transition-colors hover:text-brand-wine border-b border-transparent hover:border-brand-wine pb-1">Coleções</a>
             <a href="#festa" className="transition-colors hover:text-brand-wine border-b border-transparent hover:border-brand-wine pb-1 font-extrabold text-brand-gold">Moda Festa</a>
+            <button onClick={() => setIsTrackOpen(true)} className="transition-colors hover:text-brand-wine border-b border-transparent hover:border-brand-wine pb-1">Rastrear Pedido</button>
             <a href="#sobre" className="transition-colors hover:text-brand-wine border-b border-transparent hover:border-brand-wine pb-1">Maison</a>
           </nav>
 
           <LogoMark />
 
           <div className="flex items-center gap-2 md:gap-6">
-            <div className="hidden sm:flex items-center gap-2 text-brand-wine/40 mr-4">
-              <Truck className="h-4 w-4" />
+            <button 
+              onClick={() => setIsTrackOpen(true)}
+              className="hidden sm:flex items-center gap-2 text-brand-wine/40 mr-4 hover:text-brand-wine transition-colors group"
+            >
+              <Truck className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               <span className="text-[10px] font-bold uppercase tracking-widest">Rastrear</span>
-            </div>
+            </button>
 
             {user ? (
               <div className="flex items-center gap-3">
@@ -424,7 +430,7 @@ export default function TodaBelaStorefront() {
             <div className="space-y-8">
               <h4 className="font-headline font-bold text-brand-wine text-xs uppercase tracking-[0.4em] mb-8">Service Client</h4>
               <ul className="space-y-4 text-sm text-muted-foreground font-medium uppercase tracking-widest text-[11px]">
-                <li className="transition-colors hover:text-brand-gold cursor-pointer font-bold text-brand-gold">Rastrear Pedido</li>
+                <li onClick={() => setIsTrackOpen(true)} className="transition-colors hover:text-brand-gold cursor-pointer font-bold text-brand-gold">Rastrear Pedido</li>
                 <li className="transition-colors hover:text-brand-wine cursor-pointer">Trocas e Devoluções</li>
                 <li className="transition-colors hover:text-brand-wine cursor-pointer">Privacidade</li>
                 <li className="transition-colors hover:text-brand-wine cursor-pointer">Termos de Uso</li>
@@ -483,6 +489,11 @@ export default function TodaBelaStorefront() {
         open={isLoginOpen} 
         onOpenChange={setIsLoginOpen} 
         onAdminLogin={() => setIsAdminOpen(true)}
+      />
+
+      <OrderTrackingDialog 
+        open={isTrackOpen}
+        onOpenChange={setIsTrackOpen}
       />
     </div>
   );
