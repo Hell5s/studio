@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -12,7 +11,7 @@ interface HeroProps {
 
 export function Hero({ onShopNow }: HeroProps) {
   return (
-    <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center bg-[#FFF9F7] overflow-hidden pt-20">
+    <section className="relative min-h-[80vh] md:min-h-[85vh] flex items-center bg-[#FFF9F7] overflow-hidden pt-32 md:pt-40">
       <div className="absolute top-0 right-0 w-1/2 md:w-1/3 h-full bg-[#F7E8EA]/30 -skew-x-12 translate-x-1/2 pointer-events-none" />
       
       <div className="container mx-auto px-6 relative z-10">
@@ -28,12 +27,12 @@ export function Hero({ onShopNow }: HeroProps) {
               </div>
               
               <h1 className="text-4xl md:text-7xl font-serif font-bold text-[#6E3C47] leading-[1.1] tracking-tight">
-                Elegância para quem <br className="hidden md:block" />
-                <span className="italic text-[#C7A17A] font-light">sabe</span> o que quer
+                Elegância que se <br className="hidden md:block" />
+                <span className="italic text-[#C7A17A] font-light">destaca</span> em cada detalhe
               </h1>
               
               <p className="text-base md:text-xl text-[#2A1F22]/70 max-w-lg leading-relaxed font-light">
-                Peças pensadas para destacar sua presença em qualquer ocasião. Sinta a confiança de vestir a excelência.
+                Peças pensadas para valorizar sua presença em qualquer ocasião. Sinta a confiança de vestir a excelência.
               </p>
             </div>
 
@@ -66,7 +65,7 @@ export function Hero({ onShopNow }: HeroProps) {
           </div>
 
           <div className="relative animate-in fade-in slide-in-from-right duration-1000 delay-300 order-1 lg:order-2">
-            <div className="relative aspect-[4/5] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden shadow-2xl border-[6px] md:border-[12px] border-white group">
+            <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[4rem] overflow-hidden shadow-2xl border-[6px] md:border-[12px] border-white group">
               <Image
                 src="https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=1200&q=1600"
                 alt="Moda Feminina Toda Bela"

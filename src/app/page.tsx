@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -145,7 +144,7 @@ export default function Home() {
                 { name: 'Casual Chic', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80' },
                 { name: 'Plus Size', img: 'https://images.unsplash.com/photo-1589310243389-96a5483213a8?auto=format&fit=crop&w=600&q=80' },
               ].map((cat) => (
-                <div key={cat.name} className="group relative aspect-[4/5] rounded-[2rem] md:rounded-[3rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700">
+                <div key={cat.name} className="group relative aspect-[4/5] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700">
                   <Image 
                     src={cat.img} 
                     alt={cat.name} 
@@ -343,7 +342,7 @@ export default function Home() {
               </ul>
             </div>
 
-            <div className="space-y-6 p-8 rounded-[2.5rem] bg-[#F7E8EA]/30 border border-[#F7E8EA]">
+            <div className="space-y-6 p-8 rounded-[2rem] bg-[#F7E8EA]/30 border border-[#F7E8EA]">
               <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#6E3C47]">Visite Nossa Loja</h5>
               <p className="text-xs text-[#2A1F22]/60 font-light italic leading-relaxed">
                 Rua da Moda, 1000 - Jardins<br />
