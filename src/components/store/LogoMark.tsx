@@ -1,12 +1,14 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface LogoMarkProps {
   variant?: 'default' | 'white' | 'dark' | 'icon';
   className?: string;
+  itemsStart?: boolean;
 }
 
-export function LogoMark({ variant = 'default', className }: LogoMarkProps) {
+export function LogoMark({ variant = 'default', className, itemsStart }: LogoMarkProps) {
   const isWhite = variant === 'white';
   
   const colors = {
@@ -17,14 +19,18 @@ export function LogoMark({ variant = 'default', className }: LogoMarkProps) {
   };
 
   return (
-    <div className={cn("flex flex-col items-center group cursor-pointer transition-all duration-700", className)}>
+    <div className={cn(
+      "flex flex-col items-center group cursor-pointer transition-all duration-700", 
+      itemsStart && "items-start",
+      className
+    )}>
       {/* Selo Monogramático Refinado */}
       <div className={cn(
-        "mb-2 flex h-14 w-14 items-center justify-center rounded-full border shadow-sm transition-transform duration-700 group-hover:rotate-[360deg]",
+        "mb-2 flex h-10 w-10 md:h-14 md:w-14 items-center justify-center rounded-full border shadow-sm transition-transform duration-700 group-hover:rotate-[360deg]",
         colors.border,
         colors.bg
       )}>
-        <svg viewBox="0 0 100 100" className="h-8 w-8" fill="none">
+        <svg viewBox="0 0 100 100" className="h-6 w-6 md:h-8 md:w-8" fill="none">
           <circle cx="50" cy="50" r="48" stroke="currentColor" strokeWidth="0.5" className={colors.accent} />
           <path 
             d="M35 35H65M50 35V65M42 65H58" 
@@ -38,7 +44,7 @@ export function LogoMark({ variant = 'default', className }: LogoMarkProps) {
             y="52%" 
             dominantBaseline="middle" 
             textAnchor="middle" 
-            className={cn("font-serif text-[10px] font-light italic", colors.accent)}
+            className={cn("font-serif text-[8px] md:text-[10px] font-light italic", colors.accent)}
           >
             TB
           </text>
@@ -46,22 +52,22 @@ export function LogoMark({ variant = 'default', className }: LogoMarkProps) {
       </div>
 
       {/* Logotipo */}
-      <div className="flex flex-col items-center text-center">
+      <div className={cn("flex flex-col items-center text-center", itemsStart && "items-start text-left")}>
         <h1 className={cn(
-          "text-3xl md:text-4xl font-bold tracking-tight leading-none transition-all duration-500 group-hover:tracking-widest font-serif",
+          "text-2xl md:text-4xl font-bold tracking-tight leading-none transition-all duration-500 group-hover:tracking-widest font-serif",
           colors.primary
         )}>
           Toda Bela
         </h1>
-        <div className="flex items-center gap-3 mt-2 w-full justify-center opacity-80">
-          <div className="h-[0.5px] w-6 bg-[#C7A17A]/40" />
+        <div className={cn("flex items-center gap-2 md:gap-3 mt-1 md:mt-2 w-full justify-center opacity-80", itemsStart && "justify-start")}>
+          <div className="h-[0.5px] w-4 md:w-6 bg-[#C7A17A]/40" />
           <p className={cn(
-            "text-[9px] uppercase font-bold tracking-[0.5em]",
+            "text-[8px] md:text-[9px] uppercase font-bold tracking-[0.3em] md:tracking-[0.5em]",
             colors.accent
           )}>
             Moda Feminina
           </p>
-          <div className="h-[0.5px] w-6 bg-[#C7A17A]/40" />
+          <div className="h-[0.5px] w-4 md:w-6 bg-[#C7A17A]/40" />
         </div>
       </div>
     </div>
