@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Lock, User } from 'lucide-react';
+import { Loader2, Lock, User, Copy, Check } from 'lucide-react';
 
 interface LoginDialogProps {
   open: boolean;
@@ -21,6 +21,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [loggedInUser, setLoggedInUser] = useState<{ email: string | null, uid: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +30,12 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      toast({ title: "Bem-vinda de volta!", description: "Login realizado com sucesso." });
-      onOpenChange(false);
+      const result = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      setLoggedInUser({ email: result.user.email, uid: result.user.uid });
+      toast({ 
+        title: "Login realizado!", 
+        description: "Agora você pode copiar seu UID para cadastro admin." 
+      });
     } catch (error: any) {
       toast({ 
         title: "Erro no login", 
@@ -42,16 +47,12 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     }
   };
 
-  const handleGuestLogin = async () => {
-    setLoading(true);
-    try {
-      await signInAnonymously(auth);
-      toast({ title: "Modo Visitante", description: "Você entrou como visitante." });
-      onOpenChange(false);
-    } catch (error) {
-      toast({ title: "Erro", description: "Não foi possível entrar agora.", variant: "destructive" });
-    } finally {
-      setLoading(false);
+  const copyUid = () => {
+    if (loggedInUser) {
+      navigator.clipboard.writeText(loggedInUser.uid);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({ title: "UID Copiado!", description: "Cole este ID na coleção roles_admin do Firestore." });
     }
   };
 
@@ -64,46 +65,68 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           </div>
           <DialogTitle className="text-2xl font-headline font-bold">Acesso Toda Bela</DialogTitle>
           <DialogDescription>
-            Entre com suas credenciais para gerenciar a loja.
+            {loggedInUser ? "Copie seu identificador para o administrador." : "Entre com suas credenciais para gerenciar a loja."}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleLogin} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="seu@email.com" 
-              className="rounded-full h-12"
-              value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
-            />
+        {loggedInUser ? (
+          <div className="space-y-6 py-4">
+            <div className="p-4 rounded-2xl bg-secondary/50 border border-primary/10">
+              <p className="text-xs font-bold text-primary uppercase mb-2">Seu Identificador (UID):</p>
+              <div className="flex items-center justify-between gap-2 bg-white p-3 rounded-xl border border-primary/5">
+                <code className="text-xs break-all text-muted-foreground">{loggedInUser.uid}</code>
+                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={copyUid}>
+                  {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-center text-muted-foreground">
+              Cadastre este ID na coleção <span className="font-mono font-bold">roles_admin</span> do seu Firestore para liberar o painel.
+            </p>
+            <Button className="w-full rounded-full h-14" onClick={() => onOpenChange(false)}>
+              Concluído
+            </Button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              className="rounded-full h-12"
-              value={formData.password}
-              onChange={e => setFormData({ ...formData, password: e.target.value })}
-            />
-          </div>
-          <Button type="submit" className="w-full rounded-full h-14 font-semibold text-lg" disabled={loading}>
-            {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "Entrar como Admin"}
-          </Button>
-        </form>
+        ) : (
+          <>
+            <form onSubmit={handleLogin} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="seu@email.com" 
+                  className="rounded-full h-12"
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  className="rounded-full h-12"
+                  value={formData.password}
+                  onChange={e => setFormData({ ...formData, password: e.target.value })}
+                />
+              </div>
+              <Button type="submit" className="w-full rounded-full h-14 font-semibold text-lg" disabled={loading}>
+                {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "Entrar"}
+              </Button>
+            </form>
 
-        <div className="relative py-2">
-          <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-muted" /></div>
-          <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Ou continue como</span></div>
-        </div>
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-muted" /></div>
+              <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Ou</span></div>
+            </div>
 
-        <Button variant="outline" className="w-full rounded-full h-14 font-semibold text-primary border-primary/20" onClick={handleGuestLogin} disabled={loading}>
-          <User className="mr-2 h-4 w-4" />
-          Visitante
-        </Button>
+            <Button variant="outline" className="w-full rounded-full h-14 font-semibold text-primary border-primary/20" onClick={() => signInAnonymously(auth)} disabled={loading}>
+              <User className="mr-2 h-4 w-4" />
+              Visitante
+            </Button>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
