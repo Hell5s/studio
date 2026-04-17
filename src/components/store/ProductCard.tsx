@@ -1,12 +1,12 @@
+
 "use client";
 
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingBag, Heart, Eye } from 'lucide-react';
+import { ShoppingBag, Eye, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 
 interface ProductCardProps {
   id: string;
@@ -17,6 +17,7 @@ interface ProductCardProps {
   image: string;
   category?: string;
   onAddToCart?: () => void;
+  onBuyNow?: () => void;
 }
 
 export function ProductCard({
@@ -27,7 +28,8 @@ export function ProductCard({
   badge,
   image,
   category,
-  onAddToCart
+  onAddToCart,
+  onBuyNow
 }: ProductCardProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -37,78 +39,68 @@ export function ProductCard({
   };
 
   return (
-    <Card className="group relative overflow-hidden rounded-[3.5rem] border-none bg-transparent transition-all duration-700">
-      <div className="relative aspect-[3/4.2] overflow-hidden rounded-[3.5rem] bg-secondary/30 shadow-editorial">
+    <div className="group bg-white rounded-3xl border border-[#F7E8EA] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+      <div className="relative aspect-[3/4] overflow-hidden">
         <Image
           src={image}
           alt={name}
           fill
-          className="object-cover transition-all duration-1000 group-hover:scale-110"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, 25vw"
-          data-ai-hint="boutique fashion clothing"
+          data-ai-hint="roupa feminina"
         />
         
-        {/* Badges */}
-        <div className="absolute top-8 left-8 flex flex-col gap-2">
-          {badge && (
-            <Badge className="bg-white/90 text-primary border-none px-6 py-2 font-bold uppercase tracking-widest text-[9px] shadow-lg rounded-full">
-              {badge}
-            </Badge>
-          )}
-        </div>
+        {badge && (
+          <Badge className="absolute top-4 left-4 bg-[#6E3C47] text-white border-none px-4 py-1.5 font-bold uppercase text-[9px] rounded-full">
+            {badge}
+          </Badge>
+        )}
 
-        {/* Hover Actions */}
-        <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center gap-4">
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="rounded-full bg-white/90 text-primary hover:bg-primary hover:text-white transition-all scale-75 group-hover:scale-100 duration-500"
-          >
-            <Heart className="h-4 w-4" />
-          </Button>
+        {/* Ações de Hover */}
+        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
           <Link href={`/products/${id}`}>
-            <Button 
-              size="icon" 
-              className="rounded-full bg-primary text-white hover:bg-accent transition-all scale-75 group-hover:scale-100 duration-500 delay-75"
-            >
+            <Button size="icon" variant="secondary" className="rounded-full shadow-lg">
               <Eye className="h-4 w-4" />
             </Button>
           </Link>
         </div>
-
-        {/* Quick Add Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-8 translate-y-[105%] group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500">
-          <Button 
-            onClick={(e) => {
-              e.preventDefault();
-              onAddToCart?.();
-            }}
-            className="w-full rounded-full bg-white text-primary hover:bg-primary hover:text-white h-16 font-bold uppercase tracking-widest text-[10px] shadow-2xl transition-all"
-          >
-            <ShoppingBag className="mr-3 h-4 w-4" />
-            Adicionar à Sacola
-          </Button>
-        </div>
       </div>
 
-      <div className="pt-10 px-4 text-center space-y-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent/60">
-          {category || "Maison Toda Bela"}
+      <div className="p-6 space-y-3">
+        <p className="text-[10px] font-bold uppercase text-[#C7A17A] tracking-widest">
+          {category || "Toda Bela"}
         </p>
-        <Link href={`/products/${id}`} className="block">
-          <h4 className="text-lg font-headline font-bold text-primary group-hover:text-accent transition-colors">
+        <Link href={`/products/${id}`} className="block group-hover:text-[#6E3C47] transition-colors">
+          <h4 className="text-base font-bold text-[#2A1F22] truncate">
             {name}
           </h4>
         </Link>
-        <div className="flex items-center justify-center gap-4">
-          <span className="text-2xl font-bold text-primary">{formatCurrency(price)}</span>
+        
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-bold text-[#6E3C47]">{formatCurrency(price)}</span>
           {oldPrice && (
-            <span className="text-sm text-muted-foreground/40 line-through italic font-light">
+            <span className="text-xs text-[#2A1F22]/40 line-through">
               {formatCurrency(oldPrice)}
             </span>
           )}
         </div>
+
+        <div className="grid grid-cols-2 gap-2 pt-2">
+          <Button 
+            onClick={onAddToCart}
+            variant="outline"
+            className="rounded-full border-[#6E3C47] text-[#6E3C47] h-10 text-[10px] font-bold uppercase tracking-wider hover:bg-[#F7E8EA]"
+          >
+            Carrinho
+          </Button>
+          <Button 
+            onClick={onBuyNow}
+            className="rounded-full bg-[#6E3C47] text-white h-10 text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-[#6E3C47]/90"
+          >
+            Comprar
+          </Button>
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }

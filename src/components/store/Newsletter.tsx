@@ -5,10 +5,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase';
+import { useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase';
-import { Sparkles, Mail } from 'lucide-react';
+import { Mail, Send } from 'lucide-react';
 
 export function Newsletter() {
   const [email, setEmail] = useState('');
@@ -29,8 +28,8 @@ export function Newsletter() {
     });
 
     toast({
-      title: "Bienvenue, Chérie!",
-      description: "Você agora faz parte do nosso círculo exclusivo.",
+      title: "Pronto!",
+      description: "Agora você receberá nossas melhores ofertas.",
     });
     
     setEmail('');
@@ -38,26 +37,23 @@ export function Newsletter() {
   };
 
   return (
-    <section id="newsletter" className="container mx-auto px-4 py-32 md:px-12">
-      <div className="relative overflow-hidden rounded-[5rem] bg-white border border-primary/5 p-16 md:p-24 text-center shadow-xl">
-        <div className="absolute top-0 left-0 h-96 w-96 bg-accent/5 blur-[100px] -translate-x-1/2 -translate-y-1/2" />
-        
-        <div className="relative max-w-4xl mx-auto space-y-12">
-          <div className="space-y-6">
-            <p className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Clube Toda Bela</p>
-            <h3 className="text-4xl md:text-6xl font-headline font-bold text-primary tracking-tighter">Receba lançamentos e curadorias exclusivas</h3>
-            <p className="text-lg text-muted-foreground leading-relaxed font-light italic max-w-2xl mx-auto">
-              Capte o essencial da moda. Junte-se ao nosso círculo íntimo e receba convites antecipados para novas coleções e editoriais.
+    <section id="newsletter" className="container mx-auto px-6 py-20">
+      <div className="relative overflow-hidden rounded-3xl bg-white border border-[#F7E8EA] p-10 md:p-20 text-center shadow-lg">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <div className="space-y-4">
+            <h3 className="text-3xl md:text-4xl font-bold text-[#6E3C47] tracking-tight">Receba novidades e ofertas</h3>
+            <p className="text-base text-[#2A1F22]/70 max-w-xl mx-auto">
+              Cadastre seu melhor e-mail e seja a primeira a saber dos novos lançamentos e promoções exclusivas da Toda Bela.
             </p>
           </div>
           
-          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 pt-6 max-w-2xl mx-auto">
+          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
             <div className="relative flex-1">
-              <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
+              <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-[#2A1F22]/30" />
               <Input
                 type="email"
-                placeholder="Seu melhor endereço de e-mail"
-                className="h-16 flex-1 rounded-full border-primary/10 bg-secondary/20 text-primary placeholder:text-muted-foreground/40 px-14 focus:ring-accent focus:bg-white transition-all"
+                placeholder="Seu e-mail aqui"
+                className="h-14 flex-1 rounded-full border-[#F7E8EA] bg-[#FFF9F7] text-[#2A1F22] px-14 focus:ring-[#6E3C47]"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -65,15 +61,15 @@ export function Newsletter() {
               />
             </div>
             <Button 
-              className="h-16 rounded-full px-12 text-[10px] font-bold uppercase tracking-[0.3em] bg-primary text-white hover:bg-accent shadow-xl transition-all duration-500 hover:scale-105 active:scale-95 whitespace-nowrap"
+              className="h-14 rounded-full px-10 text-xs font-bold uppercase tracking-widest bg-[#6E3C47] text-white hover:bg-[#6E3C47]/90 shadow-xl"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Enviando..." : "Quero Participar"}
+              {isSubmitting ? "Enviando..." : "Quero receber"} <Send className="ml-2 h-4 w-4" />
             </Button>
           </form>
           
-          <p className="text-[9px] text-muted-foreground/50 uppercase tracking-[0.4em] font-bold pt-8">
-            Privacidade absoluta. Maison Toda Bela © 2024.
+          <p className="text-[10px] text-[#2A1F22]/40 font-bold uppercase tracking-widest">
+            Sem spam. Apenas o melhor da moda.
           </p>
         </div>
       </div>

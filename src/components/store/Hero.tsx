@@ -1,116 +1,80 @@
+
 "use client";
 
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, ChevronRight } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit } from 'firebase/firestore';
+import { ArrowRight, ShoppingCart } from 'lucide-react';
 
 interface HeroProps {
   onShopNow?: () => void;
 }
 
 export function Hero({ onShopNow }: HeroProps) {
-  const db = useFirestore();
-  const bannersQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'banners'), where('active', '==', true), limit(1));
-  }, [db]);
-  const { data: banners } = useCollection(bannersQuery);
-
-  const heroData = banners?.[0] || {
-    title: "A Presença que o Tempo não Apaga",
-    subtitle: "A Toda Bela nasceu para vestir mulheres que decidem ser protagonistas de sua própria jornada, com uma curadoria de luxo atemporal.",
-    campaign: "Éditorial L'Aura",
-    campaignText: "Lançamento Exclusivo • Maison 2024",
-    image: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=1200&q=80"
-  };
-
   return (
-    <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-background">
-      {/* Decorative skewed element */}
-      <div className="absolute top-0 right-0 w-[45%] h-full bg-secondary/30 -skew-x-12 translate-x-20 hidden lg:block" />
-      <div className="absolute top-1/2 left-0 w-[40rem] h-[40rem] bg-accent/5 rounded-full blur-[180px] -translate-y-1/2 -translate-x-1/2" />
-
-      <div className="container mx-auto px-6 md:px-12 relative z-10 pt-48 pb-20">
-        <div className="grid lg:grid-cols-12 gap-20 xl:gap-32 items-center">
+    <section className="relative min-h-[85vh] flex items-center bg-[#FFF9F7] overflow-hidden">
+      <div className="container mx-auto px-6 md:px-12 py-20 mt-20 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
           
-          {/* Text Content */}
-          <div className="lg:col-span-7 space-y-12 animate-in fade-in slide-in-from-left-12 duration-1000">
-            <div className="space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="h-[1px] w-20 bg-accent/40" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.8em] text-accent">
-                  {heroData.campaignText}
-                </span>
-              </div>
-              
-              <h2 className="text-6xl md:text-[6rem] xl:text-[7.5rem] font-headline font-bold text-primary leading-[0.92] tracking-tighter max-w-4xl">
-                {heroData.title.split(' ').map((word, i) => (
-                  <span key={i} className={i === 2 || i === 3 ? "text-accent italic font-light" : ""}>
-                    {word}{" "}
-                  </span>
-                ))}
+          <div className="space-y-8 animate-in fade-in slide-in-from-left duration-700">
+            <div className="space-y-4">
+              <span className="text-sm font-bold uppercase tracking-widest text-[#C7A17A]">
+                Nova Coleção
+              </span>
+              <h2 className="text-5xl md:text-7xl font-bold text-[#6E3C47] leading-tight tracking-tight">
+                Estilo e Elegância <br /> para você
               </h2>
-              
-              <p className="max-w-xl text-xl text-muted-foreground/80 leading-relaxed font-light italic">
-                {heroData.subtitle}
+              <p className="text-lg text-[#2A1F22]/70 max-w-lg leading-relaxed">
+                Descubra looks modernos e versáteis que acompanham você em todas as ocasiões. Peças selecionadas para realçar sua beleza natural.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-8 pt-4">
+            <div className="flex flex-wrap gap-4">
               <Button 
                 onClick={onShopNow}
-                className="rounded-full bg-primary hover:bg-accent text-white px-14 py-10 text-[11px] font-bold uppercase tracking-[0.4em] shadow-editorial transition-all hover:scale-105 group"
+                className="rounded-full bg-[#6E3C47] hover:bg-[#6E3C47]/90 text-white px-10 py-7 text-sm font-bold uppercase tracking-widest shadow-xl flex items-center gap-3 transition-transform hover:scale-105"
               >
-                Comprar Coleção <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-2 transition-transform" />
+                Comprar agora <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" className="rounded-full border-primary/10 text-primary px-14 py-10 text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-white transition-all">
-                Ver Editoriais
+              <Button 
+                variant="outline" 
+                onClick={onShopNow}
+                className="rounded-full border-[#6E3C47] text-[#6E3C47] px-10 py-7 text-sm font-bold uppercase tracking-widest hover:bg-[#F7E8EA] transition-all"
+              >
+                Ver produtos
               </Button>
             </div>
 
-            {/* Quick Benefits Badges */}
-            <div className="grid sm:grid-cols-2 gap-4 pt-10">
-              {[
-                { text: "Curadoria Internacional", icon: <Sparkles className="h-3.5 w-3.5 text-accent" /> },
-                { text: "Design Atemporal", icon: <Sparkles className="h-3.5 w-3.5 text-accent" /> },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-4 rounded-3xl border border-primary/5 bg-white/60 px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground backdrop-blur shadow-sm">
-                  {item.icon}
-                  {item.text}
-                </div>
-              ))}
+            <div className="flex items-center gap-8 pt-6 border-t border-[#F7E8EA]">
+              <div>
+                <p className="text-2xl font-bold text-[#6E3C47]">+2.000</p>
+                <p className="text-[10px] uppercase font-bold text-[#C7A17A]">Clientes Satisfeitas</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-[#6E3C47]">100%</p>
+                <p className="text-[10px] uppercase font-bold text-[#C7A17A]">Compra Segura</p>
+              </div>
             </div>
           </div>
 
-          {/* Visual Content */}
-          <div className="lg:col-span-5 relative flex justify-end animate-in fade-in slide-in-from-right-12 duration-1000 delay-300">
-            <div className="relative w-full max-w-[500px]">
-              {/* Main Image */}
-              <div className="relative aspect-[4/5.5] rounded-[4rem] overflow-hidden border-[12px] border-white shadow-editorial z-20 group">
-                <Image
-                  src={heroData.image}
-                  alt="Editorial Toda Bela"
-                  fill
-                  className="object-cover transition-all duration-1000 group-hover:scale-105"
-                  priority
-                  data-ai-hint="fashion campaign editorial"
-                />
-              </div>
-
-              {/* Floating Editorial Card */}
-              <div className="absolute -left-12 bottom-12 z-30 w-80 glass-morphism p-10 rounded-[3rem] shadow-editorial animate-float-editorial border-white/60">
-                <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-accent mb-4">Édition Limitée</p>
-                <h4 className="text-2xl font-headline font-bold text-primary mb-3 leading-tight">{heroData.campaign}</h4>
-                <p className="text-xs text-muted-foreground/80 leading-relaxed font-light italic mb-6">
-                  Descubra a coleção que redefine a elegância para a mulher contemporânea.
-                </p>
-                <button className="flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.5em] text-primary hover:text-accent transition-colors group">
-                  Explorar <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
+          <div className="relative animate-in fade-in slide-in-from-right duration-700 delay-200">
+            <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white">
+              <Image
+                src="https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=800&q=80"
+                alt="Moda Feminina Toda Bela"
+                fill
+                className="object-cover"
+                priority
+                data-ai-hint="mulher moda"
+              />
+            </div>
+            {/* Tag Flutuante de Preço */}
+            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl border border-[#F7E8EA] animate-bounce-slow">
+              <p className="text-[10px] font-bold text-[#C7A17A] uppercase mb-1">Destaque</p>
+              <p className="text-xl font-bold text-[#6E3C47]">R$ 189,90</p>
+              <button className="mt-2 text-[10px] font-bold uppercase text-[#6E3C47] flex items-center gap-1">
+                Ver Detalhes <ArrowRight className="h-3 w-3" />
+              </button>
             </div>
           </div>
 
