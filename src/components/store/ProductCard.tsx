@@ -1,9 +1,10 @@
+
 "use client";
 
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingBag, Heart, Eye, ArrowUpRight } from 'lucide-react';
+import { ShoppingBag, Heart, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -46,7 +47,6 @@ export function ProductCard({
           data-ai-hint="boutique fashion clothing"
         />
         
-        {/* Editorial Badges */}
         <div className="absolute top-8 left-8 flex flex-col gap-2">
           {badge && (
             <Badge className="bg-white/90 text-primary border-none px-6 py-2.5 font-bold uppercase tracking-[0.3em] text-[9px] shadow-lg backdrop-blur-md rounded-full">
@@ -55,7 +55,6 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Hover Action Overlay */}
         <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center gap-4">
           <Button 
             size="icon" 
@@ -74,7 +73,6 @@ export function ProductCard({
           </Link>
         </div>
 
-        {/* Premium Quick Add Button */}
         <div className="absolute bottom-0 left-0 right-0 p-8 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
           <Button 
             onClick={(e) => {

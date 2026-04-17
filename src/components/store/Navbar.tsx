@@ -8,7 +8,14 @@ import { Button } from '@/components/ui/button';
 import { LogoMark } from './LogoMark';
 import { cn } from '@/lib/utils';
 
-export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, onOpenTrack: () => void }) {
+interface NavbarProps {
+  onOpenLogin: () => void;
+  onOpenTrack: () => void;
+  onOpenCart: () => void;
+  cartCount: number;
+}
+
+export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -27,7 +34,6 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
-      {/* Top Notice Bar Premium */}
       <div className="bg-primary text-primary-foreground py-2.5 px-4 text-center border-b border-white/5">
         <p className="text-[10px] font-bold uppercase tracking-[0.3em]">
           ✨ Frete VIP em pedidos acima de R$350 • Parcelamento em até 10x sem juros ✨
@@ -43,10 +49,8 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
         )}
       >
         <div className="container mx-auto">
-          {/* Desktop Layout - 3 Columns Grid for Perfect Centering */}
           <div className="hidden lg:grid grid-cols-3 items-center">
             
-            {/* Left Column: Navigation */}
             <nav className="flex items-center gap-10">
               {leftLinks.map((link) => (
                 <Link 
@@ -60,14 +64,12 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
               ))}
             </nav>
 
-            {/* Center Column: Logo */}
             <div className="flex justify-center">
               <Link href="/" className="transition-transform hover:scale-105 duration-700">
                 <LogoMark />
               </Link>
             </div>
 
-            {/* Right Column: Actions */}
             <div className="flex items-center justify-end gap-6">
               <button 
                 onClick={onOpenTrack}
@@ -83,9 +85,6 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary/70 hover:text-primary transition-colors">
                   <Search className="h-4.5 w-4.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary/70 hover:text-primary transition-colors">
-                  <Heart className="h-4.5 w-4.5" />
-                </Button>
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -96,10 +95,14 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
                 </Button>
                 
                 <div className="relative group ml-2">
-                  <Button className="rounded-full bg-primary text-primary-foreground font-bold px-8 h-12 shadow-xl shadow-primary/10 hover:scale-105 transition-all duration-500 overflow-hidden group isolate">
+                  <Button 
+                    onClick={onOpenCart}
+                    className="rounded-full bg-primary text-primary-foreground font-bold px-8 h-12 shadow-xl shadow-primary/10 hover:scale-105 transition-all duration-500 overflow-hidden group isolate"
+                  >
                     <ShoppingBag className="mr-3 h-4 w-4 relative z-10" />
-                    <span className="text-[10px] uppercase tracking-[0.2em] relative z-10">Carrinho</span>
-                    {/* Correção da barra dourada bugada: usando opacity + translate mais profundo */}
+                    <span className="text-[10px] uppercase tracking-[0.2em] relative z-10">
+                      Carrinho {cartCount > 0 && `(${cartCount})`}
+                    </span>
                     <div className="absolute inset-0 bg-accent translate-y-[105%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 -z-10" />
                   </Button>
                 </div>
@@ -107,7 +110,6 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
             </div>
           </div>
 
-          {/* Mobile Layout */}
           <div className="lg:hidden relative flex items-center justify-between h-12">
             <button 
               className="p-2 text-primary"
@@ -126,14 +128,18 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
               <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={onOpenLogin}>
                 <User className="h-5 w-5" />
               </Button>
-              <Button size="icon" className="rounded-full bg-primary h-10 w-10 shadow-lg">
+              <Button onClick={onOpenCart} size="icon" className="rounded-full bg-primary h-10 w-10 shadow-lg relative">
                 <ShoppingBag className="h-4 w-4" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-accent text-white text-[8px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-[60] bg-white animate-in fade-in slide-in-from-left duration-500">
             <div className="p-10 flex flex-col h-full">

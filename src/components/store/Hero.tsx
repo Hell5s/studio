@@ -4,11 +4,15 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Star, Truck, ShieldCheck, Sparkles, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronRight } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
 
-export function Hero() {
+interface HeroProps {
+  onShopNow?: () => void;
+}
+
+export function Hero({ onShopNow }: HeroProps) {
   const db = useFirestore();
   const bannersQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -18,7 +22,7 @@ export function Hero() {
 
   const heroData = banners?.[0] || {
     title: "Noites inesquecíveis pedem looks poderosos.",
-    subtitle: "A Toda Bela nasceu para vestir mulheres confiantes com uma curadoria fashion, feminina e atual. Peças que celebram sua presença em cada detalhe.",
+    subtitle: "A Toda Bela nasceu para vestir mulheres que não temem o protagonismo, com uma curadoria fashion atemporal para ocasiões especiais.",
     campaign: "L'Essence 2024",
     campaignText: "Nova coleção • Preview",
     image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80"
@@ -26,7 +30,6 @@ export function Hero() {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-background">
-      {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-[40%] h-full bg-secondary/20 -skew-x-6 translate-x-12 hidden lg:block" />
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-accent/5 rounded-full blur-[150px] -translate-y-1/2 -translate-x-1/2" />
 
@@ -56,15 +59,17 @@ export function Hero() {
             </div>
 
             <div className="flex flex-wrap gap-6 pt-4">
-              <Button className="rounded-full bg-primary hover:bg-primary/90 text-white px-12 py-9 text-[11px] font-bold uppercase tracking-[0.4em] shadow-2xl shadow-primary/20 transition-all hover:scale-105 group">
-                Explorar Coleção <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-2 transition-transform" />
+              <Button 
+                onClick={onShopNow}
+                className="rounded-full bg-primary hover:bg-primary/90 text-white px-12 py-9 text-[11px] font-bold uppercase tracking-[0.4em] shadow-2xl shadow-primary/20 transition-all hover:scale-105 group"
+              >
+                Comprar Coleção <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-2 transition-transform" />
               </Button>
               <Button variant="outline" className="rounded-full border-primary/10 text-primary px-12 py-9 text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-white transition-all">
-                Ver Looks
+                Explorar Looks
               </Button>
             </div>
 
-            {/* Quick Stats Grid from template */}
             <div className="grid sm:grid-cols-2 gap-4 pt-8">
               {[
                 "Moda feminina moderna",
@@ -92,7 +97,6 @@ export function Hero() {
                 />
               </div>
 
-              {/* Floating Context Card */}
               <div className="absolute -left-12 bottom-12 z-30 w-72 glass p-10 rounded-[3rem] shadow-premium animate-float border-white/60">
                 <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent mb-4">Editorial</p>
                 <h4 className="text-2xl font-headline font-bold text-primary mb-3 leading-tight">{heroData.campaign}</h4>

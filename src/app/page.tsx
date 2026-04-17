@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { ArrowRight, Loader2, Star, Instagram, Facebook, Quote, Sparkles, ShieldCheck, Truck, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Loader2, Star, Instagram, Facebook, Quote, Sparkles, Truck, ShoppingBag, X, Plus, Minus, Trash2 } from 'lucide-react';
 import { LogoMark } from '@/components/store/LogoMark';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -14,17 +14,11 @@ import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
-import Image from 'next/image';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import Autoplay from "embla-carousel-autoplay";
+import { cn } from '@/lib/utils';
+
+const WHATSAPP_NUMBER = "5511999999999";
 
 export default function TodaBelaHome() {
   const db = useFirestore();
@@ -34,6 +28,10 @@ export default function TodaBelaHome() {
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Novidades");
+  
+  // Cart State
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartItems, setCartItems] = useState<any[]>([]);
 
   const autoplayPlugin = useMemo(
     () => Autoplay({ delay: 5000, stopOnInteraction: true }),
@@ -47,14 +45,13 @@ export default function TodaBelaHome() {
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
-  // Categories query
+  // Queries
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
   }, [db]);
   const { data: categories } = useCollection(categoriesQuery);
 
-  // Products query
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(12));
@@ -67,21 +64,72 @@ export default function TodaBelaHome() {
     return products.filter(p => p.category === selectedCategory);
   }, [products, selectedCategory]);
 
+  // Cart Functions
+  const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
+  const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + (item.quantity * item.price), 0), [cartItems]);
+
+  const addToCart = (product: any, buyNow = false) => {
+    setCartItems((current) => {
+      const existing = current.find((item) => item.id === product.id);
+      if (existing) {
+        return current.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...current, { ...product, quantity: 1 }];
+    });
+    setCartOpen(true);
+    if (buyNow) {
+      setTimeout(() => handleCheckout(), 200);
+    }
+  };
+
+  const updateQuantity = (productId: string, delta: number) => {
+    setCartItems((current) =>
+      current
+        .map((item) =>
+          item.id === productId ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  const removeItem = (productId: string) => {
+    setCartItems((current) => current.filter((item) => item.id !== productId));
+  };
+
+  const handleCheckout = () => {
+    if (!cartItems.length) return;
+    const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    const lines = cartItems.map(item => `- ${item.name} | Qtd: ${item.quantity} | ${formatCurrency(item.price)}`);
+    const message = encodeURIComponent(
+      `Olá Maison Toda Bela! Quero finalizar meu pedido:%0A%0A${lines.join("%0A")}%0A%0ASubtotal: ${formatCurrency(cartSubtotal)}`
+    );
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-accent/30 selection:text-primary">
-      <Navbar onOpenLogin={() => setIsLoginOpen(true)} onOpenTrack={() => setIsTrackOpen(true)} />
+      <Navbar 
+        onOpenLogin={() => setIsLoginOpen(true)} 
+        onOpenTrack={() => setIsTrackOpen(true)} 
+        onOpenCart={() => setCartOpen(true)}
+        cartCount={cartCount}
+      />
 
       <main>
-        <Hero />
+        <Hero onShopNow={() => {
+          const el = document.getElementById('colecao');
+          el?.scrollIntoView({ behavior: 'smooth' });
+        }} />
 
-        {/* Categories / Styles Explorer */}
         <section id="colecao" className="container mx-auto px-4 py-24 md:px-12">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
             <div className="space-y-4">
-              <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Coleções</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">L'Alchimie de la Saison</span>
               <h3 className="text-4xl md:text-6xl font-headline font-bold text-primary tracking-tighter">Explore por Estilo</h3>
               <p className="max-w-xl text-muted-foreground/70 font-light italic text-lg">
-                Nossa curadoria é organizada para facilitar sua busca pela peça que define seu momento.
+                Curadoria inspirada na sofisticação atemporal e no frescor da moda contemporânea.
               </p>
             </div>
           </div>
@@ -107,21 +155,20 @@ export default function TodaBelaHome() {
               <div className="col-span-full flex justify-center py-20"><Loader2 className="h-12 w-12 animate-spin text-accent/20" /></div>
             ) : filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
-                <ProductCard key={product.id} {...product} />
+                <ProductCard key={product.id} {...product} onAddToCart={() => addToCart(product)} />
               ))
             ) : (
               <div className="col-span-full py-20 text-center space-y-4 rounded-[4rem] border-2 border-dashed border-primary/5">
-                <p className="text-muted-foreground italic font-light">Nenhum item nesta categoria no momento.</p>
+                <p className="text-muted-foreground italic font-light">Sua nova conquista está sendo preparada.</p>
               </div>
             )}
           </div>
         </section>
 
-        {/* Featured Carousel */}
         <section id="mais-vendidos" className="bg-secondary/20 py-32">
           <div className="container mx-auto px-4 md:px-12">
             <div className="flex flex-col items-center mb-20 text-center space-y-6">
-              <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Destaques da Semana</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Territórios de Estilo</span>
               <h3 className="text-5xl md:text-7xl font-headline font-bold text-primary tracking-tighter">Os Mais Desejados</h3>
             </div>
 
@@ -133,7 +180,7 @@ export default function TodaBelaHome() {
                   <CarouselContent className="-ml-10">
                     {products.slice(0, 8).map((product) => (
                       <CarouselItem key={product.id} className="pl-10 basis-full sm:basis-1/2 lg:basis-1/4">
-                        <ProductCard {...product} />
+                        <ProductCard {...product} onAddToCart={() => addToCart(product)} />
                       </CarouselItem>
                     ))}
                   </CarouselContent>
@@ -147,39 +194,87 @@ export default function TodaBelaHome() {
           </div>
         </section>
 
-        {/* Benefits Grid from template */}
-        <section className="bg-background py-24 border-y border-primary/5">
-          <div className="container mx-auto px-4 md:px-12 grid gap-10 md:grid-cols-3">
-            {[
-              {
-                title: "Curadoria Premium",
-                text: "Layout refinado com estética editorial, experiência de marca forte e alto valor percebido em cada peça.",
-                icon: <Sparkles className="h-8 w-8 text-accent" />
-              },
-              {
-                title: "Atendimento Sublime",
-                text: "Uma jornada de compra fluida e personalizada para garantir que sua experiência Maison seja perfeita.",
-                icon: <Quote className="h-8 w-8 text-accent rotate-180" />
-              },
-              {
-                title: "Logística VIP",
-                text: "Entrega segura e rápida para todo o país, com o carinho que a sua nova conquista merece.",
-                icon: <Truck className="h-8 w-8 text-accent" />
-              },
-            ].map((item) => (
-              <div key={item.title} className="rounded-[3rem] border border-primary/5 bg-white p-10 shadow-sm transition-all hover:shadow-xl group">
-                <div className="mb-6 h-16 w-16 rounded-3xl bg-secondary/50 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-6">
-                  {item.icon}
-                </div>
-                <h4 className="text-2xl font-headline font-bold text-primary mb-4">{item.title}</h4>
-                <p className="text-muted-foreground/80 leading-relaxed font-light italic">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <Newsletter />
       </main>
+
+      {/* Cart Drawer Overlay */}
+      {cartOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div 
+            className="ml-auto h-full w-full max-w-xl bg-background shadow-2xl flex flex-col animate-in slide-in-from-right duration-500"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-8 border-b border-primary/5">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Sua Curadoria</p>
+                <h3 className="text-2xl font-headline font-bold text-primary">Sacola de Compras</h3>
+              </div>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setCartOpen(false)}>
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 space-y-6">
+              {!cartItems.length ? (
+                <div className="h-64 rounded-[3rem] border-2 border-dashed border-primary/5 flex flex-col items-center justify-center text-center space-y-4">
+                  <ShoppingBag className="h-12 w-12 text-primary/10" />
+                  <p className="text-muted-foreground italic font-light">Sua sacola ainda está vazia, Chérie.</p>
+                </div>
+              ) : (
+                cartItems.map((item) => (
+                  <div key={item.id} className="flex gap-6 p-6 rounded-[2rem] border border-primary/5 bg-white shadow-sm">
+                    <div className="h-28 w-20 rounded-2xl overflow-hidden shrink-0">
+                      <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
+                    </div>
+                    <div className="flex-1 flex flex-col">
+                      <div className="flex justify-between">
+                        <h4 className="font-bold text-primary">{item.name}</h4>
+                        <button onClick={() => removeItem(item.id)} className="text-muted-foreground/40 hover:text-destructive transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <p className="text-[10px] font-bold uppercase text-accent tracking-widest mt-1">{item.category}</p>
+                      <div className="mt-auto flex items-center justify-between">
+                        <p className="font-bold text-primary">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.price)}
+                        </p>
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => updateQuantity(item.id, -1)} className="h-8 w-8 rounded-full border border-primary/10 flex items-center justify-center hover:bg-secondary transition-colors">
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="text-sm font-bold text-primary w-4 text-center">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, 1)} className="h-8 w-8 rounded-full border border-primary/10 flex items-center justify-center hover:bg-secondary transition-colors">
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-8 bg-secondary/30 border-t border-primary/5 space-y-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-primary/60 uppercase tracking-widest">Subtotal</span>
+                <span className="text-2xl font-bold text-primary">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cartSubtotal)}
+                </span>
+              </div>
+              <Button 
+                onClick={handleCheckout}
+                disabled={!cartItems.length}
+                className="w-full h-16 rounded-full bg-primary text-white font-bold uppercase tracking-[0.4em] text-[10px] shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all"
+              >
+                Finalizar no WhatsApp
+              </Button>
+              <p className="text-[9px] text-center text-muted-foreground/50 font-bold uppercase tracking-[0.2em]">
+                O checkout seguro será concluído em nossa Maison via WhatsApp
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="bg-white border-t border-primary/5 py-32">
         <div className="container mx-auto px-4 md:px-12">
