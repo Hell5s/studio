@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, where, doc } from 'firebase/firestore';
 import { getAuth, signOut } from 'firebase/auth';
+import Image from 'next/image';
 import {
   Carousel,
   CarouselContent,
@@ -114,7 +115,7 @@ export default function TodaBelaStorefront() {
           <nav className="hidden lg:flex items-center gap-8 text-sm font-medium">
             <a href="#colecao" className="text-foreground/70 transition-colors hover:text-primary">Coleção</a>
             <a href="#novidades" className="text-foreground/70 transition-colors hover:text-primary">Novidades</a>
-            <a href="#beneficios" className="text-foreground/70 transition-colors hover:text-primary">Benefícios</a>
+            <a href="#categorias-grid" className="text-foreground/70 transition-colors hover:text-primary">Categorias</a>
             <a href="#newsletter" className="text-foreground/70 transition-colors hover:text-primary">Clube Toda Bela</a>
             <a href="#rastreio" className="flex items-center gap-2 text-primary font-semibold transition-colors hover:opacity-80">
               <Truck className="h-4 w-4" />
@@ -232,32 +233,34 @@ export default function TodaBelaStorefront() {
           </div>
         </section>
 
-        <section id="beneficios" className="bg-secondary/30 py-24">
+        <section id="categorias-grid" className="bg-secondary/30 py-24">
           <div className="container mx-auto px-4 md:px-8">
-            <div className="grid gap-8 md:grid-cols-3">
+            <div className="text-center mb-16">
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/60">Explore</span>
+              <h3 className="mt-4 text-4xl md:text-5xl font-headline font-semibold text-foreground">Nossas Coleções</h3>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                {
-                  title: "Visual Premium",
-                  text: "Paleta suave, layout elegante e identidade feminina com posicionamento de marca forte.",
-                  icon: <Heart className="h-6 w-6" />,
-                },
-                {
-                  title: "Feito para Converter",
-                  text: "Botões destacados, seções objetivas e vitrine organizada para uma experiência fluida.",
-                  icon: <ShoppingBag className="h-6 w-6" />,
-                },
-                {
-                  title: "Curadoria Feminina",
-                  text: "Peças escolhidas com carinho, pensando no conforto e na sofisticação da mulher moderna.",
-                  icon: <User className="h-6 w-6" />,
-                },
-              ].map((item, idx) => (
-                <div key={idx} className="group rounded-[2.5rem] border border-white/60 bg-white/50 p-10 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:shadow-xl hover:-translate-y-1">
-                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                    {item.icon}
+                { name: "Vestidos", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80", hint: "dress elegant" },
+                { name: "Conjuntos", image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", hint: "fashion outfit" },
+                { name: "Blusas", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80", hint: "blouse style" },
+                { name: "Calças", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80", hint: "trousers fashion" },
+              ].map((cat, idx) => (
+                <div key={idx} className="group relative overflow-hidden rounded-[2.5rem] aspect-[4/5] cursor-pointer shadow-lg hover:shadow-2xl transition-all">
+                  <Image 
+                    src={cat.image} 
+                    alt={cat.name} 
+                    fill 
+                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                    data-ai-hint={cat.hint}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute bottom-8 left-0 right-0 text-center">
+                    <h4 className="text-2xl font-headline font-bold text-white tracking-wide">{cat.name}</h4>
+                    <Button variant="link" className="text-white/80 hover:text-white mt-2 p-0 h-auto">
+                      Ver Coleção <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                   </div>
-                  <h5 className="text-2xl font-headline font-semibold text-primary">{item.title}</h5>
-                  <p className="mt-4 leading-relaxed text-muted-foreground">{item.text}</p>
                 </div>
               ))}
             </div>
@@ -360,3 +363,4 @@ export default function TodaBelaStorefront() {
     </div>
   );
 }
+
