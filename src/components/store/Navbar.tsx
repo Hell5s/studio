@@ -1,9 +1,8 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Menu, X, Package } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, X, Package, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LogoMark } from './LogoMark';
@@ -25,7 +24,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
+  const leftLinks = [
     { name: 'Novidades', href: '#catalogo' },
     { name: 'Mais Vendidos', href: '#catalogo' },
     { name: 'Moda Festa', href: '#catalogo' },
@@ -34,120 +33,148 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
-      {/* Barra de Aviso Simples */}
-      <div className="bg-[#6E3C47] text-white py-2 px-4 text-center text-[11px] font-bold uppercase tracking-wider">
-        Frete grátis acima de R$300 • Parcele em até 10x sem juros
+      {/* Faixa Superior Premium */}
+      <div className="bg-[#6E3C47] text-white py-2.5 px-4 text-center text-[10px] font-bold uppercase tracking-[0.25em] border-b border-white/5">
+        Frete VIP em pedidos acima de R$350 • Parcelamento em até 10x sem juros
       </div>
 
       <header 
         className={cn(
-          "transition-all duration-500 px-6 md:px-12",
+          "transition-all duration-700 px-6 md:px-12 isolate",
           scrolled 
-            ? "bg-white/95 backdrop-blur-md shadow-md py-3" 
-            : "bg-[#FFF9F7] py-5"
+            ? "bg-white/95 backdrop-blur-xl shadow-xl py-4" 
+            : "bg-[#FFF9F7] py-8"
         )}
       >
-        <div className="container mx-auto">
-          <div className="hidden lg:grid grid-cols-[1fr_auto_1fr] items-center">
+        <div className="container mx-auto max-w-7xl">
+          {/* Desktop Navigation - Layout Simétrico 1fr auto 1fr */}
+          <div className="hidden lg:grid grid-cols-[1fr_auto_1fr] items-center gap-8">
             
-            {/* Links Esquerda */}
-            <nav className="flex items-center gap-8">
-              {navLinks.map((link) => (
+            {/* Esquerda: Links Principais */}
+            <nav className="flex items-center gap-10">
+              {leftLinks.map((link) => (
                 <Link 
                   key={link.name} 
                   href={link.href}
-                  className="text-xs font-bold uppercase tracking-widest text-[#2A1F22]/70 hover:text-[#6E3C47] transition-colors"
+                  className="group relative text-[11px] font-bold uppercase tracking-[0.2em] text-[#2A1F22]/70 hover:text-[#6E3C47] transition-colors"
                 >
                   {link.name}
+                  <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#C7A17A] transition-all duration-500 group-hover:w-full" />
                 </Link>
               ))}
             </nav>
 
-            {/* Logo Centralizada */}
-            <Link href="/">
+            {/* Centro: Logo Centralizada */}
+            <Link href="/" className="px-4">
               <LogoMark />
             </Link>
 
-            {/* Ações Direita */}
-            <div className="flex items-center justify-end gap-6">
+            {/* Direita: Rastrear e Ações */}
+            <div className="flex items-center justify-end gap-8">
               <button 
                 onClick={onOpenTrack}
-                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#2A1F22]/70 hover:text-[#6E3C47] transition-colors"
+                className="flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#2A1F22]/70 hover:text-[#6E3C47] transition-colors group"
               >
-                <Package className="h-4 w-4" />
-                Rastrear Pedido
+                <Package className="h-3.5 w-3.5 text-[#C7A17A] group-hover:scale-110 transition-transform" />
+                Rastrear
               </button>
               
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-[#F7E8EA]">
-                  <Search className="h-5 w-5 text-[#6E3C47]" />
+              <div className="flex items-center gap-2 h-10 px-2 rounded-full bg-[#F7E8EA]/30 border border-[#F7E8EA]">
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 hover:bg-white text-[#6E3C47]">
+                  <Search className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-[#F7E8EA]" onClick={onOpenLogin}>
-                  <User className="h-5 w-5 text-[#6E3C47]" />
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 hover:bg-white text-[#6E3C47]">
+                  <Heart className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 hover:bg-white text-[#6E3C47]" onClick={onOpenLogin}>
+                  <User className="h-4 w-4" />
                 </Button>
                 
-                <Button 
+                <div className="w-[1px] h-4 bg-[#6E3C47]/10 mx-1" />
+
+                <button 
                   onClick={onOpenCart}
-                  className="rounded-full bg-[#6E3C47] text-white font-bold px-6 h-11 shadow-lg hover:bg-[#6E3C47]/90 transition-all flex items-center gap-2"
+                  className="flex items-center gap-3 pl-2 pr-4 h-8 rounded-full bg-[#6E3C47] text-white hover:bg-[#6E3C47]/90 transition-all shadow-lg shadow-[#6E3C47]/20 group"
                 >
-                  <ShoppingBag className="h-4 w-4" />
-                  <span className="text-[11px] uppercase tracking-wider">
-                    Carrinho {cartCount > 0 && `(${cartCount})`}
+                  <div className="relative">
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                    {cartCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-[#C7A17A] text-white text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center font-bold">
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">
+                    Carrinho
                   </span>
-                </Button>
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Mobile Header */}
-          <div className="lg:hidden flex items-center justify-between">
-            <button className="p-2" onClick={() => setMobileMenuOpen(true)}>
+          {/* Mobile Header - Logo Centralizada */}
+          <div className="lg:hidden grid grid-cols-3 items-center">
+            <button className="p-2 w-fit" onClick={() => setMobileMenuOpen(true)}>
               <Menu className="h-6 w-6 text-[#6E3C47]" />
             </button>
 
-            <Link href="/">
-              <h1 className="text-2xl font-bold text-[#6E3C47] tracking-tight">Toda Bela</h1>
+            <Link href="/" className="flex justify-center">
+              <h1 className="text-2xl font-bold text-[#6E3C47] tracking-tight font-serif">Toda Bela</h1>
             </Link>
 
-            <button onClick={onOpenCart} className="relative p-2">
-              <ShoppingBag className="h-6 w-6 text-[#6E3C47]" />
-              {cartCount > 0 && (
-                <span className="absolute top-0 right-0 bg-[#C7A17A] text-white text-[9px] h-4 w-4 rounded-full flex items-center justify-center font-bold">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+            <div className="flex justify-end items-center gap-3">
+              <button onClick={onOpenLogin} className="p-2 text-[#6E3C47]">
+                <User className="h-5 w-5" />
+              </button>
+              <button onClick={onOpenCart} className="relative p-2 bg-[#6E3C47] text-white rounded-full">
+                <ShoppingBag className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#C7A17A] text-white text-[8px] h-4 w-4 rounded-full flex items-center justify-center font-bold border-2 border-white">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Menu Mobile Simples */}
+        {/* Menu Mobile */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-[60] bg-white animate-in slide-in-from-left duration-300">
-            <div className="p-8 flex flex-col h-full">
-              <div className="flex justify-between items-center mb-12">
-                <h1 className="text-2xl font-bold text-[#6E3C47]">Toda Bela</h1>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-2 bg-[#F7E8EA] rounded-full">
-                  <X className="h-6 w-6 text-[#6E3C47]" />
+          <div className="fixed inset-0 z-[60] bg-white animate-in slide-in-from-left duration-500">
+            <div className="p-10 flex flex-col h-full bg-[#FFF9F7]">
+              <div className="flex justify-between items-center mb-16">
+                <LogoMark />
+                <button onClick={() => setMobileMenuOpen(false)} className="p-3 bg-[#F7E8EA] rounded-full text-[#6E3C47]">
+                  <X className="h-6 w-6" />
                 </button>
               </div>
-              <nav className="flex flex-col gap-6">
-                {navLinks.map((link) => (
+              <nav className="flex flex-col gap-8">
+                {leftLinks.map((link) => (
                   <Link 
                     key={link.name} 
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="text-2xl font-bold text-[#2A1F22]"
+                    className="text-3xl font-bold text-[#2A1F22] hover:text-[#6E3C47] transition-colors"
                   >
                     {link.name}
                   </Link>
                 ))}
+                <div className="h-px w-12 bg-[#C7A17A]/40 my-4" />
                 <button 
                   onClick={() => { onOpenTrack(); setMobileMenuOpen(false); }}
-                  className="text-2xl font-bold text-[#2A1F22] text-left"
+                  className="flex items-center gap-4 text-xl font-bold text-[#2A1F22] text-left"
                 >
+                  <Package className="h-6 w-6 text-[#C7A17A]" />
                   Rastrear Pedido
                 </button>
               </nav>
+
+              <div className="mt-auto pt-10 border-t border-[#F7E8EA]">
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#C7A17A] mb-4">Siga a Maison</p>
+                <div className="flex gap-4">
+                  {/* Ícones de redes sociais poderiam ir aqui */}
+                </div>
+              </div>
             </div>
           </div>
         )}
