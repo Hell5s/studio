@@ -9,13 +9,24 @@ import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit, where } from 'firebase/firestore';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export default function TodaBelaStorefront() {
   const db = useFirestore();
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
+
+  const plugin = React.useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: true })
+  );
 
   // Fetch Categories
   const categoriesQuery = useMemoFirebase(() => {
@@ -71,10 +82,10 @@ export default function TodaBelaStorefront() {
         <section id="colecao" className="container mx-auto px-4 py-24 md:px-8">
           <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
             <div className="max-w-xl">
-              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/60">Categorias</span>
-              <h3 className="mt-4 text-4xl md:text-5xl font-headline font-semibold text-foreground leading-tight">Explore por estilo</h3>
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/60">Novidades</span>
+              <h3 className="mt-4 text-4xl md:text-5xl font-headline font-semibold text-foreground leading-tight">Looks que encantam</h3>
               <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-                Nossa curadoria é pensada para a mulher real que não abre mão da elegância no cotidiano.
+                Nossa vitrine rotativa apresenta as peças mais desejadas da estação. Deslize para explorar.
               </p>
             </div>
             
@@ -107,27 +118,44 @@ export default function TodaBelaStorefront() {
             </div>
           </div>
 
-          <div id="novidades" className="relative min-h-[400px]">
+          <div id="novidades" className="relative px-4">
             {productsLoading ? (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : products && products.length > 0 ? (
-              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                {products.map((product) => (
-                  <ProductCard key={product.id} {...product} />
-                ))}
-              </div>
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+                plugins={[plugin.current]}
+                className="w-full"
+              >
+                <CarouselContent className="-ml-4">
+                  {products.map((product) => (
+                    <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/4">
+                      <div className="p-1">
+                        <ProductCard {...product} />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <div className="hidden md:flex justify-end gap-2 mt-8">
+                  <CarouselPrevious className="relative left-0 translate-y-0 h-12 w-12 border-primary/10 hover:bg-brand-blush" />
+                  <CarouselNext className="relative right-0 translate-y-0 h-12 w-12 border-primary/10 hover:bg-brand-blush" />
+                </div>
+              </Carousel>
             ) : (
-              <div className="text-center py-20 text-muted-foreground">
-                Nenhum produto encontrado nesta categoria.
+              <div className="text-center py-20 text-muted-foreground border border-dashed rounded-[2rem] border-primary/20">
+                Nenhum produto disponível nesta categoria no momento.
               </div>
             )}
           </div>
 
           <div className="mt-20 flex justify-center">
             <Button variant="ghost" className="rounded-full py-8 px-10 text-base font-semibold text-primary hover:bg-brand-blush group">
-              Ver todos os produtos
+              Ver coleção completa
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
             </Button>
           </div>
