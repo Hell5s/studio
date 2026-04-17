@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { Mail, Send } from 'lucide-react';
+import { Mail, Send, Sparkles } from 'lucide-react';
 
 export function Newsletter() {
   const [email, setEmail] = useState('');
@@ -28,8 +27,8 @@ export function Newsletter() {
     });
 
     toast({
-      title: "Pronto!",
-      description: "Agora você receberá nossas melhores ofertas.",
+      title: "Assinatura Confirmada",
+      description: "Bem-vinda ao círculo de exclusividades da Toda Bela.",
     });
     
     setEmail('');
@@ -37,23 +36,32 @@ export function Newsletter() {
   };
 
   return (
-    <section id="newsletter" className="container mx-auto px-6 py-20">
-      <div className="relative overflow-hidden rounded-3xl bg-white border border-[#F7E8EA] p-10 md:p-20 text-center shadow-lg">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="space-y-4">
-            <h3 className="text-3xl md:text-4xl font-bold text-[#6E3C47] tracking-tight">Receba novidades e ofertas</h3>
-            <p className="text-base text-[#2A1F22]/70 max-w-xl mx-auto">
-              Cadastre seu melhor e-mail e seja a primeira a saber dos novos lançamentos e promoções exclusivas da Toda Bela.
+    <section id="newsletter" className="container mx-auto px-6 py-32">
+      <div className="relative overflow-hidden rounded-[5rem] bg-[#6E3C47] p-12 md:p-32 text-center shadow-2xl isolate">
+        {/* Decoração Artística */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#C7A17A]/10 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
+        
+        <div className="max-w-4xl mx-auto space-y-12 relative z-10">
+          <div className="space-y-6">
+            <div className="flex justify-center mb-6">
+              <div className="h-14 w-14 rounded-full bg-white/10 flex items-center justify-center text-[#C7A17A] backdrop-blur-md">
+                <Sparkles className="h-6 w-6" />
+              </div>
+            </div>
+            <h3 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight">Receba novidades e <br /><span className="italic text-[#C7A17A] font-light">ofertas exclusivas</span></h3>
+            <p className="text-xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
+              Junte-se ao nosso clube e seja a primeira a acessar coleções limitadas e benefícios reservados para mulheres que valorizam a excelência.
             </p>
           </div>
           
-          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
-            <div className="relative flex-1">
-              <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-[#2A1F22]/30" />
+          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-6 max-w-2xl mx-auto">
+            <div className="relative flex-1 group">
+              <Mail className="absolute left-7 top-1/2 -translate-y-1/2 h-5 w-5 text-white/30 group-focus-within:text-[#C7A17A] transition-colors" />
               <Input
                 type="email"
-                placeholder="Seu e-mail aqui"
-                className="h-14 flex-1 rounded-full border-[#F7E8EA] bg-[#FFF9F7] text-[#2A1F22] px-14 focus:ring-[#6E3C47]"
+                placeholder="Seu melhor e-mail"
+                className="h-20 flex-1 rounded-full border-white/10 bg-white/5 text-white pl-16 pr-8 focus:ring-1 focus:ring-[#C7A17A] focus:border-transparent placeholder:text-white/20 transition-all text-base"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -61,15 +69,15 @@ export function Newsletter() {
               />
             </div>
             <Button 
-              className="h-14 rounded-full px-10 text-xs font-bold uppercase tracking-widest bg-[#6E3C47] text-white hover:bg-[#6E3C47]/90 shadow-xl"
+              className="h-20 rounded-full px-12 text-[11px] font-bold uppercase tracking-[0.4em] bg-[#C7A17A] text-white hover:bg-white hover:text-[#6E3C47] shadow-2xl transition-all duration-700"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Enviando..." : "Quero receber"} <Send className="ml-2 h-4 w-4" />
+              {isSubmitting ? "Cadastrando..." : "Quero Participar"}
             </Button>
           </form>
           
-          <p className="text-[10px] text-[#2A1F22]/40 font-bold uppercase tracking-widest">
-            Sem spam. Apenas o melhor da moda.
+          <p className="text-[10px] text-white/30 font-bold uppercase tracking-[0.5em]">
+            Respeitamos sua privacidade. Sem spam.
           </p>
         </div>
       </div>

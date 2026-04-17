@@ -34,7 +34,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
       <div className="bg-[#6E3C47] text-white py-2 px-4 text-center text-[9px] font-bold uppercase tracking-[0.4em] border-b border-white/5">
-        Frete grátis em pedidos acima de R$300 • Parcelamento em até 10x sem juros
+        Frete grátis em pedidos acima de R$300 • Parcele em até 10x sem juros
       </div>
 
       <header 
@@ -77,26 +77,21 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
                 ))}
               </nav>
 
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 text-[#6E3C47]" onClick={onOpenLogin}>
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 text-[#6E3C47] hover:bg-[#F7E8EA]" onClick={onOpenLogin}>
                   <User className="h-4 w-4" />
                 </Button>
                 
                 <button 
                   onClick={onOpenCart}
-                  className="flex items-center gap-3 pl-4 pr-5 h-10 rounded-full bg-[#6E3C47] text-white hover:opacity-90 transition-all shadow-lg shadow-[#6E3C47]/20 group relative"
+                  className="flex items-center gap-3 pl-4 pr-5 h-11 rounded-full bg-[#6E3C47] text-white hover:opacity-95 transition-all shadow-lg shadow-[#6E3C47]/20 group relative overflow-hidden"
                 >
-                  <div className="relative">
+                  <div className="relative z-10 flex items-center gap-3">
                     <ShoppingBag className="h-4 w-4" />
-                    {cartCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-[#C7A17A] text-white text-[7px] h-4 w-4 rounded-full flex items-center justify-center font-bold border border-[#6E3C47]">
-                        {cartCount}
-                      </span>
-                    )}
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">
+                      Carrinho {cartCount > 0 && `(${cartCount})`}
+                    </span>
                   </div>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em]">
-                    Carrinho
-                  </span>
                 </button>
               </div>
             </div>
