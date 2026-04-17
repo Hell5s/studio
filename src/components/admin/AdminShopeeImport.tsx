@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { useState } from 'react';
-import { ShoppingBag, Link as LinkIcon, Loader2, Search, CheckCircle2, AlertCircle, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { ShoppingBag, Link as LinkIcon, Loader2, Search, CheckCircle2, AlertCircle, Image as ImageIcon, Sparkles, Wand2 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { useFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -37,7 +38,7 @@ export function AdminShopeeImport() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async () => {
-    if (!url || !url.includes('shopee.com')) {
+    if (!url || (!url.includes('shopee.com') && !url.includes('shp.ee'))) {
       toast({
         title: "URL Inválida",
         description: "Por favor, cole um link válido da Shopee.",
@@ -54,17 +55,45 @@ export function AdminShopeeImport() {
       const importShopeeProduct = httpsCallable<any, ShopeeProduct>(functions, 'importShopeeProduct');
       const result = await importShopeeProduct({ url });
       setProduct(result.data);
+      toast({
+        title: "Sucesso!",
+        description: "Dados do produto importados com sucesso.",
+      });
     } catch (err: any) {
       console.error(err);
-      setError("Não foi possível buscar os dados do produto. Verifique se o link está correto ou tente novamente mais tarde.");
+      let msg = "Não foi possível buscar os dados. Verifique o link ou tente novamente.";
+      
+      if (err.code === 'functions/not-found') {
+        msg = "A função de importação ainda não foi implantada no seu Firebase. Use o modo de demonstração abaixo para testar o visual.";
+      }
+      
+      setError(msg);
       toast({
-        title: "Erro na Importação",
-        description: err.message || "Erro ao conectar com o servidor da Shopee.",
+        title: "Atenção",
+        description: "A busca automática falhou. Tente o modo de demonstração.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadDemoData = () => {
+    setProduct({
+      name: "Vestido Midi Satin Elegance",
+      description: "Um vestido deslumbrante em cetim premium com caimento fluido e brilho sofisticado. Perfeito para ocasiões especiais onde você deseja se destacar com elegância e leveza. Possui alças reguláveis e forro interno.",
+      price: 249.90,
+      oldPrice: 329.00,
+      image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+      categorySuggested: "Vestidos",
+      originalUrl: url || "https://shopee.com.br/demo-product",
+      origin: 'shopee'
+    });
+    setError(null);
+    toast({
+      title: "Modo de Demonstração",
+      description: "Carregamos dados de exemplo para você testar a interface.",
+    });
   };
 
   const saveToFirestore = (publish: boolean) => {
@@ -79,12 +108,12 @@ export function AdminShopeeImport() {
       price: product.price,
       oldPrice: product.oldPrice || null,
       image: product.image,
-      categoryId: product.categorySuggested || 'geral',
+      categoryId: product.categorySuggested?.toLowerCase() || 'geral',
       featured: publish,
       origin: product.origin,
       originalUrl: product.originalUrl,
       createdAt: serverTimestamp(),
-      badge: publish ? "Lançamento" : null
+      badge: publish ? "Lançamento" : "Importado"
     };
 
     addDocumentNonBlocking(productsRef, newProduct)
@@ -140,9 +169,20 @@ export function AdminShopeeImport() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/5 text-destructive border border-destructive/10 text-sm">
-              <AlertCircle className="h-5 w-5 shrink-0" />
-              {error}
+            <div className="flex flex-col gap-4 p-6 rounded-2xl bg-destructive/5 border border-destructive/10">
+              <div className="flex items-center gap-3 text-destructive text-sm font-medium">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                {error}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={loadDemoData}
+                className="w-fit rounded-full border-destructive/20 text-destructive hover:bg-destructive/10"
+              >
+                <Wand2 className="mr-2 h-4 w-4" />
+                Carregar Dados de Teste
+              </Button>
             </div>
           )}
         </div>
@@ -157,26 +197,23 @@ export function AdminShopeeImport() {
 
           <Card className="p-0 border-none bg-white shadow-xl overflow-hidden rounded-[2.5rem]">
             <div className="grid lg:grid-cols-2">
-              {/* Imagem */}
               <div className="relative aspect-square lg:aspect-auto bg-muted">
                 <Image 
                   src={product.image} 
                   alt={product.name}
                   fill
                   className="object-cover"
-                  data-ai-hint="fashion product"
                 />
                 <Badge className="absolute top-6 left-6 bg-white/90 text-primary border-none font-bold">
-                  Importado da Shopee
+                  Shopee Import
                 </Badge>
               </div>
 
-              {/* Detalhes */}
               <div className="p-8 lg:p-12 space-y-8 flex flex-col justify-between">
                 <div className="space-y-6">
                   <div>
                     <Badge variant="secondary" className="mb-4 bg-primary/5 text-primary border-none">
-                      {product.categorySuggested || 'Categoria sugerida: Geral'}
+                      {product.categorySuggested || 'Vestidos'}
                     </Badge>
                     <h5 className="text-3xl font-headline font-bold text-foreground leading-tight">
                       {product.name}
@@ -207,7 +244,7 @@ export function AdminShopeeImport() {
                     onClick={() => saveToFirestore(false)}
                     disabled={saving}
                   >
-                    {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Salvar como Rascunho"}
+                    {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Salvar Rascunho"}
                   </Button>
                   <Button 
                     className="flex-1 rounded-full h-14 font-bold shadow-lg shadow-primary/20"
@@ -224,11 +261,10 @@ export function AdminShopeeImport() {
         </div>
       )}
 
-      {/* Placeholder quando vazio */}
       {!product && !loading && !error && (
         <div className="py-20 flex flex-col items-center justify-center text-center opacity-20">
           <ImageIcon className="h-20 w-20 mb-4" />
-          <p className="max-w-xs text-sm font-medium">Aguardando link para mostrar a prévia do seu próximo sucesso de vendas.</p>
+          <p className="max-w-xs text-sm font-medium">Aguardando link da Shopee para capturar os dados.</p>
         </div>
       )}
     </div>

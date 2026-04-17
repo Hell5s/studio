@@ -71,20 +71,17 @@ export default function TodaBelaStorefront() {
     Autoplay({ delay: 4000, stopOnInteraction: true })
   );
 
-  // Verificação de Admin
   const adminDocRef = useMemo(() => {
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
   const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
-  // Fetch Categories
   const categoriesQuery = useMemoFirebase(() => {
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
   }, [db]);
   const { data: categories, isLoading: categoriesLoading } = useCollection(categoriesQuery);
 
-  // Fetch Products
   const productsQuery = useMemoFirebase(() => {
     let q = query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(12));
     if (activeCategoryId !== "all") {
@@ -97,7 +94,6 @@ export default function TodaBelaStorefront() {
   const displayProducts = useMemo(() => {
     if (productsLoading) return [];
     if (products && products.length > 0) return products;
-    // Só mostra dummy se estiver na categoria "Todas" e o banco estiver vazio
     return activeCategoryId === "all" ? dummyProducts : [];
   }, [products, productsLoading, activeCategoryId]);
 
@@ -302,7 +298,7 @@ export default function TodaBelaStorefront() {
 
           <div className="mt-16 pt-8 border-t border-primary/5 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-8 gap-y-2 text-sm text-muted-foreground">
-              <p>© 2024 Toda Bela Storefront. Todos os direitos reservados.</p>
+              <p>© 2024 Toda Bela. Todos os direitos reservados.</p>
               <div className="flex gap-4">
                 <span className="hover:text-primary cursor-pointer transition-colors">Termos de Uso</span>
                 <span className="hover:text-primary cursor-pointer transition-colors">Privacidade</span>
@@ -326,7 +322,6 @@ export default function TodaBelaStorefront() {
         </div>
       </footer>
 
-      {/* Floating Admin Button - Only visible for Admins */}
       {isAdmin && (
         <>
           <Button 
@@ -354,7 +349,6 @@ export default function TodaBelaStorefront() {
         </>
       )}
 
-      {/* Login Dialog */}
       <LoginDialog 
         open={isLoginOpen} 
         onOpenChange={setIsLoginOpen} 
@@ -363,4 +357,3 @@ export default function TodaBelaStorefront() {
     </div>
   );
 }
-
