@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -56,14 +55,6 @@ export default function TodaBelaStorefront() {
             <a href="#novidades" className="text-foreground/70 transition-colors hover:text-primary">Novidades</a>
             <a href="#beneficios" className="text-foreground/70 transition-colors hover:text-primary">Benefícios</a>
             <a href="#newsletter" className="text-foreground/70 transition-colors hover:text-primary">Clube Toda Bela</a>
-            <Button 
-              variant="ghost" 
-              onClick={() => setIsAdminOpen(true)}
-              className="text-primary/60 hover:text-primary hover:bg-primary/5 gap-2 px-3 h-9"
-            >
-              <Settings className="h-4 w-4" />
-              Admin
-            </Button>
           </nav>
 
           <div className="flex items-center gap-2 md:gap-4">
@@ -236,7 +227,7 @@ export default function TodaBelaStorefront() {
               <ul className="space-y-4 text-muted-foreground">
                 <li className="transition-colors hover:text-primary cursor-pointer font-semibold text-primary">Rastrear Pedido</li>
                 <li className="transition-colors hover:text-primary cursor-pointer">Trocas e Devoluções</li>
-                <li className="transition-colors hover:text-primary cursor-pointer">Prazos de Entrega</li>
+                <li className="transition-colors hover:text-primary cursor-pointer">Prazos e Entrega</li>
                 <li className="transition-colors hover:text-primary cursor-pointer">Minha Conta</li>
                 <li className="transition-colors hover:text-primary cursor-pointer">Fale Conosco</li>
               </ul>
