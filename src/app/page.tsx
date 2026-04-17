@@ -22,7 +22,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import Autoplay from "embla-carousel-autoplay";
 
@@ -444,14 +444,12 @@ export default function TodaBelaStorefront() {
             </p>
             <div className="flex items-center gap-6">
               {isAdmin && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <button 
                   onClick={() => setIsAdminOpen(true)}
                   className="text-brand-wine/40 hover:text-brand-wine transition-all"
                 >
                   <Settings className="h-5 w-5" />
-                </Button>
+                </button>
               )}
             </div>
           </div>
@@ -470,6 +468,10 @@ export default function TodaBelaStorefront() {
 
           <Dialog open={isAdminOpen} onOpenChange={setIsAdminOpen}>
             <DialogContent className="max-w-[98vw] w-full h-[95vh] overflow-hidden p-0 rounded-[4rem] border-none shadow-2xl">
+              <DialogHeader className="sr-only">
+                <DialogTitle>Painel Administrativo</DialogTitle>
+                <DialogDescription>Gerencie seus produtos, categorias e banners.</DialogDescription>
+              </DialogHeader>
               <AdminDashboard 
                 productsCount={products?.length || 0} 
                 categoriesCount={categories?.length || 0} 
