@@ -67,9 +67,9 @@ export default function TodaBelaHome() {
               <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Curadoria Exclusiva</span>
               <div className="h-0.5 w-10 bg-accent/40" />
             </div>
-            <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary text-editorial">Explore Universos</h3>
+            <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary text-editorial">Onde a Elegância se Torna Legado</h3>
             <p className="text-muted-foreground/70 italic font-light max-w-lg mx-auto">
-              Peças selecionadas para elevar sua presença em qualquer ocasião social ou profissional.
+              Territórios de estilo desenhados para elevar sua presença em cada capítulo da sua história.
             </p>
           </div>
 
@@ -86,7 +86,7 @@ export default function TodaBelaHome() {
                 <div className="absolute bottom-12 left-0 right-0 text-center px-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
                   <h4 className="text-2xl font-bold text-white uppercase tracking-[0.2em] mb-2">{cat.name}</h4>
                   <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-100">
-                    <span className="text-[10px] font-bold text-accent uppercase tracking-[0.4em]">Saiba Mais</span>
+                    <span className="text-[10px] font-bold text-accent uppercase tracking-[0.4em]">Explorar Mundo</span>
                     <ArrowUpRight className="h-3 w-3 text-accent" />
                   </div>
                 </div>
@@ -102,9 +102,9 @@ export default function TodaBelaHome() {
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <div className="h-px w-12 bg-accent/40" />
-                  <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Os Favoritos</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">A Alquimia da Estação</span>
                 </div>
-                <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary text-editorial">Desejados da Estação</h3>
+                <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary text-editorial">Objetos de Desejo</h3>
               </div>
               <Button variant="outline" className="rounded-full border-primary/20 text-primary font-bold uppercase tracking-[0.4em] text-[10px] h-16 px-12 group hover:bg-white hover:border-primary/40 shadow-sm transition-all duration-500">
                 Ver Catálogo Completo <ArrowRight className="ml-4 h-4 w-4 group-hover:translate-x-3 transition-transform" />
@@ -154,12 +154,12 @@ export default function TodaBelaHome() {
                     <Sparkles className="h-4 w-4 text-accent" />
                     <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-white">Preview Fall 2024</span>
                   </div>
-                  <h3 className="text-6xl md:text-[10rem] font-headline font-bold text-white text-editorial leading-[0.8] tracking-tighter">A Nobreza do Atemporal</h3>
+                  <h3 className="text-6xl md:text-[10rem] font-headline font-bold text-white text-editorial leading-[0.8] tracking-tighter">O Poder da Atemporalidade</h3>
                   <p className="text-xl md:text-2xl text-white/90 font-light italic max-w-2xl mx-auto leading-relaxed">
-                    "Moda é efêmera, a elegância Toda Bela é para sempre." Descubra looks que transcendem gerações.
+                    "A moda passa, mas a alma da mulher Toda Bela é eterna." Descubra a poesia em cada costura.
                   </p>
                   <Button className="mt-12 rounded-full bg-white text-primary hover:bg-accent hover:text-white px-16 py-10 text-[11px] font-bold uppercase tracking-[0.5em] shadow-2xl transition-all duration-700 hover:scale-110 active:scale-95">
-                    Descobrir a Coleção
+                    Sentir a Coleção
                   </Button>
                 </div>
               </div>
@@ -177,16 +177,16 @@ export default function TodaBelaHome() {
                     <div className="h-px w-16 bg-accent/40" />
                     <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">L’Essence Maison</span>
                   </div>
-                  <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary leading-[0.9] tracking-tighter">Celebrando a sua Melhor Versão</h3>
+                  <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary leading-[0.9] tracking-tighter">A Curadoria que Define sua História</h3>
                   <p className="text-lg md:text-xl text-muted-foreground/80 leading-relaxed font-light italic">
-                    Nascemos do desejo de oferecer mais do que vestuário: oferecemos ferramentas de autoconfiança. Cada costura, cada fibra e cada detalhe é pensado para a mulher que decide ser protagonista da própria narrativa.
+                    Nascemos para traduzir em tecidos o que as palavras não alcançam. Oferecemos ferramentas de autoconfiança para a mulher que decide ser a única protagonista da própria narrativa.
                   </p>
                 </div>
                 
                 <div className="grid sm:grid-cols-2 gap-10">
                   {[
-                    { icon: <ShieldCheck className="h-8 w-8 text-accent" />, title: "Qualidade Maison", desc: "Curadoria rigorosa de tecidos e acabamentos artesanais premium." },
-                    { icon: <Truck className="h-8 w-8 text-accent" />, title: "Logística VIP", desc: "Entrega expressa e segura para as principais capitais do país." }
+                    { icon: <ShieldCheck className="h-8 w-8 text-accent" />, title: "Selo de Excelência", desc: "Curadoria rigorosa de tecidos que abraçam o corpo com luxo." },
+                    { icon: <Truck className="h-8 w-8 text-accent" />, title: "Logística Sublime", desc: "Sua nova conquista chega com a rapidez que sua ansiedade merece." }
                   ].map((item, i) => (
                     <div key={i} className="p-12 rounded-[4rem] bg-secondary/30 border border-primary/5 space-y-6 hover:shadow-xl transition-all duration-500">
                       <div className="bg-white h-16 w-16 rounded-3xl flex items-center justify-center shadow-sm">
@@ -235,9 +235,9 @@ export default function TodaBelaHome() {
         <section className="py-32 bg-background border-y border-primary/5">
           <div className="container mx-auto px-4 md:px-12">
             <div className="flex flex-col items-center mb-20 text-center space-y-6">
-              <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Nosso Universo</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">O Reflexo da Maison</span>
               <h3 className="text-5xl md:text-7xl font-headline font-bold text-primary">@MaisonTodaBela</h3>
-              <p className="text-muted-foreground/70 italic font-light max-w-lg mx-auto">Siga nossa jornada e inspire-se com looks reais.</p>
+              <p className="text-muted-foreground/70 italic font-light max-w-lg mx-auto">Siga nossa jornada e torne-se parte da nossa inspiração diária.</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">

@@ -15,10 +15,10 @@ export function Hero() {
   const { data: banners } = useCollection(bannersQuery);
 
   const heroData = banners?.[0] || {
-    title: "Noites inesquecíveis pedem looks poderosos",
-    subtitle: "A Toda Bela nasceu para vestir mulheres que não temem o protagonismo, através de uma curadoria fashion atemporal e sofisticada.",
+    title: "Onde o Estilo Encontra sua Própria Alma",
+    subtitle: "A Toda Bela nasceu para vestir mulheres que não temem o protagonismo, através de uma curadoria fashion que transcende o tempo e celebra a sua essência única.",
     campaign: "L'Essence 2024",
-    campaignText: "Nova Coleção • Preview",
+    campaignText: "Nova Coleção • Infinito",
     image: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=1200&q=1600"
   };
 
@@ -56,10 +56,10 @@ export function Hero() {
 
             <div className="flex flex-wrap gap-6 pt-4">
               <Button className="rounded-full bg-primary hover:bg-primary/90 text-white px-12 py-9 text-[11px] font-bold uppercase tracking-[0.4em] shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 group">
-                Comprar Coleção <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-2 transition-transform" />
+                Viver a Experiência <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-2 transition-transform" />
               </Button>
               <Button variant="outline" className="rounded-full border-primary/10 text-primary px-12 py-9 text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-white hover:border-primary/30 transition-all">
-                Explorar Looks
+                Explorar Universos
               </Button>
             </div>
 
@@ -79,7 +79,7 @@ export function Hero() {
                   ))}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[11px] font-bold text-primary uppercase tracking-widest">+2k Clientes</span>
+                  <span className="text-[11px] font-bold text-primary uppercase tracking-widest">+2k Presenças</span>
                   <div className="flex text-accent mt-1">
                     {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-3 w-3 fill-current" />)}
                   </div>
@@ -88,7 +88,7 @@ export function Hero() {
               <div className="flex items-center gap-8 text-primary/40">
                 <div className="flex items-center gap-2">
                   <Truck className="h-4 w-4 text-accent" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Todo Brasil</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Entrega Sublime</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-accent" />
