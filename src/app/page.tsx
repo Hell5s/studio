@@ -7,7 +7,6 @@ import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
-import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit, where } from 'firebase/firestore';
@@ -192,13 +191,6 @@ export default function TodaBelaStorefront() {
         </section>
 
         <Newsletter />
-
-        {/* Admin Dashboard Section */}
-        <AdminDashboard 
-          productsCount={products?.length || 0} 
-          categoriesCount={categories?.length || 0} 
-          onOpenAI={() => setIsAdminOpen(true)}
-        />
       </main>
 
       <footer className="border-t border-primary/10 bg-white/50 py-16">
