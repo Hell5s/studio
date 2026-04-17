@@ -1,65 +1,49 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Toda Bela - Sophisticated Wine & Blush Palette */
-    --background: 30 40% 99%;
-    --foreground: 20 10% 13%;
+    /* Encanto Kids - Soft & Playful Palette */
+    --background: 210 40% 98%;
+    --foreground: 220 20% 15%;
     
     --card: 0 0% 100%;
-    --card-foreground: 20 10% 13%;
+    --card-foreground: 220 20% 15%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 20 10% 13%;
+    --popover-foreground: 220 20% 15%;
     
-    /* Wine #6E3C47 */
-    --primary: 347 29% 34%;
-    --primary-foreground: 30 40% 99%;
+    /* Sky Blue #89CFF0 */
+    --primary: 199 77% 74%;
+    --primary-foreground: 199 20% 15%;
     
-    /* Blush #F7E8EA */
-    --secondary: 351 45% 94%;
-    --secondary-foreground: 347 29% 34%;
+    /* Lavender #E6E6FA */
+    --secondary: 240 67% 94%;
+    --secondary-foreground: 240 20% 15%;
     
-    --muted: 351 15% 90%;
-    --muted-foreground: 347 10% 47%;
+    --muted: 240 10% 95%;
+    --muted-foreground: 240 10% 45%;
     
-    /* Gold #C7A17A */
-    --accent: 31 43% 63%;
-    --accent-foreground: 20 10% 13%;
+    /* Sunny Gold #FFD700 */
+    --accent: 45 100% 50%;
+    --accent-foreground: 45 10% 15%;
     
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 30 40% 99%;
+    --destructive-foreground: 210 40% 98%;
     
-    --border: 347 15% 92%;
-    --input: 347 15% 92%;
-    --ring: 347 29% 34%;
+    --border: 220 15% 92%;
+    --input: 220 15% 92%;
+    --ring: 199 77% 74%;
     
-    --radius: 2rem;
+    --radius: 1.5rem;
   }
 
   .dark {
-    --background: 20 10% 13%;
-    --foreground: 30 40% 99%;
-    --card: 20 10% 15%;
-    --card-foreground: 30 40% 99%;
-    --popover: 20 10% 15%;
-    --popover-foreground: 30 40% 99%;
-    --primary: 30 40% 99%;
-    --primary-foreground: 347 29% 34%;
-    --secondary: 347 20% 20%;
-    --secondary-foreground: 30 40% 99%;
-    --muted: 347 20% 20%;
-    --muted-foreground: 347 10% 65%;
-    --accent: 347 20% 20%;
-    --accent-foreground: 30 40% 99%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 30 40% 99%;
-    --border: 347 20% 20%;
-    --input: 347 20% 20%;
-    --ring: 347 29% 34%;
+    --background: 220 20% 10%;
+    --foreground: 210 40% 98%;
+    --primary: 199 77% 74%;
+    --primary-foreground: 220 20% 10%;
   }
 }
 

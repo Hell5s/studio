@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useState } from 'react';
-import { ShoppingBag, Link as LinkIcon, Loader2, Search, CheckCircle2, AlertCircle, Image as ImageIcon, Sparkles, ArrowRight, Package, TrendingUp, DollarSign } from 'lucide-react';
+import { ShoppingBag, Link as LinkIcon, Loader2, Search, CheckCircle2, AlertCircle, Image as ImageIcon, Sparkles, ArrowRight, Package, TrendingUp, DollarSign, Layers } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { useFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -14,18 +13,23 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
+interface ShopeeVariant {
+  name: string;
+  basePrice: number;
+  finalPrice: number;
+  stock: number;
+}
+
 interface ShopeeProduct {
   title: string;
   description: string;
-  originalPrice: number; // Preço na Shopee
-  price: number; // Preço de venda calculado
-  oldPrice?: number; // Preço "riscado" calculado
   images: string[];
   category: string;
   originalUrl: string;
-  margin: number;
-  profit: number;
+  variants: ShopeeVariant[];
   source: 'Shopee';
+  basePrice: number;
+  finalPrice: number;
 }
 
 export function AdminShopeeImport() {
@@ -39,28 +43,19 @@ export function AdminShopeeImport() {
   const [product, setProduct] = useState<ShopeeProduct | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Regra de Preço Inteligente (Dropshipping)
-  const calculateDropshippingPrice = (originalPrice: number) => {
-    let margin = 1.0;
+  const calculateFinalPrice = (basePrice: number) => {
+    let finalPrice = basePrice;
     
-    if (originalPrice < 50) margin = 2.5;
-    else if (originalPrice >= 50 && originalPrice < 100) margin = 2.2;
-    else if (originalPrice >= 100 && originalPrice < 200) margin = 2.0;
-    else margin = 1.8;
+    if (basePrice <= 20) {
+      finalPrice = basePrice * 2.5;
+    } else if (basePrice > 20 && basePrice <= 50) {
+      finalPrice = basePrice * 2.0;
+    } else {
+      finalPrice = basePrice + 30;
+    }
 
-    const rawPrice = originalPrice * margin;
-    
-    // Arredondamento Psicológico: 147 -> 149.90
-    // Lógica: Teto para a dezena mais próxima - 0.10
-    const adjustedPrice = Math.ceil(rawPrice / 10) * 10 - 0.10;
-    
-    // Preço Antigo (Fake Desconto)
-    const oldPrice = adjustedPrice * 1.3;
-    
-    // Lucro Estimado
-    const profit = adjustedPrice - originalPrice;
-
-    return { adjustedPrice, oldPrice, margin, profit };
+    // Round to .90
+    return Math.ceil(finalPrice) - 0.10;
   };
 
   const handleSearch = async () => {
@@ -82,28 +77,36 @@ export function AdminShopeeImport() {
       const result = await importShopeeProduct({ url });
       
       const data = result.data;
-      const pricing = calculateDropshippingPrice(data.price);
+      
+      // Process variants and prices
+      const variants: ShopeeVariant[] = (data.variants || []).map((v: any) => ({
+        name: v.name,
+        basePrice: v.price,
+        finalPrice: calculateFinalPrice(v.price),
+        stock: v.stock || 100
+      }));
+
+      const mainBasePrice = data.price;
+      const mainFinalPrice = calculateFinalPrice(mainBasePrice);
 
       setProduct({
         title: data.title || data.name,
         description: data.description,
-        originalPrice: data.price,
-        price: pricing.adjustedPrice,
-        oldPrice: pricing.oldPrice,
-        margin: pricing.margin,
-        profit: pricing.profit,
         images: data.images || [data.image],
-        category: data.category || 'Vestidos',
+        category: data.category || 'Geral',
         originalUrl: url,
-        source: 'Shopee'
+        variants: variants,
+        source: 'Shopee',
+        basePrice: mainBasePrice,
+        finalPrice: mainFinalPrice
       });
       
       toast({
-        title: "Sucesso!",
-        description: "Dados do produto recuperados com precificação automática.",
+        title: "Importação concluída!",
+        description: "Os preços foram calculados conforme as regras do Encanto Kids.",
       });
     } catch (err: any) {
-      setError("A função de busca automática requer configuração no Firebase Console. Use a simulação para validar as regras de preço.");
+      setError("A função de busca requer configuração no Firebase. Clique abaixo para simular.");
     } finally {
       setLoading(false);
     }
@@ -112,63 +115,59 @@ export function AdminShopeeImport() {
   const simulateImport = () => {
     setLoading(true);
     setTimeout(() => {
-      // Simulação de um produto de R$ 62,00 (Exemplo do prompt)
-      const mockOriginalPrice = 62.00;
-      const pricing = calculateDropshippingPrice(mockOriginalPrice);
+      const mockBasePrice = 35.00;
+      const mockFinalPrice = calculateFinalPrice(mockBasePrice);
+      
+      const mockVariants: ShopeeVariant[] = [
+        { name: "Azul (Pequeno)", basePrice: 20, finalPrice: calculateFinalPrice(20), stock: 50 },
+        { name: "Rosa (Médio)", basePrice: 35, finalPrice: calculateFinalPrice(35), stock: 30 },
+        { name: "Verde (Grande)", basePrice: 55, finalPrice: calculateFinalPrice(55), stock: 15 }
+      ];
 
       setProduct({
-        title: "Vestido Midi Satin Luxury - Coleção Dropshipping",
-        description: "Vestido em cetim premium com toque de seda. Peça importada com acabamento de alta costura, ideal para eventos sofisticados. Caimento fluido que valoriza a silhueta com elegância atemporal.",
-        originalPrice: mockOriginalPrice,
-        price: pricing.adjustedPrice,
-        oldPrice: pricing.oldPrice,
-        margin: pricing.margin,
-        profit: pricing.profit,
+        title: "Kit Mágico Encanto Kids - Balões de Festa",
+        description: "Transforme a festa do seu pequeno em um reino encantado com nosso kit exclusivo. Qualidade premium, cores vibrantes e durabilidade garantida.",
         images: [
-          "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=900&q=80",
-          "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=80"
+          "https://images.unsplash.com/photo-1530103043960-ef38714abb15?auto=format&fit=crop&w=900&q=80",
+          "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=900&q=80"
         ],
-        category: "Vestidos",
+        category: "Decoração",
         originalUrl: url,
-        source: 'Shopee'
+        variants: mockVariants,
+        source: 'Shopee',
+        basePrice: mockBasePrice,
+        finalPrice: mockFinalPrice
       });
       setError(null);
       setLoading(false);
     }, 1500);
   };
 
-  const saveToFirestore = (status: 'published' | 'draft') => {
+  const saveToFirestore = (published: boolean) => {
     if (!product) return;
 
     setSaving(true);
     const productsRef = collection(db, 'products');
     
     const newProduct = {
-      name: product.title,
+      title: product.title,
       description: product.description,
-      price: product.price,
-      oldPrice: product.oldPrice,
-      image: product.images[0],
+      price: product.finalPrice,
       images: product.images,
-      categoryId: product.category.toLowerCase(),
+      variants: product.variants,
       category: product.category,
-      featured: false,
-      badge: status === 'published' ? "Oferta" : "Rascunho",
-      status: status,
-      published: status === 'published',
-      source: "shopee",
-      sourceUrl: product.originalUrl,
-      originalPrice: product.originalPrice,
-      profitMargin: product.margin,
-      estimatedProfit: product.profit,
-      createdAt: serverTimestamp()
+      source: "Shopee",
+      profitApplied: true,
+      published: published,
+      createdAt: serverTimestamp(),
+      sourceUrl: product.originalUrl
     };
 
     addDocumentNonBlocking(productsRef, newProduct)
       .then(() => {
         toast({
-          title: status === 'published' ? "Produto publicado com sucesso!" : "Salvo como rascunho",
-          description: `${product.title} foi adicionado ao seu catálogo.`
+          title: published ? "Produto Publicado!" : "Produto Salvo",
+          description: `${product.title} foi adicionado ao catálogo.`
         });
         setProduct(null);
         setUrl('');
@@ -181,25 +180,25 @@ export function AdminShopeeImport() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2">
-        <h4 className="text-3xl font-headline font-bold text-brand-wine">Importar Produto</h4>
-        <p className="text-sm text-brand-wine/40 italic font-light">Cole o link da Shopee para precificação automática com lucro garantido.</p>
+        <h4 className="text-3xl font-headline font-bold text-foreground">Auto Import Product</h4>
+        <p className="text-sm text-muted-foreground italic">Cole o link da Shopee para importar com preços prontos para vender.</p>
       </div>
 
-      <Card className="p-10 border-none bg-white shadow-2xl rounded-[3rem] overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-10 opacity-5">
-          <TrendingUp className="h-32 w-32 text-brand-wine" />
+      <Card className="p-8 border-none bg-white shadow-xl rounded-[2rem] relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-5">
+          <TrendingUp className="h-32 w-32" />
         </div>
         
-        <div className="relative z-10 space-y-8">
-          <div className="grid gap-4">
-            <Label htmlFor="shopee-url" className="text-[11px] font-bold uppercase tracking-[0.4em] text-brand-wine/40 ml-2">Link do Produto Shopee</Label>
+        <div className="relative z-10 space-y-6">
+          <div className="grid gap-3">
+            <Label htmlFor="shopee-url" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-2">Paste Shopee link</Label>
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
-                <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-wine/20" />
+                <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
                 <Input 
                   id="shopee-url"
-                  placeholder="https://shopee.com.br/produto-exemplo..." 
-                  className="pl-14 rounded-full h-16 bg-brand-blush/20 border-none text-brand-wine text-lg focus:ring-2 focus:ring-brand-gold/20"
+                  placeholder="Link do produto shopee..." 
+                  className="pl-12 rounded-full h-14 bg-secondary/30 border-none text-foreground focus:ring-2 focus:ring-primary"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   disabled={loading}
@@ -208,30 +207,27 @@ export function AdminShopeeImport() {
               <Button 
                 onClick={handleSearch} 
                 disabled={loading || !url}
-                className="rounded-full h-16 px-10 font-bold text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-brand-wine/10 bg-brand-wine text-white transition-all hover:scale-105"
+                className="rounded-full h-14 px-8 font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:scale-105 transition-all"
               >
                 {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
-                Importar Produto
+                Import Automatically
               </Button>
             </div>
           </div>
 
           {error && (
-            <div className="flex flex-col gap-4 p-8 rounded-[2.5rem] bg-brand-blush/50 border border-brand-wine/5 animate-in slide-in-from-top-4">
-              <div className="flex items-start gap-4 text-brand-wine font-medium">
-                <AlertCircle className="h-6 w-6 shrink-0 text-brand-gold" />
-                <div className="space-y-1">
-                  <p className="text-sm">O serviço de captura automática requer implementação no Firebase Functions.</p>
-                  <p className="text-xs opacity-70 italic font-light">Deseja simular a captura deste link com a Regra de Preço Automática?</p>
-                </div>
+            <div className="flex flex-col gap-3 p-6 rounded-2xl bg-secondary/50 border border-primary/10">
+              <div className="flex items-start gap-3 text-foreground font-medium text-sm">
+                <AlertCircle className="h-5 w-5 text-primary" />
+                <p>O serviço automático requer backend. Deseja simular a importação com as regras de preço?</p>
               </div>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={simulateImport}
-                className="w-fit rounded-full border-brand-wine/20 text-brand-wine hover:bg-white h-12 px-8 font-bold uppercase tracking-widest text-[10px]"
+                className="w-fit rounded-full h-10 px-6 font-bold uppercase tracking-widest text-[10px]"
               >
-                Simular Captura e Precificação
+                Simulate Import
               </Button>
             </div>
           )}
@@ -239,99 +235,72 @@ export function AdminShopeeImport() {
       </Card>
 
       {product && (
-        <div className="space-y-8 animate-in zoom-in-95 duration-500">
-          <div className="flex items-center justify-between px-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center">
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
-              </div>
-              <span className="text-xs font-bold uppercase tracking-widest text-brand-wine/60">Análise de Lucro Concluída</span>
-            </div>
-            <Badge className="bg-brand-gold text-white border-none font-bold py-2 px-6 rounded-full uppercase tracking-widest text-[10px]">
-              Markup {product.margin}x
-            </Badge>
-          </div>
-
+        <div className="space-y-6 animate-in zoom-in-95 duration-500">
           <div className="grid lg:grid-cols-12 gap-8">
-            {/* Imagem Preview */}
-            <Card className="lg:col-span-5 p-0 border-none bg-white shadow-2xl overflow-hidden rounded-[4rem] aspect-square relative">
+            {/* Preview Image */}
+            <Card className="lg:col-span-5 p-0 border-none bg-white shadow-xl overflow-hidden rounded-[2.5rem] aspect-square relative">
               <Image 
                 src={product.images[0]} 
                 alt={product.title}
                 fill
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-wine/40 to-transparent" />
-              <div className="absolute bottom-10 left-10 right-10 flex gap-4">
-                <div className="flex-1 bg-white/90 backdrop-blur p-5 rounded-3xl shadow-xl text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-brand-wine/40 mb-1">Preço Shopee</p>
-                  <p className="text-xl font-bold text-brand-wine/60">R$ {product.originalPrice.toFixed(2)}</p>
-                </div>
-                <div className="flex-1 bg-brand-wine text-white p-5 rounded-3xl shadow-xl text-center border border-white/20">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">Preço Toda Bela</p>
-                  <p className="text-xl font-bold text-brand-gold">R$ {product.price.toFixed(2)}</p>
-                </div>
+              <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur p-4 rounded-2xl shadow-lg border border-white/50">
+                <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Preço Sugerido</p>
+                <p className="text-2xl font-bold text-primary">R$ {product.finalPrice.toFixed(2)}</p>
               </div>
             </Card>
 
-            {/* Dados e Lucro */}
-            <Card className="lg:col-span-7 p-12 space-y-10 border-none bg-white shadow-2xl rounded-[4rem] flex flex-col justify-between">
-              <div className="space-y-8">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <Badge variant="secondary" className="bg-brand-blush text-brand-wine border-none font-bold uppercase tracking-[0.4em] text-[10px] px-5 py-2 rounded-full">
-                      {product.category}
-                    </Badge>
-                    <h5 className="text-4xl font-headline font-bold text-brand-wine leading-tight">
-                      {product.title}
-                    </h5>
-                  </div>
-                </div>
+            {/* Data & Variants */}
+            <Card className="lg:col-span-7 p-10 space-y-8 border-none bg-white shadow-xl rounded-[2.5rem]">
+              <div className="space-y-4">
+                <Badge className="bg-primary/20 text-primary border-none font-bold py-1 px-4 uppercase tracking-widest text-[10px]">
+                  {product.category}
+                </Badge>
+                <h5 className="text-3xl font-headline font-bold text-foreground leading-tight">
+                  {product.title}
+                </h5>
+                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 italic">
+                  {product.description}
+                </p>
+              </div>
 
-                {/* Bloco de Lucro Destacado */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="p-8 rounded-[2.5rem] bg-brand-blush/30 border border-brand-wine/5 space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-wine/40 flex items-center gap-2">
-                      <TrendingUp className="h-3 w-3" /> Lucro Bruto
-                    </p>
-                    <p className="text-4xl font-bold text-brand-wine">R$ {product.profit.toFixed(2)}</p>
-                    <p className="text-[10px] text-green-600 font-bold uppercase tracking-tighter">Margem de Seguranca inclusa</p>
-                  </div>
-                  <div className="p-8 rounded-[2.5rem] bg-brand-gold/10 border border-brand-gold/10 space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-wine/40 flex items-center gap-2">
-                      <DollarSign className="h-3 w-3" /> Preço Antigo
-                    </p>
-                    <p className="text-4xl font-bold text-brand-wine/30 line-through">R$ {product.oldPrice?.toFixed(2)}</p>
-                    <p className="text-[10px] text-brand-gold font-bold uppercase tracking-tighter">Valor de Ancoragem</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-wine/30 flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3" /> Resumo do Produto
-                  </p>
-                  <p className="text-sm text-brand-wine/60 leading-relaxed italic font-light line-clamp-4">
-                    {product.description}
-                  </p>
+              {/* Variants Section */}
+              <div className="space-y-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                  <Layers className="h-3 w-3" /> Variations Detected ({product.variants.length})
+                </p>
+                <div className="grid gap-3">
+                  {product.variants.map((variant, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-secondary/30 border border-primary/5">
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-foreground">{variant.name}</p>
+                        <p className="text-[10px] text-muted-foreground">Estoque: {variant.stock} unidades</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-muted-foreground line-through">R$ {variant.basePrice.toFixed(2)}</p>
+                        <p className="text-sm font-bold text-primary">R$ {variant.finalPrice.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="pt-10 border-t border-brand-wine/5 flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <Button 
-                  className="flex-1 rounded-full h-16 font-bold shadow-xl shadow-brand-wine/20 bg-brand-wine hover:bg-brand-plum text-white uppercase tracking-[0.2em] text-[11px]"
-                  onClick={() => saveToFirestore('published')}
+                  className="flex-1 rounded-full h-14 font-bold bg-primary text-primary-foreground uppercase tracking-widest text-[11px]"
+                  onClick={() => saveToFirestore(true)}
                   disabled={saving}
                 >
-                  {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
-                  Publicar Direto
+                  {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Publish Product"}
                 </Button>
                 <Button 
                   variant="outline"
-                  className="flex-1 rounded-full h-16 font-bold border-brand-wine/20 text-brand-wine hover:bg-brand-blush/20 uppercase tracking-[0.2em] text-[11px]"
-                  onClick={() => saveToFirestore('draft')}
+                  className="flex-1 rounded-full h-14 font-bold border-primary/20 text-foreground hover:bg-secondary/50 uppercase tracking-widest text-[11px]"
+                  onClick={() => saveToFirestore(false)}
                   disabled={saving}
                 >
-                  Salvar Rascunho
+                  Save as Draft
                 </Button>
               </div>
             </Card>
@@ -340,14 +309,10 @@ export function AdminShopeeImport() {
       )}
 
       {!product && !loading && !error && (
-        <div className="py-32 flex flex-col items-center justify-center text-center bg-white/40 rounded-[5rem] border-2 border-dashed border-brand-wine/10">
-          <div className="h-24 w-24 rounded-full bg-brand-blush/50 flex items-center justify-center mb-8">
-            <Package className="h-12 w-12 text-brand-wine/20" />
-          </div>
-          <h5 className="text-xl font-headline font-bold text-brand-wine/30 uppercase tracking-widest mb-2">Aguardando Link</h5>
-          <p className="max-w-xs text-[10px] uppercase tracking-widest font-bold text-brand-wine/20 leading-relaxed">
-            Cole um link da Shopee acima para iniciar o processo de importação inteligente.
-          </p>
+        <div className="py-24 flex flex-col items-center justify-center text-center bg-white/40 rounded-[3rem] border-2 border-dashed border-primary/20">
+          <Package className="h-16 w-16 text-primary/20 mb-6" />
+          <h5 className="text-xl font-headline font-bold text-foreground/40 uppercase tracking-widest">Aguardando Link</h5>
+          <p className="text-xs text-muted-foreground mt-2 max-w-xs">Cole um link da Shopee acima para iniciar a automação Encanto Kids.</p>
         </div>
       )}
     </div>
