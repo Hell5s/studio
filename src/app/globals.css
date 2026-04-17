@@ -4,46 +4,46 @@
 
 @layer base {
   :root {
-    /* Encanto Kids - Soft & Playful Palette */
-    --background: 210 40% 98%;
-    --foreground: 220 20% 15%;
+    /* Toda Bela - Sophisticated & Elegant Palette */
+    --background: 20 30% 99%; /* Creme suave #FFF9F7 */
+    --foreground: 20 10% 13%; /* Quase preto #2A1F22 */
     
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 15%;
+    --card-foreground: 20 10% 13%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 15%;
+    --popover-foreground: 20 10% 13%;
     
-    /* Sky Blue #89CFF0 */
-    --primary: 199 77% 74%;
-    --primary-foreground: 199 20% 15%;
+    /* Vinho Profundo #6E3C47 */
+    --primary: 347 30% 34%;
+    --primary-foreground: 347 10% 98%;
     
-    /* Lavender #E6E6FA */
-    --secondary: 240 67% 94%;
-    --secondary-foreground: 240 20% 15%;
+    /* Blush Delicado #F7E8EA */
+    --secondary: 351 45% 94%;
+    --secondary-foreground: 347 30% 34%;
     
-    --muted: 240 10% 95%;
-    --muted-foreground: 240 10% 45%;
+    --muted: 351 20% 96%;
+    --muted-foreground: 347 10% 45%;
     
-    /* Sunny Gold #FFD700 */
-    --accent: 45 100% 50%;
-    --accent-foreground: 45 10% 15%;
+    /* Dourado Soft #C7A17A */
+    --accent: 31 43% 63%;
+    --accent-foreground: 31 10% 15%;
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     
-    --border: 220 15% 92%;
-    --input: 220 15% 92%;
-    --ring: 199 77% 74%;
+    --border: 347 20% 92%;
+    --input: 347 20% 92%;
+    --ring: 347 30% 34%;
     
-    --radius: 1.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 220 20% 10%;
-    --foreground: 210 40% 98%;
-    --primary: 199 77% 74%;
-    --primary-foreground: 220 20% 10%;
+    --background: 20 10% 10%;
+    --foreground: 20 10% 98%;
+    --primary: 347 30% 34%;
+    --primary-foreground: 20 10% 98%;
   }
 }
 
@@ -55,6 +55,6 @@
     @apply bg-background text-foreground font-body;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline;
+    @apply font-headline font-bold tracking-tight;
   }
 }

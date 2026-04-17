@@ -28,33 +28,33 @@ import Autoplay from "embla-carousel-autoplay";
 const dummyProducts = [
   {
     id: 'dummy-1',
-    name: 'Vestido Nuvem Encantada',
-    price: 89.90,
-    oldPrice: 129.90,
+    name: 'Vestido Midi Satin Rouge',
+    price: 249.90,
+    oldPrice: 329.90,
     badge: 'Mais Vendido',
-    image: 'https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=900&q=80'
+    image: 'https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=900&q=80'
   },
   {
     id: 'dummy-2',
-    name: 'Conjunto Ursinho Soft',
-    price: 64.90,
+    name: 'Conjunto Tweed Classique',
+    price: 389.90,
     badge: 'Novo',
-    image: 'https://images.unsplash.com/photo-1522771917563-ee55471f1b66?auto=format&fit=crop&w=900&q=80'
+    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=80'
   },
   {
     id: 'dummy-3',
-    name: 'Sapatinho Brilho Mágico',
-    price: 45.90,
-    oldPrice: 59.90,
+    name: 'Blusa Seda Essence',
+    price: 159.90,
+    oldPrice: 199.90,
     badge: 'Destaque',
-    image: 'https://images.unsplash.com/photo-1519705380846-aa397b9737b7?auto=format&fit=crop&w=900&q=80'
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80'
   },
   {
     id: 'dummy-4',
-    name: 'Laço Estelar Glitter',
-    price: 19.90,
-    badge: 'Fofo',
-    image: 'https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?auto=format&fit=crop&w=900&q=80'
+    name: 'Calça Alfaiataria Chic',
+    price: 219.90,
+    badge: 'Trend',
+    image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80'
   }
 ];
 
@@ -69,7 +69,7 @@ export default function TodaBelaStorefront() {
   const [isTrackOpen, setIsTrackOpen] = useState(false);
 
   const plugin = React.useRef(
-    Autoplay({ delay: 4000, stopOnInteraction: true })
+    Autoplay({ delay: 5000, stopOnInteraction: true })
   );
 
   const adminDocRef = useMemo(() => {
@@ -102,21 +102,20 @@ export default function TodaBelaStorefront() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       
-      {/* Top Banner */}
-      <div className="bg-primary text-primary-foreground py-2 text-center">
-        <p className="text-[10px] font-bold uppercase tracking-widest">
-          Frete Grátis acima de R$ 150 • Mundo Encantado para seus Pequenos
+      {/* Premium Top Bar */}
+      <div className="bg-primary text-primary-foreground py-2 text-center overflow-hidden">
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] animate-pulse">
+          Frete Grátis em Compras acima de R$ 299 • Use o cupom TODABELA10
         </p>
       </div>
 
-      <header className="sticky top-0 z-40 w-full border-b border-primary/10 bg-white/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 w-full border-b border-primary/5 bg-white/70 backdrop-blur-xl">
         <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8">
           
-          <nav className="hidden lg:flex items-center gap-8 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-            <a href="#novidades" className="hover:text-primary transition-colors">Novidades</a>
-            <a href="#brinquedos" className="hover:text-primary transition-colors">Brinquedos</a>
-            <a href="#festa" className="hover:text-primary transition-colors">Festa</a>
-            <button onClick={() => setIsTrackOpen(true)} className="hover:text-primary transition-colors">Rastrear</button>
+          <nav className="hidden lg:flex items-center gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            <a href="#novidades" className="hover:text-primary transition-all">Novidades</a>
+            <a href="#colecoes" className="hover:text-primary transition-all">Coleções</a>
+            <button onClick={() => setIsTrackOpen(true)} className="hover:text-primary transition-all">Rastrear</button>
           </nav>
 
           <LogoMark />
@@ -125,21 +124,21 @@ export default function TodaBelaStorefront() {
             {user ? (
               <div className="flex items-center gap-3">
                 {isAdmin && (
-                  <Button variant="ghost" size="icon" onClick={() => setIsAdminOpen(true)} className="rounded-full">
-                    <Settings className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" onClick={() => setIsAdminOpen(true)} className="rounded-full hover:bg-primary/5">
+                    <Settings className="h-5 w-5 text-primary" />
                   </Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-xs">Sair</Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-[10px] font-bold uppercase tracking-widest opacity-50 hover:opacity-100">Sair</Button>
               </div>
             ) : (
-              <Button variant="ghost" size="icon" onClick={() => setIsLoginOpen(true)} className="rounded-full">
-                <User className="h-5 w-5" />
+              <Button variant="ghost" size="icon" onClick={() => setIsLoginOpen(true)} className="rounded-full hover:bg-primary/5">
+                <User className="h-5 w-5 text-primary" />
               </Button>
             )}
 
-            <Button className="rounded-full bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20">
+            <Button className="rounded-full bg-primary text-primary-foreground font-bold px-6 shadow-xl shadow-primary/20 hover:scale-105 transition-all">
               <ShoppingBag className="mr-2 h-4 w-4" />
-              Bolsinha
+              Carrinho
             </Button>
           </div>
         </div>
@@ -148,37 +147,46 @@ export default function TodaBelaStorefront() {
       <main>
         <Hero />
 
-        {/* Section: Categories */}
-        <section className="container mx-auto px-4 py-20 md:px-8">
-          <div className="text-center mb-16">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary">Universo Infantil</span>
-            <h3 className="text-4xl font-headline font-bold mt-2">Nossas Coleções</h3>
+        {/* Section: Collections Editorial */}
+        <section id="colecoes" className="container mx-auto px-4 py-24 md:px-8">
+          <div className="text-center mb-16 space-y-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent">Curadoria Especial</span>
+            <h3 className="text-4xl md:text-5xl font-headline font-bold text-primary">Explore por Categorias</h3>
+            <div className="h-1 w-20 bg-accent mx-auto rounded-full" />
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { name: "Roupas", img: "https://images.unsplash.com/photo-1522771917563-ee55471f1b66?auto=format&fit=crop&w=800&q=80" },
-              { name: "Sapatos", img: "https://images.unsplash.com/photo-1519705380846-aa397b9737b7?auto=format&fit=crop&w=800&q=80" },
-              { name: "Brinquedos", img: "https://images.unsplash.com/photo-1500995015937-2d1254986a44?auto=format&fit=crop&w=800&q=80" },
-              { name: "Acessórios", img: "https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?auto=format&fit=crop&w=800&q=80" },
+              { name: "Vestidos", img: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=800&q=80", count: "12 Peças" },
+              { name: "Conjuntos", img: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80", count: "08 Peças" },
+              { name: "Blusas", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80", count: "15 Peças" },
+              { name: "Calças", img: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=80", count: "10 Peças" },
             ].map((cat, idx) => (
-              <div key={idx} className="group relative overflow-hidden rounded-[2.5rem] aspect-square cursor-pointer shadow-lg">
-                <Image src={cat.img} alt={cat.name} fill className="object-cover transition-transform group-hover:scale-110" />
-                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-6 left-0 right-0 text-center">
-                  <h4 className="text-xl font-bold text-white uppercase tracking-widest bg-primary/80 backdrop-blur-sm inline-block px-6 py-2 rounded-full">{cat.name}</h4>
+              <div key={idx} className="group relative overflow-hidden rounded-[2.5rem] aspect-[4/5] cursor-pointer shadow-2xl">
+                <Image src={cat.img} alt={cat.name} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute bottom-10 left-0 right-0 text-center px-6">
+                  <div className="bg-white/90 backdrop-blur-md p-6 rounded-[2rem] shadow-xl translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <h4 className="text-xl font-bold text-primary uppercase tracking-widest">{cat.name}</h4>
+                    <p className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mt-2">{cat.count}</p>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Section: Showcase */}
-        <section id="novidades" className="bg-secondary/20 py-20">
+        {/* Section: Showcase Carrossel */}
+        <section id="novidades" className="bg-secondary/30 py-24">
           <div className="container mx-auto px-4 md:px-8">
-            <div className="text-center mb-12">
-              <h3 className="text-4xl font-headline font-bold">Destaques Mágicos</h3>
-              <p className="text-muted-foreground mt-2 italic">Peças que fazem cada momento especial.</p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+              <div className="space-y-4">
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent">Tendências</span>
+                <h3 className="text-4xl md:text-5xl font-headline font-bold text-primary">Peças que Encantam</h3>
+              </div>
+              <Button variant="ghost" className="text-accent font-bold uppercase tracking-[0.2em] text-[10px] group">
+                Ver Tudo <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-2 transition-transform" />
+              </Button>
             </div>
 
             <div className="relative">
@@ -186,15 +194,15 @@ export default function TodaBelaStorefront() {
                 <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
               ) : (
                 <Carousel opts={{ align: "start" }} plugins={[plugin.current]} className="w-full">
-                  <CarouselContent className="-ml-6">
+                  <CarouselContent className="-ml-8">
                     {displayProducts.map((product) => (
-                      <CarouselItem key={product.id} className="pl-6 basis-full sm:basis-1/2 lg:basis-1/4">
+                      <CarouselItem key={product.id} className="pl-8 basis-full sm:basis-1/2 lg:basis-1/4">
                         <ProductCard {...product} />
                       </CarouselItem>
                     ))}
                   </CarouselContent>
-                  <CarouselPrevious className="hidden md:flex" />
-                  <CarouselNext className="hidden md:flex" />
+                  <CarouselPrevious className="hidden md:flex -left-16" />
+                  <CarouselNext className="hidden md:flex -right-16" />
                 </Carousel>
               )}
             </div>
@@ -204,21 +212,21 @@ export default function TodaBelaStorefront() {
         <Newsletter />
       </main>
 
-      <footer className="bg-white border-t border-primary/10 py-20">
-        <div className="container mx-auto px-4 md:px-8 text-center space-y-8">
+      <footer className="bg-white border-t border-primary/5 py-24">
+        <div className="container mx-auto px-4 md:px-8 text-center space-y-12">
           <LogoMark />
-          <p className="max-w-md mx-auto text-muted-foreground italic font-light">
-            Levando cor e magia para a infância de milhares de crianças em todo o Brasil.
+          <p className="max-w-md mx-auto text-muted-foreground italic font-light leading-relaxed">
+            Nossa missão é celebrar a beleza e a confiança de cada mulher através de uma curadoria de moda sofisticada e atual.
           </p>
           <div className="flex justify-center gap-6">
-             <button className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-primary"><Instagram className="h-5 w-5" /></button>
-             <button className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-primary"><Facebook className="h-5 w-5" /></button>
+             <button className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center text-primary hover:scale-110 transition-transform"><Instagram className="h-5 w-5" /></button>
+             <button className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center text-primary hover:scale-110 transition-transform"><Facebook className="h-5 w-5" /></button>
           </div>
-          <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-            © 2024 Encanto Kids. Todos os direitos reservados.
+          <p className="text-[9px] uppercase font-bold tracking-[0.4em] text-muted-foreground/50">
+            © 2024 Toda Bela Maison. Todos os direitos reservados.
           </p>
           {isAdmin && (
-            <button onClick={() => setIsAdminOpen(true)} className="text-primary/40 hover:text-primary">
+            <button onClick={() => setIsAdminOpen(true)} className="text-primary/20 hover:text-primary transition-colors">
               <Settings className="h-4 w-4" />
             </button>
           )}
@@ -228,10 +236,10 @@ export default function TodaBelaStorefront() {
       {isAdmin && (
         <>
           <Dialog open={isAdminOpen} onOpenChange={setIsAdminOpen}>
-            <DialogContent className="max-w-[95vw] w-full h-[90vh] overflow-hidden p-0 rounded-[2rem] border-none shadow-2xl">
+            <DialogContent className="max-w-[95vw] w-full h-[90vh] overflow-hidden p-0 rounded-[3rem] border-none shadow-2xl">
               <DialogHeader className="sr-only">
-                <DialogTitle>Admin Dashboard</DialogTitle>
-                <DialogDescription>Gerencie sua loja dropshipping.</DialogDescription>
+                <DialogTitle>Painel Administrativo Toda Bela</DialogTitle>
+                <DialogDescription>Gerencie o catálogo, banners e importações da sua boutique.</DialogDescription>
               </DialogHeader>
               <AdminDashboard 
                 productsCount={products?.length || 0} 
