@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -144,14 +145,17 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
                   {recentProducts?.map((product) => (
                     <div key={product.id} className="flex items-center gap-6 p-5 rounded-3xl border border-primary/5 hover:bg-secondary/20 transition-all duration-500">
                       <div className="h-16 w-16 rounded-2xl overflow-hidden bg-muted shadow-sm">
-                        <img src={product.images?.[0] || product.image} className="object-cover h-full w-full" alt={product.name} />
+                        <img src={product.image || product.images?.[0]} className="object-cover h-full w-full" alt={product.name || product.title} />
                       </div>
                       <div className="flex-1">
-                        <p className="font-bold text-primary text-base truncate">{product.title || product.name}</p>
+                        <p className="font-bold text-primary text-base truncate">{product.name || product.title}</p>
                         <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] mt-1 font-bold">{product.source || 'Curadoria Manual'}</p>
                       </div>
                       <div className="text-right space-y-2">
                         <p className="font-bold text-primary">R$ {product.price}</p>
+                        {product.published === false && (
+                          <Badge className="bg-amber-100 text-amber-600 border-none text-[8px] uppercase tracking-widest font-bold">Rascunho</Badge>
+                        )}
                       </div>
                     </div>
                   ))}
