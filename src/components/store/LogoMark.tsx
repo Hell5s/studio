@@ -19,7 +19,7 @@ export function LogoMark({ variant = 'default', className }: LogoMarkProps) {
     primary: isWhite ? 'text-white' : 'text-primary',
     accent: isWhite ? 'text-white/80' : 'text-accent',
     border: isWhite ? 'border-white/30' : 'border-accent/30',
-    line: isWhite ? 'bg-white/40' : 'bg-accent/40',
+    line: isWhite ? 'bg-white/20' : 'bg-accent/20',
   };
 
   if (isIcon) {
@@ -74,14 +74,14 @@ export function LogoMark({ variant = 'default', className }: LogoMarkProps) {
           Toda Bela
         </h1>
         <div className="flex items-center gap-4">
-          <div className={cn("h-[1px] w-6", colors.line)} />
+          <div className={cn("h-[0.5px] w-6", colors.line)} />
           <p className={cn(
             "text-[10px] uppercase font-bold tracking-[0.6em] whitespace-nowrap",
             colors.accent
           )}>
             Maison de Mode
           </p>
-          <div className={cn("h-[1px] w-6", colors.line)} />
+          <div className={cn("h-[0.5px] w-6", colors.line)} />
         </div>
       </div>
     </div>

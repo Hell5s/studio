@@ -55,7 +55,7 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
                   className="text-[10px] font-bold uppercase tracking-[0.4em] text-foreground/60 hover:text-primary transition-all duration-300 relative group"
                 >
                   {link.name}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-500 group-hover:w-full" />
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-500 group-hover:w-full" />
                 </Link>
               ))}
             </nav>
@@ -96,10 +96,11 @@ export function Navbar({ onOpenLogin, onOpenTrack }: { onOpenLogin: () => void, 
                 </Button>
                 
                 <div className="relative group ml-2">
-                  <Button className="rounded-full bg-primary text-primary-foreground font-bold px-8 h-12 shadow-xl shadow-primary/10 hover:scale-105 transition-all duration-500 overflow-hidden group">
+                  <Button className="rounded-full bg-primary text-primary-foreground font-bold px-8 h-12 shadow-xl shadow-primary/10 hover:scale-105 transition-all duration-500 overflow-hidden group isolate">
                     <ShoppingBag className="mr-3 h-4 w-4 relative z-10" />
                     <span className="text-[10px] uppercase tracking-[0.2em] relative z-10">Carrinho</span>
-                    <div className="absolute inset-0 bg-accent translate-y-[101%] group-hover:translate-y-0 transition-transform duration-500" />
+                    {/* Correção da barra dourada bugada: usando opacity + translate mais profundo */}
+                    <div className="absolute inset-0 bg-accent translate-y-[105%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 -z-10" />
                   </Button>
                 </div>
               </div>
