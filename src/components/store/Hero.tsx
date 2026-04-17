@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -79,7 +80,7 @@ export function Hero() {
                   ))}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[11px] font-bold text-primary uppercase tracking-widest">+2k Presenças</span>
+                  <span className="text-[11px] font-bold text-primary uppercase tracking-widest">+2 Mil clientes satisfeitas</span>
                   <div className="flex text-accent mt-1">
                     {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-3 w-3 fill-current" />)}
                   </div>
