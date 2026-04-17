@@ -12,7 +12,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
-        headline: ['Poppins', 'sans-serif'],
+        headline: ['Fredoka', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -50,11 +50,11 @@ export default {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         brand: {
-          wine: '#6E3C47',
-          blush: '#F7E8EA',
-          rose: '#E9C9CF',
-          gold: '#C7A17A',
-          plum: '#E09FD6',
+          sky: '#38BDF8',
+          cloud: '#F0F9FF',
+          lavender: '#E0E7FF',
+          gold: '#FBBF24',
+          berry: '#FB7185',
         },
         chart: {
           '1': 'hsl(var(--chart-1))',

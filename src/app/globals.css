@@ -5,61 +5,61 @@
 
 @layer base {
   :root {
-    /* Pale Blush Background #FDF6F8 */
-    --background: 345 43% 98%;
-    --foreground: 344 15% 15%;
+    /* Encanto Kids - Sky Blue & Soft Cloud */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
     
     --card: 0 0% 100%;
-    --card-foreground: 344 15% 15%;
+    --card-foreground: 222 47% 11%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 344 15% 15%;
+    --popover-foreground: 222 47% 11%;
     
-    /* Deep Plum #6E3C47 */
-    --primary: 347 29% 34%;
-    --primary-foreground: 345 43% 98%;
+    /* Vibrant Cyan-Blue #38BDF8 */
+    --primary: 199 89% 48%;
+    --primary-foreground: 210 40% 98%;
     
-    /* Soft Blush #F7E8EA */
-    --secondary: 349 31% 94%;
-    --secondary-foreground: 347 29% 34%;
+    /* Soft Lavender #E0E7FF */
+    --secondary: 226 70% 94%;
+    --secondary-foreground: 199 89% 48%;
     
-    --muted: 349 20% 90%;
-    --muted-foreground: 347 10% 45%;
+    --muted: 210 40% 90%;
+    --muted-foreground: 215 16% 47%;
     
-    /* Muted Rose-Magenta #E09FD6 */
-    --accent: 308 48% 75%;
-    --accent-foreground: 347 29% 34%;
+    /* Sun Gold #FBBF24 */
+    --accent: 45 93% 47%;
+    --accent-foreground: 222 47% 11%;
     
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
     
-    --border: 349 32% 85%;
-    --input: 349 32% 85%;
-    --ring: 347 29% 34%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;
     
-    --radius: 1rem;
+    --radius: 1.5rem;
   }
 
   .dark {
-    --background: 344 15% 10%;
-    --foreground: 345 43% 98%;
-    --card: 344 15% 12%;
-    --card-foreground: 345 43% 98%;
-    --popover: 344 15% 12%;
-    --popover-foreground: 345 43% 98%;
-    --primary: 345 43% 98%;
-    --primary-foreground: 347 29% 34%;
-    --secondary: 347 29% 20%;
-    --secondary-foreground: 345 43% 98%;
-    --muted: 347 29% 25%;
-    --muted-foreground: 349 20% 70%;
-    --accent: 308 48% 30%;
-    --accent-foreground: 345 43% 98%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 13%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 13%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 199 89% 48%;
+    --secondary: 217 32% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 32% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 32% 17%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 347 29% 25%;
-    --input: 347 29% 25%;
-    --ring: 345 43% 90%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
+    --ring: 224 71% 45%;
   }
 }
 
