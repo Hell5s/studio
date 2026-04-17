@@ -58,18 +58,17 @@ export function useDoc<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (error: FirestoreError) => {
+      (serverError: FirestoreError) => {
         const contextualError = new FirestorePermissionError({
           operation: 'get',
           path: memoizedDocRef.path,
-        })
+        });
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
+        setError(contextualError);
+        setData(null);
+        setIsLoading(false);
 
-        // Do not emit to global error listener to avoid crashing the UI
-        // errorEmitter.emit('permission-error', contextualError);
+        console.warn('Firestore Access Denied:', contextualError.message);
       }
     );
 

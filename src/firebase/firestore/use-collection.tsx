@@ -72,8 +72,7 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (error: FirestoreError) => {
-        // Extract the path from either a ref or a query
+      (serverError: FirestoreError) => {
         const path: string =
           (targetRefOrQuery as any).type === 'collection'
             ? (targetRefOrQuery as CollectionReference).path
@@ -82,14 +81,14 @@ export function useCollection<T = any>(
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
-        })
+        });
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
-
-        // Do not emit to global error listener to avoid crashing the UI
-        // errorEmitter.emit('permission-error', contextualError);
+        setError(contextualError);
+        setData(null);
+        setIsLoading(false);
+        
+        // Logamos o erro no console para debug, mas evitamos o crash visual
+        console.warn('Firestore Access Denied:', contextualError.message);
       }
     );
 
