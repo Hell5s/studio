@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   Save, 
@@ -11,7 +10,9 @@ import {
   ChevronRight,
   ChevronLeft,
   Layout,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Upload,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +29,8 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { doc } from 'firebase/firestore';
-import { useFirestore, updateDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface EditProductDialogProps {
   product: any;
@@ -38,8 +40,12 @@ interface EditProductDialogProps {
 
 export function EditProductDialog({ product, open, onOpenChange }: EditProductDialogProps) {
   const db = useFirestore();
+  const { storage } = useFirebase();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     price: 0,
@@ -90,6 +96,33 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     onOpenChange(false);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !product?.id) return;
+
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `products/${product.id}/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      setFormData(prev => ({ ...prev, image: downloadURL }));
+      
+      toast({
+        title: "Upload concluído",
+        description: "Imagem carregada com sucesso para a Maison.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível enviar a imagem no momento.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl">
@@ -99,8 +132,11 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
             <DialogDescription>Ajuste os detalhes da sua curadoria.</DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-md border border-white/10">
+            <div className="h-16 w-16 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-md border border-white/10 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               <img src={formData.image} className="h-full w-full object-cover" alt="Preview" />
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              </div>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Edição de Curadoria</p>
@@ -123,19 +159,38 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                     className="rounded-2xl border-primary/5 bg-secondary/20 h-12 focus:bg-white transition-all"
                   />
                 </div>
+                
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-image">URL da Imagem Principal</Label>
-                  <div className="relative">
-                    <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="edit-image" 
-                      value={formData.image}
-                      onChange={(e) => setFormData({...formData, image: e.target.value})}
-                      className="rounded-2xl border-primary/5 bg-secondary/20 h-12 pl-12 focus:bg-white transition-all"
-                      placeholder="https://..."
+                  <Label>Imagem do Produto</Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        value={formData.image}
+                        onChange={(e) => setFormData({...formData, image: e.target.value})}
+                        className="rounded-2xl border-primary/5 bg-secondary/20 h-12 pl-12 focus:bg-white transition-all"
+                        placeholder="Cole a URL ou use o botão ao lado"
+                      />
+                    </div>
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      className="rounded-2xl h-12 px-4 border-primary/10 hover:bg-white"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    </Button>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleFileUpload}
                     />
                   </div>
                 </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="edit-category">Categoria</Label>
                   <Input 
@@ -236,7 +291,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
           </Button>
           <Button 
             onClick={handleSave}
-            disabled={loading}
+            disabled={loading || uploading}
             className="rounded-full px-12 h-14 bg-primary text-white shadow-xl shadow-primary/20 text-[10px] font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
