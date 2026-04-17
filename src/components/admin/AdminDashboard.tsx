@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { AdminShopeeImport } from './AdminShopeeImport';
+import { ProductManagement } from './ProductManagement';
 
 interface AdminDashboardProps {
   productsCount: number;
@@ -94,7 +95,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
             <div className="h-2 w-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50 animate-pulse" />
             <p className="text-[9px] font-bold uppercase tracking-widest text-accent">Loja Online</p>
           </div>
-          <Button variant="outline" size="sm" className="w-full text-[9px] h-10 rounded-xl border-accent/20 hover:bg-white uppercase tracking-widest font-bold">
+          <Button variant="outline" size="sm" className="w-full text-[9px] h-10 rounded-xl border-accent/20 hover:bg-white uppercase tracking-widest font-bold" onClick={() => window.open('/', '_blank')}>
             Ver Site ao Vivo
           </Button>
         </div>
@@ -139,7 +140,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
               <Card className="p-10 rounded-[3.5rem] border-none bg-white shadow-xl">
                 <div className="flex items-center justify-between mb-10">
                   <h4 className="font-headline font-bold text-2xl text-primary">Últimas Importações</h4>
-                  <Button variant="ghost" size="sm" className="text-accent text-[10px] font-bold uppercase tracking-widest">Ver Catálogo Completo</Button>
+                  <Button variant="ghost" size="sm" className="text-accent text-[10px] font-bold uppercase tracking-widest" onClick={() => setActiveTab('produtos')}>Ver Catálogo Completo</Button>
                 </div>
                 <div className="space-y-6">
                   {recentProducts?.map((product) => (
@@ -170,8 +171,10 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
           )}
 
           {activeTab === 'shopee' && <AdminShopeeImport />}
+          
+          {activeTab === 'produtos' && <ProductManagement />}
 
-          {(activeTab === 'produtos' || activeTab === 'categorias' || activeTab === 'config') && (
+          {(activeTab === 'categorias' || activeTab === 'config') && (
             <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
               <div className="h-24 w-24 rounded-full bg-accent/5 flex items-center justify-center">
                 <Settings className="h-10 w-10 text-accent/40 animate-spin-slow" />
