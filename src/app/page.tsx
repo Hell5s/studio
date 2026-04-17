@@ -76,14 +76,13 @@ export default function TodaBelaStorefront() {
             <a href="#novidades" className="text-foreground/70 transition-colors hover:text-primary">Novidades</a>
             <a href="#beneficios" className="text-foreground/70 transition-colors hover:text-primary">Benefícios</a>
             <a href="#newsletter" className="text-foreground/70 transition-colors hover:text-primary">Clube Toda Bela</a>
+            <a href="#rastreio" className="flex items-center gap-2 text-primary font-semibold transition-colors hover:opacity-80">
+              <Truck className="h-4 w-4" />
+              Rastrear Pedido
+            </a>
           </nav>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <a href="#rastreio" className="hidden sm:flex items-center gap-2 text-primary font-semibold transition-colors hover:opacity-80 text-sm mr-2">
-              <Truck className="h-4 w-4" />
-              Rastrear
-            </a>
-            
             {user ? (
               <div className="flex items-center gap-2">
                 {isAdmin && (
