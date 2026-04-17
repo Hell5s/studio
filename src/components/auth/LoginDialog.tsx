@@ -48,7 +48,7 @@ export function LoginDialog({ open, onOpenChange, onAdminLogin }: LoginDialogPro
       } else {
         toast({
           title: "Login realizado!",
-          description: "Bem-vinda à Toda Bela Boutique.",
+          description: "Bem-vinda à Toda Bela.",
         });
       }
     }
