@@ -1,10 +1,9 @@
-
 "use client";
 
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Star, Truck, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Star, Truck, ShieldCheck, Sparkles } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 
@@ -16,110 +15,117 @@ export function Hero() {
   const { data: banners } = useCollection(bannersQuery);
 
   const heroData = banners?.[0] || {
-    title: "O Closet Online para Mulheres Protagonistas",
-    subtitle: "A Toda Bela nasceu para vestir mulheres confiantes com uma curadoria fashion, feminina e atual.",
-    campaign: "Essência Urbana",
-    campaignText: "Looks que marcam presença",
+    title: "Noites inesquecíveis pedem looks poderosos",
+    subtitle: "A Toda Bela nasceu para vestir mulheres que não temem o protagonismo, através de uma curadoria fashion atemporal.",
+    campaign: "L'Essence 2024",
+    campaignText: "Nova Coleção",
     image: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=1200&q=1600"
   };
 
   return (
-    <section className="relative min-h-[85vh] flex items-center overflow-hidden bg-brand-blush/20">
-      {/* Editorial Background Decor */}
-      <div className="absolute top-0 right-0 w-1/3 h-full bg-brand-rose/20 -skew-x-12 translate-x-1/4" />
-      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-brand-gold/10 rounded-full blur-[100px]" />
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-background">
+      {/* Decorative Editorial Background */}
+      <div className="absolute top-0 right-0 w-[45%] h-full bg-secondary/30 -skew-x-6 translate-x-12" />
+      <div className="absolute top-1/2 left-0 w-64 h-64 bg-accent/5 rounded-full blur-[120px] -translate-y-1/2" />
 
-      <div className="container mx-auto px-4 md:px-8 relative z-10 pt-20">
-        <div className="grid lg:grid-cols-12 gap-12 items-center">
+      <div className="container mx-auto px-4 md:px-12 relative z-10 pt-32 pb-20">
+        <div className="grid lg:grid-cols-12 gap-16 items-center">
           
           {/* Text Content */}
-          <div className="lg:col-span-6 space-y-10 animate-in fade-in slide-in-from-left-8 duration-1000">
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="h-px w-12 bg-brand-gold" />
-                <span className="text-[11px] font-bold uppercase tracking-[0.6em] text-brand-gold">
+          <div className="lg:col-span-6 space-y-12 animate-in fade-in slide-in-from-left-12 duration-1000">
+            <div className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="h-px w-16 bg-accent/40" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">
                   {heroData.campaignText}
                 </span>
               </div>
-              <h2 className="text-6xl md:text-8xl font-headline font-bold text-brand-wine leading-[0.9] tracking-tighter">
+              
+              <h2 className="text-6xl md:text-[7.5rem] font-headline font-bold text-primary text-editorial leading-[0.85] tracking-tighter">
                 {heroData.title.split(' ').map((word, i) => (
-                  <span key={i} className={i % 2 !== 0 ? "block text-brand-gold italic font-light" : "block"}>{word} </span>
+                  <span key={i} className={i % 2 !== 0 ? "block text-accent italic font-light" : "block"}>
+                    {word}{" "}
+                  </span>
                 ))}
               </h2>
-              <p className="max-w-md text-lg text-muted-foreground leading-relaxed font-light italic">
+              
+              <p className="max-w-md text-lg text-muted-foreground/80 leading-relaxed font-light italic">
                 {heroData.subtitle}
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-5">
-              <Button className="rounded-full bg-brand-wine hover:bg-brand-plum text-white px-10 py-8 text-[10px] font-bold uppercase tracking-[0.3em] shadow-2xl shadow-brand-wine/30 transition-all hover:scale-105">
-                Comprar Coleção
+            <div className="flex flex-wrap gap-6">
+              <Button className="rounded-full bg-primary hover:bg-primary/90 text-white px-12 py-9 text-[11px] font-bold uppercase tracking-[0.4em] shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 group">
+                Comprar Coleção <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-2 transition-transform" />
               </Button>
-              <Button variant="outline" className="rounded-full border-brand-wine/20 text-brand-wine px-10 py-8 text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-white">
+              <Button variant="outline" className="rounded-full border-primary/10 text-primary px-12 py-9 text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-white hover:border-primary/30 transition-all">
                 Explorar Looks
               </Button>
             </div>
 
-            {/* Prova Social Premium */}
-            <div className="flex flex-wrap items-center gap-8 pt-6">
-              <div className="flex items-center gap-3">
-                <div className="flex -space-x-2">
+            {/* Social Proof & Trust */}
+            <div className="flex flex-wrap items-center gap-12 pt-8">
+              <div className="flex items-center gap-4">
+                <div className="flex -space-x-3">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="h-10 w-10 rounded-full border-2 border-white overflow-hidden bg-brand-rose">
-                      <Image src={`https://picsum.photos/seed/${i+50}/100/100`} alt="Client" width={40} height={40} className="grayscale" />
+                    <div key={i} className="h-12 w-12 rounded-full border-[3px] border-white overflow-hidden bg-secondary shadow-lg">
+                      <Image src={`https://picsum.photos/seed/face-${i+20}/100/100`} alt="Client" width={48} height={48} className="grayscale brightness-110" />
                     </div>
                   ))}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-brand-wine uppercase tracking-widest">+2k Clientes</span>
-                  <div className="flex text-brand-gold">
+                  <span className="text-[11px] font-bold text-primary uppercase tracking-widest">+2k Clientes</span>
+                  <div className="flex text-accent mt-1">
                     {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-3 w-3 fill-current" />)}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-brand-wine/40">
+              <div className="flex items-center gap-6 text-primary/40">
                 <div className="flex items-center gap-2">
                   <Truck className="h-4 w-4" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Brasil Todo</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Todo Brasil</span>
                 </div>
-                <div className="h-4 w-px bg-brand-wine/10" />
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Loja Segura</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Maison Segura</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Image Section - Editorial Style */}
+          {/* Asymmetric Image Section */}
           <div className="lg:col-span-6 relative flex justify-end animate-in fade-in slide-in-from-right-12 duration-1000 delay-300">
-            <div className="relative w-full max-w-[500px]">
-              <div className="relative aspect-[4/5] rounded-[5rem] overflow-hidden border-[12px] border-white shadow-2xl z-20">
+            <div className="relative w-full max-w-[540px]">
+              {/* Main Image */}
+              <div className="relative aspect-[4/5] rounded-[6rem] overflow-hidden border-[16px] border-white shadow-premium z-20 group">
                 <Image
                   src={heroData.image}
-                  alt="Editorial Moda"
+                  alt="Editorial Toda Bela"
                   fill
-                  className="object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                  className="object-cover grayscale hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
                   priority
-                  data-ai-hint="editorial fashion model"
+                  data-ai-hint="fashion editorial woman"
                 />
               </div>
 
-              {/* Floating Glass Card */}
-              <div className="absolute -left-12 bottom-12 z-30 w-64 bg-white/70 backdrop-blur-xl p-8 rounded-[3rem] shadow-2xl border border-white/50 group hover:-translate-y-2 transition-transform duration-500">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-gold mb-2">Editorial</p>
-                <h4 className="text-xl font-headline font-bold text-brand-wine mb-2">{heroData.campaign}</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed font-light italic mb-4">
-                  Curadoria pensada na mulher que valoriza o atemporal.
+              {/* Glass Card */}
+              <div className="absolute -left-16 bottom-20 z-30 w-72 glass p-10 rounded-[4rem] shadow-premium animate-float border-white/60">
+                <div className="h-10 w-10 bg-accent/20 rounded-full flex items-center justify-center mb-6">
+                  <Sparkles className="h-5 w-5 text-accent" />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent mb-3">Destaque</p>
+                <h4 className="text-2xl font-headline font-bold text-primary mb-3 leading-tight">{heroData.campaign}</h4>
+                <p className="text-xs text-muted-foreground/80 leading-relaxed font-light italic mb-6">
+                  Curadoria manual de peças que transcendem a estação.
                 </p>
-                <button className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-brand-wine group-hover:gap-4 transition-all">
+                <button className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.4em] text-primary hover:text-accent transition-colors">
                   Ver Peças <ArrowRight className="h-3 w-3" />
                 </button>
               </div>
 
               {/* Decorative Elements */}
-              <div className="absolute -right-8 -top-8 h-48 w-48 rounded-full bg-brand-rose opacity-40 -z-10 blur-3xl animate-pulse" />
-              <div className="absolute -right-20 bottom-20 h-32 w-32 rounded-[2rem] border-[1px] border-brand-gold/20 -z-10 rotate-12" />
+              <div className="absolute -right-12 -top-12 h-64 w-64 rounded-full bg-accent/10 -z-10 blur-[80px]" />
+              <div className="absolute -bottom-8 -right-8 h-40 w-40 rounded-[3.5rem] border border-accent/20 -z-10 rotate-12" />
             </div>
           </div>
 
