@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -13,8 +12,7 @@ import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, orderBy, limit, where, doc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import Image from 'next/image';
 import {
   Carousel,
@@ -68,7 +66,6 @@ export default function TodaBelaHome() {
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
 
-  // Memoize the plugin to avoid hydration mismatches or re-initialization crashes
   const autoplayPlugin = useMemo(
     () => Autoplay({ delay: 5000, stopOnInteraction: true }),
     []
@@ -83,7 +80,8 @@ export default function TodaBelaHome() {
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'products'), where('published', '==', true), orderBy('createdAt', 'desc'), limit(12));
+    // Removido o filtro 'published' que causava erro de permissão/index
+    return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(12));
   }, [db]);
   
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
@@ -101,7 +99,7 @@ export default function TodaBelaHome() {
       <main>
         <Hero />
 
-        {/* Seção: Categorias Visuais */}
+        {/* Categorias Visuais */}
         <section id="colecoes" className="container mx-auto px-4 py-32 md:px-8">
           <div className="flex flex-col items-center mb-20 text-center space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-accent">Curadoria Exclusiva</span>
@@ -130,7 +128,7 @@ export default function TodaBelaHome() {
           </div>
         </section>
 
-        {/* Seção: Mais Vendidos (Premium Grid) */}
+        {/* Mais Vendidos */}
         <section id="mais-vendidos" className="bg-secondary/20 py-32 overflow-hidden">
           <div className="container mx-auto px-4 md:px-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
@@ -165,7 +163,7 @@ export default function TodaBelaHome() {
           </div>
         </section>
 
-        {/* Seção: Banner de Campanha Editorial */}
+        {/* Campanha */}
         <section className="py-20">
           <div className="container mx-auto px-4 md:px-8">
             <div className="relative h-[80vh] rounded-[4rem] overflow-hidden group">
@@ -192,7 +190,7 @@ export default function TodaBelaHome() {
           </div>
         </section>
 
-        {/* Seção: Storytelling & Prova Social */}
+        {/* Storytelling */}
         <section className="py-32 bg-white">
           <div className="container mx-auto px-4 md:px-8">
             <div className="grid lg:grid-cols-2 gap-20 items-center">
@@ -201,7 +199,7 @@ export default function TodaBelaHome() {
                   <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-accent">L’Essence Toda Bela</span>
                   <h3 className="text-5xl md:text-7xl font-headline font-black text-primary leading-tight">Celebrando a sua Melhor Versão</h3>
                   <p className="text-lg text-muted-foreground leading-relaxed font-light italic">
-                    Nascemos do desejo de oferecer mais do que roupas: oferecemos confiança. Cada costura, cada tecido e cada detalhe é pensado para a mulher que não tem medo de ser protagonista da própria história.
+                    Nascemos do desire de oferecer mais do que roupas: oferecemos confiança. Cada costura, cada tecido e cada detalhe é pensado para a mulher que não tem medo de ser protagonista da própria história.
                   </p>
                 </div>
                 

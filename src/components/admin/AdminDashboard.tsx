@@ -49,7 +49,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
 
   const tabs = [
     { id: 'dashboard', label: 'Visão Geral', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { id: 'shopee', label: 'Auto Importar', icon: <Download className="h-4 w-4" /> },
+    { id: 'shopee', label: 'Importar Produto', icon: <Download className="h-4 w-4" /> },
     { id: 'produtos', label: 'Catálogo', icon: <Package className="h-4 w-4" /> },
     { id: 'categorias', label: 'Coleções', icon: <Layers className="h-4 w-4" /> },
     { id: 'config', label: 'Configurações', icon: <Settings className="h-4 w-4" /> },
@@ -144,7 +144,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
                   {recentProducts?.map((product) => (
                     <div key={product.id} className="flex items-center gap-6 p-5 rounded-3xl border border-primary/5 hover:bg-secondary/20 transition-all duration-500">
                       <div className="h-16 w-16 rounded-2xl overflow-hidden bg-muted shadow-sm">
-                        <img src={product.images?.[0] || product.image} className="object-cover h-full w-full" />
+                        <img src={product.images?.[0] || product.image} className="object-cover h-full w-full" alt={product.name} />
                       </div>
                       <div className="flex-1">
                         <p className="font-bold text-primary text-base truncate">{product.title || product.name}</p>
@@ -152,9 +152,6 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
                       </div>
                       <div className="text-right space-y-2">
                         <p className="font-bold text-primary">R$ {product.price}</p>
-                        <Badge variant="outline" className={`text-[9px] font-bold uppercase tracking-widest ${product.published ? 'text-green-600 border-green-200 bg-green-50' : 'text-orange-600 border-orange-200 bg-orange-50'}`}>
-                          {product.published ? 'Ativo' : 'Rascunho'}
-                        </Badge>
                       </div>
                     </div>
                   ))}

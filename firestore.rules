@@ -3,115 +3,48 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA STOREFRONT - SECURITY ARCHITECTURE
-     *
-     * CORE PHILOSOPHY:
-     * This ruleset implements a "Public Storefront / Private Admin" model. 
-     * The primary goal is to allow potential customers to browse the catalog 
-     * (products, categories, banners) without authentication, while restricting 
-     * all management operations to verified administrators.
-     *
-     * DATA STRUCTURE:
-     * - /products, /categories, /banners: Publicly readable top-level collections.
-     * - /newsletter_subscribers: Write-only for the public, read-only for admins.
-     * - /roles_admin: A restricted lookup collection used to verify admin privileges.
-     *
-     * KEY SECURITY DECISIONS:
-     * 1. Admin Verification: Admin status is determined by the existence of a 
-     *    document in the `/roles_admin` collection matching the user's UID.
-     * 2. Anonymous Engagement: Newsletter subscriptions are open to all users, 
-     *    including unauthenticated (anonymous) ones, to maximize lead capture.
-     * 3. Authorization Independence: We avoid complex cross-document checks 
-     *    during reads to ensure the storefront remains high-performance.
-     * 4. Prototyping Flexibility: While we strictly enforce "who" can write, 
-     *    we allow flexibility in "what" is written (schema) to support rapid development.
+     * TODA BELA - REGRAS DE SEGURANÇA REATIVADAS
+     * 
+     * Estas regras permitem leitura pública para o catálogo e 
+     * restringem a escrita apenas para administradores.
      */
 
-    // --- Helper Functions ---
+    // --- Funções Auxiliares ---
 
-    /** Checks if the user is authenticated with Firebase Auth. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** 
-     * Verifies if the authenticated user has administrative privileges.
-     * Access is granted based on the existence of a document in the roles_admin collection.
-     */
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    /** Combines admin check with a check for the document's existence for updates/deletes. */
-    function isExistingAdmin() {
-      return isAdmin() && resource != null;
-    }
+    // --- Regras de Coleções ---
 
-    // --- Collection Rules ---
-
-    /**
-     * @description Publicly viewable product catalog. Only admins can manage listings.
-     * @path /products/{productId}
-     * @allow get, list: if true;
-     * @allow create: if isAdmin();
-     * @deny create: if !isAdmin(); // Mismatched or missing admin role
-     * @principle Role-Based Access Control (RBAC) for data management.
-     */
     match /products/{productId} {
-      allow get, list: if true;
+      // Permite leitura pública para que qualquer cliente veja os produtos
+      allow read: if true;
+      // Permite criação, atualização e exclusão apenas para administradores
       allow create: if isAdmin();
-      allow update, delete: if isExistingAdmin();
+      allow update, delete: if isAdmin();
     }
 
-    /**
-     * @description Organization categories for navigation. Publicly readable.
-     * @path /categories/{categoryId}
-     * @allow get, list: if true;
-     * @allow update: (Admin) if isExistingAdmin();
-     * @deny update: (User) if !isAdmin();
-     * @principle Separation of concerns: public browsing vs. admin configuration.
-     */
     match /categories/{categoryId} {
-      allow get, list: if true;
-      allow create: if isAdmin();
-      allow update, delete: if isExistingAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    /**
-     * @description Marketing banners for the storefront hero section.
-     * @path /banners/{bannerId}
-     * @allow get, list: if true;
-     * @allow delete: if isExistingAdmin();
-     * @deny delete: if !isAdmin();
-     * @principle Open read access for promotional content.
-     */
     match /banners/{bannerId} {
-      allow get, list: if true;
-      allow create: if isAdmin();
-      allow update, delete: if isExistingAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    /**
-     * @description Lead capture for newsletters. Anyone can subscribe; only admins can view the list.
-     * @path /newsletter_subscribers/{subscriberId}
-     * @allow create: if true; // Allows anonymous and authenticated lead capture
-     * @allow list: (Admin) if isAdmin();
-     * @deny list: (Public) if true; // Prevents email list scraping
-     * @principle Write-only public access to protect PII (Personally Identifiable Information).
-     */
     match /newsletter_subscribers/{subscriberId} {
       allow create: if true;
       allow get, list, delete: if isAdmin();
-      allow update: if false; // Subscriptions are typically immutable; delete and recreate if needed.
+      allow update: if false;
     }
 
-    /**
-     * @description Internal lookup for admin privileges.
-     * @path /roles_admin/{adminUid}
-     * @allow get: if request.auth.uid == adminUid;
-     * @deny list, create, update, delete: if true;
-     * @principle User-Locked Access: A user can verify their own role, but cannot grant roles to themselves or others.
-     */
     match /roles_admin/{adminUid} {
       allow get: if isSignedIn() && request.auth.uid == adminUid;
       allow list, create, update, delete: if false; 
