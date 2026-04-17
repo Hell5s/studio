@@ -8,6 +8,7 @@ import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
+import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, where, doc } from 'firebase/firestore';
@@ -19,7 +20,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import Autoplay from "embla-carousel-autoplay";
 
@@ -30,6 +31,7 @@ export default function TodaBelaStorefront() {
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
 
   const plugin = React.useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
@@ -247,23 +249,30 @@ export default function TodaBelaStorefront() {
 
       {/* Floating Admin Button - Only visible for Admins */}
       {isAdmin && (
-        <Dialog open={isAdminOpen} onOpenChange={setIsAdminOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              size="icon" 
-              className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl bg-foreground text-background hover:bg-primary hover:text-white z-50 transition-all duration-300 scale-100 hover:scale-110"
-            >
-              <Settings className="h-6 w-6" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-[95vw] w-full h-[90vh] overflow-y-auto p-0 rounded-[2.5rem] border-none">
-            <AdminDashboard 
-              productsCount={products?.length || 0} 
-              categoriesCount={categories?.length || 0} 
-              onOpenAI={() => {}} 
-            />
-          </DialogContent>
-        </Dialog>
+        <>
+          <Button 
+            onClick={() => setIsAdminOpen(true)}
+            size="icon" 
+            className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl bg-foreground text-background hover:bg-primary hover:text-white z-50 transition-all duration-300 scale-100 hover:scale-110"
+          >
+            <Settings className="h-6 w-6" />
+          </Button>
+
+          <Dialog open={isAdminOpen} onOpenChange={setIsAdminOpen}>
+            <DialogContent className="max-w-[95vw] w-full h-[90vh] overflow-y-auto p-0 rounded-[2.5rem] border-none">
+              <AdminDashboard 
+                productsCount={products?.length || 0} 
+                categoriesCount={categories?.length || 0} 
+                onOpenAI={() => setIsAIGeneratorOpen(true)} 
+              />
+            </DialogContent>
+          </Dialog>
+
+          <AIProductGenerator 
+            open={isAIGeneratorOpen} 
+            onOpenChange={setIsAIGeneratorOpen} 
+          />
+        </>
       )}
 
       {/* Login Dialog */}
