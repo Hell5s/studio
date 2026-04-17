@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -17,6 +16,20 @@ import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const WHATSAPP_NUMBER = "5511999999999";
 
