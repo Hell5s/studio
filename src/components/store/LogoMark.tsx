@@ -1,27 +1,89 @@
-import React from 'react';
 
-export function LogoMark() {
+import React from 'react';
+import { cn } from '@/lib/utils';
+
+interface LogoMarkProps {
+  variant?: 'default' | 'white' | 'dark' | 'icon';
+  className?: string;
+}
+
+/**
+ * Toda Bela - Maison de Mode
+ * Uma logo premium que equilibra o clássico editorial com o minimalismo moderno.
+ */
+export function LogoMark({ variant = 'default', className }: LogoMarkProps) {
+  const isWhite = variant === 'white';
+  const isIcon = variant === 'icon';
+
+  const colors = {
+    primary: isWhite ? 'text-white' : 'text-primary',
+    accent: isWhite ? 'text-white/80' : 'text-accent',
+    border: isWhite ? 'border-white/30' : 'border-accent/30',
+    line: isWhite ? 'bg-white/40' : 'bg-accent/40',
+  };
+
+  if (isIcon) {
+    return (
+      <div className={cn("relative flex h-16 w-16 items-center justify-center group", className)}>
+        {/* Outer Fine Seal */}
+        <div className={cn(
+          "absolute inset-0 border-[0.5px] rounded-full transition-transform duration-1000 group-hover:rotate-90",
+          colors.border
+        )} />
+        {/* Inner Monogram */}
+        <div className="relative flex flex-col items-center">
+          <span className={cn(
+            "text-xl font-headline font-bold tracking-tighter leading-none",
+            colors.primary
+          )}>
+            TB
+          </span>
+          <div className={cn("h-[1px] w-4 mt-1 transition-all group-hover:w-6", colors.line)} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center group cursor-pointer">
-      {/* Refined Monogram Seal */}
-      <div className="relative flex h-14 w-14 items-center justify-center mb-1">
-        <div className="absolute inset-0 border border-accent/30 rounded-full scale-90 group-hover:scale-110 transition-transform duration-1000 ease-out" />
-        <div className="absolute inset-0 border-[0.5px] border-accent/10 rounded-full scale-100 group-hover:rotate-45 transition-transform duration-1000" />
+    <div className={cn("flex flex-col items-center group cursor-pointer", className)}>
+      {/* Monogram Seal - Premium Floating Element */}
+      <div className="relative flex h-16 w-16 items-center justify-center mb-4">
+        <div className={cn(
+          "absolute inset-0 border-[0.5px] rounded-full scale-100 group-hover:scale-110 transition-transform duration-1000 ease-out",
+          colors.border
+        )} />
+        <div className={cn(
+          "absolute inset-1 border-[0.5px] rounded-full opacity-30 group-hover:rotate-45 transition-transform duration-1000",
+          colors.border
+        )} />
         <div className="relative flex flex-col items-center justify-center">
-          <span className="text-[16px] font-headline font-bold text-primary tracking-tighter leading-none">TB</span>
-          <div className="h-[1px] w-3 bg-accent/40 mt-1" />
+          <span className={cn(
+            "text-lg font-headline font-bold tracking-tighter leading-none",
+            colors.primary
+          )}>
+            TB
+          </span>
+          <div className={cn("h-[0.5px] w-3 mt-1.5", colors.line)} />
         </div>
       </div>
       
-      {/* Brand Typography */}
-      <div className="flex flex-col items-center">
-        <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-primary leading-none">
+      {/* Brand Typography - Editorial Presence */}
+      <div className="flex flex-col items-center space-y-2">
+        <h1 className={cn(
+          "text-4xl md:text-5xl font-headline font-bold tracking-tight leading-none transition-colors",
+          colors.primary
+        )}>
           Toda Bela
         </h1>
-        <div className="flex items-center gap-2 mt-2">
-          <div className="h-[0.5px] w-6 bg-accent/30" />
-          <p className="text-[10px] uppercase font-bold tracking-[0.4em] text-accent">Maison de Mode</p>
-          <div className="h-[0.5px] w-6 bg-accent/30" />
+        <div className="flex items-center gap-4">
+          <div className={cn("h-[0.5px] w-8", colors.line)} />
+          <p className={cn(
+            "text-[10px] uppercase font-bold tracking-[0.6em] whitespace-nowrap",
+            colors.accent
+          )}>
+            Maison de Mode
+          </p>
+          <div className={cn("h-[0.5px] w-8", colors.line)} />
         </div>
       </div>
     </div>
