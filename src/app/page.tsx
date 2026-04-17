@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Search, ShoppingBag, User, ArrowRight, Instagram, Facebook, Heart, Truck, Loader2 } from 'lucide-react';
+import { Search, ShoppingBag, User, ArrowRight, Instagram, Facebook, Heart, Truck, Loader2, Settings, Sparkles } from 'lucide-react';
 import { LogoMark } from '@/components/store/LogoMark';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -23,6 +23,7 @@ import Autoplay from "embla-carousel-autoplay";
 export default function TodaBelaStorefront() {
   const db = useFirestore();
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   const plugin = React.useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
@@ -45,28 +46,33 @@ export default function TodaBelaStorefront() {
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-primary/10 bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8">
           <LogoMark />
           
-          <nav className="hidden lg:flex items-center gap-10 text-sm font-medium">
+          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium">
             <a href="#colecao" className="text-foreground/70 transition-colors hover:text-primary">Coleção</a>
             <a href="#novidades" className="text-foreground/70 transition-colors hover:text-primary">Novidades</a>
             <a href="#beneficios" className="text-foreground/70 transition-colors hover:text-primary">Benefícios</a>
             <a href="#newsletter" className="text-foreground/70 transition-colors hover:text-primary">Clube Toda Bela</a>
-            <a href="#rastreio" className="flex items-center gap-1 text-primary font-semibold transition-colors hover:opacity-80">
-              <Truck className="h-4 w-4" />
-              Rastrear Pedido
-            </a>
+            <Button 
+              variant="ghost" 
+              onClick={() => setIsAdminOpen(true)}
+              className="text-primary/60 hover:text-primary hover:bg-primary/5 gap-2 px-3 h-9"
+            >
+              <Settings className="h-4 w-4" />
+              Admin
+            </Button>
           </nav>
 
           <div className="flex items-center gap-2 md:gap-4">
+            <a href="#rastreio" className="hidden sm:flex items-center gap-2 text-primary font-semibold transition-colors hover:opacity-80 text-sm mr-2">
+              <Truck className="h-4 w-4" />
+              Rastrear
+            </a>
             <Button variant="ghost" size="icon" className="rounded-full text-foreground/70">
               <Search className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="rounded-full text-foreground/70 hidden sm:flex">
-              <User className="h-5 w-5" />
             </Button>
             <Button className="rounded-full bg-primary px-5 py-6 text-sm font-semibold shadow-lg shadow-primary/10 group">
               <ShoppingBag className="mr-2 h-4 w-4 transition-transform group-hover:-rotate-12" />
@@ -81,11 +87,11 @@ export default function TodaBelaStorefront() {
 
         <section id="colecao" className="container mx-auto px-4 py-24 md:px-8">
           <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
-            <div className="max-w-xl">
+            <div className="max-w-xl text-left">
               <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/60">Novidades</span>
               <h3 className="mt-4 text-4xl md:text-5xl font-headline font-semibold text-foreground leading-tight">Looks que encantam</h3>
               <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-                Nossa vitrine rotativa apresenta as peças mais desejadas da estação. Deslize para explorar.
+                Nossa vitrine apresenta as peças mais desejadas da estação. Clique para explorar os detalhes de cada peça.
               </p>
             </div>
             
@@ -96,7 +102,7 @@ export default function TodaBelaStorefront() {
                 className={`rounded-full px-6 py-5 text-sm font-semibold transition-all duration-300 ${
                   activeCategoryId === "all" 
                     ? "shadow-md shadow-primary/20 scale-105" 
-                    : "bg-white/50 border-primary/20 text-primary hover:bg-brand-blush"
+                    : "bg-white/50 border-primary/20 text-primary hover:bg-secondary"
                 }`}
               >
                 Todas
@@ -109,7 +115,7 @@ export default function TodaBelaStorefront() {
                   className={`rounded-full px-6 py-5 text-sm font-semibold transition-all duration-300 ${
                     activeCategoryId === category.id 
                       ? "shadow-md shadow-primary/20 scale-105" 
-                      : "bg-white/50 border-primary/20 text-primary hover:bg-brand-blush"
+                      : "bg-white/50 border-primary/20 text-primary hover:bg-secondary"
                   }`}
                 >
                   {category.name}
@@ -142,26 +148,26 @@ export default function TodaBelaStorefront() {
                   ))}
                 </CarouselContent>
                 <div className="hidden md:flex justify-end gap-2 mt-8">
-                  <CarouselPrevious className="relative left-0 translate-y-0 h-12 w-12 border-primary/10 hover:bg-brand-blush" />
-                  <CarouselNext className="relative right-0 translate-y-0 h-12 w-12 border-primary/10 hover:bg-brand-blush" />
+                  <CarouselPrevious className="relative left-0 translate-y-0 h-12 w-12 border-primary/10 hover:bg-secondary" />
+                  <CarouselNext className="relative right-0 translate-y-0 h-12 w-12 border-primary/10 hover:bg-secondary" />
                 </div>
               </Carousel>
             ) : (
-              <div className="text-center py-20 text-muted-foreground border border-dashed rounded-[2rem] border-primary/20">
+              <div className="text-center py-20 text-muted-foreground border border-dashed rounded-[2rem] border-primary/20 bg-secondary/10">
                 Nenhum produto disponível nesta categoria no momento.
               </div>
             )}
           </div>
 
           <div className="mt-20 flex justify-center">
-            <Button variant="ghost" className="rounded-full py-8 px-10 text-base font-semibold text-primary hover:bg-brand-blush group">
+            <Button variant="ghost" className="rounded-full py-8 px-10 text-base font-semibold text-primary hover:bg-secondary group">
               Ver coleção completa
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
             </Button>
           </div>
         </section>
 
-        <section id="beneficios" className="bg-brand-blush/30 py-24">
+        <section id="beneficios" className="bg-secondary/30 py-24">
           <div className="container mx-auto px-4 md:px-8">
             <div className="grid gap-8 md:grid-cols-3">
               {[
@@ -199,23 +205,23 @@ export default function TodaBelaStorefront() {
       <footer className="border-t border-primary/10 bg-white/50 py-16">
         <div className="container mx-auto px-4 md:px-8">
           <div className="grid gap-12 lg:grid-cols-4">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 text-left">
               <LogoMark />
               <p className="mt-8 max-w-md text-lg leading-relaxed text-muted-foreground">
                 Toda Bela é uma marca feminina moderna com presença delicada, sofisticada e acolhedora. 
                 Nossa missão é realçar a beleza que já existe em você.
               </p>
               <div className="mt-8 flex gap-4">
-                <Button variant="outline" size="icon" className="rounded-full h-12 w-12 border-primary/10 text-primary hover:bg-brand-blush">
+                <Button variant="outline" size="icon" className="rounded-full h-12 w-12 border-primary/10 text-primary hover:bg-secondary">
                   <Instagram className="h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="icon" className="rounded-full h-12 w-12 border-primary/10 text-primary hover:bg-brand-blush">
+                <Button variant="outline" size="icon" className="rounded-full h-12 w-12 border-primary/10 text-primary hover:bg-secondary">
                   <Facebook className="h-5 w-5" />
                 </Button>
               </div>
             </div>
             
-            <div>
+            <div className="text-left">
               <h4 className="font-headline font-bold text-foreground text-lg mb-8">Navegação</h4>
               <ul className="space-y-4 text-muted-foreground">
                 <li className="transition-colors hover:text-primary cursor-pointer">Novidades</li>
@@ -225,7 +231,7 @@ export default function TodaBelaStorefront() {
               </ul>
             </div>
             
-            <div>
+            <div className="text-left">
               <h4 className="font-headline font-bold text-foreground text-lg mb-8">Ajuda</h4>
               <ul className="space-y-4 text-muted-foreground">
                 <li className="transition-colors hover:text-primary cursor-pointer font-semibold text-primary">Rastrear Pedido</li>
@@ -248,7 +254,18 @@ export default function TodaBelaStorefront() {
       </footer>
 
       {/* AI Assistant Tool for Admins */}
-      <AIProductGenerator />
+      <AIProductGenerator open={isAdminOpen} onOpenChange={setIsAdminOpen} />
+      
+      {/* Floating Action Button for AI (Trigger) */}
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={() => setIsAdminOpen(true)}
+        className="fixed bottom-6 right-6 rounded-full shadow-2xl bg-white border-primary/20 text-primary hover:bg-secondary z-50 py-6 px-6"
+      >
+        <Sparkles className="mr-2 h-4 w-4" />
+        Gerador de Descrições AI
+      </Button>
     </div>
   );
 }

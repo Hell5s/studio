@@ -2,16 +2,20 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, Loader2, Copy, Check } from 'lucide-react';
+import { Sparkles, Loader2, Copy, Check, X } from 'lucide-react';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
-export function AIProductGenerator() {
+interface AIProductGeneratorProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function AIProductGenerator({ open, onOpenChange }: AIProductGeneratorProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
   const [copied, setCopied] = useState(false);
@@ -61,21 +65,15 @@ export function AIProductGenerator() {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="fixed bottom-6 right-6 rounded-full shadow-2xl bg-white border-primary/20 text-primary hover:bg-secondary z-50 py-6 px-6">
-          <Sparkles className="mr-2 h-4 w-4" />
-          Gerador de Descrições AI
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px] z-[100]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-brand-plum" />
             Gerador Toda Bela AI
           </DialogTitle>
           <DialogDescription>
-            Crie descrições sofisticadas e envolventes em segundos.
+            Crie descrições sofisticadas e envolventes para seus produtos em segundos.
           </DialogDescription>
         </DialogHeader>
         
