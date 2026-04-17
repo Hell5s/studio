@@ -9,7 +9,6 @@ import {
   CheckCircle2, 
   Clock, 
   MapPin, 
-  ArrowRight,
   Loader2,
   AlertCircle
 } from 'lucide-react';
@@ -71,47 +70,47 @@ export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden">
-        <div className="bg-brand-wine p-8 text-white relative">
+      <DialogContent className="sm:max-w-[500px] rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-background">
+        <div className="bg-primary p-10 text-primary-foreground relative">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Truck className="h-24 w-24" />
           </div>
-          <DialogHeader className="relative z-10">
+          <DialogHeader className="relative z-10 space-y-2">
             <DialogTitle className="text-2xl font-headline font-bold uppercase tracking-widest">
               Rastrear Pedido
             </DialogTitle>
-            <DialogDescription className="text-brand-rose/60 font-light italic">
+            <DialogDescription className="text-secondary/60 font-light italic">
               Acompanhe cada passo da sua nova conquista Toda Bela.
             </DialogDescription>
           </DialogHeader>
         </div>
 
-        <div className="p-8 space-y-8">
+        <div className="p-10 space-y-8">
           {!trackingData ? (
             <form onSubmit={handleTrack} className="space-y-6">
               <div className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="orderId" className="text-[10px] font-bold uppercase tracking-widest text-brand-wine/40 ml-4">
+                  <Label htmlFor="orderId" className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-4">
                     Número do Pedido
                   </Label>
                   <Input 
                     id="orderId" 
                     placeholder="Ex: #12345" 
-                    className="rounded-full h-14 bg-brand-blush/20 border-none px-6 focus:ring-2 focus:ring-brand-wine/10 transition-all"
+                    className="rounded-full h-14 bg-secondary/30 border-none px-6 focus:ring-2 focus:ring-primary/10 transition-all text-primary"
                     value={orderId}
                     onChange={e => setOrderId(e.target.value)}
                     required
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="track-email" className="text-[10px] font-bold uppercase tracking-widest text-brand-wine/40 ml-4">
+                  <Label htmlFor="track-email" className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-4">
                     E-mail da Compra
                   </Label>
                   <Input 
                     id="track-email" 
                     type="email"
                     placeholder="seu@email.com" 
-                    className="rounded-full h-14 bg-brand-blush/20 border-none px-6 focus:ring-2 focus:ring-brand-wine/10 transition-all"
+                    className="rounded-full h-14 bg-secondary/30 border-none px-6 focus:ring-2 focus:ring-primary/10 transition-all text-primary"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
@@ -129,74 +128,72 @@ export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogP
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full rounded-full h-14 bg-brand-wine text-white font-bold uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all"
+                className="w-full rounded-full h-16 bg-primary text-primary-foreground font-bold uppercase tracking-[0.4em] shadow-xl hover:scale-[1.02] transition-all text-[10px]"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-3 h-4 w-4 animate-spin" />
                     Buscando...
                   </>
                 ) : (
                   <>
-                    <Search className="mr-2 h-4 w-4" />
+                    <Search className="mr-3 h-4 w-4" />
                     Localizar Pedido
                   </>
                 )}
               </Button>
             </form>
           ) : (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-brand-wine/40">Pedido {trackingData.id}</p>
-                  <h4 className="text-xl font-headline font-bold text-brand-wine">{trackingData.status}</h4>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Pedido {trackingData.id}</p>
+                  <h4 className="text-xl font-headline font-bold text-primary mt-1">{trackingData.status}</h4>
                 </div>
-                <Badge className="bg-brand-gold text-white border-none px-4 py-1.5 rounded-full font-bold uppercase tracking-widest text-[9px]">
+                <Badge className="bg-accent text-accent-foreground border-none px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[9px] shadow-sm">
                   {trackingData.estimatedDelivery}
                 </Badge>
               </div>
 
-              <div className="space-y-6 relative">
-                <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-brand-blush" />
+              <div className="space-y-8 relative">
+                <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-secondary" />
                 
                 {trackingData.steps.map((step: any, i: number) => (
-                  <div key={i} className="flex gap-6 relative group">
+                  <div key={i} className="flex gap-8 relative group">
                     <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 z-10 transition-all duration-500 ${
-                      step.completed ? "bg-brand-wine text-white shadow-lg" : 
-                      step.current ? "bg-brand-gold text-white shadow-lg animate-pulse" : 
-                      "bg-white border-2 border-brand-blush text-brand-wine/20"
+                      step.completed ? "bg-primary text-primary-foreground shadow-lg" : 
+                      step.current ? "bg-accent text-accent-foreground shadow-lg animate-float" : 
+                      "bg-white border-2 border-secondary text-primary/20"
                     }`}>
                       {step.icon}
                     </div>
                     <div className="flex-1 pt-1">
-                      <h5 className={`text-sm font-bold uppercase tracking-widest ${
-                        step.completed || step.current ? "text-brand-wine" : "text-brand-wine/30"
+                      <h5 className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
+                        step.completed || step.current ? "text-primary" : "text-primary/30"
                       }`}>
                         {step.title}
                       </h5>
-                      <p className="text-[10px] text-muted-foreground font-medium italic mt-0.5">
+                      <p className="text-[10px] text-muted-foreground/70 font-medium italic mt-1">
                         {step.date}
                       </p>
                     </div>
-                    {step.current && (
-                      <div className="absolute -left-2 top-0 h-10 w-10 bg-brand-gold/20 rounded-full blur-xl animate-pulse" />
-                    )}
                   </div>
                 ))}
               </div>
 
-              <Separator className="bg-brand-wine/5" />
+              <Separator className="bg-primary/5" />
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 <Button 
                   onClick={() => setTrackingData(null)}
                   variant="ghost" 
-                  className="rounded-full text-brand-wine/60 hover:text-brand-wine font-bold uppercase tracking-widest text-[10px]"
+                  className="rounded-full text-primary/60 hover:text-primary font-bold uppercase tracking-widest text-[9px] h-12"
                 >
                   Nova Consulta
                 </Button>
                 <Button 
-                  className="rounded-full h-14 border border-brand-wine/10 text-brand-wine bg-white hover:bg-brand-blush/20 font-bold uppercase tracking-widest text-[10px] transition-all"
+                  variant="outline"
+                  className="rounded-full h-14 border-primary/10 text-primary bg-white hover:bg-secondary/50 font-bold uppercase tracking-widest text-[9px] transition-all"
                 >
                   Precisa de Ajuda? Fale Conosco
                 </Button>
