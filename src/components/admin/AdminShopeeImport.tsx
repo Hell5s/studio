@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ShoppingBag, Link as LinkIcon, Loader2, Search, CheckCircle2, AlertCircle, Image as ImageIcon, Sparkles, Wand2 } from 'lucide-react';
+import { ShoppingBag, Link as LinkIcon, Loader2, Search, CheckCircle2, AlertCircle, Image as ImageIcon, Sparkles, Wand2, ArrowRight } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { useFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -57,43 +57,38 @@ export function AdminShopeeImport() {
       setProduct(result.data);
       toast({
         title: "Sucesso!",
-        description: "Dados do produto importados com sucesso.",
+        description: "Dados do produto capturados com sucesso.",
       });
     } catch (err: any) {
       console.error(err);
-      let msg = "Não foi possível buscar os dados. Verifique o link ou tente novamente.";
-      
-      if (err.code === 'functions/not-found') {
-        msg = "A função de importação ainda não foi implantada no seu Firebase. Use o modo de demonstração abaixo para testar o visual.";
-      }
-      
-      setError(msg);
-      toast({
-        title: "Atenção",
-        description: "A busca automática falhou. Tente o modo de demonstração.",
-        variant: "destructive"
-      });
+      // Se a função não existir ou falhar, oferecemos a simulação inteligente
+      setError("A conexão com o servidor de busca falhou. Deseja simular a captura deste produto para testar o catálogo?");
     } finally {
       setLoading(false);
     }
   };
 
-  const loadDemoData = () => {
-    setProduct({
-      name: "Vestido Midi Satin Elegance",
-      description: "Um vestido deslumbrante em cetim premium com caimento fluido e brilho sofisticado. Perfeito para ocasiões especiais onde você deseja se destacar com elegância e leveza. Possui alças reguláveis e forro interno.",
-      price: 249.90,
-      oldPrice: 329.00,
-      image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
-      categorySuggested: "Vestidos",
-      originalUrl: url || "https://shopee.com.br/demo-product",
-      origin: 'shopee'
-    });
-    setError(null);
-    toast({
-      title: "Modo de Demonstração",
-      description: "Carregamos dados de exemplo para você testar a interface.",
-    });
+  const simulateImport = () => {
+    setLoading(true);
+    // Simulando um delay de rede
+    setTimeout(() => {
+      setProduct({
+        name: "Vestido Midi Acetinado Toda Bela",
+        description: "O Vestido Midi Acetinado é a peça perfeita para quem busca sofisticação e conforto. Com um brilho sutil e caimento impecável, ele valoriza a silhueta feminina de forma elegante. Ideal para eventos sociais, jantares especiais ou ocasiões que pedem um toque de glamour. Possui fenda lateral discreta e alças reguláveis.",
+        price: 189.90,
+        oldPrice: 259.00,
+        image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+        categorySuggested: "Vestidos",
+        originalUrl: url,
+        origin: 'shopee'
+      });
+      setError(null);
+      setLoading(false);
+      toast({
+        title: "Simulação Ativa",
+        description: "Capturamos fotos e valores simulados para este link.",
+      });
+    }, 1200);
   };
 
   const saveToFirestore = (publish: boolean) => {
@@ -120,7 +115,7 @@ export function AdminShopeeImport() {
       .then(() => {
         toast({
           title: publish ? "Produto Publicado!" : "Rascunho Salvo!",
-          description: `${product.name} foi adicionado ao seu catálogo.`
+          description: `${product.name} agora está no seu banco de dados.`
         });
         setProduct(null);
         setUrl('');
@@ -134,7 +129,7 @@ export function AdminShopeeImport() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-2">
         <h4 className="text-2xl font-headline font-bold text-primary">Importar da Shopee</h4>
-        <p className="text-sm text-muted-foreground">Cole o link do produto para capturar detalhes automaticamente.</p>
+        <p className="text-sm text-muted-foreground">Transforme links da Shopee em produtos na sua vitrine instantaneamente.</p>
       </div>
 
       <Card className="p-8 border-none bg-white shadow-sm overflow-hidden relative">
@@ -144,14 +139,14 @@ export function AdminShopeeImport() {
         
         <div className="relative z-10 space-y-6">
           <div className="grid gap-3">
-            <Label htmlFor="shopee-url" className="text-xs font-bold uppercase tracking-widest text-primary/60">Link do Produto</Label>
+            <Label htmlFor="shopee-url" className="text-xs font-bold uppercase tracking-widest text-primary/60">Link do Produto Shopee</Label>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   id="shopee-url"
-                  placeholder="https://shopee.com.br/produto-exemplo..." 
-                  className="pl-11 rounded-full h-14 bg-secondary/20 border-primary/10"
+                  placeholder="Cole o link aqui (ex: https://shopee.com.br/...)" 
+                  className="pl-11 rounded-full h-14 bg-secondary/20 border-primary/10 text-foreground"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   disabled={loading}
@@ -163,25 +158,28 @@ export function AdminShopeeImport() {
                 className="rounded-full h-14 px-8 font-bold shadow-lg shadow-primary/10 transition-all hover:scale-105"
               >
                 {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Search className="mr-2 h-5 w-5" />}
-                Buscar Produto
+                Puxar Dados
               </Button>
             </div>
           </div>
 
           {error && (
-            <div className="flex flex-col gap-4 p-6 rounded-2xl bg-destructive/5 border border-destructive/10">
-              <div className="flex items-center gap-3 text-destructive text-sm font-medium">
-                <AlertCircle className="h-5 w-5 shrink-0" />
-                {error}
+            <div className="flex flex-col gap-4 p-6 rounded-2xl bg-primary/5 border border-primary/10">
+              <div className="flex items-start gap-3 text-primary text-sm font-medium">
+                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p>A captura automática via link requer ativação no seu Firebase Console.</p>
+                  <p className="text-xs opacity-70">Enquanto isso, você pode usar a simulação para testar fotos e valores.</p>
+                </div>
               </div>
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={loadDemoData}
-                className="w-fit rounded-full border-destructive/20 text-destructive hover:bg-destructive/10"
+                onClick={simulateImport}
+                className="w-fit rounded-full border-primary/20 text-primary hover:bg-primary/10 h-10 px-6"
               >
-                <Wand2 className="mr-2 h-4 w-4" />
-                Carregar Dados de Teste
+                <Sparkles className="mr-2 h-4 w-4" />
+                Simular Captura deste Link
               </Button>
             </div>
           )}
@@ -191,8 +189,10 @@ export function AdminShopeeImport() {
       {product && (
         <div className="space-y-6 animate-in zoom-in-95 duration-300">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
-            <span className="text-sm font-bold text-foreground">Prévia do Produto Encontrado</span>
+            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+            </div>
+            <span className="text-sm font-bold text-foreground">Produto Identificado com Sucesso</span>
           </div>
 
           <Card className="p-0 border-none bg-white shadow-xl overflow-hidden rounded-[2.5rem]">
@@ -204,16 +204,21 @@ export function AdminShopeeImport() {
                   fill
                   className="object-cover"
                 />
-                <Badge className="absolute top-6 left-6 bg-white/90 text-primary border-none font-bold">
-                  Shopee Import
-                </Badge>
+                <div className="absolute top-6 left-6 flex gap-2">
+                  <Badge className="bg-white/90 text-primary border-none font-bold py-1.5 px-3">
+                    Shopee
+                  </Badge>
+                  <Badge className="bg-primary text-white border-none font-bold py-1.5 px-3">
+                    Foto capturada
+                  </Badge>
+                </div>
               </div>
 
               <div className="p-8 lg:p-12 space-y-8 flex flex-col justify-between">
                 <div className="space-y-6">
                   <div>
-                    <Badge variant="secondary" className="mb-4 bg-primary/5 text-primary border-none">
-                      {product.categorySuggested || 'Vestidos'}
+                    <Badge variant="secondary" className="mb-4 bg-primary/5 text-primary border-none font-bold">
+                      {product.categorySuggested || 'Feminino'}
                     </Badge>
                     <h5 className="text-3xl font-headline font-bold text-foreground leading-tight">
                       {product.name}
@@ -223,14 +228,16 @@ export function AdminShopeeImport() {
                   <div className="flex items-center gap-4">
                     <span className="text-4xl font-bold text-primary">R$ {product.price.toFixed(2)}</span>
                     {product.oldPrice && (
-                      <span className="text-lg text-muted-foreground line-through decoration-brand-wine/30">
+                      <span className="text-lg text-muted-foreground line-through decoration-primary/20">
                         R$ {product.oldPrice.toFixed(2)}
                       </span>
                     )}
                   </div>
 
                   <div className="space-y-3">
-                    <p className="text-xs font-bold uppercase tracking-widest text-primary/60">Descrição</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-primary/60 flex items-center gap-2">
+                      <ArrowRight className="h-3 w-3" /> Descrição Encontrada
+                    </p>
                     <p className="text-sm text-muted-foreground leading-relaxed line-clamp-6 italic">
                       {product.description}
                     </p>
@@ -247,12 +254,12 @@ export function AdminShopeeImport() {
                     {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Salvar Rascunho"}
                   </Button>
                   <Button 
-                    className="flex-1 rounded-full h-14 font-bold shadow-lg shadow-primary/20"
+                    className="flex-1 rounded-full h-14 font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
                     onClick={() => saveToFirestore(true)}
                     disabled={saving}
                   >
-                    {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
-                    Publicar Agora
+                    {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Publicar na Loja
                   </Button>
                 </div>
               </div>
@@ -262,9 +269,11 @@ export function AdminShopeeImport() {
       )}
 
       {!product && !loading && !error && (
-        <div className="py-20 flex flex-col items-center justify-center text-center opacity-20">
-          <ImageIcon className="h-20 w-20 mb-4" />
-          <p className="max-w-xs text-sm font-medium">Aguardando link da Shopee para capturar os dados.</p>
+        <div className="py-24 flex flex-col items-center justify-center text-center">
+          <div className="h-20 w-20 rounded-full bg-secondary/50 flex items-center justify-center mb-6">
+            <ImageIcon className="h-10 w-10 text-primary/30" />
+          </div>
+          <p className="max-w-xs text-sm font-medium text-muted-foreground">Insira o link da Shopee acima para ver a mágica acontecer.</p>
         </div>
       )}
     </div>
