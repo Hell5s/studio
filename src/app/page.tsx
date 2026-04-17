@@ -98,7 +98,7 @@ export default function TodaBelaHome() {
       <main>
         <Hero />
 
-        {/* 1. Categorias Visuais */}
+        {/* 1. Categorias Visuais (Editorial Grid) */}
         <section id="colecoes" className="container mx-auto px-4 py-32 md:px-12">
           <div className="flex flex-col items-center mb-24 text-center space-y-6">
             <div className="flex items-center gap-3">
