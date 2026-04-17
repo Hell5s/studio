@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -67,9 +68,9 @@ export default function TodaBelaHome() {
               <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Curadoria Exclusiva</span>
               <div className="h-0.5 w-10 bg-accent/40" />
             </div>
-            <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary text-editorial">Onde a Elegância se Torna Legado</h3>
+            <h3 className="text-5xl md:text-8xl font-headline font-bold text-primary text-editorial">Onde o Estilo se Torna Legado</h3>
             <p className="text-muted-foreground/70 italic font-light max-w-lg mx-auto">
-              Territórios de estilo desenhados para elevar sua presença em cada capítulo da sua história.
+              Territórios de design desenhados para elevar sua presença em cada capítulo da sua história.
             </p>
           </div>
 
@@ -86,7 +87,7 @@ export default function TodaBelaHome() {
                 <div className="absolute bottom-12 left-0 right-0 text-center px-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
                   <h4 className="text-2xl font-bold text-white uppercase tracking-[0.2em] mb-2">{cat.name}</h4>
                   <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-100">
-                    <span className="text-[10px] font-bold text-accent uppercase tracking-[0.4em]">Explorar Mundo</span>
+                    <span className="text-[10px] font-bold text-accent uppercase tracking-[0.4em]">Sentir o Universo</span>
                     <ArrowUpRight className="h-3 w-3 text-accent" />
                   </div>
                 </div>
@@ -186,7 +187,7 @@ export default function TodaBelaHome() {
                 <div className="grid sm:grid-cols-2 gap-10">
                   {[
                     { icon: <ShieldCheck className="h-8 w-8 text-accent" />, title: "Selo de Excelência", desc: "Curadoria rigorosa de tecidos que abraçam o corpo com luxo." },
-                    { icon: <Truck className="h-8 w-8 text-accent" />, title: "Logística Sublime", desc: "Sua nova conquista chega com a rapidez que sua ansiedade merece." }
+                    { icon: <Truck className="h-8 w-8 text-accent" />, title: "Logística Sublime", desc: "Sua nova conquista chega com a rapidez que sua presença merece." }
                   ].map((item, i) => (
                     <div key={i} className="p-12 rounded-[4rem] bg-secondary/30 border border-primary/5 space-y-6 hover:shadow-xl transition-all duration-500">
                       <div className="bg-white h-16 w-16 rounded-3xl flex items-center justify-center shadow-sm">

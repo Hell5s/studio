@@ -16,10 +16,10 @@ export function Hero() {
   const { data: banners } = useCollection(bannersQuery);
 
   const heroData = banners?.[0] || {
-    title: "Onde o Estilo Encontra sua Própria Alma",
-    subtitle: "A Toda Bela nasceu para vestir mulheres que não temem o protagonismo, através de uma curadoria fashion que transcende o tempo e celebra a sua essência única.",
+    title: "A Presença que o Tempo não Apaga",
+    subtitle: "Curadoria de alta moda para a mulher que decide ser a única protagonista da própria história. Peças que vestem alma, força e elegância atemporal.",
     campaign: "L'Essence 2024",
-    campaignText: "Nova Coleção • Infinito",
+    campaignText: "Nova Coleção • Manifesto",
     image: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=1200&q=1600"
   };
 
@@ -57,10 +57,10 @@ export function Hero() {
 
             <div className="flex flex-wrap gap-6 pt-4">
               <Button className="rounded-full bg-primary hover:bg-primary/90 text-white px-12 py-9 text-[11px] font-bold uppercase tracking-[0.4em] shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 group">
-                Viver a Experiência <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-2 transition-transform" />
+                Sentir a Coleção <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-2 transition-transform" />
               </Button>
               <Button variant="outline" className="rounded-full border-primary/10 text-primary px-12 py-9 text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-white hover:border-primary/30 transition-all">
-                Explorar Universos
+                Ver Manifesto
               </Button>
             </div>
 
@@ -123,10 +123,10 @@ export function Hero() {
                 <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent mb-4">Maison D'Or</p>
                 <h4 className="text-3xl font-headline font-bold text-primary mb-4 leading-tight">{heroData.campaign}</h4>
                 <p className="text-xs text-muted-foreground/80 leading-relaxed font-light italic mb-8">
-                  Curadoria artesanal de peças que transcendem estações e celebram a presença feminina.
+                  A poesia reside naquilo que decidimos vestir hoje.
                 </p>
                 <button className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.4em] text-primary hover:text-accent transition-colors group">
-                  Ver Coleção <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  Explorar <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
 
