@@ -62,6 +62,7 @@ export default function TodaBelaStorefront() {
 
   const handleLogout = () => {
     signOut(auth);
+    setIsAdminOpen(false);
   };
 
   return (
@@ -259,7 +260,7 @@ export default function TodaBelaStorefront() {
           </Button>
 
           <Dialog open={isAdminOpen} onOpenChange={setIsAdminOpen}>
-            <DialogContent className="max-w-[95vw] w-full h-[90vh] overflow-y-auto p-0 rounded-[2.5rem] border-none">
+            <DialogContent className="max-w-[98vw] w-full h-[95vh] overflow-hidden p-0 rounded-[2.5rem] border-none shadow-2xl">
               <AdminDashboard 
                 productsCount={products?.length || 0} 
                 categoriesCount={categories?.length || 0} 
