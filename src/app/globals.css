@@ -4,23 +4,23 @@
 
 @layer base {
   :root {
-    /* Toda Bela - Sophisticated & Elegant Palette */
-    --background: 20 30% 99%; /* Creme suave #FFF9F7 */
-    --foreground: 20 10% 13%; /* Quase preto #2A1F22 */
+    /* Toda Bela - Palette Premium & Editorial */
+    --background: 15 100% 99%; /* Creme #FFF9F7 */
+    --foreground: 343 16% 15%; /* Texto #2A1F22 */
     
     --card: 0 0% 100%;
-    --card-foreground: 20 10% 13%;
+    --card-foreground: 343 16% 15%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 20 10% 13%;
+    --popover-foreground: 343 16% 15%;
     
     /* Vinho Profundo #6E3C47 */
-    --primary: 347 30% 34%;
-    --primary-foreground: 347 10% 98%;
+    --primary: 347 29% 34%;
+    --primary-foreground: 351 45% 94%;
     
     /* Blush Delicado #F7E8EA */
     --secondary: 351 45% 94%;
-    --secondary-foreground: 347 30% 34%;
+    --secondary-foreground: 347 29% 34%;
     
     --muted: 351 20% 96%;
     --muted-foreground: 347 10% 45%;
@@ -34,15 +34,15 @@
     
     --border: 347 20% 92%;
     --input: 347 20% 92%;
-    --ring: 347 30% 34%;
+    --ring: 347 29% 34%;
     
-    --radius: 0.75rem;
+    --radius: 1rem;
   }
 
   .dark {
     --background: 20 10% 10%;
     --foreground: 20 10% 98%;
-    --primary: 347 30% 34%;
+    --primary: 347 29% 34%;
     --primary-foreground: 20 10% 98%;
   }
 }
@@ -52,9 +52,31 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline font-bold tracking-tight;
+    @apply font-headline tracking-tighter;
   }
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.text-editorial {
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
