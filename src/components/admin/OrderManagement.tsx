@@ -50,18 +50,19 @@ export function OrderManagement() {
 
   // Verificação extra de segurança para a consulta
   const adminDocRef = useMemoFirebase(() => {
-    return user ? doc(db, 'roles_admin', user.uid) : null;
-  }, [db, user]);
-  const { data: adminRole } = useDoc(adminDocRef);
+    return user?.uid ? doc(db, 'roles_admin', user.uid) : null;
+  }, [db, user?.uid]);
+  
+  const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
   const isActuallyAdmin = !!adminRole;
 
   const ordersQuery = useMemoFirebase(() => {
-    // SÓ DISPARA A CONSULTA SE FOR ADMIN CONFIRMADO
-    if (!db || !isActuallyAdmin) return null;
+    // SÓ DISPARA A CONSULTA SE FOR ADMIN CONFIRMADO E NÃO ESTIVER CARREGANDO O STATUS
+    if (!db || !isActuallyAdmin || isAdminLoading) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
-  }, [db, isActuallyAdmin]);
+  }, [db, isActuallyAdmin, isAdminLoading]);
 
-  const { data: orders, isLoading } = useCollection(ordersQuery);
+  const { data: orders, isLoading: isOrdersLoading } = useCollection(ordersQuery);
 
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
@@ -70,9 +71,9 @@ export function OrderManagement() {
 
     return orders.filter(order => 
       order.id.toLowerCase().includes(s) ||
-      order.customerName?.toLowerCase().includes(s) ||
-      order.customerEmail?.toLowerCase().includes(s) ||
-      order.customerPhone?.toLowerCase().includes(s) ||
+      order.customer?.name?.toLowerCase().includes(s) ||
+      order.customer?.email?.toLowerCase().includes(s) ||
+      order.customer?.phone?.toLowerCase().includes(s) ||
       order.status?.toLowerCase().includes(s)
     );
   }, [orders, searchTerm]);
@@ -90,12 +91,20 @@ export function OrderManagement() {
   };
 
   const formatCurrency = (val: number) => 
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
-  if (!isActuallyAdmin && !isLoading) {
+  if (isAdminLoading) {
     return (
       <div className="py-20 text-center">
-        <p className="text-muted-foreground italic">Acesso restrito ao painel administrativo.</p>
+        <Loader2 className="h-8 w-8 animate-spin text-accent/40 mx-auto" />
+      </div>
+    );
+  }
+
+  if (!isActuallyAdmin) {
+    return (
+      <div className="py-20 text-center">
+        <p className="text-muted-foreground italic font-light">Acesso restrito ao painel administrativo.</p>
       </div>
     );
   }
@@ -136,7 +145,7 @@ export function OrderManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-primary/5">
-              {isLoading ? (
+              {isOrdersLoading ? (
                 <tr>
                   <td colSpan={6} className="py-20 text-center">
                     <Loader2 className="h-10 w-10 animate-spin text-accent/40 mx-auto" />
@@ -148,7 +157,7 @@ export function OrderManagement() {
                     <td className="px-10 py-6">
                       <div className="flex flex-col">
                         <span className="font-bold text-primary font-mono text-xs">#{order.id.slice(-6).toUpperCase()}</span>
-                        <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-tight">{order.customerName}</span>
+                        <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-tight">{order.customer?.name || 'Cliente'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-6 text-[11px] text-muted-foreground">

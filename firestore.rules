@@ -3,8 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v11.0
-     * Sistema de Pedidos Privados e Gestão Administrativa
+     * TODA BELA - REGRAS DE SEGURANÇA v12.0
+     * Sistema de Pedidos e Gestão Administrativa
      */
 
     function isSignedIn() {
@@ -20,15 +20,23 @@ service cloud.firestore {
     }
 
     // Produtos e Categorias: Leitura pública, escrita apenas admin
-    match /products/{productId} { allow read: if true; allow write: if isAdmin(); }
-    match /categories/{categoryId} { allow read: if true; allow write: if isAdmin(); }
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
 
     // Pedidos: Sistema Privado com filtragem por userId
     match /orders/{orderId} {
-      // Cliente pode criar o próprio pedido
+      // Cliente pode criar o próprio pedido se o userId bater com seu UID
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       
-      // Cliente lê apenas os próprios pedidos (get e list). Admin lê tudo.
+      // Cliente pode ler seus próprios pedidos (get e list). Admin pode ler tudo.
+      // Para 'list', a consulta DEVE incluir um filtro 'where("userId", "==", auth.uid)'
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       
       // Apenas Admin pode atualizar status ou deletar
@@ -40,15 +48,25 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
-    // Newsletter e Papéis Admin
-    match /newsletter_subscribers/{s} { allow create: if true; allow read, delete: if isAdmin(); }
-    match /roles_admin/{a} { allow get: if isSignedIn() && request.auth.uid == a; allow list: if isAdmin(); }
+    // Newsletter: Inscrição pública, leitura apenas admin
+    match /newsletter_subscribers/{s} {
+      allow create: if true;
+      allow read, delete: if isAdmin();
+    }
     
+    // Papéis Admin: Cada usuário pode ver seu próprio status de admin
+    match /roles_admin/{adminUid} {
+      allow get: if isSignedIn() && request.auth.uid == adminUid;
+      allow list: if isAdmin();
+    }
+    
+    // Banners: Leitura pública
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    // Bloqueio padrão para qualquer outro caminho
     match /{document=**} {
       allow read, write: if false;
     }
