@@ -44,9 +44,14 @@ interface HeroProps {
 }
 
 export function Hero({ onShopNow }: HeroProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
-    Autoplay({ delay: 4000, stopOnInteraction: false })
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    duration: 30,
+    skipSnaps: false
+  }, [
+    Autoplay({ delay: 5000, stopOnInteraction: false })
   ]);
+  
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const onSelect = useCallback(() => {
@@ -66,53 +71,53 @@ export function Hero({ onShopNow }: HeroProps) {
   const scrollTo = useCallback((index: number) => emblaApi && emblaApi.scrollTo(index), [emblaApi]);
 
   return (
-    <section className="relative h-[70vh] md:h-[85vh] w-full overflow-hidden bg-[#FDF8F5]">
+    <section className="relative h-[65vh] md:h-[85vh] w-full overflow-hidden bg-[#FDF8F5]">
       {/* Carrossel Principal */}
       <div className="h-full w-full" ref={emblaRef}>
         <div className="flex h-full w-full">
           {BANNERS.map((banner) => (
             <div key={banner.id} className="relative h-full w-full flex-[0_0_100%] min-w-0">
-              {/* Imagem de Fundo */}
+              {/* Imagem de Fundo com Fade-in suave */}
               <div className="absolute inset-0">
                 <Image
                   src={banner.image}
                   alt={banner.title}
                   fill
-                  className="object-cover"
+                  className="object-cover animate-in fade-in duration-1000"
                   priority={banner.id === 1}
                   data-ai-hint={banner.hint}
                 />
-                {/* Overlay para contraste */}
-                <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
+                {/* Overlay Editorial de Luxo */}
+                <div className="absolute inset-0 bg-black/35 backdrop-blur-[0.5px]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/10 to-transparent" />
               </div>
 
               {/* Conteúdo do Banner */}
               <div className="container relative h-full mx-auto px-6 flex items-center">
-                <div className="max-w-2xl space-y-6 md:space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
-                  <div className="space-y-4">
-                    <span className="inline-block text-[10px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-[#C7A17A]">
+                <div className="max-w-2xl space-y-4 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                  <div className="space-y-3 md:space-y-5">
+                    <span className="inline-block text-[10px] md:text-[11px] font-bold uppercase tracking-[0.6em] text-[#C7A17A] drop-shadow-sm">
                       {banner.top}
                     </span>
-                    <h2 className="text-4xl md:text-7xl font-serif font-bold text-white leading-[1.1]">
+                    <h2 className="text-3xl md:text-7xl font-serif font-bold text-white leading-[1.1] tracking-tight">
                       {banner.title}
                     </h2>
-                    <p className="text-lg md:text-xl text-white/80 font-light italic max-w-lg">
+                    <p className="text-base md:text-xl text-white/90 font-light italic max-w-lg leading-relaxed">
                       {banner.subtitle}
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-4 pt-4">
+                  <div className="flex flex-wrap gap-4 pt-4 md:pt-6">
                     <Button 
                       onClick={onShopNow}
-                      className="rounded-full bg-white text-[#2A1F22] px-10 h-14 md:h-16 text-[11px] font-bold uppercase tracking-[0.3em] shadow-2xl hover:bg-[#C7A17A] hover:text-white transition-all duration-500"
+                      className="rounded-full bg-[#6E3C47] text-white px-8 md:px-12 h-14 md:h-16 text-[11px] font-bold uppercase tracking-[0.4em] shadow-2xl hover:bg-[#C7A17A] border-none transition-all duration-500 transform hover:scale-105 active:scale-95"
                     >
                       {banner.buttonText}
                     </Button>
                     <Button 
                       variant="ghost" 
                       onClick={onShopNow}
-                      className="rounded-full text-white px-10 h-14 md:h-16 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-white/10 transition-all group border border-white/20"
+                      className="rounded-full text-white px-8 md:px-12 h-14 md:h-16 text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-white/10 transition-all group border border-white/30 backdrop-blur-sm"
                     >
                       Ver Detalhes <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
@@ -125,36 +130,36 @@ export function Hero({ onShopNow }: HeroProps) {
       </div>
 
       {/* Controles de Navegação (Setas) */}
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 hidden md:flex justify-between px-6 pointer-events-none">
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 hidden md:flex justify-between px-10 pointer-events-none">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={scrollPrev}
-          className="h-12 w-12 rounded-full bg-white/10 text-white backdrop-blur-md border border-white/10 hover:bg-white hover:text-[#2A1F22] transition-all pointer-events-auto shadow-xl"
+          className="h-14 w-14 rounded-full bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white hover:text-[#6E3C47] transition-all pointer-events-auto shadow-2xl"
         >
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className="h-7 w-7" />
         </Button>
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={scrollNext}
-          className="h-12 w-12 rounded-full bg-white/10 text-white backdrop-blur-md border border-white/10 hover:bg-white hover:text-[#2A1F22] transition-all pointer-events-auto shadow-xl"
+          className="h-14 w-14 rounded-full bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white hover:text-[#6E3C47] transition-all pointer-events-auto shadow-2xl"
         >
-          <ChevronRight className="h-6 w-6" />
+          <ChevronRight className="h-7 w-7" />
         </Button>
       </div>
 
       {/* Indicadores (Dots) */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3">
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-4">
         {BANNERS.map((_, index) => (
           <button
             key={index}
             onClick={() => scrollTo(index)}
             className={cn(
-              "h-1.5 transition-all duration-500 rounded-full",
+              "h-2 transition-all duration-700 rounded-full",
               selectedIndex === index 
-                ? "w-8 bg-[#C7A17A]" 
-                : "w-2 bg-white/40 hover:bg-white/60"
+                ? "w-12 bg-[#C7A17A]" 
+                : "w-3 bg-white/40 hover:bg-white/60"
             )}
             aria-label={`Ir para slide ${index + 1}`}
           />

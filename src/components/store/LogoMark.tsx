@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -25,48 +26,48 @@ export function LogoMark({ variant = 'default', className, itemsStart }: LogoMar
       itemsStart && "items-start",
       className
     )}>
-      {/* Monograma Premium */}
+      {/* Monograma Premium Estilizado */}
       <div className={cn(
-        "mb-2 flex h-10 w-10 md:h-14 md:w-14 items-center justify-center rounded-full border shadow-sm transition-all duration-700 group-hover:border-[#C7A17A] group-hover:shadow-xl",
+        "mb-2 flex h-12 w-12 md:h-16 md:w-16 items-center justify-center rounded-full border shadow-sm transition-all duration-700 group-hover:border-[#C7A17A] group-hover:shadow-xl",
         colors.border,
         colors.bg
       )}>
-        <svg viewBox="0 0 100 100" className="h-6 w-6 md:h-8 md:w-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 100 100" className="h-7 w-7 md:h-9 md:w-9" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Círculo Interno Decorativo */}
           <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" className={colors.accent} />
           
-          {/* Monograma TB Estilizado (Serifado Luxo) */}
+          {/* Monograma TB (Serifado Luxo) */}
           <path 
-            d="M35 35H55M45 35V65M40 65H50M55 45C60 45 63 48 63 52.5C63 57 60 60 55 60H45M55 60C62 60 65 63 65 67.5C65 72 62 75 55 75H45" 
+            d="M32 35H55M43 35V65M38 65H48M52 45C58 45 62 48 62 52.5C62 57 58 60 52 60H43M52 60C60 60 64 63 64 67.5C64 72 60 75 52 75H43" 
             stroke="currentColor" 
             strokeWidth="1.5" 
-            strokeLinecap="serif" 
+            strokeLinecap="round" 
             strokeLinejoin="round"
             className={colors.primary}
           />
           
-          {/* Detalhe de Brilho */}
-          <circle cx="75" cy="25" r="1.5" fill="currentColor" className={cn("animate-pulse", colors.accent)} />
+          {/* Detalhe de Brilho de Boutique */}
+          <circle cx="75" cy="25" r="2" fill="currentColor" className={cn("animate-pulse", colors.accent)} />
         </svg>
       </div>
 
-      {/* Nome da Marca com Tipografia Editorial */}
+      {/* Nome da Marca */}
       <div className={cn("flex flex-col items-center text-center", itemsStart && "items-start text-left")}>
         <h1 className={cn(
-          "text-xl md:text-3xl font-bold tracking-[0.05em] leading-none font-serif italic",
+          "text-2xl md:text-4xl font-bold tracking-[0.05em] leading-none font-serif italic",
           colors.primary
         )}>
           Toda Bela
         </h1>
-        <div className="flex items-center gap-2 mt-1">
-          <div className={cn("h-[1px] w-4 bg-current opacity-30", colors.accent)} />
+        <div className="flex items-center gap-2 mt-1.5">
+          <div className={cn("h-[1px] w-5 bg-current opacity-30", colors.accent)} />
           <p className={cn(
-            "text-[7px] md:text-[9px] uppercase font-bold tracking-[0.6em]",
+            "text-[8px] md:text-[10px] uppercase font-bold tracking-[0.7em]",
             colors.accent
           )}>
             Moda Feminina
           </p>
-          <div className={cn("h-[1px] w-4 bg-current opacity-30", colors.accent)} />
+          <div className={cn("h-[1px] w-5 bg-current opacity-30", colors.accent)} />
         </div>
       </div>
     </div>
