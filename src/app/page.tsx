@@ -1,9 +1,9 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -13,7 +13,7 @@ import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
-import { Loader2, Sparkles, ChevronRight } from 'lucide-react';
+import { Loader2, ChevronRight, Sparkles } from 'lucide-react';
 
 export default function TodaBelaStorefront() {
   const db = useFirestore();
@@ -32,16 +32,27 @@ export default function TodaBelaStorefront() {
   const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + (item.price * item.quantity), 0), [cart]);
 
   // Consulta de Produtos (Sincronização em Tempo Real)
-  const productsQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+  const [storeProducts, setStoreProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!db) return;
+
+    const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const products = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setStoreProducts(products);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [db]);
-  
-  const { data: storeProducts, isLoading } = useCollection(productsQuery);
 
   // Filtragem de Busca e Categorização
   const filteredProducts = useMemo(() => {
-    if (!storeProducts) return [];
     const search = searchQuery.toLowerCase().trim();
     if (!search) return storeProducts;
     return storeProducts.filter(p => 
@@ -52,11 +63,11 @@ export default function TodaBelaStorefront() {
   }, [storeProducts, searchQuery]);
 
   const featuredProducts = useMemo(() => 
-    filteredProducts.filter(p => p.featured || p.badge === 'Destaque').slice(0, 4), 
+    filteredProducts.filter(p => p.featured || p.badge === 'Destaque' || p.badge === 'Lançamento').slice(0, 4), 
   [filteredProducts]);
 
   const latestProducts = useMemo(() => 
-    filteredProducts.filter(p => p.published !== false).slice(0, 8), 
+    filteredProducts.filter(p => p.published !== false).slice(0, 10), 
   [filteredProducts]);
 
   // Ações
@@ -84,7 +95,7 @@ export default function TodaBelaStorefront() {
     return (
       <div className="h-screen bg-background">
         <AdminDashboard 
-          productsCount={storeProducts?.length || 0}
+          productsCount={storeProducts.length}
           categoriesCount={0}
           onOpenAI={() => setIsAIOpen(true)}
           onExit={() => setIsAdminView(false)}
@@ -101,7 +112,7 @@ export default function TodaBelaStorefront() {
         onOpenTrack={() => setIsTrackOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
         cartCount={cartCount}
-        isAdmin={true} // Em produção, validar via hook useUser
+        isAdmin={true} 
         onOpenAdmin={() => setIsAdminView(true)}
         onSearch={handleSearch}
       />
@@ -110,12 +121,12 @@ export default function TodaBelaStorefront() {
         <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
 
         {/* Seção de Lançamentos */}
-        <section id="vitrine" className="container mx-auto px-6 py-24 md:py-40">
+        <section id="vitrine" className="container mx-auto px-6 py-24 md:py-32">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="h-px w-8 bg-accent" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">New Arrivals</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Novidades</span>
               </div>
               <h2 className="text-4xl md:text-7xl font-headline font-bold text-primary text-editorial">
                 Lançamentos <span className="italic font-light">da Estação</span>
@@ -129,7 +140,7 @@ export default function TodaBelaStorefront() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-40 space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Curadoria em carregamento...</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
@@ -142,27 +153,60 @@ export default function TodaBelaStorefront() {
                   />
                 ))
               ) : (
-                latestProducts.map((product) => (
-                  <ProductCard 
-                    key={product.id} 
-                    {...product} 
-                    onAddToCart={() => addToCart(product)}
-                  />
-                ))
+                <div className="col-span-full py-20 text-center border-2 border-dashed border-primary/5 rounded-[3rem]">
+                  <p className="text-muted-foreground italic font-light">Seu catálogo aparecerá aqui em instantes.</p>
+                </div>
               )}
             </div>
           )}
         </section>
 
-        {/* Banner de Coleção */}
-        <section id="colecoes" className="bg-secondary/20 py-24 md:py-40">
+        {/* Grade de Coleções / Categorias */}
+        <section id="colecoes" className="bg-secondary/10 py-24 md:py-32">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-20 space-y-4">
+              <div className="flex items-center justify-center gap-3">
+                 <div className="h-px w-6 bg-accent/40" />
+                 <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Moda Fitness</span>
+                 <div className="h-px w-6 bg-accent/40" />
+              </div>
+              <h2 className="text-4xl md:text-6xl font-headline font-bold text-primary">Nossa Curadoria</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { title: "Tops", img: "https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=900&q=80" },
+                { title: "Leggings", img: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80" },
+                { title: "Shorts", img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80" },
+                { title: "Macacões", img: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80" }
+              ].map((col) => (
+                <div key={col.title} className="group relative aspect-[4/5] rounded-[2.5rem] overflow-hidden cursor-pointer shadow-editorial">
+                  <img 
+                    src={col.img} 
+                    className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" 
+                    alt={col.title} 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent" />
+                  <div className="absolute bottom-10 left-10 right-10">
+                    <h3 className="text-4xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-4">{col.title}</h3>
+                    <div className="h-0.5 w-0 bg-accent transition-all duration-500 group-hover:w-12" />
+                    <p className="text-[9px] font-bold text-accent uppercase tracking-[0.3em] mt-6 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all">Ver Detalhes</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Banner de Campanha Split */}
+        <section className="py-24 md:py-40">
           <div className="container mx-auto px-6">
             <div className="grid lg:grid-cols-2 gap-20 items-center">
               <div className="relative aspect-[4/5] rounded-[4rem] overflow-hidden shadow-premium group">
                 <img 
                   src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80" 
                   className="object-cover w-full h-full transition-transform duration-[2s] group-hover:scale-110" 
-                  alt="Coleção" 
+                  alt="Coleção Essência" 
                 />
                 <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
               </div>
@@ -185,9 +229,10 @@ export default function TodaBelaStorefront() {
         </section>
 
         {/* Grid Geral de Produtos */}
-        <section id="mais-vendidos" className="container mx-auto px-6 py-24 md:py-40">
+        <section id="mais-vendidos" className="container mx-auto px-6 py-24 md:py-32 bg-secondary/5 rounded-[4rem]">
           <div className="text-center space-y-6 mb-20">
-            <h3 className="text-4xl md:text-6xl font-headline font-bold text-primary">Peças Indispensáveis</h3>
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Seleção Premium</span>
+            <h3 className="text-4xl md:text-6xl font-headline font-bold text-primary">Mais Vendidos</h3>
             <div className="h-0.5 w-20 bg-accent mx-auto" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8">
