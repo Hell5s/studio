@@ -1,9 +1,9 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, orderBy, onSnapshot, doc } from 'firebase/firestore';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -14,7 +14,7 @@ import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
-import { Loader2, ChevronRight, ShieldCheck, Instagram, Facebook, Youtube, Twitter, CreditCard } from 'lucide-react';
+import { Loader2, ChevronRight, ShieldCheck, Instagram, Facebook, Youtube } from 'lucide-react';
 import { LogoMark } from '@/components/store/LogoMark';
 import { cn } from '@/lib/utils';
 
@@ -35,36 +35,24 @@ export default function TodaBelaStorefront() {
   const adminDocRef = useMemoFirebase(() => {
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
-  const { data: adminRole, isLoading: isAdminChecking } = useDoc(adminDocRef);
+  const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
   // Carrinho
   const [cart, setCart] = useState<any[]>([]);
-  const cartCount = useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart]);
-  const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + (item.price * item.quantity), 0), [cart]);
+  const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
+  const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
-  // Consulta de Produtos (Sincronização em Tempo Real)
-  const [storeProducts, setStoreProducts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!db) return;
-
-    const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const products = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setStoreProducts(products);
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
+  // Consulta de Produtos (Sincronização em Tempo Real via hook padrão)
+  const productsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
   }, [db]);
+  const { data: storeProducts, isLoading } = useCollection(productsQuery);
 
   // Filtragem de Busca e Categorização
   const filteredProducts = useMemo(() => {
+    if (!storeProducts) return [];
     const search = searchQuery.toLowerCase().trim();
     if (!search) return storeProducts;
     return storeProducts.filter(p => 
@@ -87,7 +75,7 @@ export default function TodaBelaStorefront() {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map(item => item.id === product.id ? { ...item, quantity: (item.quantity || 0) + 1 } : item);
       }
       return [...prev, { ...product, quantity: 1 }];
     });
@@ -107,7 +95,7 @@ export default function TodaBelaStorefront() {
     return (
       <div className="h-screen bg-background">
         <AdminDashboard 
-          productsCount={storeProducts.length}
+          productsCount={storeProducts?.length || 0}
           categoriesCount={0}
           onOpenAI={() => setIsAIOpen(true)}
           onExit={() => setIsAdminView(false)}
@@ -145,9 +133,6 @@ export default function TodaBelaStorefront() {
                 Lançamentos
               </h2>
             </div>
-            <button className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">
-              Ver Tudo <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-            </button>
           </div>
 
           {isLoading ? (
@@ -156,10 +141,10 @@ export default function TodaBelaStorefront() {
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
           ) : (
-            <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
+            <div className="flex gap-4 md:grid md:grid-cols-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
-                  <div key={product.id} className="min-w-[45%] md:min-w-0 flex-shrink-0">
+                  <div key={product.id} className="min-w-[45%] md:min-w-0 flex-shrink-0 snap-start">
                     <ProductCard 
                       {...product} 
                       onAddToCart={() => addToCart(product)}
@@ -203,9 +188,8 @@ export default function TodaBelaStorefront() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent" />
                   <div className="absolute bottom-3 left-3 right-3 md:bottom-10 md:left-10 md:right-10">
-                    <h3 className="text-[10px] md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-1 md:mb-4">{col.title}</h3>
+                    <h3 className="text-lg md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-1 md:mb-4">{col.title}</h3>
                     <div className="h-0.5 w-0 bg-accent transition-all duration-500 group-hover:w-full" />
-                    <p className="hidden md:block text-[9px] font-bold text-accent uppercase tracking-[0.3em] mt-6 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all">Ver Detalhes</p>
                   </div>
                 </div>
               ))}
@@ -250,9 +234,9 @@ export default function TodaBelaStorefront() {
             <h3 className="text-2xl md:text-6xl font-headline font-bold text-primary">Mais Vendidos</h3>
             <div className="h-0.5 w-12 md:w-20 bg-accent mx-auto" />
           </div>
-          <div className="flex md:grid md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
+          <div className="flex gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
             {latestProducts.map((product) => (
-              <div key={product.id} className="min-w-[45%] md:min-w-0 flex-shrink-0">
+              <div key={product.id} className="min-w-[45%] md:min-w-0 flex-shrink-0 snap-start">
                 <ProductCard 
                   {...product} 
                   onAddToCart={() => addToCart(product)}
@@ -287,7 +271,7 @@ export default function TodaBelaStorefront() {
               <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.4em]">Atendimento</h5>
               <ul className="space-y-4 text-xs md:text-[13px] text-white/70 font-light">
                 <li className="flex flex-col gap-1">
-                  <span className="text-white/30 uppercase text-[9px] font-bold tracking-widest">Fale Conosco</span>
+                  <span className="text-white/30 uppercase text-[9px] font-bold tracking-widest">WhatsApp</span>
                   (11) 99999-9999
                 </li>
                 <li className="flex flex-col gap-1">
@@ -354,7 +338,6 @@ export default function TodaBelaStorefront() {
             </div>
             <div className="flex gap-8 opacity-20 hover:opacity-100 transition-opacity duration-700 grayscale hover:grayscale-0">
                <span className="text-[10px] font-bold tracking-tighter italic">Google Safe Browsing</span>
-               <span className="text-[10px] font-bold tracking-tighter italic">Norton Secured</span>
             </div>
           </div>
         </div>

@@ -81,6 +81,7 @@ export function ProductCard({
   };
 
   const formatCurrency = (value: number) => {
+    if (value === undefined || value === null) return 'R$ 0,00';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
@@ -91,7 +92,7 @@ export function ProductCard({
     <article className="group flex flex-col h-full bg-white transition-all duration-700 min-w-[160px] md:min-w-0 snap-start">
       <div className="relative aspect-[3/4] overflow-hidden bg-[#F3EFF0] rounded-[1rem] md:rounded-none">
         <Image
-          src={image}
+          src={image || 'https://picsum.photos/seed/placeholder/600/800'}
           alt={name}
           fill
           className="object-cover transition-transform duration-[1.5s] group-hover:scale-105"
