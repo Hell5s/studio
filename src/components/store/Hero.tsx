@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -38,23 +37,23 @@ export function Hero({ onShopNow }: HeroProps) {
               </h1>
               
               <p className="text-lg md:text-xl text-[#2A1F22]/60 max-w-md leading-relaxed font-light italic">
-                Peças exclusivas com até 40% OFF. Design minimalista pensado para a mulher contemporânea.
+                Peças exclusivas com curadoria premium pensada para a mulher contemporânea.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-4 pt-4">
               <Button 
                 onClick={onShopNow}
-                className="rounded-full bg-[#42261E] text-white px-10 h-16 text-[11px] font-bold uppercase tracking-[0.3em] shadow-2xl hover:bg-[#2A1F22] hover:scale-105 transition-all duration-500"
+                className="rounded-full bg-[#42261E] text-white px-12 h-16 text-[11px] font-bold uppercase tracking-[0.3em] shadow-2xl hover:bg-[#2A1F22] hover:scale-105 transition-all duration-500"
               >
-                Comprar Agora
+                COMPRAR AGORA
               </Button>
               <Button 
                 variant="ghost" 
                 onClick={onShopNow}
                 className="rounded-full text-[#42261E] px-10 h-16 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-[#F7E8EA]/30 transition-all group"
               >
-                Ver Produtos <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                Ver Coleção <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
 

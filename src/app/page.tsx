@@ -115,24 +115,46 @@ export default function Home() {
           el?.scrollIntoView({ behavior: 'smooth' });
         }} />
 
-        {/* Manifesto */}
-        <section className="py-16 md:py-32 container mx-auto px-6">
-          <div className="max-w-4xl mx-auto text-center space-y-6 md:space-y-12">
-            <div className="flex justify-center">
-              <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-[#C7A17A] opacity-40" />
+        {/* Marcadores de Confiança Premium */}
+        <section className="bg-white py-12 md:py-16 border-y border-[#F7E8EA]">
+          <div className="container mx-auto px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+              {[
+                { icon: <Truck className="h-5 w-5" />, title: 'Frete Grátis', desc: 'Em pedidos acima de R$300' },
+                { icon: <ShieldCheck className="h-5 w-5" />, title: 'Compra Segura', desc: 'Dados 100% protegidos' },
+                { icon: <CheckCircle2 className="h-5 w-5" />, title: '10x Sem Juros', desc: 'No cartão de crédito' },
+                { icon: <HeadphonesIcon className="h-5 w-5" />, title: 'Suporte VIP', desc: 'Atendimento via WhatsApp' },
+              ].map((benefit, i) => (
+                <div key={i} className="flex items-center gap-5 group">
+                  <div className="p-4 rounded-2xl bg-[#F7E8EA] text-[#6E3C47] group-hover:bg-[#6E3C47] group-hover:text-white transition-all duration-500">{benefit.icon}</div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-[#6E3C47]">{benefit.title}</p>
+                    <p className="text-xs text-[#2A1F22]/40 font-light italic">{benefit.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <h2 className="text-2xl md:text-5xl font-serif font-bold text-[#6E3C47] leading-tight px-4">
-              A Toda Bela nasce para vestir mulheres que valorizam presença, estilo e autenticidade.
+          </div>
+        </section>
+
+        {/* Manifesto / Storytelling */}
+        <section className="py-20 md:py-32 container mx-auto px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-8 md:space-y-12">
+            <div className="flex justify-center">
+              <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-[#C7A17A] opacity-40 animate-pulse" />
+            </div>
+            <h2 className="text-3xl md:text-6xl font-serif font-bold text-[#6E3C47] leading-[1.1] px-4">
+              A Toda Bela veste mulheres que valorizam presença, estilo e autenticidade.
             </h2>
             <div className="h-[1px] w-12 md:w-24 bg-[#C7A17A] mx-auto opacity-30" />
           </div>
         </section>
 
-        {/* Categorias */}
+        {/* Categorias Visuais */}
         <section className="py-16 md:py-24 bg-white">
           <div className="container mx-auto px-6">
-            <div className="flex flex-col items-center text-center mb-10 md:mb-20 space-y-4">
-              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.5em] text-[#C7A17A]">Territórios de Estilo</span>
+            <div className="flex flex-col items-center text-center mb-12 md:mb-20 space-y-4">
+              <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#C7A17A]">Curadoria por Estilo</span>
               <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#6E3C47]">Encontre seu estilo</h2>
             </div>
 
@@ -144,7 +166,7 @@ export default function Home() {
                 { name: 'Casual Chic', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80' },
                 { name: 'Plus Size', img: 'https://images.unsplash.com/photo-1589310243389-96a5483213a8?auto=format&fit=crop&w=600&q=80' },
               ].map((cat) => (
-                <div key={cat.name} className="group relative aspect-[4/5] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700">
+                <div key={cat.name} className="group relative aspect-[4/5] rounded-[2rem] md:rounded-[3rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700">
                   <Image 
                     src={cat.img} 
                     alt={cat.name} 
@@ -152,9 +174,9 @@ export default function Home() {
                     className="object-cover transition-transform duration-1000 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#6E3C47]/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                  <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 text-white space-y-2">
+                  <div className="absolute bottom-8 left-8 text-white space-y-2">
                     <h3 className="text-xl md:text-3xl font-serif font-bold">{cat.name}</h3>
-                    <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 duration-500">Explorar Coleção</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 duration-500">Ver Coleção</p>
                   </div>
                 </div>
               ))}
@@ -162,22 +184,22 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Mais Vendidos */}
-        <section id="catalogo" className="py-16 md:py-32">
+        {/* Mais Vendidos / Catálogo */}
+        <section id="catalogo" className="py-20 md:py-32">
           <div className="container mx-auto px-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-20 gap-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 md:mb-24 gap-8">
               <div className="space-y-4">
-                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.5em] text-[#C7A17A]">Seleção Curada</span>
-                <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#6E3C47]">Mais vendidos</h2>
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#C7A17A]">Destaques da Temporada</span>
+                <h2 className="text-4xl md:text-6xl font-serif font-bold text-[#6E3C47]">Mais vendidos</h2>
               </div>
               <div className="flex flex-wrap gap-2">
                 {["Novidades", ...(categories?.map(c => c.name) || [])].map((category) => (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`rounded-full px-5 py-2.5 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] transition-all duration-500 border ${
+                    className={`rounded-full px-6 py-3 text-[9px] font-bold uppercase tracking-[0.3em] transition-all duration-500 border ${
                       selectedCategory === category
-                        ? "bg-[#6E3C47] text-white border-[#6E3C47] shadow-lg"
+                        ? "bg-[#6E3C47] text-white border-[#6E3C47] shadow-xl"
                         : "bg-white text-[#6E3C47] border-[#F7E8EA] hover:border-[#6E3C47]/30"
                     }`}
                   >
@@ -188,9 +210,9 @@ export default function Home() {
             </div>
 
             {productsLoading ? (
-              <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-[#C7A17A]/20" /></div>
+              <div className="flex justify-center py-20"><Loader2 className="h-12 w-12 animate-spin text-[#C7A17A]/20" /></div>
             ) : (
-              <div className="grid gap-6 md:gap-12 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-8 md:gap-12 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 {filteredProducts.map((product) => (
                   <ProductCard 
                     key={product.id} 
@@ -204,21 +226,30 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Benefícios */}
-        <section className="bg-white py-16 md:py-32">
+        {/* Avaliações / Prova Social */}
+        <section className="bg-white py-20 md:py-32">
           <div className="container mx-auto px-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+            <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-4">
+              <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#C7A17A]">Experiências Reais</span>
+              <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#6E3C47]">O que dizem nossas clientes</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { icon: <Truck className="h-6 w-6" />, title: 'Brasil Inteiro', desc: 'Entrega VIP com rastreio real' },
-                { icon: <ShieldCheck className="h-6 w-6" />, title: 'Compra Segura', desc: 'Privacidade em cada clique' },
-                { icon: <CheckCircle2 className="h-6 w-6" />, title: 'Peças Selecionadas', desc: 'Revisado por especialistas' },
-                { icon: <HeadphonesIcon className="h-6 w-6" />, title: 'Atendimento Rápido', desc: 'Suporte via WhatsApp' },
-              ].map((benefit, i) => (
-                <div key={i} className="flex flex-col items-center text-center space-y-4 group">
-                  <div className="p-5 rounded-3xl bg-[#F7E8EA]/50 text-[#6E3C47] group-hover:bg-[#6E3C47] group-hover:text-white transition-all duration-700">{benefit.icon}</div>
-                  <div className="space-y-1">
-                    <p className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.3em] text-[#6E3C47]">{benefit.title}</p>
-                    <p className="text-xs md:text-sm text-[#2A1F22]/50 font-light italic leading-relaxed">{benefit.desc}</p>
+                { name: "Mariana S.", review: "A qualidade das peças é surpreendente. O vestido midi que comprei tem um caimento perfeito!", stars: 5 },
+                { name: "Beatriz L.", review: "Chegou antes do prazo e a embalagem é um luxo. Me senti abrindo um presente de uma maison francesa.", stars: 5 },
+                { name: "Juliana M.", review: "O atendimento pelo WhatsApp foi impecável. Tiraram todas as minhas dúvidas sobre o tamanho.", stars: 5 },
+              ].map((item, i) => (
+                <div key={i} className="bg-[#FFF9F7] p-10 rounded-[2.5rem] border border-[#F7E8EA] space-y-6 hover:shadow-xl transition-all duration-500">
+                  <div className="flex gap-1 text-[#C7A17A]">
+                    {[...Array(item.stars)].map((_, s) => <Star key={s} className="h-4 w-4 fill-current" />)}
+                  </div>
+                  <p className="text-sm md:text-base text-[#2A1F22]/70 italic leading-relaxed font-light">"{item.review}"</p>
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-[#6E3C47] text-white flex items-center justify-center font-bold text-xs">
+                      {item.name[0]}
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#6E3C47]">{item.name}</span>
                   </div>
                 </div>
               ))}
@@ -304,7 +335,7 @@ export default function Home() {
         </div>
       )}
 
-      <footer className="bg-white border-t border-[#F7E8EA] pt-16 md:pt-32 pb-12">
+      <footer className="bg-white border-t border-[#F7E8EA] pt-20 md:pt-32 pb-12">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 md:gap-20">
             <div className="space-y-8">
@@ -343,7 +374,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-6 p-8 rounded-[2rem] bg-[#F7E8EA]/30 border border-[#F7E8EA]">
-              <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#6E3C47]">Visite Nossa Loja</h5>
+              <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#6E3C47]">Maison Toda Bela</h5>
               <p className="text-xs text-[#2A1F22]/60 font-light italic leading-relaxed">
                 Rua da Moda, 1000 - Jardins<br />
                 São Paulo, SP - Brasil
@@ -352,7 +383,7 @@ export default function Home() {
           </div>
           <div className="mt-20 pt-10 border-t border-[#F7E8EA] flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-[#2A1F22]/30">
-              © 2024 Toda Bela • Todos os direitos reservados.
+              © 2026 Toda Bela • Todos os direitos reservados.
             </p>
             <div className="flex gap-8 opacity-30">
               <span className="text-[9px] font-bold uppercase tracking-widest">Visa</span>
