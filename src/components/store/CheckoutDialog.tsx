@@ -67,7 +67,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
       
       const payload = {
         orderNumber: orderId,
-        userId: user.uid, // CRÍTICO: Vincula o pedido ao UID do usuário para regras de segurança
+        userId: user.uid, // OBRIGATÓRIO para as novas regras de segurança
         customer: {
           name: formData.name,
           email: formData.email.toLowerCase().trim() || user.email?.toLowerCase().trim() || '',
@@ -92,7 +92,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
         updatedAt: serverTimestamp()
       };
 
-      // Usando setDoc para garantir o ID do pedido que criamos manualmente
       await setDoc(doc(db, 'orders', orderId), payload);
       
       setOrderComplete(true);
@@ -106,7 +105,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
       console.error("Erro ao processar pedido:", error);
       toast({
         title: "Erro ao processar",
-        description: "Não foi possível registrar seu pedido. Tente novamente em instantes.",
+        description: "Não foi possível registrar seu pedido. Verifique sua conexão.",
         variant: "destructive"
       });
     } finally {

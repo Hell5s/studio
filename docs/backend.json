@@ -47,7 +47,7 @@
       "description": "Registros de pedidos feitos pelos clientes.",
       "properties": {
         "orderNumber": { "type": "string" },
-        "userId": { "type": "string" },
+        "userId": { "type": "string", "description": "UID do usuário no Firebase Auth" },
         "customer": {
           "type": "object",
           "properties": {
@@ -69,27 +69,6 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["orderNumber", "userId", "items", "total", "status", "createdAt"]
-    },
-    "NewsletterSubscriber": {
-      "title": "NewsletterSubscriber",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "subscriptionDate": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "email", "subscriptionDate"]
-    },
-    "Favorite": {
-      "title": "Favorite",
-      "type": "object",
-      "description": "Representa um produto favoritado por uma usuária.",
-      "properties": {
-        "productId": { "type": "string" },
-        "productName": { "type": "string" },
-        "addedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["productId", "addedAt"]
     }
   },
   "auth": {
@@ -100,23 +79,14 @@
       "schema": { "$ref": "#/backend/entities/Product" },
       "description": "Catálogo de produtos"
     },
-    "/categories/{categoryId}": {
-      "schema": { "$ref": "#/backend/entities/Category" },
-      "description": "Categorias de produtos"
-    },
     "/orders/{orderId}": {
       "schema": { "$ref": "#/backend/entities/Order" },
-      "description": "Pedidos dos clientes"
-    },
-    "/newsletter_subscribers/{subscriberId}": {
-      "schema": { "$ref": "#/backend/entities/NewsletterSubscriber" },
-      "description": "Assinantes da newsletter"
+      "description": "Pedidos dos clientes vinculados por userId"
     },
     "/roles_admin/{uid}": {
       "description": "Papéis administrativos por UID"
     },
     "/users/{userId}/favorites/{productId}": {
-      "schema": { "$ref": "#/backend/entities/Favorite" },
       "description": "Produtos favoritos da usuária"
     }
   }

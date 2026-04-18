@@ -1,16 +1,17 @@
 
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, orderBy, limit, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
 import { Newsletter } from '@/components/store/Newsletter';
-import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, Info } from 'lucide-react';
+import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, Info, RefreshCw } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -25,6 +26,8 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 export default function MeusPedidosPage() {
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
+  const [isMigrating, setIsMigrating] = useState(false);
 
   // Verificação de Admin para a Navbar
   const adminDocRef = useMemoFirebase(() => {
@@ -33,18 +36,48 @@ export default function MeusPedidosPage() {
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
-  // Consulta de Pedidos filtrada OBRIGATORIAMENTE por userId para satisfazer as regras do Firestore
+  // Consulta de Pedidos filtrada OBRIGATORIAMENTE por userId
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
       collection(db, 'orders'), 
-      where('userId', '==', user.uid), // Filtro de segurança fundamental
+      where('userId', '==', user.uid), 
       orderBy('createdAt', 'desc'),
       limit(20)
     );
   }, [db, user?.uid]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection(ordersQuery);
+
+  const handleSyncOldOrders = async () => {
+    if (!user?.email || !user?.uid) return;
+    
+    setIsMigrating(true);
+    try {
+      // Busca pedidos que batem com o e-mail mas não têm userId (legado)
+      const q = query(collection(db, 'orders'), where('customer.email', '==', user.email));
+      const snapshot = await getDocs(q);
+      
+      let count = 0;
+      for (const orderDoc of snapshot.docs) {
+        if (!orderDoc.data().userId) {
+          await updateDoc(orderDoc.ref, { userId: user.uid });
+          count++;
+        }
+      }
+
+      if (count > 0) {
+        toast({ title: "Sincronização Concluída", description: `${count} pedidos foram vinculados à sua conta.` });
+      } else {
+        toast({ title: "Tudo em ordem", description: "Não encontramos pedidos pendentes de sincronização." });
+      }
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Erro na sincronização", description: "Não foi possível recuperar pedidos antigos no momento.", variant: "destructive" });
+    } finally {
+      setIsMigrating(false);
+    }
+  };
 
   const formatPrice = (val: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -73,13 +106,28 @@ export default function MeusPedidosPage() {
                 <div className="h-px w-12 bg-accent" />
                 <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-accent">Exclusividade</span>
               </div>
-              <h1 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-[0.95] tracking-tighter">
-                Minha Jornada <br />
-                <span className="italic font-light text-accent">Toda Bela</span>
-              </h1>
-              <p className="text-base md:text-2xl text-muted-foreground font-light italic max-w-2xl leading-relaxed">
-                Acompanhe o status e os detalhes de cada uma de suas escolhas.
-              </p>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                <div>
+                  <h1 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-[0.95] tracking-tighter">
+                    Minha Jornada <br />
+                    <span className="italic font-light text-accent">Toda Bela</span>
+                  </h1>
+                  <p className="text-base md:text-2xl text-muted-foreground font-light italic max-w-2xl mt-6 leading-relaxed">
+                    Acompanhe o status e os detalhes de cada uma de suas escolhas.
+                  </p>
+                </div>
+                {user && (
+                  <Button 
+                    onClick={handleSyncOldOrders} 
+                    disabled={isMigrating}
+                    variant="outline" 
+                    className="rounded-full border-accent/20 text-accent hover:bg-accent hover:text-white h-14 px-8 font-bold uppercase tracking-widest text-[10px]"
+                  >
+                    {isMigrating ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                    Sincronizar Compras
+                  </Button>
+                )}
+              </div>
            </div>
         </header>
 
@@ -87,7 +135,7 @@ export default function MeusPedidosPage() {
           {isUserLoading || isOrdersLoading ? (
             <div className="py-40 flex flex-col items-center justify-center space-y-6">
               <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando...</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
           ) : !user ? (
             <div className="py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-primary/5 shadow-editorial">

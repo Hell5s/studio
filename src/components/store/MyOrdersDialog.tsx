@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo } from 'react';
@@ -14,6 +15,8 @@ import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag,
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface MyOrdersDialogProps {
   open: boolean;
@@ -33,16 +36,14 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Consulta memoizada e protegida: só dispara se o usuário estiver logado e o modal aberto
+  // Consulta memoizada e protegida: filtra estritamente por userId para respeitar as regras
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user?.uid || !open) return null;
-    
-    // IMPORTANTE: O filtro por userId garante que as regras de segurança permitam a listagem
     return query(
       collection(db, 'orders'), 
       where('userId', '==', user.uid), 
       orderBy('createdAt', 'desc'),
-      limit(20)
+      limit(10)
     );
   }, [db, user?.uid, open]);
 
@@ -96,7 +97,6 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                 
                 return (
                   <div key={order.id} className="group relative bg-white rounded-[2.5rem] border border-primary/5 shadow-editorial hover:shadow-premium transition-all duration-700 overflow-hidden">
-                    {/* Order Header */}
                     <div className="p-8 md:p-10 border-b border-primary/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
@@ -104,26 +104,22 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                            <div className="h-1 w-1 rounded-full bg-accent/30" />
                            <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{formatDate(order.createdAt)}</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                           <div className={cn("px-4 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-widest flex items-center gap-2", status.color)}>
-                              {status.icon}
-                              {status.label}
-                           </div>
+                        <div className={cn("px-4 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-widest flex items-center gap-2", status.color)}>
+                           {status.icon}
+                           {status.label}
                         </div>
                       </div>
-                      
                       <div className="text-left md:text-right space-y-1">
-                        <p className="text-[9px] font-bold uppercase text-primary/30 tracking-widest">Investimento Total</p>
+                        <p className="text-[9px] font-bold uppercase text-primary/30 tracking-widest">Total</p>
                         <p className="text-3xl font-headline font-bold text-primary">{formatPrice(order.total || 0)}</p>
                       </div>
                     </div>
 
-                    <div className="grid lg:grid-cols-12 gap-0">
-                      {/* Items Column */}
+                    <div className="grid lg:grid-cols-12">
                       <div className="lg:col-span-7 p-8 md:p-10 space-y-8">
                         <div className="space-y-6">
                           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent flex items-center gap-2">
-                            <Package className="h-3 w-3" /> Sua Seleção ({order.items?.length || 0} itens)
+                            <Package className="h-3 w-3" /> Sua Seleção ({order.items?.length || 0})
                           </p>
                           <div className="space-y-4">
                             {order.items?.map((item: any, i: number) => (
@@ -133,93 +129,41 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <h5 className="text-sm font-bold text-primary leading-tight line-clamp-1">{item.name}</h5>
-                                  <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground italic">
-                                    <span>Qtd: {item.quantity}</span>
-                                    <span>•</span>
-                                    <span>{formatPrice(item.price)}/un</span>
-                                  </div>
+                                  <p className="mt-1 text-[11px] text-muted-foreground italic">Qtd: {item.quantity} • {formatPrice(item.price)}</p>
                                 </div>
-                                <div className="text-right">
-                                  <p className="text-sm font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
-                                </div>
+                                <p className="text-sm font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
                               </div>
                             ))}
                           </div>
                         </div>
-
-                        {order.trackingCode && (
-                          <div className="p-6 rounded-[2rem] bg-primary text-primary-foreground space-y-3">
-                             <div className="flex items-center gap-3">
-                                <Truck className="h-5 w-5 text-accent" />
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-accent">Rastreamento da Peça</p>
-                             </div>
-                             <div className="flex justify-between items-center">
-                                <p className="text-lg font-mono font-medium">{order.trackingCode}</p>
-                                <button className="text-[9px] font-bold uppercase tracking-widest underline underline-offset-4 decoration-accent">Copiar Código</button>
-                             </div>
-                          </div>
-                        )}
                       </div>
 
-                      {/* Info Column */}
-                      <div className="lg:col-span-5 bg-secondary/20 p-8 md:p-10 space-y-10">
-                        <div className="space-y-6">
-                           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent flex items-center gap-2">
-                            <MapPin className="h-3 w-3" /> Destino de Entrega
+                      <div className="lg:col-span-5 bg-secondary/20 p-8 md:p-10 space-y-8">
+                         <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent flex items-center gap-2">
+                            <MapPin className="h-3 w-3" /> Entrega
                           </p>
-                          <div className="space-y-4">
-                            <div className="space-y-1">
-                               <p className="text-sm font-bold text-primary">{order.customer?.name || order.customerName}</p>
-                               <p className="text-[11px] text-muted-foreground italic">{order.customer?.email || order.customerEmail}</p>
-                               <p className="text-[11px] text-muted-foreground italic">{order.customer?.phone || order.customerPhone}</p>
-                            </div>
-                            <Separator className="bg-primary/5" />
-                            <div className="space-y-1 text-[11px] text-muted-foreground leading-relaxed italic">
-                               <p>{order.customer?.address || order.customerAddress?.street}</p>
-                               <p>{order.customer?.city || order.customerAddress?.city}, {order.customer?.state || order.customerAddress?.state}</p>
-                               <p>CEP: {order.customer?.zip || order.customerAddress?.zipCode}</p>
-                            </div>
+                          <div className="space-y-4 text-[11px] text-muted-foreground leading-relaxed italic">
+                             <p className="font-bold text-primary not-italic">{order.customer?.name}</p>
+                             <p>{order.customer?.address}</p>
+                             <p>{order.customer?.city}, {order.customer?.state}</p>
+                             <p>CEP: {order.customer?.zip}</p>
                           </div>
-                        </div>
-
-                        <div className="p-6 rounded-[2rem] border border-primary/5 bg-white/50 space-y-4">
-                           <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-primary/40">
-                              <span>Subtotal</span>
-                              <span>{formatPrice(order.subtotal || order.total)}</span>
-                           </div>
-                           <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-accent">
-                              <span>Entrega Boutique</span>
-                              <span className="italic font-light">VIP Grátis</span>
-                           </div>
-                           <Separator className="bg-primary/5" />
-                           <div className="flex justify-between items-center text-primary">
-                              <span className="text-[11px] font-bold uppercase tracking-widest">Investimento Final</span>
-                              <span className="text-xl font-bold">{formatPrice(order.total)}</span>
-                           </div>
-                        </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
+              <div className="text-center pt-8">
+                <Link href="/meus-pedidos">
+                  <Button className="rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] h-14 px-12">Ver Histórico Completo</Button>
+                </Link>
+              </div>
             </div>
           ) : (
-            <div className="py-32 flex flex-col items-center justify-center text-center space-y-8 bg-white/40 rounded-[4rem] border-2 border-dashed border-primary/10">
-              <div className="h-24 w-24 rounded-full bg-secondary flex items-center justify-center text-primary/20">
-                <ShoppingBag className="h-12 w-12" />
-              </div>
-              <div className="space-y-2">
-                <h5 className="text-2xl font-headline font-bold text-primary uppercase tracking-widest">Nenhuma Peça Ainda</h5>
-                <p className="text-sm text-muted-foreground max-w-xs mx-auto font-light italic leading-relaxed">
-                  Sua história na Toda Bela começa com a sua primeira escolha. Que tal explorar nossos lançamentos?
-                </p>
-              </div>
-              <button 
-                onClick={() => onOpenChange(false)}
-                className="rounded-full border-2 border-primary px-10 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
-              >
-                Conhecer a Coleção
-              </button>
+            <div className="py-20 text-center space-y-6">
+              <ShoppingBag className="h-12 w-12 text-accent/30 mx-auto" />
+              <h3 className="text-xl font-headline font-bold text-primary">Nenhuma peça ainda</h3>
+              <p className="text-muted-foreground italic max-w-xs mx-auto">Sua história na Toda Bela começa com a sua primeira escolha.</p>
             </div>
           )}
         </div>
