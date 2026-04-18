@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -7,12 +6,15 @@ import { useDoc, useFirestore, useCollection, useMemoFirebase } from '@/firebase
 import { doc, collection, query, where, limit } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Newsletter } from '@/components/store/Newsletter';
+import { Footer } from '@/components/store/Footer';
 import { ProductGallery } from '@/components/store/product-detail/ProductGallery';
 import { ProductInfo } from '@/components/store/product-detail/ProductInfo';
 import { ProductTabs } from '@/components/store/product-detail/ProductTabs';
 import { RelatedProducts } from '@/components/store/product-detail/RelatedProducts';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
+import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
+import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -23,6 +25,11 @@ export default function ProductDetailPage() {
   const db = useFirestore();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
+  const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  
+  // Carrinho local (simplificado para detalhe)
+  const [cart, setCart] = useState<any[]>([]);
 
   const productRef = useMemo(() => {
     if (!db || !id) return null;
@@ -66,8 +73,9 @@ export default function ProductDetailPage() {
       <Navbar 
         onOpenLogin={() => setIsLoginOpen(true)} 
         onOpenTrack={() => setIsTrackOpen(true)}
-        onOpenCart={() => {}}
-        cartCount={0}
+        onOpenOrders={() => setIsMyOrdersOpen(true)}
+        onOpenCart={() => setIsCheckoutOpen(true)}
+        cartCount={cart.length}
       />
       
       <main className="pt-24 md:pt-32 pb-12 md:pb-20">
@@ -101,7 +109,7 @@ export default function ProductDetailPage() {
               <section>
                 <div className="flex items-center gap-4 mb-8 md:mb-12">
                   <div className="h-px w-10 md:w-12 bg-accent/40" />
-                  <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.6em] md:tracking-[0.8em] text-accent">Essência da Peça</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.6em] md:tracking-[0.8em] text-accent">Essência da Peça</span>
                 </div>
                 <div className="prose prose-primary max-w-none">
                   <h3 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-6 md:mb-8">Elegância em cada detalhe</h3>
@@ -139,16 +147,25 @@ export default function ProductDetailPage() {
           {/* Related Products */}
           {relatedProducts && relatedProducts.length > 0 && (
             <div className="mt-24 md:mt-40">
-              <RelatedProducts products={relatedProducts} />
+              RelatedProducts
             </div>
           )}
         </div>
       </main>
 
       <Newsletter />
+      <Footer />
       
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
       <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
+      <MyOrdersDialog open={isMyOrdersOpen} onOpenChange={setIsMyOrdersOpen} />
+      <CheckoutDialog 
+        open={isCheckoutOpen} 
+        onOpenChange={setIsCheckoutOpen} 
+        cartItems={cart}
+        total={0}
+        onSuccess={() => setCart([])}
+      />
     </div>
   );
 }

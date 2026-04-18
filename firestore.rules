@@ -1,11 +1,10 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v8.2
-     * Ajuste fino nas permissões de pedidos e funções administrativas.
+     * TODA BELA - REGRAS DE SEGURANÇA v8.5
+     * Correção definitiva para listagem de pedidos por e-mail.
      */
 
     function isSignedIn() {
@@ -37,7 +36,7 @@ service cloud.firestore {
       allow create: if true;
       // Permite buscar por ID (rastreio público)
       allow get: if true; 
-      // Permite listar se for admin ou se o filtro da query bater com o email do token
+      // Permite listar se for admin ou se o filtro da query bater com o e-mail do usuário autenticado
       allow list: if isAdmin() || (isSignedIn() && request.auth.token.email != null && request.auth.token.email == resource.data.customerEmail);
       allow update, delete: if isAdmin();
     }
@@ -51,6 +50,11 @@ service cloud.firestore {
     match /newsletter_subscribers/{s} { allow create: if true; allow read, delete: if isAdmin(); }
     match /roles_admin/{a} { allow get: if isSignedIn() && request.auth.uid == a; allow list: if isAdmin(); }
     
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

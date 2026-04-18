@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -8,14 +7,14 @@ import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
+import { Footer } from '@/components/store/Footer';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
-import { Loader2, ChevronRight, ShieldCheck, Instagram, Facebook, Youtube } from 'lucide-react';
-import { LogoMark } from '@/components/store/LogoMark';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function TodaBelaStorefront() {
@@ -43,7 +42,7 @@ export default function TodaBelaStorefront() {
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
   const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
-  // Consulta de Produtos (Sincronização em Tempo Real via hook padrão)
+  // Consulta de Produtos
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
@@ -249,99 +248,7 @@ export default function TodaBelaStorefront() {
         <Newsletter />
       </main>
 
-      {/* Rodapé Premium Editorial */}
-      <footer className="bg-[#1A1516] text-white pt-20 pb-12 border-t border-white/5">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16 mb-20">
-            <div className="space-y-8">
-              <LogoMark className="scale-90 origin-left invert brightness-200" />
-              <p className="text-white/50 font-light italic text-sm leading-relaxed max-w-xs">
-                Inspirando presença, propósito e estilo. O movimento da mulher moderna que valoriza sua essência e autenticidade.
-              </p>
-              <div className="flex gap-5">
-                {[Instagram, Facebook, Youtube].map((Icon, idx) => (
-                  <button key={idx} className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-accent hover:text-white transition-all duration-500">
-                    <Icon className="h-4 w-4" />
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-6">
-              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.4em]">Atendimento</h5>
-              <ul className="space-y-4 text-xs md:text-[13px] text-white/70 font-light">
-                <li className="flex flex-col gap-1">
-                  <span className="text-white/30 uppercase text-[9px] font-bold tracking-widest">WhatsApp</span>
-                  (11) 99999-9999
-                </li>
-                <li className="flex flex-col gap-1">
-                  <span className="text-white/30 uppercase text-[9px] font-bold tracking-widest">E-mail</span>
-                  contato@todobela.com.br
-                </li>
-                <li className="flex flex-col gap-1">
-                  <span className="text-white/30 uppercase text-[9px] font-bold tracking-widest">Horário</span>
-                  Seg a Sex | 08h às 18h
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-6">
-              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.4em]">Institucional</h5>
-              <ul className="space-y-3 text-xs md:text-[13px] text-white/70 font-light">
-                {['Acompanhar Pedido', 'Termos de Uso', 'Privacidade', 'Trocas e Devoluções', 'Sobre a Toda Bela'].map((item) => (
-                  <li key={item} className="cursor-pointer hover:text-accent transition-colors flex items-center gap-2 group">
-                    <div className="h-px w-0 bg-accent transition-all group-hover:w-3" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.4em]">Pagamento Seguro</h5>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { name: 'Visa', color: 'bg-white/10' },
-                    { name: 'Master', color: 'bg-white/10' },
-                    { name: 'Elo', color: 'bg-white/10' },
-                    { name: 'Pix', color: 'bg-accent/20' },
-                    { name: 'Hiper', color: 'bg-white/10' },
-                    { name: 'Boleto', color: 'bg-white/10' },
-                  ].map((card) => (
-                    <div key={card.name} className={cn("h-8 rounded-md flex items-center justify-center text-[7px] font-bold uppercase tracking-tighter border border-white/5", card.color)}>
-                      {card.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.4em]">Segurança</h5>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2 px-4 py-3 bg-white/5 rounded-xl border border-white/5">
-                    <ShieldCheck className="h-4 w-4 text-green-500" />
-                    <div className="flex flex-col">
-                      <span className="text-[8px] font-bold uppercase tracking-widest">SSL Secure</span>
-                      <span className="text-[7px] text-white/40">Criptografado</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex flex-col items-center md:items-start gap-1">
-              <p className="text-[9px] uppercase tracking-[0.4em] text-white/30">© 2024 Toda Bela Boutique de Luxo</p>
-              <p className="text-[7px] uppercase tracking-[0.2em] text-white/10">CNPJ: 00.000.000/0001-00 • Todos os direitos reservados.</p>
-            </div>
-            <div className="flex gap-8 opacity-20 hover:opacity-100 transition-opacity duration-700 grayscale hover:grayscale-0">
-               <span className="text-[10px] font-bold tracking-tighter italic">Google Safe Browsing</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Diálogos e Modais */}
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
