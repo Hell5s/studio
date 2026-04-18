@@ -1,9 +1,8 @@
-
 "use client";
 
 import React from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ShoppingBag, Loader2, Package, Clock, CheckCircle2, Truck, XCircle, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Loader2, Package, Clock, CheckCircle2, Truck, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
@@ -40,7 +39,7 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Garante que o e-mail está em minúsculas e sem espaços para bater com a regra
+  // Garante que o e-mail está em minúsculas e sem espaços para bater com a regra do Firebase
   const userEmail = user?.email?.toLowerCase().trim() || null;
 
   const ordersQuery = useMemoFirebase(() => {
@@ -48,14 +47,15 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
     return query(
       collection(db, 'orders'),
       where('customerEmail', '==', userEmail),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
+      limit(20)
     );
   }, [db, userEmail, open]);
 
   const { data: orders, isLoading } = useCollection(ordersQuery);
 
   const formatCurrency = (val: number) => {
-    if (!val) return 'R$ 0,00';
+    if (val === undefined || val === null) return 'R$ 0,00';
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   };
 

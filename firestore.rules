@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v8.6
+     * TODA BELA - REGRAS DE SEGURANÇA v8.7
      * Correção definitiva para listagem de pedidos por e-mail e rastreio.
      */
 
@@ -36,8 +36,8 @@ service cloud.firestore {
       allow create: if true;
       // Permite buscar por ID (rastreio público seguro)
       allow get: if true; 
-      // Permite listar apenas se for admin ou se a consulta estiver explicitamente filtrada pelo e-mail do dono
-      allow list: if isAdmin() || (isSignedIn() && request.auth.token.email != null && request.query.limit <= 50 && request.auth.token.email == resource.data.customerEmail);
+      // Permite listar apenas se for admin ou se a consulta estiver filtrada pelo e-mail do dono
+      allow list: if isAdmin() || (isSignedIn() && request.auth.token.email != null && resource.data.customerEmail == request.auth.token.email);
       allow update, delete: if isAdmin();
     }
 
