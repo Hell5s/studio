@@ -4,8 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v18.0
-     * Sistema de Pedidos, Gestão Administrativa e Segurança de Listagem
+     * TODA BELA - REGRAS DE SEGURANÇA v19.0
+     * Foco em Propriedade de Pedidos e Segurança Administrativa
      */
 
     function isSignedIn() {
@@ -31,44 +31,51 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Pedidos: Sistema Privado com filtragem por userId
+    // Pedidos: Sistema Privado baseado em userId conforme solicitado
     match /orders/{orderId} {
-      allow create: if isSignedIn();
-      
-      // Admin lê tudo. Cliente lê o próprio.
-      allow get: if isAdmin() || (isSignedIn() && (
-        resource.data.userId == request.auth.uid || 
-        resource.data.customer.email.lower() == request.auth.token.email.lower()
-      ));
-      
-      // Listagem: Exige filtro de segurança para não-admins
-      allow list: if isAdmin() || (isSignedIn() && (
-        request.query.filters.userId == request.auth.uid
-      ));
+      // Qualquer usuário autenticado pode criar um pedido
+      allow create: if request.auth != null;
 
-      allow update, delete: if isAdmin();
+      // O cliente lê apenas seus próprios pedidos. Admin lê tudo.
+      allow read: if isAdmin() || (
+        request.auth != null && 
+        resource.data.userId == request.auth.uid
+      );
+
+      // O cliente pode atualizar seus pedidos (ex: cancelamento). Admin atualiza tudo.
+      allow update: if isAdmin() || (
+        request.auth != null && 
+        resource.data.userId == request.auth.uid
+      );
+
+      // Exclusão permitida apenas para administradores
+      allow delete: if isAdmin();
     }
 
+    // Favoritos: Apenas o dono acessa
     match /users/{userId}/favorites/{favId} {
       allow read, write: if isOwner(userId);
     }
 
+    // Newsletter: Inscrição pública, gestão admin
     match /newsletter_subscribers/{s} {
       allow create: if true;
       allow read, delete: if isAdmin();
     }
     
-    // Papéis Administrativos: Dono lê seu próprio status, admin lista todos
+    // Papéis Administrativos: Dono lê seu status, admin lista todos
     match /roles_admin/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
       allow list: if isAdmin();
     }
     
+    // Banners: Leitura pública, gestão admin
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    // Bloqueio padrão para qualquer outro documento
     match /{document=**} {
       allow read, write: if false;
     }
