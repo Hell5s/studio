@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -24,112 +25,79 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const leftLinks = [
-    { name: 'Novidades', href: '#catalogo' },
-    { name: 'Mais Vendidos', href: '#catalogo' },
-    { name: 'Moda Festa', href: '#catalogo' },
-    { name: 'Coleções', href: '#catalogo' },
+  const navLinks = [
+    { name: 'NOVIDADES', href: '#catalogo' },
+    { name: 'MAIS VENDIDOS', href: '#catalogo' },
+    { name: 'MODA FESTA', href: '#catalogo' },
+    { name: 'COLEÇÕES', href: '#catalogo' },
+    { name: 'RASTREAR', href: '#', onClick: onOpenTrack },
   ];
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 w-full">
-      {/* Barra de Aviso Superior */}
-      <div className="bg-[#6E3C47] text-white py-2 px-4 text-center text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] border-b border-white/5">
-        Frete VIP acima de R$350 • Até 10x sem juros
-      </div>
-
       <header 
         className={cn(
-          "transition-all duration-500 px-4 md:px-12 w-full",
+          "transition-all duration-700 px-6 md:px-12 w-full border-b border-transparent",
           scrolled 
-            ? "bg-white/95 backdrop-blur-xl shadow-xl py-2 md:py-3" 
-            : "bg-[#FFF9F7] py-4 md:py-6"
+            ? "bg-white/80 backdrop-blur-xl border-black/5 py-4" 
+            : "bg-transparent py-6"
         )}
       >
-        <div className="container mx-auto max-w-[1600px]">
-          {/* Layout Desktop */}
-          <div className="hidden lg:grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-            
-            {/* Esquerda: Links */}
-            <nav className="flex items-center gap-6">
-              {leftLinks.map((link) => (
-                <Link 
-                  key={link.name} 
-                  href={link.href}
-                  className="group relative py-2"
-                >
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#2A1F22]/70 group-hover:text-[#6E3C47] transition-colors">
-                    {link.name}
-                  </span>
-                  <span className="absolute bottom-0 left-0 w-0 h-px bg-[#C7A17A] transition-all duration-500 group-hover:w-full" />
-                </Link>
-              ))}
-            </nav>
+        <div className="container mx-auto max-w-[1600px] flex items-center justify-between">
+          
+          {/* Logo à Esquerda */}
+          <Link href="/" className="transition-transform duration-500 hover:scale-105 shrink-0">
+            <LogoMark itemsStart />
+          </Link>
 
-            {/* Centro: Logo */}
-            <Link href="/" className="px-8 transition-transform duration-500 hover:scale-105">
-              <LogoMark />
-            </Link>
-
-            {/* Direita: Ações */}
-            <div className="flex items-center justify-end gap-5">
+          {/* Navegação Central */}
+          <nav className="hidden lg:flex items-center gap-10">
+            {navLinks.map((link) => (
               <button 
-                onClick={onOpenTrack}
-                className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#2A1F22]/50 hover:text-[#6E3C47]"
+                key={link.name} 
+                onClick={link.onClick}
+                className="group relative"
               >
-                <Package className="h-3.5 w-3.5" />
-                <span>Rastrear</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A1F22]/70 group-hover:text-[#6E3C47] transition-colors">
+                  {link.name}
+                </span>
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-[#C7A17A] transition-all duration-500 group-hover:w-full" />
               </button>
+            ))}
+          </nav>
 
-              <div className="flex items-center gap-1 border-r border-[#F7E8EA] pr-4">
-                <Button variant="ghost" size="icon" className="rounded-full text-[#6E3C47] h-9 w-9">
-                  <Search className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="rounded-full text-[#6E3C47] h-9 w-9" onClick={onOpenLogin}>
-                  <User className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <button 
-                onClick={onOpenCart}
-                className="flex items-center gap-3 pl-4 pr-5 h-11 rounded-full bg-[#6E3C47] text-white hover:bg-[#2A1F22] transition-all shadow-lg group"
-              >
-                <div className="relative">
-                  <ShoppingBag className="h-4 w-4" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-[#C7A17A] text-white text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center font-bold border border-[#6E3C47]">
-                      {cartCount}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Carrinho</span>
-              </button>
+          {/* Ações à Direita */}
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="rounded-full text-[#2A1F22]/70 hover:text-[#6E3C47]">
+                <Search className="h-4.5 w-4.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="rounded-full text-[#2A1F22]/70 hover:text-[#6E3C47]" onClick={onOpenLogin}>
+                <User className="h-4.5 w-4.5" />
+              </Button>
             </div>
-          </div>
-
-          {/* Layout Mobile */}
-          <div className="lg:hidden flex items-center justify-between">
+            
             <button 
-              onClick={() => setMobileMenuOpen(true)}
-              className="h-10 w-10 flex items-center justify-center rounded-full bg-white border border-[#F7E8EA]"
+              onClick={onOpenCart}
+              className="flex items-center gap-3 pl-5 pr-6 h-12 rounded-full bg-[#6E3C47] text-white hover:bg-[#2A1F22] transition-all shadow-xl group"
             >
-              <Menu className="h-5 w-5 text-[#6E3C47]" />
+              <div className="relative">
+                <ShoppingBag className="h-4 w-4" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#C7A17A] text-white text-[7px] h-3.5 w-3.5 rounded-full flex items-center justify-center font-bold">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Carrinho</span>
             </button>
 
-            <Link href="/" className="scale-90 transform-gpu">
-              <LogoMark />
-            </Link>
-
+            {/* Mobile Toggle */}
             <button 
-              onClick={onOpenCart} 
-              className="relative h-10 w-10 flex items-center justify-center bg-[#6E3C47] text-white rounded-full"
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden h-10 w-10 flex items-center justify-center rounded-full bg-white border border-black/5"
             >
-              <ShoppingBag className="h-4.5 w-4.5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#C7A17A] text-white text-[8px] h-4 w-4 rounded-full flex items-center justify-center font-bold border border-white">
-                  {cartCount}
-                </span>
-              )}
+              <Menu className="h-5 w-5 text-[#6E3C47]" />
             </button>
           </div>
         </div>
@@ -137,46 +105,29 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
         {/* Menu Mobile Lateral */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-[100] bg-white/98 animate-in fade-in slide-in-from-left duration-500">
-            <div className="p-8 flex flex-col h-full">
-              <div className="flex justify-between items-center mb-12">
-                <LogoMark className="scale-90" />
+            <div className="p-10 flex flex-col h-full">
+              <div className="flex justify-between items-center mb-16">
+                <LogoMark />
                 <button 
                   onClick={() => setMobileMenuOpen(false)} 
-                  className="h-10 w-10 flex items-center justify-center rounded-full bg-[#F7E8EA]"
+                  className="h-12 w-12 flex items-center justify-center rounded-full bg-[#F7E8EA]"
                 >
-                  <X className="h-5 w-5 text-[#6E3C47]" />
+                  <X className="h-6 w-6 text-[#6E3C47]" />
                 </button>
               </div>
               
-              <nav className="flex flex-col gap-6">
-                {leftLinks.map((link) => (
-                  <Link 
+              <nav className="flex flex-col gap-8">
+                {navLinks.map((link) => (
+                  <button 
                     key={link.name} 
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="group"
+                    onClick={() => { link.onClick?.(); setMobileMenuOpen(false); }}
+                    className="text-left group"
                   >
-                    <p className="text-2xl font-serif font-bold text-[#6E3C47]">{link.name}</p>
+                    <p className="text-3xl font-serif font-bold text-[#6E3C47]">{link.name}</p>
                     <div className="h-px w-full bg-[#F7E8EA] mt-4 opacity-30" />
-                  </Link>
+                  </button>
                 ))}
               </nav>
-
-              <div className="mt-auto space-y-4 pt-10">
-                <Button 
-                  onClick={() => { onOpenTrack(); setMobileMenuOpen(false); }}
-                  variant="outline" 
-                  className="w-full h-14 rounded-full border-[#F7E8EA] text-[#6E3C47] font-bold uppercase tracking-widest text-[10px]"
-                >
-                  Rastrear Pedido
-                </Button>
-                <Button 
-                  onClick={() => { onOpenLogin(); setMobileMenuOpen(false); }}
-                  className="w-full h-14 rounded-full bg-[#6E3C47] text-white font-bold uppercase tracking-widest text-[10px]"
-                >
-                  Minha Conta
-                </Button>
-              </div>
             </div>
           </div>
         )}
