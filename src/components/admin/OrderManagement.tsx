@@ -14,7 +14,7 @@ import {
   MoreVertical,
   X
 } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -46,13 +46,21 @@ const statusIcons: Record<string, React.ReactNode> = {
 
 export function OrderManagement() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Verificação extra de segurança para a consulta
+  const adminDocRef = useMemoFirebase(() => {
+    return user ? doc(db, 'roles_admin', user.uid) : null;
+  }, [db, user]);
+  const { data: adminRole } = useDoc(adminDocRef);
+  const isActuallyAdmin = !!adminRole;
+
   const ordersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !isActuallyAdmin) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
-  }, [db]);
+  }, [db, isActuallyAdmin]);
 
   const { data: orders, isLoading } = useCollection(ordersQuery);
 
@@ -84,6 +92,14 @@ export function OrderManagement() {
 
   const formatCurrency = (val: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+
+  if (!isActuallyAdmin && !isLoading) {
+    return (
+      <div className="py-20 text-center">
+        <p className="text-muted-foreground italic">Acesso restrito ao painel administrativo.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">

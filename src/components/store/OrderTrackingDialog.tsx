@@ -25,7 +25,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useFirestore } from '@/firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface OrderTrackingDialogProps {
   open: boolean;
@@ -52,31 +52,16 @@ export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogP
       const cleanId = orderId.trim().replace('#', '');
       const cleanEmail = email.trim().toLowerCase();
 
-      // Primeiro tentamos por ID exato (mais eficiente)
+      // Busca direta por ID (permitido publicamente nas regras)
+      // Nota: Não usamos busca por e-mail para visitantes para evitar erros de permissão 'list'
       const docRef = doc(db, 'orders', cleanId);
       const docSnap = await getDoc(docRef);
 
-      let orderData = null;
-      let finalId = cleanId;
-
       if (docSnap.exists()) {
-        orderData = docSnap.data();
-      } else {
-        // Se não achar por ID longo, buscamos todos os pedidos do email e filtramos pelo sufixo
-        const q = query(collection(db, 'orders'), where('customerEmail', '==', cleanEmail));
-        const querySnapshot = await getDocs(q);
+        const orderData = docSnap.data();
         
-        const matchingOrder = querySnapshot.docs.find(d => 
-          d.id.toLowerCase().endsWith(cleanId.toLowerCase())
-        );
-
-        if (matchingOrder) {
-          orderData = matchingOrder.data();
-          finalId = matchingOrder.id;
-        }
-      }
-
-      if (orderData) {
+        // Verificação de segurança na memória do cliente: 
+        // O ID é público, mas só mostramos os dados se o e-mail bater.
         if (orderData.customerEmail?.toLowerCase() !== cleanEmail) {
           setError("E-mail não corresponde ao pedido informado.");
           setLoading(false);
@@ -86,7 +71,7 @@ export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogP
         const status = orderData.status || "Pendente";
         
         setTrackingData({
-          id: `#${finalId.slice(-6).toUpperCase()}`,
+          id: `#${docSnap.id.slice(-6).toUpperCase()}`,
           status: status,
           lastUpdate: orderData.updatedAt?.toDate ? orderData.updatedAt.toDate().toLocaleString('pt-BR') : "Recentemente",
           estimatedDelivery: status === 'Entregue' ? "Entregue" : "Em processamento",
@@ -99,7 +84,7 @@ export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogP
           ]
         });
       } else {
-        setError("Pedido não localizado. Verifique o ID e o e-mail.");
+        setError("Pedido não localizado. Verifique o ID digitado.");
       }
     } catch (err) {
       setError("Falha na conexão. Tente novamente mais tarde.");
