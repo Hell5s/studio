@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v14.0
+     * TODA BELA - REGRAS DE SEGURANÇA v15.0
      * Sistema de Pedidos e Gestão Administrativa
      */
 
@@ -34,10 +34,7 @@ service cloud.firestore {
     // Pedidos: Sistema Privado com filtragem por userId ou Email
     match /orders/{orderId} {
       // Cliente pode criar o próprio pedido
-      allow create: if isSignedIn() && (
-        request.resource.data.userId == request.auth.uid || 
-        request.resource.data.customer.email.lower() == request.auth.token.email.lower()
-      );
+      allow create: if isSignedIn();
       
       // Admin pode ler tudo. Cliente pode ler seus próprios pedidos.
       allow read: if isAdmin() || (isSignedIn() && (

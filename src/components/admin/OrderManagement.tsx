@@ -50,7 +50,7 @@ export function OrderManagement() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Verificação extra de segurança para a consulta: SÓ DISPARA se o UID existir
+  // Verificação extra de segurança para a consulta: SÓ DISPARA se o UID existir e for admin
   const adminDocRef = useMemoFirebase(() => {
     return user?.uid ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user?.uid]);
@@ -59,8 +59,8 @@ export function OrderManagement() {
   const isActuallyAdmin = !!adminRole;
 
   const ordersQuery = useMemoFirebase(() => {
-    // PROTEÇÃO CRÍTICA: Só dispara a consulta administrativa se o usuário estiver confirmado como Admin
-    if (!db || !isActuallyAdmin || isAdminLoading) return null;
+    // PROTEÇÃO CRÍTICA: Só dispara a consulta administrativa se o usuário estiver confirmado como Admin e o loading terminou
+    if (!db || isAdminLoading || !isActuallyAdmin) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
   }, [db, isActuallyAdmin, isAdminLoading]);
 
@@ -110,9 +110,9 @@ export function OrderManagement() {
     return (
       <div className="py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-primary/5">
         <XCircle className="h-12 w-12 text-destructive/20 mx-auto mb-6" />
-        <h4 className="text-xl font-headline font-bold text-primary mb-2">Acesso Negado</h4>
+        <h4 className="text-xl font-headline font-bold text-primary mb-2">Acesso Restrito</h4>
         <p className="text-sm text-muted-foreground italic font-light max-w-xs mx-auto">
-          Este painel é exclusivo para administradores da Toda Bela. Se você deveria ter acesso, verifique seu UID.
+          Este painel é exclusivo para administradores confirmados da Toda Bela.
         </p>
       </div>
     );
@@ -225,8 +225,8 @@ export function OrderManagement() {
                         <ShoppingBag className="h-12 w-12" />
                       </div>
                       <div className="space-y-2">
-                        <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Aguardando Pedidos</h5>
-                        <p className="text-xs text-muted-foreground max-w-xs font-light italic">Tente buscar por um ID diferente ou limpe os filtros de busca.</p>
+                        <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Nenhum Pedido</h5>
+                        <p className="text-xs text-muted-foreground max-w-xs font-light italic">Os pedidos da boutique aparecerão aqui em tempo real.</p>
                       </div>
                     </div>
                   </td>
