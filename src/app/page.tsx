@@ -56,7 +56,7 @@ export default function Home() {
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
 
-  // Sincronização Real dos Produtos
+  // PASSO 1 - Sincronização Real dos Produtos
   const [storeProducts, setStoreProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
 
@@ -79,7 +79,7 @@ export default function Home() {
     });
 
     return () => unsubscribe();
-  }, [db]);
+  }, []); // Dependência vazia conforme PASSO 1
 
   // Verificação de Admin
   const adminDocRef = useMemoFirebase(() => {
@@ -89,7 +89,7 @@ export default function Home() {
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
-  // Lógica de Fallback (PASSO 4)
+  // PASSO 4 - Lógica de Fallback GARANTIDA
   const storefrontProducts = useMemo(() => {
     if (storeProducts.length) return storeProducts;
     return [...staticLaunchProducts, ...staticBasicProducts];
@@ -170,7 +170,7 @@ export default function Home() {
     el?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Usar produtos reais no Admin (PASSO 3)
+  // PASSO 3 - Usar produtos REAIS no Admin
   if (showAdmin && isAdmin) {
     return (
       <div className="h-screen w-full">
