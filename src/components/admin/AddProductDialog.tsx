@@ -122,6 +122,15 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!storage) {
+      toast({
+        title: "Erro de Configuração",
+        description: "O serviço de armazenamento não está disponível.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setUploading(true);
     try {
       const storageRef = ref(storage, `products/uploads/${Date.now()}-${file.name}`);
@@ -129,8 +138,13 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       const downloadURL = await getDownloadURL(snapshot.ref);
       setFormData(prev => ({ ...prev, image: downloadURL }));
       toast({ title: "Imagem carregada com sucesso" });
-    } catch (error) {
-      toast({ title: "Erro no upload", variant: "destructive" });
+    } catch (error: any) {
+      console.error("Erro no upload:", error);
+      toast({ 
+        title: "Erro no upload", 
+        description: error.message || "Não foi possível enviar a imagem. Verifique as permissões do Storage.",
+        variant: "destructive" 
+      });
     } finally {
       setUploading(false);
     }

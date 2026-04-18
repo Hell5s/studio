@@ -133,6 +133,15 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     const file = e.target.files?.[0];
     if (!file || !product?.id) return;
 
+    if (!storage) {
+      toast({
+        title: "Erro de Configuração",
+        description: "O serviço de armazenamento não está disponível.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setUploading(true);
     try {
       const storageRef = ref(storage, `products/${product.id}/${Date.now()}-${file.name}`);
@@ -140,8 +149,13 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       const downloadURL = await getDownloadURL(snapshot.ref);
       setFormData(prev => ({ ...prev, image: downloadURL }));
       toast({ title: "Imagem atualizada" });
-    } catch (error) {
-      toast({ title: "Erro no upload", variant: "destructive" });
+    } catch (error: any) {
+      console.error("Erro no upload:", error);
+      toast({ 
+        title: "Erro no upload", 
+        description: error.message || "Não foi possível enviar a imagem. Verifique se o bucket do Storage está configurado.",
+        variant: "destructive" 
+      });
     } finally {
       setUploading(false);
     }
