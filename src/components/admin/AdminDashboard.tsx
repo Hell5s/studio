@@ -39,12 +39,14 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
   const db = useFirestore();
   const { user } = useUser();
 
+  // Consulta de produtos recentes (segura, pois produtos são públicos)
   const recentProductsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(5));
-  }, [db, user]);
+  }, [db]);
   const { data: recentProducts } = useCollection(recentProductsQuery);
 
+  // Consulta de pedidos (só deve rodar se o admin estiver realmente confirmado)
   const ordersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
@@ -166,7 +168,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
                           <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] font-bold">{order.items?.length || 0} Itens</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-primary">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total)}</p>
+                          <p className="font-bold text-primary">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total || 0)}</p>
                           <Badge variant="outline" className="text-[8px] uppercase tracking-widest mt-1">
                             {order.status || 'Pendente'}
                           </Badge>
