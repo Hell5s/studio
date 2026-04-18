@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Toda Bela - Palette Editorial Deluxe */
+    /* Toda Bela - Paleta Editorial Brasileira */
     --background: 15 100% 99%; /* Creme #FFF9F7 */
     --foreground: 343 16% 15%; /* Texto #2A1F22 */
     
@@ -28,9 +28,6 @@
     /* Dourado Soft #C7A17A */
     --accent: 31 43% 63%;
     --accent-foreground: 31 10% 15%;
-    
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
     
     --border: 347 20% 92%;
     --input: 347 20% 92%;
