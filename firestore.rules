@@ -1,9 +1,10 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v15.0
+     * TODA BELA - REGRAS DE SEGURANÇA v16.0
      * Sistema de Pedidos e Gestão Administrativa
      */
 
@@ -12,7 +13,6 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // Verifica se o UID do usuário existe na coleção de administradores
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
@@ -33,49 +33,42 @@ service cloud.firestore {
 
     // Pedidos: Sistema Privado com filtragem por userId ou Email
     match /orders/{orderId} {
-      // Cliente pode criar o próprio pedido
       allow create: if isSignedIn();
       
-      // Admin pode ler tudo. Cliente pode ler seus próprios pedidos.
+      // Admin lê tudo. Cliente lê o próprio.
       allow read: if isAdmin() || (isSignedIn() && (
         resource.data.userId == request.auth.uid || 
         resource.data.customer.email.lower() == request.auth.token.email.lower()
       ));
       
-      // Listagem (queries): Requer filtro por userId ou Email para clientes, ou ser Admin
+      // Listagem: Exige filtro de segurança
       allow list: if isAdmin() || (isSignedIn() && (
         request.query.filters.userId == request.auth.uid ||
         request.query.filters['customer.email'] == request.auth.token.email.lower()
       ));
 
-      // Apenas Admin pode atualizar status ou deletar
       allow update, delete: if isAdmin();
     }
 
-    // Favoritos: Gestão por UID
     match /users/{userId}/favorites/{favId} {
       allow read, write: if isOwner(userId);
     }
 
-    // Newsletter: Inscrição pública, leitura apenas admin
     match /newsletter_subscribers/{s} {
       allow create: if true;
       allow read, delete: if isAdmin();
     }
     
-    // Papéis Admin: Permite que o usuário verifique sua própria permissão de forma segura
     match /roles_admin/{uid} {
-      allow get: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isSignedIn() && request.auth.uid == uid;
       allow list: if isAdmin();
     }
     
-    // Banners: Leitura pública
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Bloqueio padrão para qualquer outro caminho
     match /{document=**} {
       allow read, write: if false;
     }

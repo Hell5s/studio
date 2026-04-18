@@ -35,9 +35,9 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
   };
 
   const navLinks = [
-    { label: 'COLEÇÕES', href: '#colecoes' },
-    { label: 'PRODUTOS', href: '#produtos' },
-    { label: 'MAIS VENDIDOS', href: '#mais-vendidos' },
+    { label: 'COLEÇÕES', href: '/#colecoes' },
+    { label: 'PRODUTOS', href: '/#produtos' },
+    { label: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
     { label: 'ECONOMIZE', href: '/economize', highlight: true },
   ];
 
@@ -88,15 +88,16 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
           </form>
 
           <div className="flex items-center gap-1 md:gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="rounded-full text-primary hover:bg-secondary h-10 px-3 md:px-4" 
-              onClick={onOpenOrders}
-            >
-              <Package className="h-5 w-5 md:mr-2" />
-              <span className="hidden md:inline text-[9px] font-bold uppercase tracking-widest">Meus Pedidos</span>
-            </Button>
+            <Link href="/meus-pedidos">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="rounded-full text-primary hover:bg-secondary h-10 px-3 md:px-4"
+              >
+                <Package className="h-5 w-5 md:mr-2" />
+                <span className="hidden md:inline text-[9px] font-bold uppercase tracking-widest">Meus Pedidos</span>
+              </Button>
+            </Link>
             
             <Button variant="ghost" size="icon" className="rounded-full text-primary hover:bg-secondary h-10 w-10" onClick={onOpenLogin}>
               <User className="h-5 w-5" />
