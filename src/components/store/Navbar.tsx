@@ -3,12 +3,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Menu, X, Heart, ShieldCheck, Trash2 } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, X, Heart, ShieldCheck, Trash2, LogOut, Settings, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LogoMark } from './LogoMark';
-import { useCollection, useFirestore, useUser, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase, deleteDocumentNonBlocking, useAuth } from '@/firebase';
 import { collection, query, doc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 import {
   Sheet,
   SheetContent,
@@ -16,6 +17,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from '@/components/ui/separator';
 
 interface NavbarProps {
@@ -33,6 +42,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const db = useFirestore();
+  const auth = useAuth();
   const { user } = useUser();
 
   const favoritesQuery = useMemoFirebase(() => {
@@ -58,6 +68,11 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
   const removeFavorite = (productId: string) => {
     if (!user?.uid || !db) return;
     deleteDocumentNonBlocking(doc(db, 'users', user.uid, 'favorites', productId));
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    window.location.reload();
   };
 
   const links = [
@@ -132,15 +147,69 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
             </form>
 
             <div className="flex items-center gap-1 md:gap-2">
-              {/* User Account */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full h-9 w-9 text-primary hover:bg-gray-100"
-                onClick={isAdmin ? onOpenAdmin : onOpenLogin}
-              >
-                {isAdmin ? <ShieldCheck className="h-5 w-5" /> : <User className="h-5 w-5" />}
-              </Button>
+              {/* User Account / Login */}
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="rounded-full h-9 w-9 text-primary hover:bg-gray-100 relative"
+                    >
+                      <User className="h-5 w-5" />
+                      {isAdmin && <span className="absolute -top-1 -right-1 bg-accent h-2 w-2 rounded-full animate-pulse" />}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-primary/5">
+                    <DropdownMenuLabel className="px-4 py-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bem-vinda</p>
+                      <p className="text-xs font-semibold text-primary truncate">{user.email}</p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-primary/5" />
+                    
+                    {isAdmin && (
+                      <DropdownMenuItem 
+                        onClick={onOpenAdmin}
+                        className="rounded-xl px-4 py-3 cursor-pointer text-primary hover:bg-primary/5"
+                      >
+                        <ShieldCheck className="mr-3 h-4 w-4 text-accent" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Painel Administrativo</span>
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuItem className="rounded-xl px-4 py-3 cursor-pointer text-primary hover:bg-primary/5">
+                      <User className="mr-3 h-4 w-4 text-muted-foreground" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Minha Conta</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem 
+                      onClick={onOpenTrack}
+                      className="rounded-xl px-4 py-3 cursor-pointer text-primary hover:bg-primary/5"
+                    >
+                      <Package className="mr-3 h-4 w-4 text-muted-foreground" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Meus Pedidos</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator className="bg-primary/5" />
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="rounded-xl px-4 py-3 cursor-pointer text-red-500 hover:bg-red-50 focus:bg-red-50 focus:text-red-500"
+                    >
+                      <LogOut className="mr-3 h-4 w-4" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Sair da Conta</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full h-9 w-9 text-primary hover:bg-gray-100"
+                  onClick={onOpenLogin}
+                >
+                  <User className="h-5 w-5" />
+                </Button>
+              )}
               
               {/* Wishlist */}
               <Sheet>
@@ -275,12 +344,31 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
               </nav>
 
               <div className="mt-auto space-y-4">
-                 <button 
-                    onClick={() => { isAdmin ? onOpenAdmin?.() : onOpenLogin(); setMobileMenuOpen(false); }} 
-                    className="w-full py-4 rounded-md bg-black text-white text-[10px] font-bold uppercase tracking-widest"
-                  >
-                   {isAdmin ? "GERENCIAR LOJA" : "MINHA CONTA"}
-                 </button>
+                 {user ? (
+                   <div className="space-y-4">
+                      {isAdmin && (
+                        <button 
+                          onClick={() => { onOpenAdmin?.(); setMobileMenuOpen(false); }} 
+                          className="w-full py-4 rounded-md bg-accent text-white text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                        >
+                          <ShieldCheck className="h-4 w-4" /> GERENCIAR LOJA
+                        </button>
+                      )}
+                      <button 
+                        onClick={handleLogout} 
+                        className="w-full py-4 rounded-md border border-red-100 text-red-500 text-[10px] font-bold uppercase tracking-widest"
+                      >
+                        SAIR DA CONTA
+                      </button>
+                   </div>
+                 ) : (
+                   <button 
+                      onClick={() => { onOpenLogin(); setMobileMenuOpen(false); }} 
+                      className="w-full py-4 rounded-md bg-black text-white text-[10px] font-bold uppercase tracking-widest"
+                    >
+                     ENTRAR / CADASTRAR
+                   </button>
+                 )}
                  <button 
                     onClick={() => { onOpenTrack(); setMobileMenuOpen(false); }} 
                     className="w-full py-4 rounded-md border border-gray-200 text-primary text-[10px] font-bold uppercase tracking-widest"

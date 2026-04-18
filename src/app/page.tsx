@@ -2,8 +2,8 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, orderBy, onSnapshot, doc } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 
 export default function TodaBelaStorefront() {
   const db = useFirestore();
+  const { user } = useUser();
   
   // Estados de Interface
   const [isAdminView, setIsAdminView] = useState(false);
@@ -28,6 +29,13 @@ export default function TodaBelaStorefront() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [searchQuery, setSearchValue] = useState("");
   
+  // Verificação de Admin (Segurança Real)
+  const adminDocRef = useMemoFirebase(() => {
+    return user ? doc(db, 'roles_admin', user.uid) : null;
+  }, [db, user]);
+  const { data: adminRole, isLoading: isAdminChecking } = useDoc(adminDocRef);
+  const isAdmin = !!adminRole;
+
   // Carrinho
   const [cart, setCart] = useState<any[]>([]);
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart]);
@@ -93,7 +101,7 @@ export default function TodaBelaStorefront() {
   };
 
   // Se estiver no modo Admin, exibe o Dashboard completo
-  if (isAdminView) {
+  if (isAdminView && isAdmin) {
     return (
       <div className="h-screen bg-background">
         <AdminDashboard 
@@ -114,7 +122,7 @@ export default function TodaBelaStorefront() {
         onOpenTrack={() => setIsTrackOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
         cartCount={cartCount}
-        isAdmin={true} 
+        isAdmin={isAdmin} 
         onOpenAdmin={() => setIsAdminView(true)}
         onSearch={handleSearch}
       />
