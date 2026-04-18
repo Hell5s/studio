@@ -13,6 +13,7 @@ import {
   Layers,
   Download,
   ExternalLink,
+  LogOut,
   Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,9 +30,10 @@ interface AdminDashboardProps {
   productsCount: number;
   categoriesCount: number;
   onOpenAI: () => void;
+  onExit?: () => void;
 }
 
-export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: AdminDashboardProps) {
+export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'shopee' | 'banners' | 'config'>('dashboard');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const db = useFirestore();
@@ -82,13 +84,25 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
           ))}
         </nav>
 
-        <div className="p-6 rounded-[2rem] bg-accent/5 border border-accent/10">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-2 w-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50 animate-pulse" />
-            <p className="text-[9px] font-bold uppercase tracking-widest text-accent">Loja Online</p>
+        <div className="space-y-4">
+          <div className="p-6 rounded-[2rem] bg-accent/5 border border-accent/10">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-2 w-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50 animate-pulse" />
+              <p className="text-[9px] font-bold uppercase tracking-widest text-accent">Loja Online</p>
+            </div>
+            <Button variant="outline" size="sm" className="w-full text-[9px] h-10 rounded-xl border-accent/20 hover:bg-white uppercase tracking-widest font-bold" onClick={() => window.open('/', '_blank')}>
+              Ver Site ao Vivo
+            </Button>
           </div>
-          <Button variant="outline" size="sm" className="w-full text-[9px] h-10 rounded-xl border-accent/20 hover:bg-white uppercase tracking-widest font-bold" onClick={() => window.open('/', '_blank')}>
-            Ver Site ao Vivo
+
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onExit}
+            className="w-full flex items-center justify-center gap-2 text-[9px] h-12 rounded-xl text-primary hover:bg-primary/5 uppercase tracking-widest font-bold"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sair do Painel
           </Button>
         </div>
       </aside>

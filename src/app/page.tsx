@@ -141,15 +141,9 @@ export default function Home() {
           productsCount={products?.length || 0} 
           categoriesCount={categories?.length || 0}
           onOpenAI={() => setIsAIGeneratorOpen(true)}
+          onExit={() => setShowAdmin(false)}
         />
         <AIProductGenerator open={isAIGeneratorOpen} onOpenChange={setIsAIGeneratorOpen} />
-        {/* Botão flutuante para voltar à loja */}
-        <Button 
-          onClick={() => setShowAdmin(false)}
-          className="fixed bottom-10 right-10 rounded-full h-16 px-10 bg-black text-white font-bold uppercase tracking-widest shadow-2xl z-[100] hover:scale-105 transition-all"
-        >
-          Voltar para a Loja
-        </Button>
       </div>
     );
   }
