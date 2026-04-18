@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -209,7 +208,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Gestão de Produtos</p>
-              <h3 className="text-3xl font-headline font-bold">Novo Item da Maison</h3>
+              <h3 className="text-3xl font-headline font-bold">Novo Item da Boutique</h3>
             </div>
           </div>
           <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-14 bg-white text-primary hover:bg-accent hover:text-white font-bold uppercase tracking-widest text-[10px] shadow-xl">
@@ -229,10 +228,10 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="md:col-span-2 space-y-2">
                   <Label>Nome do Produto</Label>
-                  <Input 
+                  <input 
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
-                    className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
+                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
                     placeholder="Ex: Top Alongado Decote Alto"
                   />
                 </div>
@@ -277,29 +276,29 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label>Preço da Loja (R$)</Label>
-                  <Input 
+                  <input 
                     value={formData.price}
                     onChange={e => setFormData({...formData, price: e.target.value})}
-                    className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
+                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
                     placeholder="129,90"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Preço Comparativo (R$)</Label>
-                  <Input 
+                  <input 
                     value={formData.oldPrice}
                     onChange={e => setFormData({...formData, oldPrice: e.target.value})}
-                    className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
+                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
                     placeholder="169,90"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Estoque Total</Label>
-                  <Input 
+                  <input 
                     type="number"
                     value={formData.stock}
                     onChange={e => setFormData({...formData, stock: e.target.value})}
-                    className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
+                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
                     placeholder="0"
                   />
                 </div>
@@ -313,10 +312,10 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               </div>
               <div className="space-y-4">
                 <div className="grid md:grid-cols-[1fr_auto] gap-4">
-                  <Input 
+                  <input 
                     value={formData.image}
                     onChange={e => setFormData({...formData, image: e.target.value})}
-                    className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
+                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
                     placeholder="URL ou Upload da Imagem Principal"
                   />
                   <Button variant="outline" className="rounded-2xl h-14 border-primary/10" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
@@ -325,16 +324,16 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                 </div>
                 <Label>Galeria de Imagens (uma URL por linha)</Label>
-                <Textarea 
+                <textarea 
                    value={formData.gallery}
                    onChange={e => setFormData({...formData, gallery: e.target.value})}
-                   className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[90px]"
+                   className="w-full rounded-2xl border-primary/5 bg-white shadow-sm min-h-[90px] px-4 py-3 outline-none"
                    placeholder="https://imagem1.jpg&#10;https://imagem2.jpg"
                 />
-                <Input 
+                <input 
                   value={formData.sourceUrl}
                   onChange={e => setFormData({...formData, sourceUrl: e.target.value})}
-                  className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
+                  className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
                   placeholder="Link Shopee (Privado)"
                 />
               </div>
@@ -361,38 +360,38 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label>Tamanhos Disponíveis</Label>
-                    <Input 
+                    <input 
                       value={formData.sizes}
                       onChange={e => setFormData({...formData, sizes: e.target.value})}
-                      className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
+                      className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
                       placeholder="P, M, G, GG"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Cores Principais</Label>
-                    <Input 
+                    <input 
                       value={formData.colors}
                       onChange={e => setFormData({...formData, colors: e.target.value})}
-                      className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
+                      className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
                       placeholder="Preto, Rose, Off White"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Resumo Vitrine (Curta)</Label>
-                  <Textarea 
+                  <textarea 
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
-                    className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[80px]"
+                    className="w-full rounded-2xl border-primary/5 bg-white shadow-sm min-h-[80px] px-4 py-3 outline-none"
                     placeholder="Uma frase impactante para a listagem"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Descrição Completa (Editorial)</Label>
-                  <Textarea 
+                  <textarea 
                     value={formData.longDescription}
                     onChange={e => setFormData({...formData, longDescription: e.target.value})}
-                    className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[160px]"
+                    className="w-full rounded-2xl border-primary/5 bg-white shadow-sm min-h-[160px] px-4 py-3 outline-none"
                     placeholder="História da peça, tecidos, cuidados e sugestões de uso..."
                   />
                 </div>

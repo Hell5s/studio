@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -192,7 +191,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
 
               <div className="mt-auto pb-10 space-y-4">
                  <button onClick={() => { isAdmin ? onOpenAdmin?.() : onOpenLogin(); setMobileMenuOpen(false); }} className="w-full py-5 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-widest">
-                   {isAdmin ? "Painel Maison" : "Minha Conta"}
+                   {isAdmin ? "Painel Admin" : "Minha Conta"}
                  </button>
                  <button onClick={() => { onOpenTrack(); setMobileMenuOpen(false); }} className="w-full py-5 rounded-full border border-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest">Rastrear Pedido</button>
               </div>
