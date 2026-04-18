@@ -4,9 +4,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA REFINADAS
-     * Ajustando permissões para garantir leitura pública de banners e produtos.
-     * Forçando deploy para sincronização de estado.
+     * TODA BELA - REGRAS DE SEGURANÇA v1.2
+     * Garantindo acesso público para banners e produtos.
+     * v1.2: Ajuste explicito para leitura de banners.
      */
 
     function isSignedIn() {
@@ -29,9 +29,9 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Banners: Leitura pública total explicita (get e list)
+    // Banners: Leitura pública total (get e list)
     match /banners/{bannerId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
