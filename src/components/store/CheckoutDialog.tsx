@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, 
   MapPin, 
@@ -26,7 +26,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { collection, serverTimestamp } from 'firebase/firestore';
-import { useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { useFirestore, addDocumentNonBlocking, useUser } from '@/firebase';
 
 interface CheckoutDialogProps {
   open: boolean;
@@ -38,6 +38,7 @@ interface CheckoutDialogProps {
 
 export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess }: CheckoutDialogProps) {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -55,6 +56,17 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
     state: ''
   });
 
+  // Preenche dados se o usuário estiver logado
+  useEffect(() => {
+    if (user && open) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || prev.email,
+        name: user.displayName || prev.name
+      }));
+    }
+  }, [user, open]);
+
   const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.street) {
@@ -70,7 +82,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
 
     const orderData = {
       customerName: formData.name,
-      customerEmail: formData.email || null,
+      customerEmail: formData.email?.toLowerCase().trim() || null,
       customerPhone: formData.phone,
       customerAddress: {
         zipCode: formData.zipCode,
@@ -203,9 +215,10 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="ml-4 text-[10px] font-bold uppercase tracking-widest text-primary/40">E-mail (Opcional)</Label>
+                    <Label className="ml-4 text-[10px] font-bold uppercase tracking-widest text-primary/40">E-mail (Obrigatório para acompanhar)</Label>
                     <Input 
                       type="email"
+                      required
                       value={formData.email}
                       onChange={e => setFormData({...formData, email: e.target.value})}
                       placeholder="seu@email.com"

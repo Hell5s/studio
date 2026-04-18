@@ -4,8 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v5.0
-     * Foco em acessibilidade total para favoritos e segurança administrativa.
+     * TODA BELA - REGRAS DE SEGURANÇA v6.0
+     * Foco em acessibilidade total para favoritos e segurança de pedidos.
      */
 
     function isSignedIn() {
@@ -32,10 +32,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Pedidos: Criação pública, gestão admin
+    // Pedidos: Criação pública, gestão admin, leitura pelo dono do pedido (e-mail)
     match /orders/{orderId} {
       allow create: if true;
-      allow read, update, delete: if isAdmin();
+      // Permite ler se for admin OU se o e-mail no pedido for o mesmo do usuário logado
+      allow read: if isAdmin() || (isSignedIn() && request.auth.token.email == resource.data.customerEmail);
+      allow update, delete: if isAdmin();
     }
 
     // Favoritos: Permitir que qualquer usuário autenticado gerencie seu próprio subconjunto
