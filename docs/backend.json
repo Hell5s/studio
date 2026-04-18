@@ -7,173 +7,51 @@
       "type": "object",
       "description": "Represents a single product available in the store catalog.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Product entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the product."
-        },
-        "price": {
-          "type": "number",
-          "description": "The current selling price of the product."
-        },
-        "oldPrice": {
-          "type": "number",
-          "description": "The previous price of the product, typically for showing discounts. (Optional)"
-        },
-        "badge": {
-          "type": "string",
-          "description": "A promotional badge or label for the product (e.g., 'Mais vendido', 'Novo', 'Oferta', 'Trend'). (Optional)"
-        },
-        "categoryId": {
-          "type": "string",
-          "description": "Reference to the Category this product belongs to. (Relationship: Category 1:N Product)"
-        },
-        "image": {
-          "type": "string",
-          "description": "URL to the main image of the product.",
-          "format": "uri"
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description of the product."
-        },
-        "featured": {
-          "type": "boolean",
-          "description": "Indicates if the product is highlighted as a featured item."
-        },
-        "source": {
-          "type": "string",
-          "description": "The source of the product (e.g., 'Shopee', 'Manual')."
-        },
-        "sourceUrl": {
-          "type": "string",
-          "description": "The original URL of the product at the supplier.",
-          "format": "uri"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the product record was created.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "oldPrice": { "type": "number" },
+        "badge": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "category": { "type": "string" },
+        "image": { "type": "string", "format": "uri" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string" },
+        "longDescription": { "type": "string" },
+        "stock": { "type": "number" },
+        "sizes": { "type": "array", "items": { "type": "string" } },
+        "colors": { "type": "array", "items": { "type": "string" } },
+        "featured": { "type": "boolean" },
+        "published": { "type": "boolean" },
+        "source": { "type": "string" },
+        "sourceUrl": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "name",
-        "price",
-        "categoryId",
-        "image",
-        "description",
-        "featured",
-        "createdAt"
-      ]
+      "required": ["id", "name", "price", "image", "createdAt"]
     },
     "Category": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Category",
       "type": "object",
-      "description": "Represents a category for organizing products in the storefront.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Category entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the product category (e.g., 'Vestidos', 'Blusas')."
-        },
-        "order": {
-          "type": "number",
-          "description": "A numerical value to define the display order of categories."
-        }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "order": { "type": "number" }
       },
-      "required": [
-        "id",
-        "name",
-        "order"
-      ]
-    },
-    "Banner": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Banner",
-      "type": "object",
-      "description": "Represents a promotional banner displayed on the storefront's hero section.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Banner entity."
-        },
-        "title": {
-          "type": "string",
-          "description": "The main title text for the banner."
-        },
-        "subtitle": {
-          "type": "string",
-          "description": "Secondary descriptive text accompanying the banner title."
-        },
-        "image": {
-          "type": "string",
-          "description": "URL to the banner's main image.",
-          "format": "uri"
-        },
-        "campaign": {
-          "type": "string",
-          "description": "The name or theme of the campaign associated with the banner."
-        },
-        "campaignText": {
-          "type": "string",
-          "description": "A short descriptive text for the banner's campaign."
-        },
-        "active": {
-          "type": "boolean",
-          "description": "Indicates if the banner is currently active and should be displayed."
-        }
-      },
-      "required": [
-        "id",
-        "title",
-        "subtitle",
-        "image",
-        "campaign",
-        "campaignText",
-        "active"
-      ]
+      "required": ["id", "name", "order"]
     },
     "NewsletterSubscriber": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "NewsletterSubscriber",
       "type": "object",
-      "description": "Represents a subscriber to the store's newsletter.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the NewsletterSubscriber entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "The email address of the newsletter subscriber.",
-          "format": "email"
-        },
-        "subscriptionDate": {
-          "type": "string",
-          "description": "Timestamp indicating when the user subscribed to the newsletter.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "subscriptionDate": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "email",
-        "subscriptionDate"
-      ]
+      "required": ["id", "email", "subscriptionDate"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
@@ -181,83 +59,33 @@
         "path": "/products/{productId}",
         "definition": {
           "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Stores individual product listings. Documents include denormalized 'categoryName' for efficient filtering and display, 'createdAt' for ordering, and 'featured' for highlighting. Publicly readable for storefront, admin-only write access.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "The unique identifier for a specific product."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Product" },
+          "description": "Catalogo de produtos"
         }
       },
       {
         "path": "/categories/{categoryId}",
         "definition": {
           "entityName": "Category",
-          "schema": {
-            "$ref": "#/backend/entities/Category"
-          },
-          "description": "Manages product categories for organization and navigation. Includes an 'order' field for explicit sorting. Publicly readable for storefront, admin-only write access.",
-          "params": [
-            {
-              "name": "categoryId",
-              "description": "The unique identifier for a product category."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/banners/{bannerId}",
-        "definition": {
-          "entityName": "Banner",
-          "schema": {
-            "$ref": "#/backend/entities/Banner"
-          },
-          "description": "Holds promotional banner content for the storefront's hero section. Includes an 'active' field to control visibility. Publicly readable for storefront, admin-only write access.",
-          "params": [
-            {
-              "name": "bannerId",
-              "description": "The unique identifier for a promotional banner."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Category" },
+          "description": "Categorias de produtos"
         }
       },
       {
         "path": "/newsletter_subscribers/{subscriberId}",
         "definition": {
           "entityName": "NewsletterSubscriber",
-          "schema": {
-            "$ref": "#/backend/entities/NewsletterSubscriber"
-          },
-          "description": "Collects email addresses for newsletter subscriptions. Allows anonymous/authenticated users to create new subscriptions. Read and delete access restricted to administrators.",
-          "params": [
-            {
-              "name": "subscriberId",
-              "description": "The unique identifier for a newsletter subscriber (e.g., generated UUID)."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/NewsletterSubscriber" },
+          "description": "Assinantes da newsletter"
         }
       },
       {
         "path": "/roles_admin/{adminUid}",
         "definition": {
           "entityName": "UserRole",
-          "schema": {
-            "$ref": "#/backend/entities/UserRole"
-          },
-          "description": "Designates users with administrative privileges. The existence of a document at this path for a specific UID grants admin access to manage products, categories, banners, and newsletter subscribers. Only accessible for read by the adminUid itself.",
-          "params": [
-            {
-              "name": "adminUid",
-              "description": "The Firebase Authentication UID of a user with administrative rights."
-            }
-          ]
+          "description": "Papeis administrativos"
         }
       }
-    ],
-    "reasoning": "The Firestore structure for the 'Toda Bela Storefront' prioritizes public readability and administrative control, adhering to core design principles for security, scalability, and debuggability."
+    ]
   }
 }

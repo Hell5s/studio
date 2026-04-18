@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { 
   ShoppingBag, 
   Users, 
-  TrendingUp, 
   PlusCircle, 
   Settings, 
   Sparkles,
@@ -22,6 +21,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { AdminShopeeImport } from './AdminShopeeImport';
 import { ProductManagement } from './ProductManagement';
+import { AddProductDialog } from './AddProductDialog';
 
 interface AdminDashboardProps {
   productsCount: number;
@@ -31,6 +31,7 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'shopee' | 'config'>('dashboard');
+  const [isAddOpen, setIsAddOpen] = useState(false);
   const db = useFirestore();
 
   const recentProductsQuery = useMemoFirebase(() => {
@@ -55,7 +56,6 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
 
   return (
     <div className="flex h-full bg-background overflow-hidden">
-      {/* Sidebar Editorial */}
       <aside className="w-72 bg-white border-r border-primary/5 p-8 flex flex-col gap-10">
         <div className="px-2">
           <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent mb-2">Administrativo</p>
@@ -90,7 +90,6 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden bg-secondary/5">
         <header className="h-24 bg-white border-b border-primary/5 px-10 flex items-center justify-between">
           <h2 className="text-xl font-headline font-bold text-primary uppercase tracking-[0.2em]">
@@ -101,7 +100,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
               <Sparkles className="mr-2 h-4 w-4" />
               Gerar com AI
             </Button>
-            <Button className="rounded-full bg-primary text-primary-foreground font-bold text-[10px] px-8 h-12 shadow-xl shadow-primary/20 uppercase tracking-widest">
+            <Button onClick={() => setIsAddOpen(true)} className="rounded-full bg-primary text-primary-foreground font-bold text-[10px] px-8 h-12 shadow-xl shadow-primary/20 uppercase tracking-widest">
               <PlusCircle className="mr-2 h-4 w-4" />
               Novo Produto
             </Button>
@@ -128,21 +127,21 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
 
               <Card className="p-10 rounded-[3.5rem] border-none bg-white shadow-xl">
                 <div className="flex items-center justify-between mb-10">
-                  <h4 className="font-headline font-bold text-2xl text-primary">Últimas Importações</h4>
+                  <h4 className="font-headline font-bold text-2xl text-primary">Últimas Atividades</h4>
                   <Button variant="ghost" size="sm" className="text-accent text-[10px] font-bold uppercase tracking-widest" onClick={() => setActiveTab('produtos')}>Ver Catálogo Completo</Button>
                 </div>
                 <div className="space-y-6">
                   {recentProducts?.map((product) => (
                     <div key={product.id} className="flex items-center gap-6 p-5 rounded-3xl border border-primary/5 hover:bg-secondary/20 transition-all duration-500">
                       <div className="h-16 w-16 rounded-2xl overflow-hidden bg-muted shadow-sm">
-                        <img src={product.image || product.images?.[0]} className="object-cover h-full w-full" alt={product.name || product.title} />
+                        <img src={product.image || product.images?.[0]} className="object-cover h-full w-full" alt={product.name} />
                       </div>
                       <div className="flex-1">
-                        <p className="font-bold text-primary text-base truncate">{product.name || product.title}</p>
-                        <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] mt-1 font-bold">{product.source || 'Curadoria Manual'}</p>
+                        <p className="font-bold text-primary text-base truncate">{product.name}</p>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] mt-1 font-bold">{product.source || 'Curadoria'}</p>
                       </div>
                       <div className="text-right flex flex-col items-end gap-2">
-                        <p className="font-bold text-primary">R$ {product.price}</p>
+                        <p className="font-bold text-primary">R$ {product.price?.toFixed(2)}</p>
                         <div className="flex gap-2">
                           {product.sourceUrl && (
                             <Button 
@@ -154,9 +153,6 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
                               <ExternalLink className="mr-1 h-3 w-3" />
                               Shopee
                             </Button>
-                          )}
-                          {product.published === false && (
-                            <Badge className="bg-amber-100 text-amber-600 border-none text-[8px] uppercase tracking-widest font-bold">Rascunho</Badge>
                           )}
                         </div>
                       </div>
@@ -176,9 +172,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
           )}
 
           {activeTab === 'shopee' && <AdminShopeeImport />}
-          
           {activeTab === 'produtos' && <ProductManagement />}
-
           {(activeTab === 'categorias' || activeTab === 'config') && (
             <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
               <div className="h-24 w-24 rounded-full bg-accent/5 flex items-center justify-center">
@@ -190,6 +184,8 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
           )}
         </div>
       </main>
+
+      <AddProductDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
     </div>
   );
 }

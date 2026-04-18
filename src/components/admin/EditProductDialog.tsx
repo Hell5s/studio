@@ -3,18 +3,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  X, 
   Save, 
   Loader2, 
-  Image as ImageIcon,
   Sparkles,
-  ChevronRight,
-  ChevronLeft,
-  Layout,
   Link as LinkIcon,
   Upload,
-  Check,
-  ShoppingBag
+  ShoppingBag,
+  Package,
+  Layers
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,9 +49,13 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     price: 0,
     oldPrice: 0,
     description: '',
+    longDescription: '',
     category: '',
     badge: '',
     image: '',
+    stock: 0,
+    sizes: '',
+    colors: '',
     published: true,
     featured: false,
     sourceUrl: ''
@@ -68,9 +68,13 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         price: product.price || 0,
         oldPrice: product.oldPrice || 0,
         description: product.description || '',
+        longDescription: product.longDescription || '',
         category: product.category || '',
         badge: product.badge || '',
         image: product.image || product.images?.[0] || '',
+        stock: product.stock || 0,
+        sizes: product.sizes?.join(', ') || '',
+        colors: product.colors?.join(', ') || '',
         published: product.published !== false,
         featured: !!product.featured,
         sourceUrl: product.sourceUrl || ''
@@ -88,6 +92,9 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       ...formData,
       price: Number(formData.price),
       oldPrice: Number(formData.oldPrice),
+      stock: Number(formData.stock),
+      sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
+      colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
       updatedAt: new Date().toISOString()
     });
 
@@ -109,19 +116,10 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       const storageRef = ref(storage, `products/${product.id}/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
-      
       setFormData(prev => ({ ...prev, image: downloadURL }));
-      
-      toast({
-        title: "Upload concluído",
-        description: "Imagem carregada com sucesso para a Maison.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro no upload",
-        description: "Não foi possível enviar a imagem no momento.",
-        variant: "destructive"
-      });
+      toast({ title: "Upload concluído" });
+    } catch (error) {
+      toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -129,14 +127,13 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl bg-[#FFF9F7]">
         <div className="bg-primary p-8 text-primary-foreground relative">
           <DialogHeader className="sr-only">
-            <DialogTitle>Editar Produto: {product?.name}</DialogTitle>
-            <DialogDescription>Ajuste os detalhes da sua curadoria.</DialogDescription>
+            <DialogTitle>Editar Produto</DialogTitle>
           </DialogHeader>
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-md border border-white/10 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+          <div className="flex items-center gap-6">
+            <div className="h-20 w-20 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-md border border-white/10 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               <img src={formData.image} className="h-full w-full object-cover" alt="Preview" />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
@@ -144,173 +141,83 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Edição de Curadoria</p>
-              <h3 className="text-2xl font-headline font-bold">{formData.name}</h3>
+              <h3 className="text-2xl font-headline font-bold">{formData.name || 'Nova Peça'}</h3>
             </div>
           </div>
         </div>
 
         <div className="p-10 grid md:grid-cols-2 gap-10">
           <div className="space-y-8">
-            <div className="space-y-4">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Identificação e Mídia</Label>
-              <div className="space-y-4">
+            <div className="grid gap-4">
+              <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Package className="h-3 w-3" /> Essencial</Label>
+              <div className="grid gap-2">
+                <Label>Nome do Produto</Label>
+                <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none focus:ring-1 focus:ring-accent" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-name">Nome do Produto</Label>
-                  <input 
-                    id="edit-name" 
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
-                  />
+                  <Label>Coleção</Label>
+                  <input value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
                 </div>
-                
                 <div className="grid gap-2">
-                  <Label>Link do Fornecedor (Shopee)</Label>
-                  <div className="relative">
-                    <ShoppingBag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input 
-                      value={formData.sourceUrl}
-                      onChange={(e) => setFormData({...formData, sourceUrl: e.target.value})}
-                      className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 pl-12 pr-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
-                      placeholder="URL original da Shopee"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>URL da Imagem</Label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input 
-                        value={formData.image}
-                        onChange={(e) => setFormData({...formData, image: e.target.value})}
-                        className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 pl-12 pr-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
-                        placeholder="Cole a URL ou use o botão ao lado"
-                      />
-                    </div>
-                    <Button 
-                      type="button"
-                      variant="outline" 
-                      className="rounded-2xl h-12 px-4 border-primary/10 hover:bg-white"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                    >
-                      {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    </Button>
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-category">Categoria</Label>
-                  <input 
-                    id="edit-category" 
-                    value={formData.category}
-                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
-                  />
+                  <Label>Badge</Label>
+                  <input value={formData.badge} onChange={e => setFormData({...formData, badge: e.target.value})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Precificação</Label>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4">
+              <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Layers className="h-3 w-3" /> Estoque e Variantes</Label>
+              <div className="grid grid-cols-3 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-price">Preço Venda (R$)</Label>
-                  <input 
-                    id="edit-price" 
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
-                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
-                  />
+                  <Label>Preço</Label>
+                  <input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-old-price">Preço Antigo (R$)</Label>
-                  <input 
-                    id="edit-old-price" 
-                    type="number"
-                    value={formData.oldPrice}
-                    onChange={(e) => setFormData({...formData, oldPrice: Number(e.target.value)})}
-                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
-                  />
+                  <Label>Estoque</Label>
+                  <input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
                 </div>
+                <div className="grid gap-2">
+                  <Label>Venda (De)</Label>
+                  <input type="number" value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: Number(e.target.value)})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Tamanhos (P, M, G...)</Label>
+                <input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
               </div>
             </div>
           </div>
 
           <div className="space-y-8">
-            <div className="space-y-4">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Conteúdo e Vitrine</Label>
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-description">Descrição Editorial</Label>
-                  <Textarea 
-                    id="edit-description" 
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="rounded-2xl border-none bg-secondary/20 min-h-[120px] focus:bg-white transition-all resize-none px-6 py-4 text-sm outline-none focus:ring-2 focus:ring-primary/10"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-badge">Selo Promocional</Label>
-                  <input 
-                    id="edit-badge" 
-                    placeholder="Ex: Novo, Destaque, Off"
-                    value={formData.badge}
-                    onChange={(e) => setFormData({...formData, badge: e.target.value})}
-                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
-                  />
-                </div>
+            <div className="grid gap-4">
+              <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Sparkles className="h-3 w-3" /> Conteúdo Editorial</Label>
+              <div className="grid gap-2">
+                <Label>Resumo (Vitrine)</Label>
+                <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="rounded-xl border-primary/5 bg-white min-h-[80px]" />
+              </div>
+              <div className="grid gap-2">
+                <Label>Descrição Completa</Label>
+                <Textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} className="rounded-xl border-primary/5 bg-white min-h-[160px]" />
               </div>
             </div>
 
-            <div className="space-y-4 p-6 rounded-3xl bg-secondary/30 border border-primary/5">
+            <div className="p-6 rounded-3xl bg-secondary/30 border border-primary/5 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-bold">Publicar Produto</Label>
-                  <p className="text-[10px] text-muted-foreground italic">Visível para clientes na vitrine.</p>
-                </div>
-                <Switch 
-                  checked={formData.published} 
-                  onCheckedChange={(val) => setFormData({...formData, published: val})} 
-                />
+                <Label className="font-bold">Publicado</Label>
+                <Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} />
               </div>
-              <div className="flex items-center justify-between pt-4 border-t border-primary/5">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-bold">Destaque Hero</Label>
-                  <p className="text-[10px] text-muted-foreground italic">Exibir na seção principal.</p>
-                </div>
-                <Switch 
-                  checked={formData.featured} 
-                  onCheckedChange={(val) => setFormData({...formData, featured: val})} 
-                />
+              <div className="flex items-center justify-between">
+                <Label className="font-bold">Destaque</Label>
+                <Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} />
               </div>
             </div>
           </div>
         </div>
 
         <DialogFooter className="p-8 bg-secondary/20 border-t border-primary/5">
-          <Button 
-            variant="ghost" 
-            onClick={() => onOpenChange(false)}
-            className="rounded-full px-8 text-[10px] font-bold uppercase tracking-widest"
-          >
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={loading || uploading}
-            className="rounded-full px-12 h-14 bg-primary text-white shadow-xl shadow-primary/20 text-[10px] font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
-          >
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-full px-8 text-[10px] font-bold uppercase tracking-widest">Cancelar</Button>
+          <Button onClick={handleSave} disabled={loading} className="rounded-full px-12 h-14 bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-xl">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             Salvar Alterações
           </Button>
