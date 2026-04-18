@@ -4,8 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v8.0
-     * Foco em segurança de pedidos e acesso administrativo.
+     * TODA BELA - REGRAS DE SEGURANÇA v8.1
+     * Ajuste na permissão de listagem de pedidos para clientes.
      */
 
     function isSignedIn() {
@@ -37,8 +37,8 @@ service cloud.firestore {
       allow create: if true;
       // Permite buscar por ID (rastreio)
       allow get: if true; 
-      // Permite listar se for admin ou se filtrar pelo próprio e-mail
-      allow list: if isAdmin() || (isSignedIn() && request.auth.token.email == request.query.filters.customerEmail);
+      // Permite listar se for admin ou se filtrar pelo próprio e-mail (usando resource.data)
+      allow list: if isAdmin() || (isSignedIn() && request.auth.token.email == resource.data.customerEmail);
       allow update, delete: if isAdmin();
     }
 

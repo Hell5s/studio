@@ -40,14 +40,15 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
   const db = useFirestore();
   const { user } = useUser();
 
+  // A consulta só deve ser montada e executada se o diálogo estiver aberto e o usuário logado
   const ordersQuery = useMemoFirebase(() => {
-    if (!db || !user?.email) return null;
+    if (!db || !user?.email || !open) return null;
     return query(
       collection(db, 'orders'),
-      where('customerEmail', '==', user.email),
+      where('customerEmail', '==', user.email.toLowerCase().trim()),
       orderBy('createdAt', 'desc')
     );
-  }, [db, user?.email]);
+  }, [db, user?.email, open]);
 
   const { data: orders, isLoading } = useCollection(ordersQuery);
 
@@ -72,7 +73,11 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
         </div>
 
         <div className="p-10 space-y-6">
-          {isLoading ? (
+          {!user ? (
+            <div className="py-20 text-center space-y-4">
+              <p className="text-sm italic text-muted-foreground">Você precisa estar logada para ver seu histórico.</p>
+            </div>
+          ) : isLoading ? (
             <div className="py-20 text-center">
               <Loader2 className="h-10 w-10 animate-spin text-accent/40 mx-auto" />
               <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-primary/40">Buscando seu histórico...</p>
