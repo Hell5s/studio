@@ -57,13 +57,14 @@ export function useDoc<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      async (serverError: FirestoreError) => {
+      (serverError: FirestoreError) => {
+        // Synchronous error handling to prevent SDK internal assertion failures
         const contextualError = new FirestorePermissionError({
           operation: 'get',
           path: memoizedDocRef.path,
         });
 
-        // Emit the error through the central emitter for consistent handling
+        // Emit the error through the central emitter
         errorEmitter.emit('permission-error', contextualError);
 
         setError(contextualError);

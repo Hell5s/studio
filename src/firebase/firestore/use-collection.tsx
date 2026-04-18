@@ -58,8 +58,9 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      async (serverError: FirestoreError) => {
-        // Safe path extraction using public API only
+      (serverError: FirestoreError) => {
+        // Synchronous error handling to prevent SDK internal assertion failures
+        // Safe path extraction for debugging
         let path = 'collection-query';
         if ('path' in targetRefOrQuery) {
           path = (targetRefOrQuery as any).path;
@@ -70,7 +71,7 @@ export function useCollection<T = any>(
           path,
         });
 
-        // Emit the error through the central emitter for consistent handling
+        // Emit the error through the central emitter
         errorEmitter.emit('permission-error', contextualError);
 
         setError(contextualError);

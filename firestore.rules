@@ -5,7 +5,8 @@ service cloud.firestore {
 
     /**
      * TODA BELA - REGRAS DE SEGURANÇA REFINADAS
-     * Garantindo leitura pública de banners e produtos.
+     * Ajustando permissões para garantir leitura pública de banners e produtos.
+     * Forçando deploy para sincronização de estado.
      */
 
     function isSignedIn() {
@@ -28,9 +29,9 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Banners: Leitura pública total (get e list)
+    // Banners: Leitura pública total explicita (get e list)
     match /banners/{bannerId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
