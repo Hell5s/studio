@@ -36,12 +36,13 @@ export default function MeusPedidosPage() {
   const isAdmin = !!adminRole;
 
   // Consulta de Pedidos filtrada OBRIGATORIAMENTE por userId para satisfazer as Security Rules
-  const ordersQuery = useMemoFirebase(() => {
+  const ordersQuery = useMemo(() => {
     if (!db || !user?.uid) return null;
+  
     return query(
-      collection(db, 'orders'), 
-      where('userId', '==', user.uid), 
-      orderBy('createdAt', 'desc'),
+      collection(db, "orders"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc"),
       limit(20)
     );
   }, [db, user?.uid]);
@@ -54,7 +55,6 @@ export default function MeusPedidosPage() {
     setIsMigrating(true);
     try {
       // Busca pedidos que batem com o e-mail mas não têm userId (legado)
-      // Nota: Esta consulta pode exigir permissão específica temporária se as regras forem muito rígidas
       const q = query(collection(db, 'orders'), where('customer.email', '==', user.email));
       const snapshot = await getDocs(q);
       
