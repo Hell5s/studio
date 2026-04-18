@@ -28,7 +28,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % images.length);
-    }, 5000);
+    }, 4000); // 4 segundos como solicitado anteriormente
     return () => clearInterval(timer);
   }, [images.length]);
 
@@ -46,28 +46,35 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         {/* LADO ESQUERDO: TEXTO EDITORIAL */}
         <div className="space-y-6 md:space-y-12 animate-in fade-in slide-in-from-left-10 duration-1000 order-2 lg:order-1">
           <div className="space-y-2 text-center lg:text-left">
-            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent">Lançamento Exclusivo</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent">Curadoria Especial</span>
             <div className="flex flex-col gap-1 md:gap-3">
               <h2 className="text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-primary leading-[1] md:leading-[0.9] tracking-tighter">
-                Noites <br />
-                <span className="italic font-light text-accent">inesquecíveis</span> <br />
-                pedem <br />
-                <span className="italic font-light">looks</span> <br />
-                <span className="font-bold">poderosos</span>
+                Elegância <br />
+                que <br />
+                <span className="italic font-light text-accent">se destaca</span> <br />
+                em <br />
+                <span className="font-bold">cada detalhe</span>
               </h2>
             </div>
           </div>
 
           <div className="max-w-md mx-auto lg:mx-0 space-y-6 md:space-y-8 text-center lg:text-left">
             <p className="text-sm md:text-lg text-primary/70 font-light italic leading-relaxed">
-              A Toda Bela nasceu para vestir mulheres que não temem o protagonismo, através de uma curadoria fashion atemporal.
+              Peças pensadas para valorizar sua presença em qualquer ocasião através de uma curadoria fashion atemporal.
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
               <Button 
                 onClick={onShopNow}
                 className="rounded-full bg-primary text-white px-8 md:px-10 h-14 md:h-16 text-[10px] font-bold uppercase tracking-[0.4em] shadow-xl hover:bg-accent transition-all duration-500 transform hover:scale-105"
               >
-                COMPRAR COLEÇÃO <ArrowRight className="ml-3 h-4 w-4" />
+                COMPRAR AGORA <ArrowRight className="ml-3 h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={onShopNow}
+                className="rounded-full border-primary/20 text-primary px-8 md:px-10 h-14 md:h-16 text-[10px] font-bold uppercase tracking-[0.4em] hover:bg-primary hover:text-white transition-all duration-500 transform hover:scale-105"
+              >
+                VER COLEÇÃO
               </Button>
             </div>
           </div>
@@ -106,7 +113,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               <Sparkles className="h-3 w-3 md:h-4 md:w-4 text-accent" />
               <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-accent">Essência 2026</span>
             </div>
-            <h4 className="text-xl md:text-2xl font-serif font-bold text-primary mb-1 md:mb-2">Presença Marcante</h4>
+            <h4 className="text-xl md:text-2xl font-serif font-bold text-primary mb-1 md:mb-2">Beleza Única</h4>
             <p className="text-[9px] md:text-[10px] text-primary/60 font-light italic leading-relaxed mb-4 md:mb-6">
               A sofisticação traduzida em tecidos nobres e cortes que esculpem a confiança feminina.
             </p>
