@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v12.0
+     * TODA BELA - REGRAS DE SEGURANÇA v13.0
      * Sistema de Pedidos e Gestão Administrativa
      */
 
@@ -12,6 +12,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
+      // Verifica se o UID do usuário existe na coleção de administradores
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
@@ -30,14 +31,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Pedidos: Sistema Privado com filtragem por userId
+    // Pedidos: Sistema Privado com filtragem por userId ou Email
     match /orders/{orderId} {
-      // Cliente pode criar o próprio pedido se o userId bater com seu UID
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // Cliente pode criar o próprio pedido
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid || 
+        request.resource.data.customer.email.lower() == request.auth.token.email.lower()
+      );
       
-      // Cliente pode ler seus próprios pedidos (get e list). Admin pode ler tudo.
-      // Para 'list', a consulta DEVE incluir um filtro 'where("userId", "==", auth.uid)'
-      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Admin pode ler tudo. Cliente pode ler seus próprios pedidos.
+      allow read: if isAdmin() || (isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.customer.email.lower() == request.auth.token.email.lower()
+      ));
       
       // Apenas Admin pode atualizar status ou deletar
       allow update, delete: if isAdmin();
@@ -54,7 +60,7 @@ service cloud.firestore {
       allow read, delete: if isAdmin();
     }
     
-    // Papéis Admin: Cada usuário pode ver seu próprio status de admin
+    // Papéis Admin: Permite que o usuário verifique sua própria permissão
     match /roles_admin/{adminUid} {
       allow get: if isSignedIn() && request.auth.uid == adminUid;
       allow list: if isAdmin();
