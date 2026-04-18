@@ -129,7 +129,7 @@ export default function TodaBelaStorefront() {
                 <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Novidades</span>
               </div>
               <h2 className="text-4xl md:text-7xl font-headline font-bold text-primary text-editorial">
-                Lançamentos <span className="italic font-light">da Estação</span>
+                Lançamentos
               </h2>
             </div>
             <button className="group flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">
@@ -190,7 +190,7 @@ export default function TodaBelaStorefront() {
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent" />
                   <div className="absolute bottom-10 left-10 right-10">
                     <h3 className="text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-4">{col.title}</h3>
-                    <div className="h-0.5 w-0 bg-accent transition-all duration-500 group-hover:w-12" />
+                    <div className="h-0.5 w-0 bg-accent transition-all duration-500 group-hover:w-full" />
                     <p className="text-[9px] font-bold text-accent uppercase tracking-[0.3em] mt-6 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all">Ver Detalhes</p>
                   </div>
                 </div>
