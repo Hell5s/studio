@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -44,7 +43,7 @@ export function LogoMark({ className }: LogoMarkProps) {
         <div className="flex items-center gap-3 mt-2 overflow-hidden">
           <div className="h-[1px] w-4 bg-accent/30 transition-all duration-700 group-hover:w-10" />
           <p className="text-[10px] uppercase tracking-[0.6em] text-accent font-black whitespace-nowrap">
-            B O U T I Q U E
+            Moda feminina
           </p>
           <div className="h-[1px] w-4 bg-accent/30 transition-all duration-700 group-hover:w-10" />
         </div>
