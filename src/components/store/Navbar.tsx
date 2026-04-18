@@ -92,17 +92,19 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
                 <Link 
                   key={link.name} 
                   href={link.href}
-                  className="text-[11px] font-bold tracking-wider text-primary hover:text-accent transition-colors"
+                  className="relative text-[11px] font-bold tracking-wider text-primary group py-2"
                 >
-                  {link.name}
+                  <span>{link.name}</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-accent transition-all duration-300 group-hover:w-full" />
                 </Link>
               ) : (
                 <button 
                   key={link.name} 
                   onClick={link.onClick}
-                  className="text-[11px] font-bold tracking-wider text-primary hover:text-accent transition-colors"
+                  className="relative text-[11px] font-bold tracking-wider text-primary group py-2"
                 >
-                  {link.name}
+                  <span>{link.name}</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-accent transition-all duration-300 group-hover:w-full" />
                 </button>
               )
             ))}
@@ -110,7 +112,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
 
           {/* Search and Actions - Right Side */}
           <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
-            {/* Search Bar (Kaisan Style) */}
+            {/* Search Bar */}
             <form 
               onSubmit={handleSearchSubmit} 
               className="hidden md:flex items-center bg-[#F5F5F5] rounded-md h-9 w-40 lg:w-56 overflow-hidden border border-transparent focus-within:border-accent/30 focus-within:bg-white transition-all"
@@ -146,7 +148,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
                   <Button variant="ghost" size="icon" className="relative rounded-full h-9 w-9 text-primary hover:bg-gray-100">
                     <Heart className="h-5 w-5" />
                     {favoritesCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gray-100 text-[9px] font-bold text-primary border border-white">
+                      <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[9px] font-bold text-white border border-white">
                         {favoritesCount}
                       </span>
                     )}
@@ -265,9 +267,9 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
                       if (link.onClick) link.onClick();
                       setMobileMenuOpen(false);
                     }}
-                    className="text-left text-xl font-bold text-primary border-b border-gray-50 pb-2"
+                    className="text-left text-xl font-bold text-primary border-b border-gray-50 pb-2 relative group"
                   >
-                    {link.name}
+                    <span>{link.name}</span>
                   </button>
                 ))}
               </nav>
