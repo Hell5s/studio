@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v1.5
+     * TODA BELA - REGRAS DE SEGURANÇA v1.7
      * Estabilização de acesso público e proteção administrativa.
      */
 
@@ -16,21 +16,21 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    // Banners: Acesso público total para leitura (get e list)
+    // Banners: Acesso público total e explícito para leitura
     match /banners/{bannerId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     // Produtos: Leitura pública total
     match /products/{productId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     // Categorias: Leitura pública total
     match /categories/{categoryId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 

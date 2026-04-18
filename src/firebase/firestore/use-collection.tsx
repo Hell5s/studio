@@ -60,20 +60,19 @@ export function useCollection<T = any>(
       },
       (serverError: FirestoreError) => {
         // CRITICAL: Defer the error handling to the next execution cycle.
-        // This prevents the "Unexpected state" error in Firebase SDK which occurs
-        // when state updates or global events are triggered directly inside the observer callback.
+        // This prevents the "Unexpected state" error in Firebase SDK.
         setTimeout(() => {
           let path = 'collection-query';
           try {
             if (targetRefOrQuery) {
               if ('path' in targetRefOrQuery) {
                 path = (targetRefOrQuery as any).path;
-              } else if ((targetRefOrQuery as any)._query?.path) {
+              } else if ((targetRefOrQuery as any)._query?.path?.toString()) {
                 path = (targetRefOrQuery as any)._query.path.toString();
               }
             }
           } catch (e) {
-            // Silently fallback to default path
+            // Silently fallback
           }
 
           const contextualError = new FirestorePermissionError({
@@ -81,9 +80,7 @@ export function useCollection<T = any>(
             path,
           });
 
-          // Emit the error through the central emitter
           errorEmitter.emit('permission-error', contextualError);
-
           setError(contextualError);
           setData(null);
           setIsLoading(false);

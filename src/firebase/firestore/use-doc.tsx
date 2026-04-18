@@ -59,16 +59,13 @@ export function useDoc<T = any>(
       },
       (serverError: FirestoreError) => {
         // CRITICAL: Defer the error handling to the next execution cycle.
-        // This prevents the "Unexpected state" error in Firebase SDK.
         setTimeout(() => {
           const contextualError = new FirestorePermissionError({
             operation: 'get',
             path: memoizedDocRef.path,
           });
 
-          // Emit the error through the central emitter
           errorEmitter.emit('permission-error', contextualError);
-
           setError(contextualError);
           setData(null);
           setIsLoading(false);

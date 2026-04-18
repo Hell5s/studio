@@ -2,7 +2,6 @@
 {
   "entities": {
     "Product": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Product",
       "type": "object",
       "description": "Represents a single product available in the store catalog.",
