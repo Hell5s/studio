@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Menu, X, Heart, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, X, Heart, ShieldCheck, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LogoMark } from './LogoMark';
@@ -34,6 +34,13 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
     onSearch?.(searchValue);
   };
 
+  const navLinks = [
+    { label: 'COLEÇÕES', href: '#colecoes' },
+    { label: 'PRODUTOS', href: '#produtos' },
+    { label: 'MAIS VENDIDOS', href: '#mais-vendidos' },
+    { label: 'ECONOMIZE', href: '/economize', highlight: true },
+  ];
+
   return (
     <header 
       className={cn(
@@ -52,13 +59,18 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
 
         {/* Nav Links - Center (Desktop) */}
         <nav className="hidden lg:flex items-center gap-10">
-          {['COLEÇÕES', 'REPOSIÇÕES', 'PRODUTOS', 'MAIS VENDIDOS', 'OUTLET'].map((link) => (
+          {navLinks.map((link) => (
             <Link 
-              key={link} 
-              href={`#${link.toLowerCase().replace(' ', '-')}`}
-              className="text-[11px] font-bold tracking-[0.2em] text-primary/70 hover:text-primary transition-colors"
+              key={link.label} 
+              href={link.href}
+              className={cn(
+                "text-[11px] font-bold tracking-[0.2em] transition-colors",
+                link.highlight 
+                  ? "text-accent hover:text-accent/80 border-b border-accent/20" 
+                  : "text-primary/70 hover:text-primary"
+              )}
             >
-              {link}
+              {link.label}
             </Link>
           ))}
         </nav>
@@ -76,12 +88,17 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
           </form>
 
           <div className="flex items-center gap-1 md:gap-2">
-            <Button variant="ghost" size="icon" className="rounded-full text-primary hover:bg-secondary" onClick={onOpenTrack}>
-              <Search className="h-5 w-5 md:hidden" />
-              <span className="hidden md:inline text-[9px] font-bold uppercase tracking-widest px-2">Rastrear</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="rounded-full text-primary hover:bg-secondary h-10 px-3 md:px-4" 
+              onClick={onOpenOrders}
+            >
+              <Package className="h-5 w-5 md:mr-2" />
+              <span className="hidden md:inline text-[9px] font-bold uppercase tracking-widest">Meus Pedidos</span>
             </Button>
             
-            <Button variant="ghost" size="icon" className="rounded-full text-primary hover:bg-secondary" onClick={onOpenLogin}>
+            <Button variant="ghost" size="icon" className="rounded-full text-primary hover:bg-secondary h-10 w-10" onClick={onOpenLogin}>
               <User className="h-5 w-5" />
             </Button>
 
@@ -95,7 +112,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
             </button>
 
             {isAdmin && (
-              <Button variant="ghost" size="icon" className="rounded-full text-accent hover:bg-accent/10 ml-2" onClick={onOpenAdmin}>
+              <Button variant="ghost" size="icon" className="rounded-full text-accent hover:bg-accent/10 ml-2 h-10 w-10" onClick={onOpenAdmin}>
                 <ShieldCheck className="h-5 w-5" />
               </Button>
             )}
