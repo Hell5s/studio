@@ -28,7 +28,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % images.length);
-    }, 4000); // 4 segundos como solicitado anteriormente
+    }, 4000);
     return () => clearInterval(timer);
   }, [images.length]);
 
@@ -60,7 +60,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
           <div className="max-w-md mx-auto lg:mx-0 space-y-6 md:space-y-8 text-center lg:text-left">
             <p className="text-sm md:text-lg text-primary/70 font-light italic leading-relaxed">
-              Peças pensadas para valorizar sua presença em qualquer ocasião através de uma curadoria fashion atemporal.
+              Curadoria exclusiva de peças atemporais desenvolvidas para elevar sua confiança e presença em todos os seus momentos.
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
               <Button 
