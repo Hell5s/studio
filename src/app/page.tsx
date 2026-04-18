@@ -13,7 +13,9 @@ import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
-import { Loader2, ChevronRight, ShieldCheck } from 'lucide-react';
+import { Loader2, ChevronRight, ShieldCheck, Instagram, Facebook, Youtube, Twitter, CreditCard } from 'lucide-react';
+import { LogoMark } from '@/components/store/LogoMark';
+import { cn } from '@/lib/utils';
 
 export default function TodaBelaStorefront() {
   const db = useFirestore();
@@ -252,72 +254,97 @@ export default function TodaBelaStorefront() {
         <Newsletter />
       </main>
 
-      {/* Rodapé Editorial */}
-      <footer className="bg-primary text-white py-12 md:py-24 border-t border-white/5">
+      {/* Rodapé Premium Editorial */}
+      <footer className="bg-[#1A1516] text-white pt-20 pb-12 border-t border-white/5">
         <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-16">
-            <div className="space-y-6 md:space-y-8">
-              <h4 className="text-2xl md:text-3xl font-headline font-bold">Toda Bela</h4>
-              <p className="text-white/60 font-light italic text-xs md:text-sm leading-relaxed">
-                Inspirando presença, propósito e estilo em cada detalhe. O movimento de evolução da mulher moderna que valoriza a autenticidade.
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16 mb-20">
+            <div className="space-y-8">
+              <LogoMark className="scale-90 origin-left invert brightness-200" />
+              <p className="text-white/50 font-light italic text-sm leading-relaxed max-w-xs">
+                Inspirando presença, propósito e estilo. O movimento da mulher moderna que valoriza sua essência e autenticidade.
               </p>
-              <div className="flex gap-4">
-                <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent transition-colors cursor-pointer">
-                  <span className="text-[10px] font-bold uppercase tracking-widest">IG</span>
-                </div>
-                <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent transition-colors cursor-pointer">
-                  <span className="text-[10px] font-bold uppercase tracking-widest">FB</span>
-                </div>
+              <div className="flex gap-5">
+                {[Instagram, Facebook, Youtube].map((Icon, idx) => (
+                  <button key={idx} className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-accent hover:text-white transition-all duration-500">
+                    <Icon className="h-4 w-4" />
+                  </button>
+                ))}
               </div>
             </div>
             
-            <div className="space-y-3 md:space-y-6">
-              <h5 className="text-accent text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">Atendimento</h5>
-              <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-white/80 font-light">
-                <li className="flex items-center gap-3">
-                  <div className="h-1 w-1 rounded-full bg-accent" />
-                  WhatsApp: (11) 99999-9999
+            <div className="space-y-6">
+              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.4em]">Atendimento</h5>
+              <ul className="space-y-4 text-xs md:text-[13px] text-white/70 font-light">
+                <li className="flex flex-col gap-1">
+                  <span className="text-white/30 uppercase text-[9px] font-bold tracking-widest">Fale Conosco</span>
+                  (11) 99999-9999
                 </li>
-                <li className="flex items-center gap-3">
-                  <div className="h-1 w-1 rounded-full bg-accent" />
-                  Seg a Sex | 08h às 18h
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="h-1 w-1 rounded-full bg-accent" />
+                <li className="flex flex-col gap-1">
+                  <span className="text-white/30 uppercase text-[9px] font-bold tracking-widest">E-mail</span>
                   contato@todobela.com.br
                 </li>
+                <li className="flex flex-col gap-1">
+                  <span className="text-white/30 uppercase text-[9px] font-bold tracking-widest">Horário</span>
+                  Seg a Sex | 08h às 18h
+                </li>
               </ul>
             </div>
 
-            <div className="space-y-3 md:space-y-6">
-              <h5 className="text-accent text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">Institucional</h5>
-              <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-white/80 font-light">
-                <li className="cursor-pointer hover:text-accent transition-colors" onClick={() => setIsTrackOpen(true)}>Acompanhar Pedido</li>
-                <li className="cursor-pointer hover:text-accent transition-colors">Termos de Uso</li>
-                <li className="cursor-pointer hover:text-accent transition-colors">Política de Privacidade</li>
-                <li className="cursor-pointer hover:text-accent transition-colors">Trocas e Devoluções</li>
-                <li className="cursor-pointer hover:text-accent transition-colors">Sobre a Toda Bela</li>
+            <div className="space-y-6">
+              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.4em]">Institucional</h5>
+              <ul className="space-y-3 text-xs md:text-[13px] text-white/70 font-light">
+                {['Acompanhar Pedido', 'Termos de Uso', 'Privacidade', 'Trocas e Devoluções', 'Sobre a Toda Bela'].map((item) => (
+                  <li key={item} className="cursor-pointer hover:text-accent transition-colors flex items-center gap-2 group">
+                    <div className="h-px w-0 bg-accent transition-all group-hover:w-3" />
+                    {item}
+                  </li>
+                ))}
               </ul>
             </div>
 
-            <div className="space-y-4 md:space-y-6">
-              <h5 className="text-accent text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">Pagamento e Segurança</h5>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white/5 p-2 md:p-3 rounded-xl text-[8px] md:text-[9px] font-bold text-center border border-white/10 uppercase tracking-widest flex items-center justify-center gap-2">
-                  <ShieldCheck className="h-3 w-3 text-accent" /> SSL
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.4em]">Pagamento Seguro</h5>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { name: 'Visa', color: 'bg-white/10' },
+                    { name: 'Master', color: 'bg-white/10' },
+                    { name: 'Elo', color: 'bg-white/10' },
+                    { name: 'Pix', color: 'bg-accent/20' },
+                    { name: 'Hiper', color: 'bg-white/10' },
+                    { name: 'Boleto', color: 'bg-white/10' },
+                  ].map((card) => (
+                    <div key={card.name} className={cn("h-8 rounded-md flex items-center justify-center text-[7px] font-bold uppercase tracking-tighter border border-white/5", card.color)}>
+                      {card.name}
+                    </div>
+                  ))}
                 </div>
-                <div className="bg-white/5 p-2 md:p-3 rounded-xl text-[8px] md:text-[9px] font-bold text-center border border-white/10 uppercase tracking-widest">Seguro</div>
               </div>
-              <div className="flex gap-4 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-default">
-                <div className="h-5 w-8 bg-white/10 rounded flex items-center justify-center text-[7px] font-bold border border-white/5">VISA</div>
-                <div className="h-5 w-8 bg-white/10 rounded flex items-center justify-center text-[7px] font-bold border border-white/5">PIX</div>
+              
+              <div className="space-y-4">
+                <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.4em]">Segurança</h5>
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-2 px-4 py-3 bg-white/5 rounded-xl border border-white/5">
+                    <ShieldCheck className="h-4 w-4 text-green-500" />
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-bold uppercase tracking-widest">SSL Secure</span>
+                      <span className="text-[7px] text-white/40">Criptografado</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-12 md:mt-24 pt-8 border-t border-white/10 text-center space-y-2">
-            <p className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] text-white/30">© 2024 Toda Bela • Luxo Acessível</p>
-            <p className="text-[7px] md:text-[8px] uppercase tracking-[0.2em] text-white/20">CNPJ: 00.000.000/0001-00</p>
+          <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex flex-col items-center md:items-start gap-1">
+              <p className="text-[9px] uppercase tracking-[0.4em] text-white/30">© 2024 Toda Bela Boutique de Luxo</p>
+              <p className="text-[7px] uppercase tracking-[0.2em] text-white/10">CNPJ: 00.000.000/0001-00 • Todos os direitos reservados.</p>
+            </div>
+            <div className="flex gap-8 opacity-20 hover:opacity-100 transition-opacity duration-700 grayscale hover:grayscale-0">
+               <span className="text-[10px] font-bold tracking-tighter italic">Google Safe Browsing</span>
+               <span className="text-[10px] font-bold tracking-tighter italic">Norton Secured</span>
+            </div>
           </div>
         </div>
       </footer>
