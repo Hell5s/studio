@@ -30,6 +30,7 @@ import { collection, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useFirebase, addDocumentNonBlocking } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Badge } from '@/components/ui/badge';
+import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 
 interface AddProductDialogProps {
   open: boolean;
@@ -44,6 +45,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -114,6 +116,55 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleAIGenerate = async () => {
+    if (!formData.name || !formData.price) {
+      toast({
+        title: "Dados insuficientes",
+        description: "Preencha o nome e preço para a IA criar a descrição.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setGeneratingAI(true);
+    try {
+      const features = [
+        ...(formData.colors ? [`Disponível nas cores: ${formData.colors}`] : []),
+        ...(formData.sizes ? [`Tamanhos: ${formData.sizes}`] : []),
+        "Tecido premium",
+        "Corte sofisticado"
+      ];
+
+      const result = await adminGenerateProductDescription({
+        productName: formData.name,
+        category: formData.category,
+        price: `R$ ${formData.price}`,
+        oldPrice: formData.oldPrice ? `R$ ${formData.oldPrice}` : undefined,
+        badge: formData.badge,
+        keyFeatures: features
+      });
+
+      setFormData(prev => ({ 
+        ...prev, 
+        longDescription: result.description,
+        description: result.description.split('.')[0] + '.'
+      }));
+
+      toast({
+        title: "Descrição Criada!",
+        description: "A IA gerou um texto editorial para sua peça.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na IA",
+        description: "Não foi possível gerar o texto agora.",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingAI(false);
     }
   };
 
@@ -252,9 +303,21 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             </section>
 
             <section className="space-y-6">
-              <div className="flex items-center gap-3 text-accent">
-                <Sparkles className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Descrição e Atributos</h4>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-accent">
+                  <Sparkles className="h-5 w-5" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Descrição e Atributos</h4>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAIGenerate} 
+                  disabled={generatingAI}
+                  className="rounded-full border-accent/20 text-accent hover:bg-accent hover:text-white"
+                >
+                  {generatingAI ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Sparkles className="h-3 w-3 mr-2" />}
+                  Gerar com AI
+                </Button>
               </div>
               <div className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
@@ -283,6 +346,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
                     className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[100px]"
+                    placeholder="Resumo impactante para a vitrine"
                   />
                 </div>
                 <div className="space-y-2">
@@ -291,6 +355,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     value={formData.longDescription}
                     onChange={e => setFormData({...formData, longDescription: e.target.value})}
                     className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[200px]"
+                    placeholder="História da peça, modelagem e estilo..."
                   />
                 </div>
               </div>
@@ -318,8 +383,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-accent">{formData.category}</p>
                   <h5 className="font-headline font-bold text-xl text-primary truncate">{formData.name || 'Nome do Produto'}</h5>
                   <div className="space-y-1">
-                    <p className="text-3xl font-light text-primary">R$ {Number(formData.price).toFixed(2)}</p>
-                    <p className="text-[10px] text-muted-foreground/60 italic">ou 10x de R$ {(Number(formData.price) / 10).toFixed(2)}</p>
+                    <p className="text-3xl font-light text-primary">R$ {formData.price ? Number(formData.price).toFixed(2) : '0.00'}</p>
+                    <p className="text-[10px] text-muted-foreground/60 italic">ou 10x de R$ {formData.price ? (Number(formData.price) / 10).toFixed(2) : '0.00'}</p>
                   </div>
                 </div>
               </div>

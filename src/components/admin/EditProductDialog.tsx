@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { doc } from 'firebase/firestore';
 import { useFirestore, useFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 
 interface EditProductDialogProps {
   product: any;
@@ -44,6 +45,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     price: 0,
@@ -125,6 +127,55 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     }
   };
 
+  const handleAIGenerate = async () => {
+    if (!formData.name || !formData.price) {
+      toast({
+        title: "Dados insuficientes",
+        description: "Preencha o nome e preço para a IA criar a descrição.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setGeneratingAI(true);
+    try {
+      const features = [
+        ...(formData.colors ? [`Disponível nas cores: ${formData.colors}`] : []),
+        ...(formData.sizes ? [`Tamanhos: ${formData.sizes}`] : []),
+        "Tecido premium",
+        "Corte sofisticado"
+      ];
+
+      const result = await adminGenerateProductDescription({
+        productName: formData.name,
+        category: formData.category,
+        price: `R$ ${formData.price}`,
+        oldPrice: formData.oldPrice ? `R$ ${formData.oldPrice}` : undefined,
+        badge: formData.badge,
+        keyFeatures: features
+      });
+
+      setFormData(prev => ({ 
+        ...prev, 
+        longDescription: result.description,
+        description: result.description.split('.')[0] + '.'
+      }));
+
+      toast({
+        title: "Descrição Criada!",
+        description: "A IA gerou um texto editorial para sua peça.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na IA",
+        description: "Não foi possível gerar o texto agora.",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl bg-[#FFF9F7]">
@@ -191,7 +242,19 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
           <div className="space-y-8">
             <div className="grid gap-4">
-              <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Sparkles className="h-3 w-3" /> Conteúdo Editorial</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Sparkles className="h-3 w-3" /> Conteúdo Editorial</Label>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAIGenerate} 
+                  disabled={generatingAI}
+                  className="rounded-full border-accent/20 text-accent hover:bg-accent hover:text-white h-8"
+                >
+                  {generatingAI ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Sparkles className="h-3 w-3 mr-2" />}
+                  Gerar com IA
+                </Button>
+              </div>
               <div className="grid gap-2">
                 <Label>Resumo (Vitrine)</Label>
                 <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="rounded-xl border-primary/5 bg-white min-h-[80px]" />
