@@ -46,7 +46,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         {/* LADO ESQUERDO: TEXTO EDITORIAL */}
         <div className="space-y-6 md:space-y-12 animate-in fade-in slide-in-from-left-10 duration-1000 order-2 lg:order-1">
           <div className="space-y-2 text-center lg:text-left">
-            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent">Curadoria Especial</span>
             <div className="flex flex-col gap-1 md:gap-3">
               <h2 className="text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-primary leading-[1] md:leading-[0.9] tracking-tighter">
                 Elegância <br />
