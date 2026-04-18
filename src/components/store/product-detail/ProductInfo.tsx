@@ -138,7 +138,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </Button>
         <div className="grid grid-cols-2 gap-4">
           <Button variant="outline" className="rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 hover:bg-white text-primary">
-            <Heart className="mr-2 h-4 w-4" /> Wishlist
+            <Heart className="mr-2 h-4 w-4" /> Favoritos
           </Button>
           <Button variant="outline" className="rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 hover:bg-white text-primary">
             <Share2 className="mr-2 h-4 w-4" /> Compartilhar
@@ -149,7 +149,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
       {/* Trust Badges */}
       <div className="grid grid-cols-1 gap-4 pt-10">
         {[
-          { icon: <Truck className="h-5 w-5" />, title: "Entrega Maison Express", desc: "Frete VIP para todo o país" },
+          { icon: <Truck className="h-5 w-5" />, title: "Entrega Expressa Boutique", desc: "Frete VIP para todo o país" },
           { icon: <ShieldCheck className="h-5 w-5" />, title: "Compra Protegida", desc: "Segurança absoluta em seus dados" },
           { icon: <Sparkles className="h-5 w-5" />, title: "Curadoria Toda Bela", desc: "Peça selecionada por especialistas" }
         ].map((item, idx) => (

@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ShoppingBag, Link as LinkIcon, Loader2, Search, CheckCircle2, AlertCircle, Image as ImageIcon, Sparkles, ArrowRight, Package, TrendingUp, DollarSign, Layers } from 'lucide-react';
+import { ShoppingBag, Link as LinkIcon, Loader2, Search, AlertCircle, Image as ImageIcon, Sparkles, Package, DollarSign, Layers } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { useFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -57,7 +57,6 @@ export function AdminShopeeImport() {
       finalPrice = basePrice + 30;
     }
 
-    // Arredondamento psicológico para .90
     return Math.ceil(finalPrice) - 0.10;
   };
 
@@ -76,7 +75,6 @@ export function AdminShopeeImport() {
     setProduct(null);
 
     try {
-      // Tentativa de chamada real para a Firebase Function
       const importShopeeProduct = httpsCallable<any, any>(functions, 'importShopeeProduct');
       const result = await importShopeeProduct({ url });
       
@@ -111,7 +109,6 @@ export function AdminShopeeImport() {
         description: "Preços calculados com sucesso.",
       });
     } catch (err: any) {
-      // Fallback para simulação caso a function não esteja implantada
       setError("Função de backend não detectada. Deseja simular a importação para testar a lógica de preços?");
     } finally {
       setLoading(false);
@@ -122,7 +119,7 @@ export function AdminShopeeImport() {
     setLoading(true);
     setTimeout(() => {
       const mockBasePrice = 62.00;
-      const mockFinalPrice = calculateFinalPrice(mockBasePrice); // 62 * 2.2 = 136.4 -> 139.90
+      const mockFinalPrice = calculateFinalPrice(mockBasePrice);
       
       const mockVariants: ShopeeVariant[] = [
         { name: "P - Rose", basePrice: 62, finalPrice: mockFinalPrice, stock: 15, sku: "TB-V-01" },
@@ -131,7 +128,7 @@ export function AdminShopeeImport() {
       ];
 
       setProduct({
-        title: "Vestido Midi Satin Rouge - Coleção Maison",
+        title: "Vestido Midi Satin Rouge - Coleção Boutique",
         description: "Elegância e sofisticação em cetim premium. Um corte que valoriza a silhueta feminina com o toque de luxo que a mulher Toda Bela merece.",
         images: [
           "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=900&q=80",
@@ -163,7 +160,7 @@ export function AdminShopeeImport() {
       name: product.title,
       description: product.description,
       price: product.finalPrice,
-      oldPrice: product.finalPrice * 1.3, // Preço antigo para ancoragem
+      oldPrice: product.finalPrice * 1.3,
       image: product.images[0],
       images: product.images,
       variants: product.variants,
@@ -194,7 +191,7 @@ export function AdminShopeeImport() {
     <div className="space-y-10 animate-in fade-in duration-700">
       <div className="flex flex-col gap-2">
         <h4 className="text-3xl font-headline font-bold text-primary">Importar Produto Shopee</h4>
-        <p className="text-sm text-muted-foreground italic font-light">Cole o link da Maison fornecedora para calcular margens e publicar automaticamente.</p>
+        <p className="text-sm text-muted-foreground italic font-light">Cole o link do fornecedor para calcular margens e publicar automaticamente.</p>
       </div>
 
       <Card className="p-10 border-none bg-white shadow-2xl rounded-[3rem] relative overflow-hidden">
@@ -347,7 +344,7 @@ export function AdminShopeeImport() {
           </div>
           <div className="space-y-2">
             <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Aguardando Curadoria</h5>
-            <p className="text-xs text-muted-foreground max-w-xs font-light italic">Insira um link da Shopee acima para iniciar a automação de estoque da sua Maison.</p>
+            <p className="text-xs text-muted-foreground max-w-xs font-light italic">Insira um link da Shopee acima para iniciar a automação do seu estoque.</p>
           </div>
         </div>
       )}

@@ -14,7 +14,7 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
       <div className="flex flex-col items-center text-center space-y-6">
         <div className="flex items-center gap-3">
           <div className="h-0.5 w-10 bg-accent/40" />
-          <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">L'Inspiration</span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Inspiração</span>
           <div className="h-0.5 w-10 bg-accent/40" />
         </div>
         <h3 className="text-4xl md:text-6xl font-headline font-bold text-primary text-editorial">Complete seu Universo</h3>

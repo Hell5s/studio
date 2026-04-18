@@ -5,29 +5,17 @@ import React, { useState } from 'react';
 import { 
   ShoppingBag, 
   Users, 
-  Search, 
   TrendingUp, 
-  Plus, 
-  Image as ImageIcon, 
+  PlusCircle, 
   Settings, 
   Sparkles,
   LayoutDashboard,
   Package,
   Layers,
-  FileText,
-  ExternalLink,
-  Edit,
-  Trash2,
-  X,
-  PlusCircle,
-  Eye,
-  ArrowUpRight,
-  Clock,
   Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
@@ -180,7 +168,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
                 <Settings className="h-10 w-10 text-accent/40 animate-spin-slow" />
               </div>
               <h5 className="font-headline font-bold text-primary uppercase tracking-[0.3em]">Módulo em Ajuste</h5>
-              <p className="text-xs text-muted-foreground max-w-xs font-light italic">Refinando as ferramentas de curadoria para sua boutique Maison.</p>
+              <p className="text-xs text-muted-foreground max-w-xs font-light italic">Refinando as ferramentas de curadoria para sua boutique exclusiva.</p>
             </div>
           )}
         </div>

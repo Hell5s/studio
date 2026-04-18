@@ -44,7 +44,7 @@ export default function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-creme">
+      <div className="min-h-screen flex items-center justify-center bg-[#FFF9F7]">
         <Loader2 className="h-12 w-12 animate-spin text-primary/40" />
       </div>
     );
@@ -52,10 +52,10 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-creme">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-[#FFF9F7]">
         <h1 className="text-3xl font-headline font-bold text-primary">Objeto de desejo não encontrado</h1>
         <Button onClick={() => router.push('/')} variant="outline" className="rounded-full px-12">
-          Voltar para a Maison
+          Voltar para a Boutique
         </Button>
       </div>
     );
@@ -63,7 +63,12 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-background selection:bg-accent/30 selection:text-primary">
-      <Navbar onOpenLogin={() => setIsLoginOpen(true)} onOpenTrack={() => setIsTrackOpen(true)} />
+      <Navbar 
+        onOpenLogin={() => setIsLoginOpen(true)} 
+        onOpenTrack={() => setIsTrackOpen(true)}
+        onOpenCart={() => {}}
+        cartCount={0}
+      />
       
       <main className="pt-32 pb-20">
         <div className="container mx-auto px-4 md:px-12">
@@ -96,7 +101,7 @@ export default function ProductDetailPage() {
               <section>
                 <div className="flex items-center gap-4 mb-12">
                   <div className="h-px w-12 bg-accent/40" />
-                  <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">L'Essence du Produit</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.8em] text-accent">Essência do Produto</span>
                 </div>
                 <div className="prose prose-primary max-w-none">
                   <h3 className="text-4xl font-headline font-bold text-primary mb-8">Elegância em cada detalhe</h3>
@@ -115,7 +120,7 @@ export default function ProductDetailPage() {
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-xl font-headline font-bold text-primary uppercase tracking-widest mb-6">Diferenciais Maison</h4>
+                    <h4 className="text-xl font-headline font-bold text-primary uppercase tracking-widest mb-6">Diferenciais Exclusivos</h4>
                     <ul className="space-y-4 text-sm text-muted-foreground font-light italic">
                       <li className="flex items-center gap-3"><div className="h-1.5 w-1.5 rounded-full bg-accent" /> Modelagem que esculpe a silhueta</li>
                       <li className="flex items-center gap-3"><div className="h-1.5 w-1.5 rounded-full bg-accent" /> Tecido com toque de seda premium</li>

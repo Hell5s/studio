@@ -56,7 +56,7 @@ export function ProductTabs({ product }: ProductTabsProps) {
         </AccordionTrigger>
         <AccordionContent className="pb-8 text-sm text-muted-foreground/80 leading-relaxed font-light italic">
           O prazo de entrega varia de acordo com a sua localização. 
-          Como somos uma Maison de curadoria global, nossos prazos de entrega 
+          Como somos uma Boutique de curadoria global, nossos prazos de entrega 
           estimados para produtos importados selecionados variam de 10 a 20 dias úteis.
         </AccordionContent>
       </AccordionItem>

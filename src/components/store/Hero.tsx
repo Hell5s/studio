@@ -72,7 +72,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
             </p>
             <Button 
               onClick={onShopNow}
-              className="rounded-full bg-[#6E4B3A] text-white px-10 md:px-16 h-16 md:h-20 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.4em] shadow-2xl hover:bg-[#C8A96A] transition-all duration-700 transform hover:scale-105"
+              className="rounded-full bg-[#6E3C47] text-white px-10 md:px-16 h-16 md:h-20 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.4em] shadow-2xl hover:bg-[#C7A17A] transition-all duration-700 transform hover:scale-105"
             >
               COMPRAR COLEÇÃO <ArrowRight className="ml-4 h-4 w-4" />
             </Button>
@@ -106,13 +106,13 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
             <div className="absolute inset-0 bg-gradient-to-t from-[#6E4B3A]/20 to-transparent pointer-events-none z-20" />
           </div>
 
-          {/* CARD FLUTUANTE PREMIUM (L'ESSENCE) */}
+          {/* CARD FLUTUANTE PREMIUM */}
           <div className="absolute -bottom-6 -left-6 md:-bottom-12 md:-left-12 z-30 glass-morphism p-8 md:p-12 rounded-[2.5rem] md:rounded-[3.5rem] shadow-editorial max-w-[280px] md:max-w-[340px] border border-white/40 animate-float-editorial">
             <div className="flex items-center gap-3 mb-4">
               <Sparkles className="h-5 w-5 text-[#C8A96A]" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#C8A96A]">Destaque Maison</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#C8A96A]">Curadoria Exclusiva</span>
             </div>
-            <h4 className="text-2xl md:text-3xl font-serif font-bold text-[#6E4B3A] mb-2">L'Essence 2024</h4>
+            <h4 className="text-2xl md:text-3xl font-serif font-bold text-[#6E4B3A] mb-2">Essência 2026</h4>
             <p className="text-[10px] md:text-xs text-[#6E4B3A]/60 font-light italic leading-relaxed mb-6">
               A sofisticação traduzida em tecidos nobres e cortes que esculpem a confiança feminina.
             </p>
