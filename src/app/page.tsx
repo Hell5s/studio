@@ -167,18 +167,19 @@ export default function TodaBelaStorefront() {
             <div className="text-center mb-20 space-y-4">
               <div className="flex items-center justify-center gap-3">
                  <div className="h-px w-6 bg-accent/40" />
-                 <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Moda Fitness</span>
+                 <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Nossa Curadoria</span>
                  <div className="h-px w-6 bg-accent/40" />
               </div>
-              <h2 className="text-4xl md:text-6xl font-headline font-bold text-primary">Nossa Curadoria</h2>
+              <h2 className="text-4xl md:text-6xl font-headline font-bold text-primary">Universo Toda Bela</h2>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               {[
-                { title: "Tops", img: "https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=900&q=80" },
-                { title: "Leggings", img: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80" },
-                { title: "Shorts", img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80" },
-                { title: "Macacões", img: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80" }
+                { title: "Moda Praia", img: "https://images.unsplash.com/photo-1596436889106-be35e843f974?auto=format&fit=crop&w=900&q=80" },
+                { title: "Moda Fitness", img: "https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=900&q=80" },
+                { title: "Moda Casual", img: "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=900&q=80" },
+                { title: "Vestidos", img: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=900&q=80" },
+                { title: "Conjuntos", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80" }
               ].map((col) => (
                 <div key={col.title} className="group relative aspect-[4/5] rounded-[2.5rem] overflow-hidden cursor-pointer shadow-editorial">
                   <img 
@@ -188,7 +189,7 @@ export default function TodaBelaStorefront() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent" />
                   <div className="absolute bottom-10 left-10 right-10">
-                    <h3 className="text-4xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-4">{col.title}</h3>
+                    <h3 className="text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-4">{col.title}</h3>
                     <div className="h-0.5 w-0 bg-accent transition-all duration-500 group-hover:w-12" />
                     <p className="text-[9px] font-bold text-accent uppercase tracking-[0.3em] mt-6 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all">Ver Detalhes</p>
                   </div>
