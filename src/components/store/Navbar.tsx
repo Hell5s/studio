@@ -77,11 +77,10 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
   };
 
   const links = [
-    { name: 'COLEÇÕES', href: '#colecoes' },
-    { name: 'NOVIDADES', href: '#vitrine' },
-    { name: 'MAIS VENDIDOS', href: '#mais-vendidos' },
-    { name: 'PRODUTOS', href: '#vitrine' },
-    { name: 'RASTREAR', onClick: onOpenTrack },
+    { name: 'COLEÇÕES', href: '/#colecoes' },
+    { name: 'NOVIDADES', href: '/#vitrine' },
+    { name: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
+    { name: 'ECONOMIZE', href: '/economize' },
   ];
 
   return (
@@ -104,25 +103,14 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
           {/* Nav Links - Center (Desktop) */}
           <nav className="hidden lg:flex items-center justify-center gap-6 xl:gap-10">
             {links.map((link) => (
-              link.href ? (
-                <Link 
-                  key={link.name} 
-                  href={link.href}
-                  className="relative text-[11px] font-bold tracking-wider text-primary group py-2"
-                >
-                  <span>{link.name}</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-accent transition-all duration-300 group-hover:w-full" />
-                </Link>
-              ) : (
-                <button 
-                  key={link.name} 
-                  onClick={link.onClick}
-                  className="relative text-[11px] font-bold tracking-wider text-primary group py-2"
-                >
-                  <span>{link.name}</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-accent transition-all duration-300 group-hover:w-full" />
-                </button>
-              )
+              <Link 
+                key={link.name} 
+                href={link.href}
+                className="relative text-[11px] font-bold tracking-wider text-primary group py-2"
+              >
+                <span>{link.name}</span>
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-accent transition-all duration-300 group-hover:w-full" />
+              </Link>
             ))}
           </nav>
 
@@ -327,20 +315,14 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
               
               <nav className="flex flex-col gap-6">
                 {links.map((link) => (
-                  <button 
+                  <Link 
                     key={link.name} 
-                    onClick={() => {
-                      if (link.href) {
-                        const el = document.querySelector(link.href);
-                        el?.scrollIntoView({ behavior: 'smooth' });
-                      }
-                      if (link.onClick) link.onClick();
-                      setMobileMenuOpen(false);
-                    }}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
                     className="text-left text-xl font-bold text-primary border-b border-gray-50 pb-2 relative group"
                   >
                     <span>{link.name}</span>
-                  </button>
+                  </Link>
                 ))}
               </nav>
 
