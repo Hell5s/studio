@@ -86,13 +86,14 @@
       "description": "Representa um produto favoritado por uma usuária.",
       "properties": {
         "productId": { "type": "string" },
+        "productName": { "type": "string" },
         "addedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["productId", "addedAt"]
     }
   },
   "auth": {
-    "providers": ["password", "anonymous"]
+    "providers": ["password", "anonymous", "google.com"]
   },
   "firestore": {
     "/products/{productId}": {
