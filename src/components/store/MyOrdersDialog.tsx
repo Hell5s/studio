@@ -40,20 +40,24 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
   const db = useFirestore();
   const { user } = useUser();
 
-  // A consulta só deve ser montada e executada se o diálogo estiver aberto e o usuário logado
+  // Garante que o e-mail está em minúsculas e sem espaços para bater com a regra
+  const userEmail = user?.email?.toLowerCase().trim() || null;
+
   const ordersQuery = useMemoFirebase(() => {
-    if (!db || !user?.email || !open) return null;
+    if (!db || !userEmail || !open) return null;
     return query(
       collection(db, 'orders'),
-      where('customerEmail', '==', user.email.toLowerCase().trim()),
+      where('customerEmail', '==', userEmail),
       orderBy('createdAt', 'desc')
     );
-  }, [db, user?.email, open]);
+  }, [db, userEmail, open]);
 
   const { data: orders, isLoading } = useCollection(ordersQuery);
 
-  const formatCurrency = (val: number) => 
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  const formatCurrency = (val: number) => {
+    if (!val) return 'R$ 0,00';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

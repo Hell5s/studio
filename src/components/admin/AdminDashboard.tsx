@@ -19,8 +19,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import { AdminShopeeImport } from './AdminShopeeImport';
 import { ProductManagement } from './ProductManagement';
 import { AddProductDialog } from './AddProductDialog';
@@ -39,18 +39,25 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
   const db = useFirestore();
   const { user } = useUser();
 
-  // Consulta de produtos recentes (segura, pois produtos são públicos)
+  // Verificação dupla de Admin para consultas pesadas
+  const adminDocRef = useMemoFirebase(() => {
+    return user ? doc(db, 'roles_admin', user.uid) : null;
+  }, [db, user]);
+  const { data: adminRole } = useDoc(adminDocRef);
+  const isActuallyAdmin = !!adminRole;
+
+  // Consulta de produtos recentes
   const recentProductsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(5));
   }, [db]);
   const { data: recentProducts } = useCollection(recentProductsQuery);
 
-  // Consulta de pedidos (só deve rodar se o admin estiver realmente confirmado)
+  // Consulta de pedidos (SÓ RODA SE FOR ADMIN CONFIRMADO)
   const ordersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !isActuallyAdmin) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
-  }, [db]);
+  }, [db, isActuallyAdmin]);
   const { data: orders } = useCollection(ordersQuery);
 
   const tabs = [

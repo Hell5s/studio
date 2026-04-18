@@ -4,8 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v8.1
-     * Ajuste na permissão de listagem de pedidos para clientes.
+     * TODA BELA - REGRAS DE SEGURANÇA v8.2
+     * Ajuste fino nas permissões de pedidos e funções administrativas.
      */
 
     function isSignedIn() {
@@ -35,10 +35,10 @@ service cloud.firestore {
     // Pedidos: Criação pública, gestão admin, leitura pelo dono do pedido
     match /orders/{orderId} {
       allow create: if true;
-      // Permite buscar por ID (rastreio)
+      // Permite buscar por ID (rastreio público)
       allow get: if true; 
-      // Permite listar se for admin ou se filtrar pelo próprio e-mail (usando resource.data)
-      allow list: if isAdmin() || (isSignedIn() && request.auth.token.email == resource.data.customerEmail);
+      // Permite listar se for admin ou se o filtro da query bater com o email do token
+      allow list: if isAdmin() || (isSignedIn() && request.auth.token.email != null && request.auth.token.email == resource.data.customerEmail);
       allow update, delete: if isAdmin();
     }
 
