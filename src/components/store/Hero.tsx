@@ -1,103 +1,164 @@
+
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
+import { cn } from '@/lib/utils';
+
+const BANNERS = [
+  {
+    id: 1,
+    top: "Nova Coleção 2026",
+    title: "Elegância que transforma",
+    subtitle: "Peças exclusivas com até 40% OFF",
+    buttonText: "COMPRAR AGORA",
+    image: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=1600&q=80",
+    hint: "fashion high-end"
+  },
+  {
+    id: 2,
+    top: "OFERTAS EXCLUSIVAS",
+    title: "SALE: Até 50% OFF",
+    subtitle: "Oportunidade única para renovar seu guarda-roupa hoje",
+    buttonText: "APROVEITAR",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80",
+    hint: "fashion sale"
+  },
+  {
+    id: 3,
+    top: "TENDÊNCIA",
+    title: "Mais Vendidos",
+    subtitle: "As peças favoritas do momento selecionadas para você",
+    buttonText: "VER AGORA",
+    image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=80",
+    hint: "fashion trend"
+  }
+];
 
 interface HeroProps {
   onShopNow?: () => void;
 }
 
 export function Hero({ onShopNow }: HeroProps) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
+    Autoplay({ delay: 4000, stopOnInteraction: false })
+  ]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+  }, [emblaApi, onSelect]);
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+  const scrollTo = useCallback((index: number) => emblaApi && emblaApi.scrollTo(index), [emblaApi]);
+
   return (
-    <section className="relative min-h-[85vh] flex items-center bg-[#FDF8F5] overflow-hidden pt-28 md:pt-32">
-      {/* Textura e Profundidade de Fundo */}
-      <div className="absolute inset-0 opacity-40 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[60%] h-[120%] bg-[#F7E8EA] rounded-full blur-[120px] mix-blend-multiply" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[50%] h-[100%] bg-[#FDF8F5] rounded-full blur-[100px]" />
-      </div>
-      
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 md:gap-16 items-center">
-          
-          {/* Coluna de Texto */}
-          <div className="space-y-8 animate-in fade-in slide-in-from-left duration-1000 order-2 lg:order-1">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-3 px-1 py-1">
-                <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-[#C7A17A]">
-                  Nova Coleção 2026
-                </span>
-                <div className="h-px w-12 bg-[#C7A17A]/30" />
+    <section className="relative h-[70vh] md:h-[85vh] w-full overflow-hidden bg-[#FDF8F5]">
+      {/* Carrossel Principal */}
+      <div className="h-full w-full" ref={emblaRef}>
+        <div className="flex h-full w-full">
+          {BANNERS.map((banner) => (
+            <div key={banner.id} className="relative h-full w-full flex-[0_0_100%] min-w-0">
+              {/* Imagem de Fundo */}
+              <div className="absolute inset-0">
+                <Image
+                  src={banner.image}
+                  alt={banner.title}
+                  fill
+                  className="object-cover"
+                  priority={banner.id === 1}
+                  data-ai-hint={banner.hint}
+                />
+                {/* Overlay para contraste */}
+                <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
               </div>
-              
-              <h1 className="text-5xl md:text-8xl font-serif font-bold text-[#2A1F22] leading-[1.05] tracking-tight">
-                Elegância que <br className="hidden md:block" />
-                <span className="italic font-light text-[#C7A17A]">transforma</span>
-              </h1>
-              
-              <p className="text-lg md:text-xl text-[#2A1F22]/60 max-w-md leading-relaxed font-light italic">
-                Peças exclusivas com curadoria premium pensada para a mulher contemporânea.
-              </p>
-            </div>
 
-            <div className="flex flex-wrap gap-4 pt-4">
-              <Button 
-                onClick={onShopNow}
-                className="rounded-full bg-[#42261E] text-white px-12 h-16 text-[11px] font-bold uppercase tracking-[0.3em] shadow-2xl hover:bg-[#2A1F22] hover:scale-105 transition-all duration-500"
-              >
-                COMPRAR AGORA
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={onShopNow}
-                className="rounded-full text-[#42261E] px-10 h-16 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-[#F7E8EA]/30 transition-all group"
-              >
-                Ver Coleção <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </div>
+              {/* Conteúdo do Banner */}
+              <div className="container relative h-full mx-auto px-6 flex items-center">
+                <div className="max-w-2xl space-y-6 md:space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
+                  <div className="space-y-4">
+                    <span className="inline-block text-[10px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-[#C7A17A]">
+                      {banner.top}
+                    </span>
+                    <h2 className="text-4xl md:text-7xl font-serif font-bold text-white leading-[1.1]">
+                      {banner.title}
+                    </h2>
+                    <p className="text-lg md:text-xl text-white/80 font-light italic max-w-lg">
+                      {banner.subtitle}
+                    </p>
+                  </div>
 
-            {/* Selos de Confiança Discretos */}
-            <div className="flex items-center gap-10 pt-12 border-t border-[#42261E]/5">
-              <div className="flex flex-col">
-                <span className="text-2xl font-serif font-bold text-[#42261E]">Premium</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#C7A17A] font-bold">Qualidade</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-serif font-bold text-[#42261E]">Exclusivo</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#C7A17A] font-bold">Curadoria</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Coluna da Imagem */}
-          <div className="relative animate-in fade-in slide-in-from-right duration-1000 delay-300 order-1 lg:order-2">
-            <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(66,38,30,0.15)] group">
-              <Image
-                src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80"
-                alt="Elegância Feminina Toda Bela"
-                fill
-                className="object-cover transition-transform duration-[2000ms] group-hover:scale-105"
-                priority
-                data-ai-hint="fashion minimal"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#42261E]/10 via-transparent to-transparent opacity-40" />
-            </div>
-            
-            {/* Detalhe Flutuante */}
-            <div className="absolute -bottom-6 -right-6 md:-bottom-12 md:-right-12 bg-white/95 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-[#FDF8F5] hidden sm:block animate-float-editorial">
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#C7A17A] uppercase tracking-[0.3em]">Must Have</p>
-                <h4 className="text-xl font-serif font-bold text-[#42261E]">Blazer Minimal</h4>
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-bold text-[#42261E]">R$ 489,90</span>
-                  <span className="text-xs text-[#C7A17A] line-through">R$ 629,00</span>
+                  <div className="flex flex-wrap gap-4 pt-4">
+                    <Button 
+                      onClick={onShopNow}
+                      className="rounded-full bg-white text-[#2A1F22] px-10 h-14 md:h-16 text-[11px] font-bold uppercase tracking-[0.3em] shadow-2xl hover:bg-[#C7A17A] hover:text-white transition-all duration-500"
+                    >
+                      {banner.buttonText}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={onShopNow}
+                      className="rounded-full text-white px-10 h-14 md:h-16 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-white/10 transition-all group border border-white/20"
+                    >
+                      Ver Detalhes <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
+          ))}
         </div>
+      </div>
+
+      {/* Controles de Navegação (Setas) */}
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 hidden md:flex justify-between px-6 pointer-events-none">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={scrollPrev}
+          className="h-12 w-12 rounded-full bg-white/10 text-white backdrop-blur-md border border-white/10 hover:bg-white hover:text-[#2A1F22] transition-all pointer-events-auto shadow-xl"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={scrollNext}
+          className="h-12 w-12 rounded-full bg-white/10 text-white backdrop-blur-md border border-white/10 hover:bg-white hover:text-[#2A1F22] transition-all pointer-events-auto shadow-xl"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Indicadores (Dots) */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3">
+        {BANNERS.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => scrollTo(index)}
+            className={cn(
+              "h-1.5 transition-all duration-500 rounded-full",
+              selectedIndex === index 
+                ? "w-8 bg-[#C7A17A]" 
+                : "w-2 bg-white/40 hover:bg-white/60"
+            )}
+            aria-label={`Ir para slide ${index + 1}`}
+          />
+        ))}
       </div>
     </section>
   );
