@@ -46,10 +46,10 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
   ];
 
   const stats = [
-    { label: "Vendas (Mês)", value: "R$ 12.450", icon: <ShoppingBag className="h-5 w-5" />, color: "bg-primary/10 text-primary", trend: "+15%" },
-    { label: "Produtos Ativos", value: productsCount, icon: <Package className="h-5 w-5" />, color: "bg-accent/10 text-accent", trend: "+3" },
-    { label: "Novas Clientes", value: "84", icon: <Users className="h-5 w-5" />, color: "bg-secondary text-primary", trend: "+12%" },
-    { label: "Ticket Médio", value: "R$ 215", icon: <TrendingUp className="h-5 w-5" />, color: "bg-green-50 text-green-600", trend: "+5%" },
+    { label: "Vendas (Mês)", value: "R$ 0,00", icon: <ShoppingBag className="h-5 w-5" />, color: "bg-primary/10 text-primary", trend: "0%" },
+    { label: "Produtos Ativos", value: productsCount, icon: <Package className="h-5 w-5" />, color: "bg-accent/10 text-accent", trend: "Real" },
+    { label: "Coleções", value: categoriesCount, icon: <Layers className="h-5 w-5" />, color: "bg-secondary text-primary", trend: "Real" },
+    { label: "Novas Clientes", value: "0", icon: <Users className="h-5 w-5" />, color: "bg-green-50 text-green-600", trend: "0%" },
   ];
 
   return (
@@ -115,7 +115,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
                   <Card key={i} className="p-8 rounded-[2.5rem] border-none bg-white shadow-xl hover:shadow-2xl transition-all duration-500">
                     <div className="flex items-center justify-between mb-6">
                       <div className={`p-4 rounded-2xl ${stat.color}`}>{stat.icon}</div>
-                      <Badge variant="outline" className="text-[10px] border-green-500/20 text-green-600 bg-green-50 font-bold">
+                      <Badge variant="outline" className="text-[10px] border-primary/10 text-primary bg-secondary/20 font-bold">
                         {stat.trend}
                       </Badge>
                     </div>
@@ -149,8 +149,11 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
                     </div>
                   ))}
                   {(!recentProducts || recentProducts.length === 0) && (
-                    <div className="text-center py-10">
-                      <p className="text-muted-foreground italic font-light">Nenhum produto cadastrado recentemente.</p>
+                    <div className="text-center py-20">
+                      <div className="h-20 w-20 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-4">
+                        <Package className="h-10 w-10 text-primary/20" />
+                      </div>
+                      <p className="text-muted-foreground italic font-light">Nenhum produto cadastrado no momento.</p>
                     </div>
                   )}
                 </div>
