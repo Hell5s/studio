@@ -63,7 +63,7 @@ export default function TodaBelaStorefront() {
   }, [storeProducts, searchQuery]);
 
   const featuredProducts = useMemo(() => 
-    filteredProducts.filter(p => p.featured || p.badge === 'Destaque' || p.badge === 'Lançamento').slice(0, 4), 
+    filteredProducts.filter(p => p.featured || p.badge === 'Destaque' || p.badge === 'Lançamento').slice(0, 8), 
   [filteredProducts]);
 
   const latestProducts = useMemo(() => 
@@ -121,19 +121,19 @@ export default function TodaBelaStorefront() {
         <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
 
         {/* Seção de Lançamentos */}
-        <section id="vitrine" className="container mx-auto px-6 py-16 md:py-32">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-6">
-            <div className="space-y-4">
+        <section id="vitrine" className="container mx-auto px-4 md:px-6 py-12 md:py-32 overflow-hidden">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-4">
+            <div className="space-y-2 md:space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-px w-8 bg-accent" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Novidades</span>
+                <div className="h-px w-6 md:w-8 bg-accent" />
+                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Novidades</span>
               </div>
-              <h2 className="text-4xl md:text-7xl font-headline font-bold text-primary text-editorial">
+              <h2 className="text-3xl md:text-7xl font-headline font-bold text-primary text-editorial">
                 Lançamentos
               </h2>
             </div>
-            <button className="group flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">
-              Ver Coleção Completa <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <button className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">
+              Ver Tudo <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
 
@@ -143,37 +143,38 @@ export default function TodaBelaStorefront() {
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+            <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
-                  <ProductCard 
-                    key={product.id} 
-                    {...product} 
-                    onAddToCart={() => addToCart(product)}
-                  />
+                  <div key={product.id} className="min-w-[45%] md:min-w-0 flex-shrink-0">
+                    <ProductCard 
+                      {...product} 
+                      onAddToCart={() => addToCart(product)}
+                    />
+                  </div>
                 ))
               ) : (
-                <div className="col-span-full py-20 text-center border-2 border-dashed border-primary/5 rounded-[3rem]">
-                  <p className="text-muted-foreground italic font-light">Seu catálogo aparecerá aqui em instantes.</p>
+                <div className="col-span-full w-full py-20 text-center border-2 border-dashed border-primary/5 rounded-[2rem] md:rounded-[3rem]">
+                  <p className="text-muted-foreground italic font-light text-sm">Seu catálogo aparecerá aqui em instantes.</p>
                 </div>
               )}
             </div>
           )}
         </section>
 
-        {/* Grade de Coleções / Categorias */}
-        <section id="colecoes" className="bg-secondary/10 py-16 md:py-32">
-          <div className="container mx-auto px-6">
-            <div className="text-center mb-12 md:mb-20 space-y-4">
+        {/* Grade de Coleções */}
+        <section id="colecoes" className="bg-secondary/10 py-12 md:py-32">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-8 md:mb-20 space-y-2 md:space-y-4">
               <div className="flex items-center justify-center gap-3">
                  <div className="h-px w-6 bg-accent/40" />
-                 <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Coleções</span>
+                 <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Coleções</span>
                  <div className="h-px w-6 bg-accent/40" />
               </div>
-              <h2 className="text-4xl md:text-6xl font-headline font-bold text-primary">Universo Toda Bela</h2>
+              <h2 className="text-3xl md:text-6xl font-headline font-bold text-primary">Universo Toda Bela</h2>
             </div>
             
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6">
               {[
                 { title: "Moda Praia", img: "https://images.unsplash.com/photo-1596436889106-be35e843f974?auto=format&fit=crop&w=900&q=80" },
                 { title: "Moda Fitness", img: "https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=900&q=80" },
@@ -181,15 +182,15 @@ export default function TodaBelaStorefront() {
                 { title: "Vestidos", img: "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=900&q=80" },
                 { title: "Conjuntos", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80" }
               ].map((col) => (
-                <div key={col.title} className="group relative aspect-[4/5] rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden cursor-pointer shadow-editorial">
+                <div key={col.title} className="group relative aspect-[4/5] rounded-[1.2rem] md:rounded-[2.5rem] overflow-hidden cursor-pointer shadow-editorial">
                   <img 
                     src={col.img} 
                     className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" 
                     alt={col.title} 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 md:bottom-10 md:left-10 md:right-10">
-                    <h3 className="text-lg md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-2 md:mb-4">{col.title}</h3>
+                  <div className="absolute bottom-3 left-3 right-3 md:bottom-10 md:left-10 md:right-10">
+                    <h3 className="text-[10px] md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-1 md:mb-4">{col.title}</h3>
                     <div className="h-0.5 w-0 bg-accent transition-all duration-500 group-hover:w-full" />
                     <p className="hidden md:block text-[9px] font-bold text-accent uppercase tracking-[0.3em] mt-6 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all">Ver Detalhes</p>
                   </div>
@@ -200,10 +201,10 @@ export default function TodaBelaStorefront() {
         </section>
 
         {/* Banner de Campanha Split */}
-        <section className="py-16 md:py-40">
-          <div className="container mx-auto px-6">
-            <div className="grid lg:grid-cols-2 gap-12 md:gap-20 items-center">
-              <div className="relative aspect-[4/5] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden shadow-premium group">
+        <section className="py-12 md:py-40">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-20 items-center">
+              <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[4rem] overflow-hidden shadow-premium group">
                 <img 
                   src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80" 
                   className="object-cover w-full h-full transition-transform duration-[2s] group-hover:scale-110" 
@@ -211,17 +212,17 @@ export default function TodaBelaStorefront() {
                 />
                 <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
               </div>
-              <div className="space-y-6 md:space-y-10">
-                <div className="space-y-4 md:space-y-6">
-                  <span className="text-accent text-[11px] font-bold uppercase tracking-[0.5em]">Essência Toda Bela</span>
-                  <h3 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-tight">
+              <div className="space-y-4 md:space-y-10">
+                <div className="space-y-3 md:space-y-6">
+                  <span className="text-accent text-[9px] md:text-[11px] font-bold uppercase tracking-[0.5em]">Essência Toda Bela</span>
+                  <h3 className="text-3xl md:text-8xl font-headline font-bold text-primary leading-tight">
                     Moda com <br /> <span className="italic font-light">Propósito</span>
                   </h3>
-                  <p className="text-base md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
+                  <p className="text-sm md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
                     Cada peça em nossa boutique é selecionada para elevar sua confiança e refletir sua autenticidade.
                   </p>
                 </div>
-                <button className="rounded-full border-2 border-primary px-8 py-4 md:px-12 md:py-6 text-xs md:text-sm font-bold uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all shadow-xl">
+                <button className="w-full sm:w-auto rounded-full border-2 border-primary px-6 py-4 md:px-12 md:py-6 text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all shadow-xl">
                   Conheça a Coleção
                 </button>
               </div>
@@ -230,19 +231,20 @@ export default function TodaBelaStorefront() {
         </section>
 
         {/* Grid Geral de Produtos */}
-        <section id="mais-vendidos" className="container mx-auto px-6 py-16 md:py-32 bg-secondary/5 rounded-[2.5rem] md:rounded-[4rem]">
-          <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-20">
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Seleção Premium</span>
-            <h3 className="text-3xl md:text-6xl font-headline font-bold text-primary">Mais Vendidos</h3>
-            <div className="h-0.5 w-16 md:w-20 bg-accent mx-auto" />
+        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-12 md:py-32 bg-secondary/5 rounded-[2rem] md:rounded-[4rem]">
+          <div className="text-center space-y-3 md:space-y-6 mb-8 md:mb-20">
+            <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Seleção Premium</span>
+            <h3 className="text-2xl md:text-6xl font-headline font-bold text-primary">Mais Vendidos</h3>
+            <div className="h-0.5 w-12 md:w-20 bg-accent mx-auto" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+          <div className="flex md:grid md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
             {latestProducts.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                {...product} 
-                onAddToCart={() => addToCart(product)}
-              />
+              <div key={product.id} className="min-w-[45%] md:min-w-0 flex-shrink-0">
+                <ProductCard 
+                  {...product} 
+                  onAddToCart={() => addToCart(product)}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -251,12 +253,12 @@ export default function TodaBelaStorefront() {
       </main>
 
       {/* Rodapé Editorial */}
-      <footer className="bg-primary text-white py-16 md:py-24 border-t border-white/5">
+      <footer className="bg-primary text-white py-12 md:py-24 border-t border-white/5">
         <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-16">
             <div className="space-y-6 md:space-y-8">
-              <h4 className="text-3xl font-headline font-bold">Toda Bela</h4>
-              <p className="text-white/60 font-light italic text-sm leading-relaxed">
+              <h4 className="text-2xl md:text-3xl font-headline font-bold">Toda Bela</h4>
+              <p className="text-white/60 font-light italic text-xs md:text-sm leading-relaxed">
                 Inspirando presença, propósito e estilo em cada detalhe. O movimento de evolução da mulher moderna que valoriza a autenticidade.
               </p>
               <div className="flex gap-4">
@@ -269,9 +271,9 @@ export default function TodaBelaStorefront() {
               </div>
             </div>
             
-            <div className="space-y-4 md:space-y-6">
-              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.3em]">Atendimento</h5>
-              <ul className="space-y-3 text-sm text-white/80 font-light">
+            <div className="space-y-3 md:space-y-6">
+              <h5 className="text-accent text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">Atendimento</h5>
+              <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-white/80 font-light">
                 <li className="flex items-center gap-3">
                   <div className="h-1 w-1 rounded-full bg-accent" />
                   WhatsApp: (11) 99999-9999
@@ -287,9 +289,9 @@ export default function TodaBelaStorefront() {
               </ul>
             </div>
 
-            <div className="space-y-4 md:space-y-6">
-              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.3em]">Institucional</h5>
-              <ul className="space-y-3 text-sm text-white/80 font-light">
+            <div className="space-y-3 md:space-y-6">
+              <h5 className="text-accent text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">Institucional</h5>
+              <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-white/80 font-light">
                 <li className="cursor-pointer hover:text-accent transition-colors" onClick={() => setIsTrackOpen(true)}>Acompanhar Pedido</li>
                 <li className="cursor-pointer hover:text-accent transition-colors">Termos de Uso</li>
                 <li className="cursor-pointer hover:text-accent transition-colors">Política de Privacidade</li>
@@ -299,24 +301,23 @@ export default function TodaBelaStorefront() {
             </div>
 
             <div className="space-y-4 md:space-y-6">
-              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.3em]">Pagamento e Segurança</h5>
+              <h5 className="text-accent text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">Pagamento e Segurança</h5>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white/5 p-3 rounded-xl text-[9px] font-bold text-center border border-white/10 uppercase tracking-widest flex items-center justify-center gap-2">
-                  <ShieldCheck className="h-3 w-3 text-accent" /> SSL Protegido
+                <div className="bg-white/5 p-2 md:p-3 rounded-xl text-[8px] md:text-[9px] font-bold text-center border border-white/10 uppercase tracking-widest flex items-center justify-center gap-2">
+                  <ShieldCheck className="h-3 w-3 text-accent" /> SSL
                 </div>
-                <div className="bg-white/5 p-3 rounded-xl text-[9px] font-bold text-center border border-white/10 uppercase tracking-widest">Pagamento Seguro</div>
+                <div className="bg-white/5 p-2 md:p-3 rounded-xl text-[8px] md:text-[9px] font-bold text-center border border-white/10 uppercase tracking-widest">Seguro</div>
               </div>
               <div className="flex gap-4 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-default">
-                <div className="h-6 w-10 bg-white/10 rounded flex items-center justify-center text-[8px] font-bold border border-white/5">VISA</div>
-                <div className="h-6 w-10 bg-white/10 rounded flex items-center justify-center text-[8px] font-bold border border-white/5">MASTER</div>
-                <div className="h-6 w-10 bg-white/10 rounded flex items-center justify-center text-[8px] font-bold border border-white/5">PIX</div>
+                <div className="h-5 w-8 bg-white/10 rounded flex items-center justify-center text-[7px] font-bold border border-white/5">VISA</div>
+                <div className="h-5 w-8 bg-white/10 rounded flex items-center justify-center text-[7px] font-bold border border-white/5">PIX</div>
               </div>
             </div>
           </div>
 
-          <div className="mt-16 md:mt-24 pt-8 border-t border-white/10 text-center space-y-4">
-            <p className="text-[9px] uppercase tracking-[0.4em] text-white/30">© 2024 Toda Bela • Luxo Acessível • Todos os direitos reservados</p>
-            <p className="text-[8px] uppercase tracking-[0.2em] text-white/20">CNPJ: 00.000.000/0001-00 • Rua da Moda, 1234 - São Paulo/SP</p>
+          <div className="mt-12 md:mt-24 pt-8 border-t border-white/10 text-center space-y-2">
+            <p className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] text-white/30">© 2024 Toda Bela • Luxo Acessível</p>
+            <p className="text-[7px] md:text-[8px] uppercase tracking-[0.2em] text-white/20">CNPJ: 00.000.000/0001-00</p>
           </div>
         </div>
       </footer>
