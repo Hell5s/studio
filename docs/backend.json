@@ -79,6 +79,15 @@
         "subscriptionDate": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "email", "subscriptionDate"]
+    },
+    "Favorite": {
+      "title": "Favorite",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "addedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId", "addedAt"]
     }
   },
   "auth": {
@@ -103,6 +112,10 @@
     },
     "/roles_admin/{adminUid}": {
       "description": "Papéis administrativos"
+    },
+    "/users/{userId}/favorites/{productId}": {
+      "schema": { "$ref": "#/backend/entities/Favorite" },
+      "description": "Produtos favoritos da usuária"
     }
   }
 }

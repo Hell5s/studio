@@ -2,11 +2,13 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, Share2, ShieldCheck, Truck, Sparkles, Check } from 'lucide-react';
+import { ShoppingBag, Heart, Share2, ShieldCheck, Truck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
 
 interface ProductInfoProps {
   product: any;
@@ -14,8 +16,43 @@ interface ProductInfoProps {
 
 export function ProductInfo({ product }: ProductInfoProps) {
   const { toast } = useToast();
+  const db = useFirestore();
+  const { user } = useUser();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+
+  // Referência para o favorito
+  const favoriteRef = React.useMemo(() => {
+    if (!db || !user || !product?.id) return null;
+    return doc(db, 'users', user.uid, 'favorites', product.id);
+  }, [db, user, product?.id]);
+
+  const { data: favoriteData } = useDoc(favoriteRef);
+  const isFavorited = !!favoriteData;
+
+  const handleToggleFavorite = () => {
+    if (!user) {
+      toast({
+        title: "Acesso necessário",
+        description: "Faça login para salvar suas peças favoritas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!favoriteRef) return;
+
+    if (isFavorited) {
+      deleteDocumentNonBlocking(favoriteRef);
+      toast({ title: "Removido dos favoritos" });
+    } else {
+      setDocumentNonBlocking(favoriteRef, {
+        productId: product.id,
+        addedAt: serverTimestamp()
+      }, { merge: true });
+      toast({ title: "Salvo nos seus favoritos!" });
+    }
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -137,8 +174,16 @@ export function ProductInfo({ product }: ProductInfoProps) {
           Garantir Exclusividade
         </Button>
         <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" className="rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 hover:bg-white text-primary">
-            <Heart className="mr-2 h-4 w-4" /> Favoritos
+          <Button 
+            variant="outline" 
+            onClick={handleToggleFavorite}
+            className={cn(
+              "rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 transition-all",
+              isFavorited ? "bg-primary text-white" : "hover:bg-white text-primary"
+            )}
+          >
+            <Heart className={cn("mr-2 h-4 w-4", isFavorited && "fill-current")} /> 
+            {isFavorited ? "Favoritado" : "Favoritos"}
           </Button>
           <Button variant="outline" className="rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 hover:bg-white text-primary">
             <Share2 className="mr-2 h-4 w-4" /> Compartilhar

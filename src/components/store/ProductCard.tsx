@@ -4,9 +4,13 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingBag, Eye, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductCardProps {
   id: string;
@@ -27,10 +31,54 @@ export function ProductCard({
   oldPrice,
   badge,
   image,
-  category,
   onAddToCart,
-  onBuyNow
 }: ProductCardProps) {
+  const db = useFirestore();
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  // Referência para o documento de favorito
+  const favoriteRef = React.useMemo(() => {
+    if (!db || !user || !id) return null;
+    return doc(db, 'users', user.uid, 'favorites', id);
+  }, [db, user, id]);
+
+  const { data: favoriteData } = useDoc(favoriteRef);
+  const isFavorited = !!favoriteData;
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      toast({
+        title: "Acesso necessário",
+        description: "Faça login ou acesse como visitante para favoritar peças.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!favoriteRef) return;
+
+    if (isFavorited) {
+      deleteDocumentNonBlocking(favoriteRef);
+      toast({
+        title: "Removido",
+        description: "Peça removida dos seus favoritos.",
+      });
+    } else {
+      setDocumentNonBlocking(favoriteRef, {
+        productId: id,
+        addedAt: serverTimestamp()
+      }, { merge: true });
+      toast({
+        title: "Favoritado",
+        description: "Peça salva na sua lista de desejos!",
+      });
+    }
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -56,8 +104,16 @@ export function ProductCard({
           </Badge>
         )}
         
-        <button className="absolute right-4 top-4 h-11 w-11 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center text-[#6E3C47] shadow-sm hover:bg-[#6E3C47] hover:text-white transition-all z-10">
-          <Heart className="h-4.5 w-4.5" />
+        <button 
+          onClick={toggleFavorite}
+          className={cn(
+            "absolute right-4 top-4 h-11 w-11 rounded-full backdrop-blur-md flex items-center justify-center transition-all z-10 shadow-sm",
+            isFavorited 
+              ? "bg-[#6E3C47] text-white" 
+              : "bg-white/95 text-[#6E3C47] hover:bg-[#6E3C47] hover:text-white"
+          )}
+        >
+          <Heart className={cn("h-4.5 w-4.5", isFavorited && "fill-current")} />
         </button>
 
         {/* Quick View */}
