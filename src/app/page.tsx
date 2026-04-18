@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -109,7 +110,7 @@ export default function Home() {
         cartCount={cartCount}
       />
 
-      <main>
+      <main className="pt-[110px] md:pt-[150px]">
         <Hero onShopNow={() => {
           const el = document.getElementById('catalogo');
           el?.scrollIntoView({ behavior: 'smooth' });
