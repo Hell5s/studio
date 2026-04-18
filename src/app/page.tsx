@@ -4,19 +4,11 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Loader2, 
-  Truck, 
-  ShieldCheck,
-  CheckCircle2,
   ShoppingBagIcon,
   Trash2,
   Plus,
   Minus,
   X,
-  Star,
-  Instagram,
-  Sparkles,
-  HeadphonesIcon,
-  ArrowRight,
   Info,
   ChevronRight
 } from 'lucide-react';
@@ -24,7 +16,6 @@ import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
-import { LogoMark } from '@/components/store/LogoMark';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import { LoginDialog } from '@/components/auth/LoginDialog';

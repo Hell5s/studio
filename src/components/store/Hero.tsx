@@ -5,36 +5,30 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import data from '@/app/lib/placeholder-images.json';
 
 export function Hero({ onShopNow }: { onShopNow?: () => void }) {
-  const db = useFirestore();
   const [currentImage, setCurrentImage] = useState(0);
 
-  // Buscar banners ativos do Firestore com memoização para evitar loops e erros de asserção
-  const bannersQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(
-      collection(db, 'banners'), 
-      where('active', '==', true),
-      orderBy('order', 'asc')
-    );
-  }, [db]);
-  
-  const { data: banners } = useCollection(bannersQuery);
+  // Usando os banners estáticos definidos nos placeholders para garantir estabilidade
+  const staticBanners = data.placeholderImages.filter(img => img.id.startsWith('hero-editorial'));
 
-  // Fallback se não houver banners cadastrados
-  const fallbackImages = [
+  const fallbackBanners = [
     {
-      url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80",
+      imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80",
       title: "Elegância que Inspira",
       subtitle: "Curadoria exclusiva de peças que unem sofisticação e conforto.",
       ctaText: "Comprar Agora"
+    },
+    {
+      imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=80",
+      title: "Coleção Boutique",
+      subtitle: "Presença e propósito em cada detalhe do seu visual.",
+      ctaText: "Ver Looks"
     }
   ];
 
-  const activeBanners = banners && banners.length > 0 ? banners : fallbackImages;
+  const activeBanners = staticBanners.length > 0 ? staticBanners : fallbackBanners;
 
   useEffect(() => {
     if (activeBanners.length <= 1) return;
@@ -47,7 +41,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   return (
     <section className="relative w-full h-[85vh] min-h-[600px] overflow-hidden bg-black">
       {/* Imagem de Fundo com Transição */}
-      {activeBanners.map((banner, idx) => (
+      {activeBanners.map((banner: any, idx) => (
         <div
           key={idx}
           className={cn(
@@ -57,7 +51,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         >
           <div className="relative w-full h-full">
              <Image
-              src={banner.imageUrl || (banner as any).url}
+              src={banner.imageUrl || banner.url}
               alt="Boutique Toda Bela"
               fill
               className={cn(
@@ -79,13 +73,13 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         <div className="max-w-3xl space-y-10 animate-in fade-in slide-in-from-left-10 duration-1000">
           <div className="space-y-6">
             <h1 className="text-5xl md:text-8xl font-serif font-bold text-white uppercase tracking-tighter leading-[0.9]">
-              {activeBanners[currentImage]?.title?.split(' ')[0] || "Elegância"} <br />
+              {(activeBanners[currentImage] as any).title?.split(' ')[0] || "Elegância"} <br />
               <span className="italic font-light text-accent">
-                {activeBanners[currentImage]?.title?.split(' ').slice(1).join(' ') || "que Inspira"}
+                {(activeBanners[currentImage] as any).title?.split(' ').slice(1).join(' ') || "que Inspira"}
               </span>
             </h1>
             <p className="text-lg md:text-2xl text-white/90 font-light italic max-w-xl leading-relaxed">
-              {activeBanners[currentImage]?.subtitle || "Curadoria exclusiva para mulheres autênticas."}
+              {(activeBanners[currentImage] as any).subtitle || "Curadoria exclusiva para mulheres autênticas."}
             </p>
           </div>
           
@@ -94,7 +88,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               onClick={onShopNow}
               className="rounded-full bg-white text-primary px-12 py-8 text-lg font-bold uppercase tracking-widest shadow-2xl hover:scale-105 transition-all"
             >
-              {activeBanners[currentImage]?.ctaText || "Comprar Agora"}
+              {(activeBanners[currentImage] as any).ctaText || "Comprar Agora"}
             </Button>
             <Button 
               onClick={onShopNow}

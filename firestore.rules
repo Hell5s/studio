@@ -4,9 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v1.8
-     * Estabilização de acesso público e proteção administrativa.
-     * Forçando redeploy para aplicar permissões de listagem de banners.
+     * TODA BELA - REGRAS DE SEGURANÇA v2.0
+     * Estabilização de acesso público. Coleção de banners removida.
      */
 
     function isSignedIn() {
@@ -15,13 +14,6 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
-    }
-
-    // Banners: Acesso público total e explícito para leitura
-    // Essencial para o Hero e a vitrine funcionarem sem erros de permissão
-    match /banners/{bannerId} {
-      allow read: if true;
-      allow write: if isAdmin();
     }
 
     // Produtos: Leitura pública total

@@ -13,8 +13,7 @@ import {
   Layers,
   Download,
   ExternalLink,
-  LogOut,
-  Image as ImageIcon
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,7 +23,6 @@ import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { AdminShopeeImport } from './AdminShopeeImport';
 import { ProductManagement } from './ProductManagement';
 import { AddProductDialog } from './AddProductDialog';
-import { BannerManagement } from './BannerManagement';
 
 interface AdminDashboardProps {
   productsCount: number;
@@ -34,7 +32,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'shopee' | 'banners' | 'config'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'shopee' | 'config'>('dashboard');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const db = useFirestore();
   const { user } = useUser();
@@ -49,7 +47,6 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'dashboard', label: 'Visão Geral', icon: <LayoutDashboard className="h-4 w-4" /> },
     { id: 'shopee', label: 'Importar Produto', icon: <Download className="h-4 w-4" /> },
     { id: 'produtos', label: 'Catálogo', icon: <Package className="h-4 w-4" /> },
-    { id: 'banners', label: 'Banners AI', icon: <ImageIcon className="h-4 w-4" /> },
     { id: 'categorias', label: 'Coleções', icon: <Layers className="h-4 w-4" /> },
     { id: 'config', label: 'Configurações', icon: <Settings className="h-4 w-4" /> },
   ];
@@ -184,7 +181,6 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
 
           {activeTab === 'shopee' && <AdminShopeeImport />}
           {activeTab === 'produtos' && <ProductManagement />}
-          {activeTab === 'banners' && <BannerManagement />}
           {(activeTab === 'categorias' || activeTab === 'config') && (
             <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
               <div className="h-24 w-24 rounded-full bg-accent/5 flex items-center justify-center">
