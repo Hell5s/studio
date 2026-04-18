@@ -81,9 +81,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               Comprar Agora
             </Button>
             <Button 
-              variant="outline"
               onClick={onShopNow}
-              className="rounded-full border-white text-white px-12 py-8 text-lg font-bold uppercase tracking-widest hover:bg-white hover:text-primary transition-all"
+              className="rounded-full border-2 border-white bg-transparent text-white px-12 py-8 text-lg font-bold uppercase tracking-widest hover:bg-white hover:text-primary transition-all"
             >
               Ver Looks
             </Button>
