@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -50,7 +51,7 @@ export function OrderManagement() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Verificação extra de segurança para a consulta: SÓ DISPARA se o UID existir e for admin
+  // Verificação extra de segurança para a consulta
   const adminDocRef = useMemoFirebase(() => {
     return user?.uid ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user?.uid]);
@@ -59,7 +60,8 @@ export function OrderManagement() {
   const isActuallyAdmin = !!adminRole;
 
   const ordersQuery = useMemoFirebase(() => {
-    // PROTEÇÃO CRÍTICA: Só dispara a consulta administrativa se o usuário estiver confirmado como Admin e o loading terminou
+    // PROTEÇÃO CRÍTICA: Só dispara a consulta administrativa se o usuário estiver confirmado como Admin e o carregamento terminou.
+    // Isso evita o erro de permissão insuficiente durante o carregamento inicial.
     if (!db || isAdminLoading || !isActuallyAdmin) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
   }, [db, isActuallyAdmin, isAdminLoading]);
