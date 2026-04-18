@@ -5,6 +5,7 @@ service cloud.firestore {
 
     /**
      * TODA BELA - REGRAS DE SEGURANÇA REFINADAS
+     * Atualizado para garantir leitura pública de banners e produtos.
      */
 
     function isSignedIn() {
@@ -15,31 +16,31 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    // Regra para produtos (Leitura pública total)
+    // Produtos: Leitura pública total
     match /products/{productId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Regra para categorias
+    // Categorias: Leitura pública total
     match /categories/{categoryId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Regra para banners (Leitura pública para o Hero)
+    // Banners: Essencial para o Hero da Home (Leitura pública)
     match /banners/{bannerId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Regra para assinantes da newsletter
+    // Newsletter: Qualquer um pode se inscrever
     match /newsletter_subscribers/{subscriberId} {
       allow create: if true;
-      allow get, list, delete: if isAdmin();
+      allow read, delete: if isAdmin();
     }
 
-    // Regra para verificar papel de admin
+    // Controle de Admin: Apenas o próprio admin ou outros admins podem ler
     match /roles_admin/{adminUid} {
       allow get: if isSignedIn() && request.auth.uid == adminUid;
       allow list: if isAdmin();

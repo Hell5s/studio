@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -58,10 +59,13 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // Safely attempt to extract path context for the permission error
-        const path = (targetRefOrQuery as any).path || 
-                     (targetRefOrQuery as any)._query?.path?.toString() || 
-                     'unknown-query-path';
+        // Safe path extraction for contextual errors
+        let path = 'unknown-query-path';
+        if ((targetRefOrQuery as any).path) {
+          path = (targetRefOrQuery as any).path;
+        } else if ((targetRefOrQuery as any)._query?.path?.segments) {
+          path = (targetRefOrQuery as any)._query.path.segments.join('/');
+        }
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',

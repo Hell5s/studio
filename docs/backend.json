@@ -72,7 +72,7 @@
   "firestore": {
     "/products/{productId}": {
       "schema": { "$ref": "#/backend/entities/Product" },
-      "description": "Catalogo de produtos"
+      "description": "Catálogo de produtos"
     },
     "/categories/{categoryId}": {
       "schema": { "$ref": "#/backend/entities/Category" },
@@ -87,7 +87,7 @@
       "description": "Assinantes da newsletter"
     },
     "/roles_admin/{adminUid}": {
-      "description": "Papeis administrativos"
+      "description": "Papéis administrativos"
     }
   }
 }
