@@ -13,7 +13,7 @@ import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
-import { Loader2, ChevronRight, Sparkles } from 'lucide-react';
+import { Loader2, ChevronRight, Sparkles, ShieldCheck } from 'lucide-react';
 
 export default function TodaBelaStorefront() {
   const db = useFirestore();
@@ -256,35 +256,66 @@ export default function TodaBelaStorefront() {
             <div className="space-y-8">
               <h4 className="text-3xl font-headline font-bold">Toda Bela</h4>
               <p className="text-white/60 font-light italic text-sm leading-relaxed">
-                Inspirando presença, propósito e estilo em cada detalhe. O movimento de evolução da mulher moderna.
+                Inspirando presença, propósito e estilo em cada detalhe. O movimento de evolução da mulher moderna que valoriza a autenticidade.
               </p>
+              <div className="flex gap-4">
+                <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent transition-colors cursor-pointer">
+                  <span className="text-[10px] font-bold uppercase tracking-widest">IG</span>
+                </div>
+                <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent transition-colors cursor-pointer">
+                  <span className="text-[10px] font-bold uppercase tracking-widest">FB</span>
+                </div>
+              </div>
             </div>
+            
             <div className="space-y-6">
               <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.3em]">Atendimento</h5>
               <ul className="space-y-4 text-sm text-white/80 font-light">
-                <li>WhatsApp: (11) 99999-9999</li>
-                <li>Seg a Sex | 08h às 18h</li>
-                <li>contato@todobela.com.br</li>
+                <li className="flex items-center gap-3">
+                  <div className="h-1 w-1 rounded-full bg-accent" />
+                  WhatsApp: (11) 99999-9999
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="h-1 w-1 rounded-full bg-accent" />
+                  Seg a Sex | 08h às 18h
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="h-1 w-1 rounded-full bg-accent" />
+                  contato@todobela.com.br
+                </li>
               </ul>
             </div>
+
             <div className="space-y-6">
-              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.3em]">Links Úteis</h5>
+              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.3em]">Institucional</h5>
               <ul className="space-y-4 text-sm text-white/80 font-light">
                 <li className="cursor-pointer hover:text-accent transition-colors" onClick={() => setIsTrackOpen(true)}>Acompanhar Pedido</li>
+                <li className="cursor-pointer hover:text-accent transition-colors">Termos de Uso</li>
+                <li className="cursor-pointer hover:text-accent transition-colors">Política de Privacidade</li>
                 <li className="cursor-pointer hover:text-accent transition-colors">Trocas e Devoluções</li>
-                <li className="cursor-pointer hover:text-accent transition-colors">Trabalhe Conosco</li>
+                <li className="cursor-pointer hover:text-accent transition-colors">Sobre a Toda Bela</li>
               </ul>
             </div>
+
             <div className="space-y-6">
-              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.3em]">Segurança</h5>
+              <h5 className="text-accent text-[10px] font-bold uppercase tracking-[0.3em]">Pagamento e Segurança</h5>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white/5 p-3 rounded-xl text-[9px] font-bold text-center border border-white/10 uppercase tracking-widest">SSL Protegido</div>
+                <div className="bg-white/5 p-3 rounded-xl text-[9px] font-bold text-center border border-white/10 uppercase tracking-widest flex items-center justify-center gap-2">
+                  <ShieldCheck className="h-3 w-3 text-accent" /> SSL Protegido
+                </div>
                 <div className="bg-white/5 p-3 rounded-xl text-[9px] font-bold text-center border border-white/10 uppercase tracking-widest">Pagamento Seguro</div>
+              </div>
+              <div className="flex gap-4 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-default">
+                <div className="h-6 w-10 bg-white/10 rounded flex items-center justify-center text-[8px] font-bold border border-white/5">VISA</div>
+                <div className="h-6 w-10 bg-white/10 rounded flex items-center justify-center text-[8px] font-bold border border-white/5">MASTER</div>
+                <div className="h-6 w-10 bg-white/10 rounded flex items-center justify-center text-[8px] font-bold border border-white/5">PIX</div>
               </div>
             </div>
           </div>
-          <div className="mt-24 pt-8 border-t border-white/10 text-center">
-            <p className="text-[9px] uppercase tracking-[0.4em] text-white/30">© 2024 Toda Bela • Curadoria de Luxo Acessível</p>
+
+          <div className="mt-24 pt-8 border-t border-white/10 text-center space-y-4">
+            <p className="text-[9px] uppercase tracking-[0.4em] text-white/30">© 2024 Toda Bela • Curadoria de Luxo Acessível • Todos os direitos reservados</p>
+            <p className="text-[8px] uppercase tracking-[0.2em] text-white/20">CNPJ: 00.000.000/0001-00 • Rua da Moda, 1234 - São Paulo/SP</p>
           </div>
         </div>
       </footer>
