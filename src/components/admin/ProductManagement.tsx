@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   XCircle,
   Package,
-  ArrowUpDown
+  ArrowUpDown,
+  ExternalLink
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, where, deleteDoc, doc } from 'firebase/firestore';
@@ -104,7 +105,17 @@ export function ProductManagement() {
                       </div>
                       <div className="flex flex-col gap-1 min-w-0">
                         <span className="font-bold text-primary truncate max-w-[200px]">{product.name}</span>
-                        <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">{product.source || 'Curadoria'}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">{product.source || 'Curadoria'}</span>
+                          {product.sourceUrl && (
+                            <button 
+                              onClick={() => window.open(product.sourceUrl, '_blank')}
+                              className="text-[9px] text-accent hover:underline flex items-center gap-1 font-bold uppercase tracking-widest"
+                            >
+                              <ExternalLink className="h-2.5 w-2.5" /> Fornecedor
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>

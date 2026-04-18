@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   Package,
   Layers,
-  Download
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -140,11 +141,24 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
                         <p className="font-bold text-primary text-base truncate">{product.name || product.title}</p>
                         <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] mt-1 font-bold">{product.source || 'Curadoria Manual'}</p>
                       </div>
-                      <div className="text-right space-y-2">
+                      <div className="text-right flex flex-col items-end gap-2">
                         <p className="font-bold text-primary">R$ {product.price}</p>
-                        {product.published === false && (
-                          <Badge className="bg-amber-100 text-amber-600 border-none text-[8px] uppercase tracking-widest font-bold">Rascunho</Badge>
-                        )}
+                        <div className="flex gap-2">
+                          {product.sourceUrl && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-8 rounded-full text-[8px] uppercase tracking-widest font-bold border-accent/20 text-accent hover:bg-white"
+                              onClick={() => window.open(product.sourceUrl, '_blank')}
+                            >
+                              <ExternalLink className="mr-1 h-3 w-3" />
+                              Shopee
+                            </Button>
+                          )}
+                          {product.published === false && (
+                            <Badge className="bg-amber-100 text-amber-600 border-none text-[8px] uppercase tracking-widest font-bold">Rascunho</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

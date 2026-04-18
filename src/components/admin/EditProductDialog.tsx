@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -12,7 +13,8 @@ import {
   Layout,
   Link as LinkIcon,
   Upload,
-  Check
+  Check,
+  ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,7 +57,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     badge: '',
     image: '',
     published: true,
-    featured: false
+    featured: false,
+    sourceUrl: ''
   });
 
   useEffect(() => {
@@ -69,7 +72,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         badge: product.badge || '',
         image: product.image || product.images?.[0] || '',
         published: product.published !== false,
-        featured: !!product.featured
+        featured: !!product.featured,
+        sourceUrl: product.sourceUrl || ''
       });
     }
   }, [product]);
@@ -152,23 +156,36 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               <div className="space-y-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-name">Nome do Produto</Label>
-                  <Input 
+                  <input 
                     id="edit-name" 
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="rounded-2xl border-primary/5 bg-secondary/20 h-12 focus:bg-white transition-all"
+                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
                   />
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label>Imagem do Produto</Label>
+                  <Label>Link do Fornecedor (Shopee)</Label>
+                  <div className="relative">
+                    <ShoppingBag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input 
+                      value={formData.sourceUrl}
+                      onChange={(e) => setFormData({...formData, sourceUrl: e.target.value})}
+                      className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 pl-12 pr-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                      placeholder="URL original da Shopee"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>URL da Imagem</Label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
+                      <input 
                         value={formData.image}
                         onChange={(e) => setFormData({...formData, image: e.target.value})}
-                        className="rounded-2xl border-primary/5 bg-secondary/20 h-12 pl-12 focus:bg-white transition-all"
+                        className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 pl-12 pr-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
                         placeholder="Cole a URL ou use o botão ao lado"
                       />
                     </div>
@@ -193,11 +210,11 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
                 <div className="grid gap-2">
                   <Label htmlFor="edit-category">Categoria</Label>
-                  <Input 
+                  <input 
                     id="edit-category" 
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="rounded-2xl border-primary/5 bg-secondary/20 h-12 focus:bg-white transition-all"
+                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
                   />
                 </div>
               </div>
@@ -208,22 +225,22 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-price">Preço Venda (R$)</Label>
-                  <Input 
+                  <input 
                     id="edit-price" 
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
-                    className="rounded-2xl border-primary/5 bg-secondary/20 h-12 focus:bg-white transition-all"
+                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-old-price">Preço Antigo (R$)</Label>
-                  <Input 
+                  <input 
                     id="edit-old-price" 
                     type="number"
                     value={formData.oldPrice}
                     onChange={(e) => setFormData({...formData, oldPrice: Number(e.target.value)})}
-                    className="rounded-2xl border-primary/5 bg-secondary/20 h-12 focus:bg-white transition-all"
+                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
                   />
                 </div>
               </div>
@@ -240,17 +257,17 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                     id="edit-description" 
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="rounded-2xl border-primary/5 bg-secondary/20 min-h-[120px] focus:bg-white transition-all resize-none"
+                    className="rounded-2xl border-none bg-secondary/20 min-h-[120px] focus:bg-white transition-all resize-none px-6 py-4 text-sm outline-none focus:ring-2 focus:ring-primary/10"
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-badge">Selo Promocional</Label>
-                  <Input 
+                  <input 
                     id="edit-badge" 
                     placeholder="Ex: Novo, Destaque, Off"
                     value={formData.badge}
                     onChange={(e) => setFormData({...formData, badge: e.target.value})}
-                    className="rounded-2xl border-primary/5 bg-secondary/20 h-12 focus:bg-white transition-all"
+                    className="flex h-12 w-full rounded-2xl border-none bg-secondary/20 px-6 py-2 text-sm text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none"
                   />
                 </div>
               </div>
