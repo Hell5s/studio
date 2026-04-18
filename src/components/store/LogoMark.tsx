@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -26,6 +27,9 @@ export function LogoMark({ className }: LogoMarkProps) {
         <h1 className="text-xl md:text-2xl font-serif font-bold tracking-[0.2em] text-primary uppercase leading-none">
           Toda Bela
         </h1>
+        <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent mt-1 whitespace-nowrap">
+          Moda Feminina
+        </p>
       </div>
     </div>
   );
