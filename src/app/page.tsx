@@ -196,7 +196,7 @@ export default function Home() {
             {productsLoading ? (
               <div className="flex justify-center py-20 md:py-32"><Loader2 className="h-8 w-8 md:h-10 md:w-10 animate-spin text-accent" /></div>
             ) : (
-              <div className="grid gap-6 md:gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:gap-10 grid-cols-2 lg:grid-cols-4">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} {...product} onAddToCart={() => addToCart(product)} onBuyNow={() => addToCart(product, true)} />
                 ))}
