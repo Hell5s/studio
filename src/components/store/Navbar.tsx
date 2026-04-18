@@ -96,7 +96,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
                     {cartCount}
                   </span>
                 )}
-                <span className="hidden md:block text-[9px] font-bold uppercase tracking-[0.2em]">Sacola</span>
+                <span className="hidden md:block text-[9px] font-bold uppercase tracking-[0.2em]">Carrinho</span>
               </button>
 
               <button 

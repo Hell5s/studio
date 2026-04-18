@@ -338,7 +338,7 @@ export default function Home() {
         <div className="fixed inset-0 z-[100] bg-primary/20 backdrop-blur-sm">
           <div className="ml-auto h-full w-full max-w-full sm:max-w-md bg-background shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
             <div className="flex items-center justify-between p-6 md:p-10 border-b border-accent/10">
-              <h3 className="text-2xl md:text-3xl font-serif font-bold text-primary">Sacola</h3>
+              <h3 className="text-2xl md:text-3xl font-serif font-bold text-primary">Carrinho</h3>
               <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 md:h-12 md:w-12" onClick={() => setCartOpen(false)}>
                 <X className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </Button>
@@ -348,7 +348,7 @@ export default function Home() {
               {!cartItems.length ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 md:space-y-6">
                   <ShoppingBagIcon className="h-12 w-12 md:h-16 md:w-16 text-accent/20" />
-                  <p className="text-xs md:text-sm text-primary/40 italic font-light">Sua sacola aguarda por peças incríveis.</p>
+                  <p className="text-xs md:text-sm text-primary/40 italic font-light">Seu carrinho aguarda por peças incríveis.</p>
                 </div>
               ) : (
                 cartItems.map((item) => (
