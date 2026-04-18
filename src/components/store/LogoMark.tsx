@@ -11,7 +11,7 @@ interface LogoMarkProps {
 export function LogoMark({ className }: LogoMarkProps) {
   return (
     <div className={cn("flex flex-col items-center group cursor-pointer", className)}>
-      <div className="relative flex items-center justify-center mb-2">
+      <div className="relative flex items-center justify-center mb-1">
         {/* Monograma Sofisticado */}
         <div className="relative h-14 w-14 md:h-16 md:w-16 flex items-center justify-center">
           <div className="absolute inset-0 rounded-full border-[0.5px] border-accent/20 animate-[spin_40s_linear_infinite]" />
@@ -28,21 +28,15 @@ export function LogoMark({ className }: LogoMarkProps) {
           Toda Bela
         </h1>
         
-        {/* Subtítulo com fios duplos decorativos */}
-        <div className="flex items-center gap-3 mt-2">
-          <div className="flex flex-col gap-[2px] opacity-40">
-            <div className="h-[0.5px] w-3 md:w-6 bg-accent" />
-            <div className="h-[0.5px] w-3 md:w-6 bg-accent" />
-          </div>
+        {/* Subtítulo com fio único e delicado */}
+        <div className="flex items-center gap-3 mt-1.5">
+          <div className="h-[0.5px] w-4 md:w-8 bg-accent/30" />
           
-          <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent whitespace-nowrap">
+          <p className="text-[7px] md:text-[8px] font-medium uppercase tracking-[0.5em] text-accent/80 whitespace-nowrap">
             Moda Feminina
           </p>
           
-          <div className="flex flex-col gap-[2px] opacity-40">
-            <div className="h-[0.5px] w-3 md:w-6 bg-accent" />
-            <div className="h-[0.5px] w-3 md:w-6 bg-accent" />
-          </div>
+          <div className="h-[0.5px] w-4 md:w-8 bg-accent/30" />
         </div>
       </div>
     </div>
