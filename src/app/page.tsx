@@ -15,7 +15,9 @@ import {
   Star,
   Instagram,
   Sparkles,
-  HeadphonesIcon
+  HeadphonesIcon,
+  ArrowRight,
+  Info
 } from 'lucide-react';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
@@ -27,6 +29,7 @@ import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Image from 'next/image';
 
 const WHATSAPP_NUMBER = "5511999999999";
@@ -39,6 +42,13 @@ export default function Home() {
   
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
+
+  // Estado para informações institucionais
+  const [infoDialog, setInfoDialog] = useState<{ open: boolean; title: string; content: string }>({
+    open: false,
+    title: '',
+    content: ''
+  });
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -95,6 +105,15 @@ export default function Home() {
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
   };
 
+  const openInfo = (title: string, content: string) => {
+    setInfoDialog({ open: true, title, content });
+  };
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-white overflow-x-hidden">
       <Navbar 
@@ -105,10 +124,7 @@ export default function Home() {
       />
 
       <main className="pt-[80px] md:pt-[120px]">
-        <Hero onShopNow={() => {
-          const el = document.getElementById('vitrine');
-          el?.scrollIntoView({ behavior: 'smooth' });
-        }} />
+        <Hero onShopNow={() => scrollTo('vitrine')} />
 
         {/* Manifesto Institucional */}
         <section className="py-16 md:py-40 container mx-auto px-6 text-center">
@@ -133,18 +149,25 @@ export default function Home() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               {[
-                { name: 'Vestidos', img: 'https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=600&q=80', hint: 'vestido premium' },
-                { name: 'Conjuntos', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80', hint: 'conjunto moda' },
-                { name: 'Moda Festa', img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=600&q=80', hint: 'moda festa' },
-                { name: 'Casual Chic', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80', hint: 'casual chic' },
+                { name: 'Vestidos', img: 'https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=600&q=80', id: 'vestidos' },
+                { name: 'Conjuntos', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80', id: 'conjuntos' },
+                { name: 'Moda Festa', img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=600&q=80', id: 'festa' },
+                { name: 'Casual Chic', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80', id: 'casual' },
               ].map((cat) => (
-                <div key={cat.name} className="group relative aspect-[3/4] rounded-[2rem] md:rounded-[3rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700">
+                <div 
+                  key={cat.name} 
+                  onClick={() => {
+                    setSelectedCategory(cat.name === 'Casual Chic' ? 'Casual' : cat.name);
+                    scrollTo('vitrine');
+                  }}
+                  className="group relative aspect-[3/4] rounded-[2rem] md:rounded-[3rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700"
+                >
                   <Image 
                     src={cat.img} 
                     alt={cat.name} 
                     fill 
                     className="object-cover transition-transform duration-[2s] group-hover:scale-110" 
-                    data-ai-hint={cat.img.includes('vestido') ? 'fashion editorial' : 'fashion minimal'}
+                    data-ai-hint="fashion editorial"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent" />
                   <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 text-white">
@@ -209,7 +232,10 @@ export default function Home() {
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 md:p-8 space-y-4 md:space-y-6">
                 <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.8em] text-white/80">Seleção Especial</span>
                 <h3 className="text-2xl md:text-7xl font-serif font-bold text-white text-editorial">Destaques da semana</h3>
-                <Button className="rounded-full bg-white text-primary px-8 md:px-12 h-12 md:h-16 text-[9px] md:text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-all shadow-2xl">
+                <Button 
+                  onClick={() => scrollTo('vitrine')}
+                  className="rounded-full bg-white text-primary px-8 md:px-12 h-12 md:h-16 text-[9px] md:text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-all shadow-2xl"
+                >
                   Ver produtos
                 </Button>
               </div>
@@ -281,26 +307,26 @@ export default function Home() {
             <div className="space-y-6 md:space-y-8">
               <h5 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.4em] text-accent">Navegação</h5>
               <ul className="space-y-3 md:space-y-4 text-[9px] md:text-[11px] text-primary/60 font-medium">
-                <li className="hover:text-primary cursor-pointer transition-colors">Novidades</li>
-                <li className="hover:text-primary cursor-pointer transition-colors">Mais Vendidos</li>
-                <li className="hover:text-primary cursor-pointer transition-colors">Moda Festa</li>
-                <li className="hover:text-primary cursor-pointer transition-colors">Coleções</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => { setSelectedCategory("Novidades"); scrollTo('vitrine'); }}>Novidades</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => scrollTo('vitrine')}>Mais Vendidos</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => scrollTo('categorias')}>Moda Festa</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => scrollTo('categorias')}>Coleções</li>
               </ul>
             </div>
             <div className="space-y-6 md:space-y-8">
               <h5 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.4em] text-accent">Atendimento</h5>
               <ul className="space-y-3 md:space-y-4 text-[9px] md:text-[11px] text-primary/60 font-medium">
                 <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => setIsTrackOpen(true)}>Rastrear Pedido</li>
-                <li className="hover:text-primary cursor-pointer transition-colors">Trocas e Devoluções</li>
-                <li className="hover:text-primary cursor-pointer transition-colors">Fale Conosco</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => openInfo("Trocas e Devoluções", "Sua satisfação é nossa prioridade. Você tem até 7 dias corridos após o recebimento para solicitar a troca ou devolução sem custo na primeira tentativa. As peças devem estar com etiquetas originais e sem sinais de uso.")}>Trocas e Devoluções</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => openInfo("Fale Conosco", "Estamos aqui para você. Atendimento VIP via WhatsApp (11) 99999-9999 ou e-mail sac@todabela.com.br. Segunda a Sexta, das 09h às 18h.")}>Fale Conosco</li>
               </ul>
             </div>
             <div className="space-y-6 md:space-y-8">
               <h5 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.4em] text-accent">Institucional</h5>
               <ul className="space-y-3 md:space-y-4 text-[9px] md:text-[11px] text-primary/60 font-medium">
-                <li className="hover:text-primary cursor-pointer transition-colors">Sobre a Toda Bela</li>
-                <li className="hover:text-primary cursor-pointer transition-colors">Trabalhe Conosco</li>
-                <li className="hover:text-primary cursor-pointer transition-colors">Políticas de Privacidade</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => openInfo("Sobre a Toda Bela", "A Toda Bela nasceu para vestir mulheres que não temem o protagonismo. Através de uma curadoria fashion atemporal e sofisticada, buscamos elevar a confiança e a presença feminina em cada detalhe.")}>Sobre a Toda Bela</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => openInfo("Trabalhe Conosco", "Quer fazer parte do nosso universo? Envie seu currículo e portfólio para talentos@todabela.com.br. Estamos sempre em busca de mentes criativas e apaixonadas por moda.")}>Trabalhe Conosco</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => openInfo("Políticas de Privacidade", "Seus dados estão 100% seguros conosco. Utilizamos criptografia de ponta a ponta e seguimos rigorosamente a LGPD para garantir que sua experiência seja segura e privativa.")}>Políticas de Privacidade</li>
               </ul>
             </div>
             <div className="space-y-6 md:space-y-8">
@@ -376,6 +402,28 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Diálogo de Informações Institucionais */}
+      <Dialog open={infoDialog.open} onOpenChange={(open) => setInfoDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-[500px] rounded-[3rem] p-0 border-none shadow-2xl bg-background overflow-hidden">
+          <div className="bg-primary p-10 text-primary-foreground relative">
+            <DialogHeader className="relative z-10 space-y-2">
+              <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mb-4">
+                <Info className="h-6 w-6 text-accent" />
+              </div>
+              <DialogTitle className="text-2xl font-serif font-bold">{infoDialog.title}</DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="p-10">
+            <DialogDescription className="text-primary/70 text-base leading-relaxed italic font-light">
+              {infoDialog.content}
+            </DialogDescription>
+            <Button onClick={() => setInfoDialog(prev => ({ ...prev, open: false }))} className="w-full mt-10 rounded-full h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-xl">
+              Entendido
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
       <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
