@@ -41,6 +41,21 @@
       },
       "required": ["id", "name", "order"]
     },
+    "Order": {
+      "title": "Order",
+      "type": "object",
+      "description": "Registros de pedidos feitos pelos clientes.",
+      "properties": {
+        "id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "object" } },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pendente", "Pago", "Enviado", "Entregue", "Cancelado"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "items", "total", "status", "createdAt"]
+    },
     "NewsletterSubscriber": {
       "title": "NewsletterSubscriber",
       "type": "object",
@@ -64,6 +79,10 @@
       "schema": { "$ref": "#/backend/entities/Category" },
       "description": "Categorias de produtos"
     },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/backend/entities/Order" },
+      "description": "Pedidos dos clientes"
+    },
     "/newsletter_subscribers/{subscriberId}": {
       "schema": { "$ref": "#/backend/entities/NewsletterSubscriber" },
       "description": "Assinantes da newsletter"
@@ -73,3 +92,5 @@
     }
   }
 }
+
+    

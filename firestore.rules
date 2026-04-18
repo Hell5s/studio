@@ -4,8 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v2.0
-     * Estabilização de acesso público. Coleção de banners removida.
+     * TODA BELA - REGRAS DE SEGURANÇA v3.0
+     * Suporte a Pedidos em Tempo Real.
      */
 
     function isSignedIn() {
@@ -28,6 +28,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Pedidos: Qualquer um pode criar, apenas admin pode ler/gerenciar
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
     // Newsletter: Qualquer um pode se inscrever
     match /newsletter_subscribers/{subscriberId} {
       allow create: if true;
@@ -46,3 +52,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

@@ -16,8 +16,8 @@ import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking } from '@/firebase';
+import { collection, query, orderBy, limit, doc, serverTimestamp } from 'firebase/firestore';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
@@ -78,10 +78,10 @@ export default function Home() {
 
   const addToCart = (product: any, buyNow = false) => {
     setCartItems((current) => {
-      const existing = current.find((item) => item.id === (product.id || product.productId));
+      const existing = current.find((item) => (item.id || item.productId) === (product.id || product.productId));
       if (existing) {
         return current.map((item) =>
-          item.id === (product.id || product.productId) ? { ...item, quantity: item.quantity + 1 } : item
+          (item.id || item.productId) === (product.id || product.productId) ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
       return [...current, { ...product, id: product.id || product.productId, quantity: 1 }];
@@ -108,12 +108,35 @@ export default function Home() {
 
   const handleCheckout = () => {
     if (!cartItems.length) return;
+
+    // Registrar pedido no Firestore antes de ir para o WhatsApp
+    const orderData = {
+      customerName: user?.displayName || "Cliente Toda Bela",
+      customerEmail: user?.email || null,
+      items: cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image
+      })),
+      total: cartSubtotal,
+      status: 'Pendente',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    addDocumentNonBlocking(collection(db, 'orders'), orderData);
+
     const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
     const lines = cartItems.map(item => `- ${item.name} | Qtd: ${item.quantity} | ${formatCurrency(item.price)}`);
     const message = encodeURIComponent(
       `Olá! Quero finalizar meu pedido na Toda Bela:%0A%0A${lines.join("%0A")}%0A%0ASubtotal: ${formatCurrency(cartSubtotal)}`
     );
+    
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
+    setCartItems([]);
+    setCartOpen(false);
   };
 
   const openInfo = (title: string, content: string) => {
@@ -374,3 +397,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

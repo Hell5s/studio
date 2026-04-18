@@ -13,7 +13,8 @@ import {
   Layers,
   Download,
   ExternalLink,
-  LogOut
+  LogOut,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -23,6 +24,7 @@ import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { AdminShopeeImport } from './AdminShopeeImport';
 import { ProductManagement } from './ProductManagement';
 import { AddProductDialog } from './AddProductDialog';
+import { OrderManagement } from './OrderManagement';
 
 interface AdminDashboardProps {
   productsCount: number;
@@ -32,7 +34,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'shopee' | 'config'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'pedidos' | 'produtos' | 'categorias' | 'shopee' | 'config'>('dashboard');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const db = useFirestore();
   const { user } = useUser();
@@ -43,18 +45,27 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
   }, [db, user]);
   const { data: recentProducts } = useCollection(recentProductsQuery);
 
+  const ordersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
+  }, [db]);
+  const { data: orders } = useCollection(ordersQuery);
+
   const tabs = [
     { id: 'dashboard', label: 'Visão Geral', icon: <LayoutDashboard className="h-4 w-4" /> },
+    { id: 'pedidos', label: 'Pedidos', icon: <ShoppingBag className="h-4 w-4" /> },
     { id: 'shopee', label: 'Importar Produto', icon: <Download className="h-4 w-4" /> },
     { id: 'produtos', label: 'Catálogo', icon: <Package className="h-4 w-4" /> },
     { id: 'categorias', label: 'Coleções', icon: <Layers className="h-4 w-4" /> },
     { id: 'config', label: 'Configurações', icon: <Settings className="h-4 w-4" /> },
   ];
 
+  const totalSales = orders?.reduce((acc, order) => acc + (order.total || 0), 0) || 0;
+
   const stats = [
-    { label: "Vendas (Mês)", value: "R$ 0,00", icon: <ShoppingBag className="h-5 w-5" />, color: "bg-primary/10 text-primary", trend: "0%" },
-    { label: "Produtos Ativos", value: productsCount, icon: <Package className="h-5 w-5" />, color: "bg-accent/10 text-accent", trend: "Real" },
-    { label: "Coleções", value: categoriesCount, icon: <Layers className="h-5 w-5" />, color: "bg-secondary text-primary", trend: "Real" },
+    { label: "Vendas Totais", value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalSales), icon: <ShoppingBag className="h-5 w-5" />, color: "bg-primary/10 text-primary", trend: `${orders?.length || 0} pedidos` },
+    { label: "Produtos Ativos", value: productsCount, icon: <Package className="h-5 w-5" />, color: "bg-accent/10 text-accent", trend: "Boutique" },
+    { label: "Novos Pedidos", value: orders?.filter(o => o.status === 'Pendente').length || 0, icon: <Clock className="h-5 w-5" />, color: "bg-amber-50 text-amber-600", trend: "Tempo Real" },
     { label: "Novas Clientes", value: "0", icon: <Users className="h-5 w-5" />, color: "bg-green-50 text-green-600", trend: "0%" },
   ];
 
@@ -141,44 +152,54 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
                 ))}
               </div>
 
-              <Card className="p-10 rounded-[3.5rem] border-none bg-white shadow-xl">
-                <div className="flex items-center justify-between mb-10">
-                  <h4 className="font-headline font-bold text-2xl text-primary">Últimas Atividades</h4>
-                  <Button variant="ghost" size="sm" className="text-accent text-[10px] font-bold uppercase tracking-widest" onClick={() => setActiveTab('produtos')}>Ver Catálogo Completo</Button>
-                </div>
-                <div className="space-y-6">
-                  {recentProducts?.map((product) => (
-                    <div key={product.id} className="flex items-center gap-6 p-5 rounded-3xl border border-primary/5 hover:bg-secondary/20 transition-all duration-500">
-                      <div className="h-16 w-16 rounded-2xl overflow-hidden bg-muted shadow-sm">
-                        <img src={product.image || product.images?.[0]} className="object-cover h-full w-full" alt={product.name} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-primary text-base truncate">{product.name}</p>
-                        <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] mt-1 font-bold">{product.source || 'Curadoria'}</p>
-                      </div>
-                      <div className="text-right flex flex-col items-end gap-2">
-                        <p className="font-bold text-primary">R$ {product.price?.toFixed(2)}</p>
-                        <div className="flex gap-2">
-                          {product.sourceUrl && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="h-8 rounded-full text-[8px] uppercase tracking-widest font-bold border-accent/20 text-accent hover:bg-white"
-                              onClick={() => window.open(product.sourceUrl, '_blank')}
-                            >
-                              <ExternalLink className="mr-1 h-3 w-3" />
-                              Shopee
-                            </Button>
-                          )}
+              <div className="grid lg:grid-cols-2 gap-8">
+                <Card className="p-10 rounded-[3.5rem] border-none bg-white shadow-xl">
+                  <div className="flex items-center justify-between mb-10">
+                    <h4 className="font-headline font-bold text-2xl text-primary">Pedidos Recentes</h4>
+                    <Button variant="ghost" size="sm" className="text-accent text-[10px] font-bold uppercase tracking-widest" onClick={() => setActiveTab('pedidos')}>Ver Todos</Button>
+                  </div>
+                  <div className="space-y-6">
+                    {orders?.slice(0, 5).map((order) => (
+                      <div key={order.id} className="flex items-center gap-6 p-5 rounded-3xl border border-primary/5 hover:bg-secondary/20 transition-all">
+                        <div className="flex-1">
+                          <p className="font-bold text-primary">#{order.id.slice(-6).toUpperCase()}</p>
+                          <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] font-bold">{order.items?.length || 0} Itens</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-primary">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total)}</p>
+                          <Badge variant="outline" className="text-[8px] uppercase tracking-widest mt-1">
+                            {order.status || 'Pendente'}
+                          </Badge>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
+                    ))}
+                  </div>
+                </Card>
+
+                <Card className="p-10 rounded-[3.5rem] border-none bg-white shadow-xl">
+                  <div className="flex items-center justify-between mb-10">
+                    <h4 className="font-headline font-bold text-2xl text-primary">Últimas do Catálogo</h4>
+                    <Button variant="ghost" size="sm" className="text-accent text-[10px] font-bold uppercase tracking-widest" onClick={() => setActiveTab('produtos')}>Ver Tudo</Button>
+                  </div>
+                  <div className="space-y-6">
+                    {recentProducts?.map((product) => (
+                      <div key={product.id} className="flex items-center gap-6 p-5 rounded-3xl border border-primary/5 hover:bg-secondary/20 transition-all">
+                        <div className="h-16 w-16 rounded-2xl overflow-hidden bg-muted shadow-sm">
+                          <img src={product.image || product.images?.[0]} className="object-cover h-full w-full" alt={product.name} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-primary text-sm truncate">{product.name}</p>
+                          <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] font-bold">{product.category}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
             </>
           )}
 
+          {activeTab === 'pedidos' && <OrderManagement />}
           {activeTab === 'shopee' && <AdminShopeeImport />}
           {activeTab === 'produtos' && <ProductManagement />}
           {(activeTab === 'categorias' || activeTab === 'config') && (
@@ -197,3 +218,5 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     </div>
   );
 }
+
+    
