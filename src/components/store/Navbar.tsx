@@ -26,11 +26,10 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
   }, []);
 
   const links = [
-    { name: 'Coleções', href: '#colecoes' },
     { name: 'Novidades', href: '#vitrine' },
     { name: 'Mais vendidos', href: '#vitrine' },
+    { name: 'Coleções', href: '#colecoes' },
     { name: 'Rastrear Pedido', onClick: onOpenTrack },
-    { name: 'Outlet', href: '#vitrine' },
   ];
 
   return (
@@ -48,21 +47,16 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
             : "bg-white py-6 md:py-8"
         )}
       >
-        <div className="container mx-auto flex items-center gap-8">
+        <div className="container mx-auto flex items-center justify-between">
           
-          {/* Logo */}
-          <Link href="/" className="transition-transform duration-500 hover:scale-105 shrink-0">
-            <LogoMark />
-          </Link>
-
-          {/* Navegação Central (Desktop) */}
-          <nav className="hidden lg:flex flex-1 items-center justify-center gap-10">
+          {/* Navegação Esquerda (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-8 w-1/3">
             {links.map((link) => (
               link.href ? (
                 <Link 
                   key={link.name} 
                   href={link.href}
-                  className="text-[13px] font-bold uppercase tracking-[0.1em] text-primary/70 hover:text-primary transition-colors relative group"
+                  className="text-[12px] font-bold uppercase tracking-[0.1em] text-primary/70 hover:text-primary transition-colors relative group"
                 >
                   {link.name}
                   <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent transition-all duration-500 group-hover:w-full" />
@@ -71,7 +65,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
                 <button 
                   key={link.name} 
                   onClick={link.onClick}
-                  className="text-[13px] font-bold uppercase tracking-[0.1em] text-primary/70 hover:text-primary transition-colors relative group"
+                  className="text-[12px] font-bold uppercase tracking-[0.1em] text-primary/70 hover:text-primary transition-colors relative group"
                 >
                   {link.name}
                   <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent transition-all duration-500 group-hover:w-full" />
@@ -80,47 +74,67 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
             ))}
           </nav>
 
-          {/* Ações Lado Direito */}
-          <div className="flex items-center gap-4 ml-auto">
-            {/* Busca Desktop */}
-            <div className="hidden lg:flex items-center overflow-hidden rounded-full border border-primary/10 bg-secondary/20 h-12 w-[280px]">
+          {/* Logo Centralizada */}
+          <div className="flex justify-center w-full lg:w-1/3">
+            <Link href="/" className="transition-transform duration-500 hover:scale-105 shrink-0">
+              <LogoMark />
+            </Link>
+          </div>
+
+          {/* Ações Lado Direito (Desktop) */}
+          <div className="hidden lg:flex items-center justify-end gap-6 w-1/3">
+            <div className="flex items-center overflow-hidden rounded-full border border-primary/10 bg-secondary/20 h-11 w-48">
               <input
-                placeholder="Procurar no site..."
-                className="flex-1 bg-transparent px-6 text-xs outline-none text-primary"
+                placeholder="Busca..."
+                className="flex-1 bg-transparent px-5 text-[11px] outline-none text-primary"
               />
-              <button className="flex h-12 w-12 items-center justify-center border-l border-primary/10 text-primary hover:bg-white transition-colors">
-                <Search className="h-4 w-4" />
+              <button className="flex h-11 w-11 items-center justify-center border-l border-primary/10 text-primary hover:bg-white transition-colors">
+                <Search className="h-3.5 w-3.5" />
               </button>
             </div>
 
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="hidden md:flex rounded-full text-primary/70 hover:text-primary" onClick={onOpenLogin}>
-                <User className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 text-primary/70 hover:text-primary" onClick={onOpenLogin}>
+                <User className="h-4.5 w-4.5" />
               </Button>
-              <Button variant="ghost" size="icon" className="hidden md:flex rounded-full text-primary/70 hover:text-primary">
-                <Heart className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 text-primary/70 hover:text-primary">
+                <Heart className="h-4.5 w-4.5" />
               </Button>
               
               <button 
                 onClick={onOpenCart}
-                className="relative flex items-center gap-3 px-6 h-12 rounded-full bg-primary text-white hover:bg-black transition-all shadow-xl group"
+                className="relative flex items-center gap-2 px-5 h-11 rounded-full bg-primary text-white hover:bg-black transition-all shadow-lg group"
               >
                 <ShoppingBag className="h-4 w-4" />
-                <span className="hidden md:block text-[10px] font-bold uppercase tracking-[0.2em]">Carrinho</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em]">Carrinho</span>
                 {cartCount > 0 && (
-                  <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white shadow-lg">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[9px] font-bold text-white shadow-lg">
                     {cartCount}
                   </span>
                 )}
               </button>
-
-              <button 
-                onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden h-12 w-12 flex items-center justify-center rounded-full bg-secondary/50"
-              >
-                <Menu className="h-5 w-5 text-primary" />
-              </button>
             </div>
+          </div>
+
+          {/* Mobile UI (Menu e Carrinho) */}
+          <div className="flex lg:hidden items-center gap-3 absolute right-6">
+            <button 
+              onClick={onOpenCart}
+              className="relative flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white shadow-lg"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[8px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+            <button 
+              onClick={() => setMobileMenuOpen(true)}
+              className="h-11 w-11 flex items-center justify-center rounded-full bg-secondary"
+            >
+              <Menu className="h-5 w-5 text-primary" />
+            </button>
           </div>
         </div>
 
