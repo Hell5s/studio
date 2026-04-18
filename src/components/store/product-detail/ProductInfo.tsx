@@ -21,11 +21,13 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
-  // Referência para o favorito
+  const stringId = String(product?.id);
+
+  // Referência estável para o favorito
   const favoriteRef = React.useMemo(() => {
-    if (!db || !user || !product?.id) return null;
-    return doc(db, 'users', user.uid, 'favorites', product.id);
-  }, [db, user, product?.id]);
+    if (!db || !user?.uid || !stringId) return null;
+    return doc(db, 'users', user.uid, 'favorites', stringId);
+  }, [db, user?.uid, stringId]);
 
   const { data: favoriteData } = useDoc(favoriteRef);
   const isFavorited = !!favoriteData;
@@ -34,7 +36,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
     if (!user) {
       toast({
         title: "Acesso necessário",
-        description: "Faça login para salvar suas peças favoritas.",
+        description: "Faça login ou acesse como visitante no menu para salvar suas peças favoritas.",
         variant: "destructive"
       });
       return;
@@ -47,7 +49,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
       toast({ title: "Removido dos favoritos" });
     } else {
       setDocumentNonBlocking(favoriteRef, {
-        productId: product.id,
+        productId: stringId,
+        productName: product.name,
         addedAt: serverTimestamp()
       }, { merge: true });
       toast({ title: "Salvo nos seus favoritos!" });
@@ -112,7 +115,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
         {product.description}
       </p>
 
-      {/* Variation Selectors */}
       <div className="space-y-8">
         {product.colors && product.colors.length > 0 && (
           <div className="space-y-4">
@@ -164,22 +166,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
         )}
       </div>
 
-      {/* Action Buttons */}
       <div className="flex flex-col gap-4 pt-6">
-        <Button 
+        <button 
           onClick={handleAddToCart}
-          className="w-full rounded-full py-10 text-[11px] font-bold uppercase tracking-[0.5em] bg-primary text-white hover:bg-accent transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
+          className="w-full rounded-full py-6 text-[11px] font-bold uppercase tracking-[0.5em] bg-[#6E3C47] text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
         >
-          <ShoppingBag className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform" />
           Garantir Exclusividade
-        </Button>
+        </button>
         <div className="grid grid-cols-2 gap-4">
           <Button 
             variant="outline" 
             onClick={handleToggleFavorite}
             className={cn(
               "rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 transition-all",
-              isFavorited ? "bg-primary text-white" : "hover:bg-white text-primary"
+              isFavorited ? "bg-[#6E3C47] text-white" : "hover:bg-white text-primary"
             )}
           >
             <Heart className={cn("mr-2 h-4 w-4", isFavorited && "fill-current")} /> 
@@ -191,7 +191,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </div>
       </div>
 
-      {/* Trust Badges */}
       <div className="grid grid-cols-1 gap-4 pt-10">
         {[
           { icon: <Truck className="h-5 w-5" />, title: "Entrega Expressa Boutique", desc: "Frete VIP para todo o país" },

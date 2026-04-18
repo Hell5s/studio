@@ -13,7 +13,7 @@ import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 interface ProductCardProps {
-  id: string;
+  id: string | number;
   name: string;
   price: number;
   oldPrice?: number;
@@ -21,7 +21,6 @@ interface ProductCardProps {
   image: string;
   category?: string;
   onAddToCart?: () => void;
-  onBuyNow?: () => void;
 }
 
 export function ProductCard({
@@ -37,11 +36,14 @@ export function ProductCard({
   const { user } = useUser();
   const { toast } = useToast();
 
-  // Referência para o documento de favorito
+  // Garante que o ID seja string para o Firestore
+  const stringId = String(id);
+
+  // Referência estável para o documento de favorito
   const favoriteRef = React.useMemo(() => {
-    if (!db || !user || !id) return null;
-    return doc(db, 'users', user.uid, 'favorites', id);
-  }, [db, user, id]);
+    if (!db || !user?.uid || !stringId) return null;
+    return doc(db, 'users', user.uid, 'favorites', stringId);
+  }, [db, user?.uid, stringId]);
 
   const { data: favoriteData } = useDoc(favoriteRef);
   const isFavorited = !!favoriteData;
@@ -53,7 +55,7 @@ export function ProductCard({
     if (!user) {
       toast({
         title: "Acesso necessário",
-        description: "Faça login ou acesse como visitante para favoritar peças.",
+        description: "Faça login ou acesse como visitante no menu para salvar peças.",
         variant: "destructive"
       });
       return;
@@ -65,16 +67,17 @@ export function ProductCard({
       deleteDocumentNonBlocking(favoriteRef);
       toast({
         title: "Removido",
-        description: "Peça removida dos seus favoritos.",
+        description: "Peça removida da sua lista.",
       });
     } else {
       setDocumentNonBlocking(favoriteRef, {
-        productId: id,
+        productId: stringId,
+        productName: name,
         addedAt: serverTimestamp()
       }, { merge: true });
       toast({
         title: "Favoritado",
-        description: "Peça salva na sua lista de desejos!",
+        description: "Salvo com sucesso!",
       });
     }
   };
@@ -116,9 +119,8 @@ export function ProductCard({
           <Heart className={cn("h-4.5 w-4.5", isFavorited && "fill-current")} />
         </button>
 
-        {/* Quick View */}
         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 hidden md:flex items-center justify-center z-10">
-          <Link href={`/products/${id}`}>
+          <Link href={`/products/${stringId}`}>
             <Button className="rounded-full bg-white text-[#6E3C47] font-bold uppercase text-[9px] tracking-[0.4em] px-8 py-6 shadow-2xl hover:bg-[#6E3C47] hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-700">
               Ver Detalhes
             </Button>
@@ -127,7 +129,7 @@ export function ProductCard({
       </div>
 
       <div className="px-1 pb-4 pt-6 text-center flex flex-col flex-1">
-        <Link href={`/products/${id}`} className="block group-hover:text-primary transition-colors mb-2">
+        <Link href={`/products/${stringId}`} className="block group-hover:text-primary transition-colors mb-2">
           <h3 className="line-clamp-2 text-[15px] uppercase leading-tight tracking-tight text-[#3A3133] font-medium min-h-[2.5rem]">
             {name}
           </h3>
