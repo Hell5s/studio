@@ -70,46 +70,24 @@
     "providers": ["password", "anonymous"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/products/{productId}",
-        "definition": {
-          "entityName": "Product",
-          "schema": { "$ref": "#/backend/entities/Product" },
-          "description": "Catalogo de produtos"
-        }
-      },
-      {
-        "path": "/categories/{categoryId}",
-        "definition": {
-          "entityName": "Category",
-          "schema": { "$ref": "#/backend/entities/Category" },
-          "description": "Categorias de produtos"
-        }
-      },
-      {
-        "path": "/banners/{bannerId}",
-        "definition": {
-          "entityName": "Banner",
-          "schema": { "$ref": "#/backend/entities/Banner" },
-          "description": "Banners da home"
-        }
-      },
-      {
-        "path": "/newsletter_subscribers/{subscriberId}",
-        "definition": {
-          "entityName": "NewsletterSubscriber",
-          "schema": { "$ref": "#/backend/entities/NewsletterSubscriber" },
-          "description": "Assinantes da newsletter"
-        }
-      },
-      {
-        "path": "/roles_admin/{adminUid}",
-        "definition": {
-          "entityName": "UserRole",
-          "description": "Papeis administrativos"
-        }
-      }
-    ]
+    "/products/{productId}": {
+      "schema": { "$ref": "#/backend/entities/Product" },
+      "description": "Catalogo de produtos"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/backend/entities/Category" },
+      "description": "Categorias de produtos"
+    },
+    "/banners/{bannerId}": {
+      "schema": { "$ref": "#/backend/entities/Banner" },
+      "description": "Banners da home"
+    },
+    "/newsletter_subscribers/{subscriberId}": {
+      "schema": { "$ref": "#/backend/entities/NewsletterSubscriber" },
+      "description": "Assinantes da newsletter"
+    },
+    "/roles_admin/{adminUid}": {
+      "description": "Papeis administrativos"
+    }
   }
 }

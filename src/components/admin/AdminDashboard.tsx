@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { AdminShopeeImport } from './AdminShopeeImport';
 import { ProductManagement } from './ProductManagement';
@@ -37,10 +37,12 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
   const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'shopee' | 'banners' | 'config'>('dashboard');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const db = useFirestore();
+  const { user } = useUser();
 
   const recentProductsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(5));
-  }, [db]);
+  }, [db, user]);
   const { data: recentProducts } = useCollection(recentProductsQuery);
 
   const tabs = [

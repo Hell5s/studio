@@ -1,10 +1,10 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA
-     * Garante acesso público para leitura do catálogo e restrições administrativas.
+     * TODA BELA - REGRAS DE SEGURANÇA REFINADAS
      */
 
     function isSignedIn() {
@@ -17,31 +17,32 @@ service cloud.firestore {
 
     // Regra para produtos (Leitura pública total)
     match /products/{productId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     // Regra para categorias
     match /categories/{categoryId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
-    // Regra para banners
+    // Regra para banners (Leitura pública para o Hero)
     match /banners/{bannerId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     // Regra para assinantes da newsletter
     match /newsletter_subscribers/{subscriberId} {
       allow create: if true;
-      allow read, delete: if isAdmin();
+      allow get, list, delete: if isAdmin();
     }
 
     // Regra para verificar papel de admin
     match /roles_admin/{adminUid} {
-      allow read: if isSignedIn() && request.auth.uid == adminUid;
+      allow get: if isSignedIn() && request.auth.uid == adminUid;
+      allow list: if isAdmin();
     }
   }
 }
