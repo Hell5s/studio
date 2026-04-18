@@ -29,7 +29,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
     { name: 'Novidades', href: '#vitrine' },
     { name: 'Mais vendidos', href: '#vitrine' },
     { name: 'Rastrear Pedido', onClick: onOpenTrack },
-    { name: 'Coleções', href: '#categorias' },
+    { name: 'Coleções', href: '#colecoes' },
   ];
 
   return (

@@ -124,27 +124,14 @@ export default function Home() {
       />
 
       <main className="pt-[80px] md:pt-[120px]">
-        <Hero onShopNow={() => scrollTo('vitrine')} />
+        <Hero onShopNow={() => scrollTo('colecoes')} />
 
-        {/* Manifesto Institucional */}
-        <section className="py-16 md:py-40 container mx-auto px-6 text-center">
-          <div className="max-w-4xl mx-auto space-y-6 md:space-y-10">
-            <div className="flex justify-center">
-              <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-accent animate-pulse" />
-            </div>
-            <h2 className="text-2xl md:text-5xl lg:text-6xl font-serif font-bold text-primary leading-tight tracking-tight px-2">
-              A Toda Bela nasce para vestir mulheres que valorizam presença, estilo e autenticidade em cada detalhe.
-            </h2>
-            <div className="h-0.5 w-16 md:w-24 bg-accent mx-auto opacity-30" />
-          </div>
-        </section>
-
-        {/* Categorias - Encontre seu Estilo */}
-        <section id="categorias" className="py-16 md:py-32 bg-white">
+        {/* Coleções - Essência da Marca */}
+        <section id="colecoes" className="py-16 md:py-32 md:py-40 bg-white">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12 md:mb-20 space-y-3 md:space-y-4">
               <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.6em] text-accent">Curadoria Exclusiva</span>
-              <h2 className="text-3xl md:text-6xl font-serif font-bold text-primary">Encontre seu estilo</h2>
+              <h2 className="text-3xl md:text-6xl font-serif font-bold text-primary">Nossas Coleções</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
@@ -309,8 +296,8 @@ export default function Home() {
               <ul className="space-y-3 md:space-y-4 text-[9px] md:text-[11px] text-primary/60 font-medium">
                 <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => { setSelectedCategory("Novidades"); scrollTo('vitrine'); }}>Novidades</li>
                 <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => scrollTo('vitrine')}>Mais Vendidos</li>
-                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => scrollTo('categorias')}>Moda Festa</li>
-                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => scrollTo('categorias')}>Coleções</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => scrollTo('colecoes')}>Moda Festa</li>
+                <li className="hover:text-primary cursor-pointer transition-colors" onClick={() => scrollTo('colecoes')}>Coleções</li>
               </ul>
             </div>
             <div className="space-y-6 md:space-y-8">
