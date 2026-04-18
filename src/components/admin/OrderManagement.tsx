@@ -59,7 +59,8 @@ export function OrderManagement() {
   const isActuallyAdmin = !!adminRole;
 
   const ordersQuery = useMemoFirebase(() => {
-    // CRÍTICO: Só dispara a consulta se o status de admin estiver confirmado.
+    // CRÍTICO: Só dispara a consulta global (sem filtros) se o status de admin estiver confirmado.
+    // Isso evita o erro de permissão insuficiente para usuários comuns.
     if (!db || isAdminLoading || !isActuallyAdmin) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
   }, [db, isActuallyAdmin, isAdminLoading]);

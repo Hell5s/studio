@@ -1,14 +1,13 @@
 
 "use client";
 
-import React from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, limit } from 'firebase/firestore';
+import React, { useMemo } from 'react';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, orderBy, limit, doc } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
 import { Newsletter } from '@/components/store/Newsletter';
 import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, Info } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,11 +26,19 @@ export default function MeusPedidosPage() {
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
 
+  // Verificação de Admin para a Navbar
+  const adminDocRef = useMemoFirebase(() => {
+    return user ? doc(db, 'roles_admin', user.uid) : null;
+  }, [db, user]);
+  const { data: adminRole } = useDoc(adminDocRef);
+  const isAdmin = !!adminRole;
+
+  // Consulta de Pedidos filtrada OBRIGATORIAMENTE por userId para satisfazer as regras do Firestore
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
       collection(db, 'orders'), 
-      where('userId', '==', user.uid), 
+      where('userId', '==', user.uid), // Filtro de segurança fundamental
       orderBy('createdAt', 'desc'),
       limit(20)
     );
@@ -56,6 +63,7 @@ export default function MeusPedidosPage() {
         onOpenOrders={() => {}}
         onOpenCart={() => {}}
         cartCount={0}
+        isAdmin={isAdmin}
       />
 
       <main className="pt-32 pb-24">
@@ -86,7 +94,9 @@ export default function MeusPedidosPage() {
               <Info className="h-12 w-12 text-accent/20 mx-auto mb-6" />
               <h3 className="text-2xl font-headline font-bold text-primary mb-4">Acesso Necessário</h3>
               <p className="text-muted-foreground italic font-light max-w-xs mx-auto mb-8">Faça login para ver seu histórico de pedidos.</p>
-              <Button className="rounded-full px-12 h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px]">Acessar Conta</Button>
+              <Link href="/">
+                <Button className="rounded-full px-12 h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px]">Acessar Conta</Button>
+              </Link>
             </div>
           ) : orders && orders.length > 0 ? (
             <div className="grid gap-12">

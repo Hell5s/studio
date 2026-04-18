@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -12,8 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from '@/components/ui/separator';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 interface CheckoutDialogProps {
@@ -62,11 +63,11 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
 
     setLoading(true);
     try {
-      const orderNumber = `PED-${Date.now()}`;
+      const orderId = `PED-${Date.now()}`;
       
       const payload = {
-        orderNumber,
-        userId: user.uid,
+        orderNumber: orderId,
+        userId: user.uid, // CRÍTICO: Vincula o pedido ao UID do usuário para regras de segurança
         customer: {
           name: formData.name,
           email: formData.email.toLowerCase().trim() || user.email?.toLowerCase().trim() || '',
@@ -91,8 +92,8 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
         updatedAt: serverTimestamp()
       };
 
-      // Usando setDoc para garantir o ID do pedido que criamos
-      await setDoc(doc(db, 'orders', orderNumber), payload);
+      // Usando setDoc para garantir o ID do pedido que criamos manualmente
+      await setDoc(doc(db, 'orders', orderId), payload);
       
       setOrderComplete(true);
       setTimeout(() => {
@@ -102,7 +103,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
       }, 3000);
 
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao processar pedido:", error);
       toast({
         title: "Erro ao processar",
         description: "Não foi possível registrar seu pedido. Tente novamente em instantes.",

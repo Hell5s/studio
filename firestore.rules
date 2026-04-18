@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v19.0
+     * TODA BELA - REGRAS DE SEGURANÇA v20.0
      * Foco em Propriedade de Pedidos e Segurança Administrativa
      */
 
@@ -31,22 +31,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Pedidos: Sistema Privado baseado em userId conforme solicitado
+    // Pedidos: Sistema de Propriedade Privada
     match /orders/{orderId} {
-      // Qualquer usuário autenticado pode criar um pedido
-      allow create: if request.auth != null;
+      // Qualquer usuário autenticado pode criar um pedido, desde que marque com seu próprio UID
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
 
-      // O cliente lê apenas seus próprios pedidos. Admin lê tudo.
-      allow read: if isAdmin() || (
-        request.auth != null && 
-        resource.data.userId == request.auth.uid
-      );
+      // Leitura de documento único (get)
+      allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
 
-      // O cliente pode atualizar seus pedidos (ex: cancelamento). Admin atualiza tudo.
-      allow update: if isAdmin() || (
-        request.auth != null && 
-        resource.data.userId == request.auth.uid
-      );
+      // Listagem (queries): O filtro userId == request.auth.uid deve estar presente na consulta
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+
+      // Atualização permitida apenas para administradores ou proprietário (ex: cancelar pedido)
+      allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
 
       // Exclusão permitida apenas para administradores
       allow delete: if isAdmin();
