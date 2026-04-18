@@ -1,65 +1,270 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  Loader2, 
-  ShoppingBagIcon,
-  Trash2,
-  Plus,
-  Minus,
-  X,
-  Info,
-  ChevronRight,
-  SearchX
-} from 'lucide-react';
-import { Navbar } from '@/components/store/Navbar';
-import { Hero } from '@/components/store/Hero';
-import { ProductCard } from '@/components/store/ProductCard';
-import { Newsletter } from '@/components/store/Newsletter';
-import { useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, orderBy, limit, doc, onSnapshot } from 'firebase/firestore';
-import { LoginDialog } from '@/components/auth/LoginDialog';
-import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
-import { AdminDashboard } from '@/components/admin/AdminDashboard';
-import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
-import { CheckoutDialog } from '@/components/store/CheckoutDialog';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
+import { useEffect, useMemo, useState } from "react";
+import { firebaseConfig } from "@/firebase/config";
+import { initializeApp, getApps } from "firebase/app";
+import {
+  addDoc,
+  collection,
+  getFirestore,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Fallback estático para garantir que o site nunca fique vazio
-const staticLaunchProducts = [
-  { id: '1', name: "Top Alongado com Decote Alto", price: 99.9, image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80", badge: 'Novo' },
-  { id: '2', name: "Macaquinho Contrastante", price: 159.9, image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", badge: 'Novo' },
-  { id: '3', name: "Calça Legging com Cós em V", price: 169.9, image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80", badge: 'Destaque' },
-  { id: '4', name: "Short com Recorte Premium", price: 109.9, image: "https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&w=900&q=80", badge: 'Novo' }
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+const brand = {
+  name: "Toda Bela",
+  colors: {
+    wine: "#6E3C47",
+    gold: "#C7A17A",
+    blush: "#F7E8EA",
+    cream: "#FFF9F7",
+    rose: "#E9C9CF",
+    text: "#2A1F22",
+    soft: "#F4ECEE",
+  },
+};
+
+const hero = {
+  title: "Moda Fitness",
+  subtitle: "Peças que acompanham seu ritmo com conforto, presença e estilo.",
+  cta: "Conferir",
+  image:
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80",
+};
+
+const collections = [
+  {
+    title: "Tops",
+    image:
+      "https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    title: "Leggings",
+    image:
+      "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    title: "Shorts",
+    image:
+      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    title: "Macacões",
+    image:
+      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80",
+  },
 ];
 
-const staticBasicProducts = [
-  { id: '5', name: "Top Básico Alças Reguláveis", price: 69.9, image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80", collection: 'Linha Básica' },
-  { id: '6', name: "Calça Legging Básica", price: 99.9, image: "https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=900&q=80", collection: 'Linha Básica' },
-  { id: '7', name: "Conjunto Básico Lilás", price: 69.9, image: "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=900&q=80", collection: 'Linha Básica' }
+const launchProducts = [
+  {
+    id: "1",
+    name: "Top Alongado com Decote Alto",
+    price: 99.9,
+    oldPrice: 129.9,
+    image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "2",
+    name: "Macaquinho Contrastante",
+    price: 159.9,
+    oldPrice: 199.9,
+    image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "3",
+    name: "Calça Legging com Cós em V",
+    price: 169.9,
+    oldPrice: 209.9,
+    image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "4",
+    name: "Short com Recorte Premium",
+    price: 109.9,
+    oldPrice: 149.9,
+    image: "https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&w=900&q=80",
+  },
 ];
 
-export default function Home() {
-  const db = useFirestore();
-  const { user } = useUser();
-  
-  // Estados de UI
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isTrackOpen, setIsTrackOpen] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
-  const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("Novidades");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [cartOpen, setCartOpen] = useState(false);
-  const [cartItems, setCartItems] = useState<any[]>([]);
+const basicProducts = [
+  {
+    id: "5",
+    name: "Top Básico com Alças Reguláveis",
+    price: 69.9,
+    oldPrice: 89.9,
+    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "6",
+    name: "Calça Legging Básica",
+    price: 99.9,
+    oldPrice: 129.9,
+    image: "https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "7",
+    name: "Conjunto Básico Lilás",
+    price: 69.9,
+    oldPrice: 99.9,
+    image: "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "8",
+    name: "Short Básico Azul",
+    price: 69.9,
+    oldPrice: 89.9,
+    image: "https://images.unsplash.com/photo-1464863979621-258859e62245?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "9",
+    name: "Top Básico com Bojo",
+    price: 69.9,
+    oldPrice: 89.9,
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80",
+  },
+];
 
-  // PASSO 1 - Sincronização Real dos Produtos
+function formatPrice(value: any) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(Number(value || 0));
+}
+
+function Logo() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#E9D7DB] bg-white shadow-sm">
+        <svg viewBox="0 0 120 120" className="h-7 w-7" fill="none">
+          <circle cx="60" cy="60" r="42" stroke={brand.colors.gold} strokeWidth="4" />
+          <path
+            d="M44 39C44 35.6863 46.6863 33 50 33H70C73.3137 33 76 35.6863 76 39V41C76 44.3137 73.3137 47 70 47H64V83H56V47H50C46.6863 47 44 44.3137 44 41V39Z"
+            fill={brand.colors.wine}
+          />
+        </svg>
+      </div>
+      <div className="leading-none text-left">
+        <p className="text-3xl font-semibold tracking-[-0.05em] text-[#6E3C47]">Toda Bela</p>
+        <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#C7A17A]">Moda Feminina</p>
+      </div>
+    </div>
+  );
+}
+
+function ProductCard({ product, onAdd }: any) {
+  return (
+    <article className="group flex flex-col h-full bg-white transition-all">
+      <div className="relative overflow-hidden bg-[#F3EFF0] aspect-[3/4]">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+        />
+        <button className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-xl text-[#6E3C47] shadow-sm hover:bg-[#6E3C47] hover:text-white transition-all">
+          ♡
+        </button>
+      </div>
+      <div className="px-1 pb-4 pt-5 text-center flex flex-col flex-1">
+        <h3 className="line-clamp-2 text-[15px] uppercase leading-tight tracking-tight text-[#3A3133] font-medium min-h-[2.5rem]">
+          {product.name}
+        </h3>
+        <div className="mt-auto space-y-2">
+          <p className="text-[2rem] font-light text-[#2A1F22] leading-none">
+            {formatPrice(product.price)}
+          </p>
+          <p className="text-sm text-[#6D575D] font-medium italic">
+            ou 10x de {formatPrice(product.price / 10)}
+          </p>
+          <button
+            onClick={() => onAdd(product)}
+            className="mt-4 w-full rounded-full border border-[#E7C5CC] bg-transparent px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.25em] text-[#6E3C47] transition hover:bg-[#F7E8EA] hover:border-[#6E3C47]"
+          >
+            Adicionar
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SectionTitle({ title, action }: any) {
+  return (
+    <div className="mb-12 flex items-center justify-between gap-4">
+      <h2 className="text-4xl md:text-5xl font-semibold tracking-[-0.04em] text-[#2A1F22]">{title}</h2>
+      {action ? <button className="text-sm font-bold uppercase tracking-widest text-[#C7A17A] underline underline-offset-8">{action}</button> : null}
+    </div>
+  );
+}
+
+export default function TodaBelaStorefront() {
+  const [cart, setCart] = useState<any[]>([]);
   const [storeProducts, setStoreProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [isAdmin] = useState(true);
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const [productForm, setProductForm] = useState({
+    name: "",
+    collection: "Moda Fitness",
+    category: "Tops",
+    price: "",
+    oldPrice: "",
+    stock: "",
+    sizes: "P, M, G, GG",
+    color: "",
+    badge: "Novo",
+    shortDescription: "",
+    description: "",
+    image: "",
+    gallery: "",
+    shopeeLink: "",
+    featured: false,
+    published: true,
+    bestseller: false,
+  });
 
+  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
+
+  // PASSO 4 — GARANTIR FALLBACK
+  const storefrontProducts = useMemo(() => {
+    if (storeProducts.length) return storeProducts;
+    return [...launchProducts, ...basicProducts];
+  }, [storeProducts]);
+
+  // Busca funcional
+  const filteredProducts = useMemo(() => {
+    const published = storefrontProducts.filter(p => p.published !== false);
+    if (!searchQuery) return published;
+    const q = searchQuery.toLowerCase().trim().replace('#', '');
+    return published.filter(p => 
+      p.name?.toLowerCase().includes(q) || 
+      p.id?.toLowerCase().includes(q) ||
+      p.collection?.toLowerCase().includes(q)
+    );
+  }, [storefrontProducts, searchQuery]);
+
+  const launchProductsDisplay = useMemo(() => {
+    const featured = filteredProducts.filter((item) => item.featured || item.bestseller);
+    return featured.length ? featured.slice(0, 4) : filteredProducts.slice(0, 4);
+  }, [filteredProducts]);
+
+  const basicProductsDisplay = useMemo(() => {
+    const basics = filteredProducts.filter(p => p.collection === 'Linha Básica' || p.category === 'Básicos');
+    return basics.length ? basics.slice(0, 5) : filteredProducts.slice(4, 9);
+  }, [filteredProducts]);
+
+  // PASSO 1 - Sincronização Real
   useEffect(() => {
     if (!db) {
       setProductsLoading(false);
@@ -69,312 +274,447 @@ export default function Home() {
     const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const products = snapshot.docs.map(doc => ({
+      const items = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
-      setStoreProducts(products);
+      setStoreProducts(items);
       setProductsLoading(false);
     });
 
     return () => unsubscribe();
-  }, []); // Dependência vazia conforme PASSO 1
+  }, []);
 
-  // Verificação de Admin
-  const adminDocRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, 'roles_admin', user.uid);
-  }, [db, user]);
-  const { data: adminRole } = useDoc(adminDocRef);
-  const isAdmin = !!adminRole;
+  function handleFormChange(field: string, value: any) {
+    setProductForm((current) => ({ ...current, [field]: value }));
+  }
 
-  // PASSO 4 - Lógica de Fallback GARANTIDA
-  const storefrontProducts = useMemo(() => {
-    if (storeProducts.length) return storeProducts;
-    return [...staticLaunchProducts, ...staticBasicProducts];
-  }, [storeProducts]);
+  async function uploadImage(file: File) {
+    if (!storage || !file) return null;
+    const fileRef = ref(storage, `products/${Date.now()}_${file.name}`);
+    await uploadBytes(fileRef, file);
+    const url = await getDownloadURL(fileRef);
+    return url;
+  }
 
-  // Lógica de filtragem
-  const filteredProducts = useMemo(() => {
-    let items = storefrontProducts;
-    
-    if (selectedCategory !== "Novidades") {
-      items = items.filter(p => p.category === selectedCategory || p.collection === selectedCategory);
+  async function saveProductToFirestore() {
+    if (!db) {
+      setSaveMessage("Configure seu Firebase antes de salvar.");
+      return;
     }
-    
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      items = items.filter(p => 
-        p.name?.toLowerCase().includes(q) || 
-        p.id?.toLowerCase().includes(q) ||
-        p.collection?.toLowerCase().includes(q)
-      );
+
+    if (!productForm.name || !productForm.price || !productForm.collection || !productForm.category) {
+      setSaveMessage("Preencha nome, coleção, categoria e preço antes de salvar.");
+      return;
     }
-    
-    return items;
-  }, [storefrontProducts, selectedCategory, searchQuery]);
 
-  const basicProducts = useMemo(() => {
-    if (searchQuery) return []; 
-    const basics = storefrontProducts.filter(p => p.collection === 'Linha Básica' || p.category === 'Básicos');
-    return (basics.length ? basics : storefrontProducts.slice(4)).slice(0, 5);
-  }, [storefrontProducts, searchQuery]);
+    try {
+      setSavingProduct(true);
+      setSaveMessage("");
 
-  const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
-  const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + (item.quantity * item.price), 0), [cartItems]);
+      const galleryImages = productForm.gallery
+        .split("\n")
+        .map((item) => item.trim())
+        .filter(Boolean);
 
-  const addToCart = (product: any, buyNow = false) => {
-    setCartItems((current) => {
-      const existing = current.find((item) => (item.id || item.productId) === (product.id || product.productId));
-      if (existing) {
+      const payload = {
+        name: productForm.name,
+        collection: productForm.collection,
+        category: productForm.category,
+        price: Number(String(productForm.price).replace(/\./g, "").replace(",", ".")) || 0,
+        oldPrice: productForm.oldPrice ? Number(String(productForm.oldPrice).replace(/\./g, "").replace(",", ".")) : null,
+        stock: Number(productForm.stock) || 0,
+        sizes: productForm.sizes.split(",").map((item) => item.trim()).filter(Boolean),
+        color: productForm.color,
+        badge: productForm.badge,
+        description: productForm.description,
+        shortDescription: productForm.shortDescription,
+        image: productForm.image,
+        images: galleryImages,
+        shopeeLink: productForm.shopeeLink,
+        featured: productForm.featured,
+        published: productForm.published,
+        bestseller: productForm.bestseller,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      await addDoc(collection(db, "products"), payload);
+
+      setSaveMessage("Produto salvo no Firestore com sucesso.");
+      setProductForm({
+        name: "",
+        collection: "Moda Fitness",
+        category: "Tops",
+        price: "",
+        oldPrice: "",
+        stock: "",
+        sizes: "P, M, G, GG",
+        color: "",
+        badge: "Novo",
+        shortDescription: "",
+        description: "",
+        image: "",
+        gallery: "",
+        shopeeLink: "",
+        featured: false,
+        published: true,
+        bestseller: false,
+      });
+    } catch (error) {
+      console.error(error);
+      setSaveMessage("Não foi possível salvar no Firestore.");
+    } finally {
+      setSavingProduct(false);
+    }
+  }
+
+  function addToCart(product: any) {
+    setCart((current) => {
+      const found = current.find((item) => item.id === product.id);
+      if (found) {
         return current.map((item) =>
-          (item.id || item.productId) === (product.id || product.productId) ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...current, { ...product, id: product.id || product.productId, quantity: 1 }];
+      return [...current, { ...product, quantity: 1 }];
     });
-    if (!buyNow) setCartOpen(true);
-    if (buyNow) {
-      setTimeout(() => setIsCheckoutOpen(true), 200);
-    }
-  };
-
-  const updateQuantity = (productId: string, delta: number) => {
-    setCartItems((current) =>
-      current
-        .map((item) =>
-          item.id === productId ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  const removeItem = (productId: string) => {
-    setCartItems((current) => current.filter((item) => item.id !== productId));
-  };
-
-  const handleCheckout = () => {
-    if (!cartItems.length) return;
-    setCartOpen(false);
-    setIsCheckoutOpen(true);
-  };
-
-  const onOrderSuccess = () => {
-    setCartItems([]);
-    setIsCheckoutOpen(false);
-  };
-
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    el?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // PASSO 3 - Usar produtos REAIS no Admin
-  if (showAdmin && isAdmin) {
-    return (
-      <div className="h-screen w-full">
-        <AdminDashboard 
-          productsCount={storeProducts.length} 
-          categoriesCount={0}
-          onOpenAI={() => setIsAIGeneratorOpen(true)}
-          onExit={() => setShowAdmin(false)}
-        />
-        <AIProductGenerator open={isAIGeneratorOpen} onOpenChange={setIsAIGeneratorOpen} />
-      </div>
-    );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-white overflow-x-hidden">
-      <Navbar 
-        onOpenLogin={() => setIsLoginOpen(true)} 
-        onOpenTrack={() => setIsTrackOpen(true)} 
-        onOpenCart={() => setCartOpen(true)}
-        cartCount={cartCount}
-        isAdmin={isAdmin}
-        onOpenAdmin={() => setShowAdmin(true)}
-        onSearch={setSearchQuery}
-      />
+    <div className="min-h-screen bg-[#FFF9F7] text-[#2A1F22]">
+      <div className="bg-[#6E3C47] px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.28em] text-white/80">
+        Moda que inspira sua melhor versão
+      </div>
 
-      <main className="pt-[140px] md:pt-[180px]">
-        {!searchQuery && <Hero onShopNow={() => scrollTo('vitrine')} />}
+      <header className="border-b border-[#E9D7DB] bg-white sticky top-0 z-50">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-8 px-6 py-5 xl:px-10">
+          <Logo />
 
-        <section id="vitrine" className="py-20 md:py-32 container mx-auto px-6">
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-3xl md:text-5xl font-serif font-bold text-primary tracking-tight">
-              {productsLoading ? "Carregando Boutique..." : (searchQuery ? `Resultados para "${searchQuery}"` : selectedCategory === "Novidades" ? "Lançamentos" : selectedCategory)}
-            </h2>
-            {searchQuery && (
-               <button 
-                onClick={() => setSearchQuery("")}
-                className="text-sm font-bold uppercase tracking-widest text-accent hover:text-primary"
-              >
-                Limpar Busca
-              </button>
-            )}
+          <nav className="hidden flex-1 items-center justify-center gap-14 text-[13px] font-bold uppercase tracking-[0.1em] text-[#2A1F22] lg:flex">
+            <a href="#colecoes" className="hover:text-[#6E3C47] transition-colors">Coleções</a>
+            <a href="#produtos" className="hover:text-[#6E3C47] transition-colors">Novidades</a>
+            <a href="#mais-vendidos" className="hover:text-[#6E3C47] transition-colors">Favoritos</a>
+          </nav>
+
+          <div className="ml-auto flex items-center gap-6">
+            <div className="hidden items-center overflow-hidden rounded-full border border-[#E5DADD] bg-[#FAF6F7] md:flex h-11">
+              <input
+                placeholder="Busca por nome ou ID..."
+                className="bg-transparent px-5 text-[12px] outline-none w-48 text-[#2A1F22]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button className="flex h-11 w-11 items-center justify-center border-l border-[#E5DADD] text-lg text-[#6E3C47] hover:bg-white transition-colors">⌕</button>
+            </div>
+            
+            <button className="relative flex items-center gap-2 rounded-full bg-[#6E3C47] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.15em] text-white hover:bg-black transition-all shadow-lg">
+              Sacola
+              {cartCount ? (
+                <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white shadow-md">
+                  {cartCount}
+                </span>
+              ) : null}
+            </button>
           </div>
+        </div>
+      </header>
 
-          {productsLoading ? (
-            <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-accent" /></div>
+      <main>
+        <section className="relative overflow-hidden bg-black h-[75vh] min-h-[500px]">
+          <img
+            src={hero.image}
+            alt={hero.title}
+            className="h-full w-full object-cover opacity-80"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 mx-auto flex max-w-[1600px] items-center px-8 xl:px-14">
+            <div className="max-w-2xl text-white space-y-8 animate-in fade-in slide-in-from-left-10 duration-1000">
+              <h1 className="text-6xl md:text-8xl font-serif font-bold uppercase tracking-tighter leading-[0.9]">
+                Moda <br /> <span className="italic font-light text-[#C7A17A]">Fitness</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-white/85 font-light italic max-w-lg">
+                {hero.subtitle}
+              </p>
+              <button className="rounded-full bg-white px-12 py-5 text-lg font-bold uppercase tracking-widest text-[#2A1F22] transition-all hover:scale-105 shadow-2xl">
+                {hero.cta}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="produtos" className="mx-auto max-w-[1400px] px-6 py-24 md:py-32">
+          <SectionTitle 
+            title={productsLoading ? "Curadoria..." : (searchQuery ? `Busca: "${searchQuery}"` : "Novidades")} 
+            action={searchQuery ? "Limpar Busca" : "Ver tudo"}
+            onClickAction={() => searchQuery && setSearchQuery("")}
+          />
+          {filteredProducts.length > 0 ? (
+            <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
+              {launchProductsDisplay.map((product) => (
+                <ProductCard key={product.id} product={product} onAdd={addToCart} />
+              ))}
+            </div>
           ) : (
-            <>
-              {filteredProducts.length > 0 ? (
-                <div className="grid gap-x-4 gap-y-12 grid-cols-2 lg:grid-cols-4">
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} {...product} onAddToCart={() => addToCart(product)} onBuyNow={() => addToCart(product, true)} />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-32 text-center space-y-4">
-                  <SearchX className="h-16 w-16 text-primary/20" />
-                  <p className="text-lg text-primary/40 italic font-light">Nenhum objeto de desejo encontrado.</p>
-                  <Button variant="outline" onClick={() => setSearchQuery("")} className="rounded-full px-8">Ver todo o catálogo</Button>
-                </div>
-              )}
-            </>
+            <div className="py-20 text-center space-y-4">
+              <p className="text-xl text-[#2A1F22]/40 italic">Nenhum objeto de desejo encontrado.</p>
+              <button onClick={() => setSearchQuery("")} className="text-sm font-bold uppercase tracking-widest text-[#6E3C47] underline underline-offset-4">Ver todo o catálogo</button>
+            </div>
           )}
         </section>
 
-        {!searchQuery && (
-          <>
-            <section id="colecoes" className="py-20 md:py-32 bg-[#F4ECEE]">
-              <div className="container mx-auto px-6 text-center">
-                <div className="space-y-4 mb-16">
-                  <h2 className="text-4xl md:text-6xl font-serif font-bold text-primary">Nossas Coleções</h2>
-                  <p className="text-accent text-[11px] font-bold uppercase tracking-[0.3em]">Peças que acompanham seu ritmo</p>
+        <section id="colecoes" className="bg-[#F4ECEE] py-24 md:py-32">
+          <div className="mx-auto max-w-[1400px] px-6">
+            <div className="mb-16 text-center space-y-4">
+              <p className="text-[13px] font-bold uppercase tracking-[0.3em] text-[#C7A17A]">Curadoria Especializada</p>
+              <h2 className="text-5xl md:text-6xl font-serif font-bold text-[#6E3C47]">Categorias</h2>
+            </div>
+            <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
+              {collections.map((item) => (
+                <article key={item.title} className="group relative overflow-hidden rounded-[2.5rem] shadow-xl aspect-[3/4]">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute bottom-8 left-8 right-8">
+                    <h3 className="text-3xl font-serif font-bold uppercase text-white tracking-tight">{item.title}</h3>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="mais-vendidos" className="mx-auto max-w-[1400px] px-6 py-24 md:py-32">
+          <div className="mb-16 text-center space-y-4">
+            <p className="text-[13px] font-bold uppercase tracking-[0.3em] text-[#6E3C47]">Essencial Toda Bela</p>
+            <h2 className="text-5xl md:text-6xl font-serif font-bold text-[#2A1F22]">Favoritos</h2>
+          </div>
+          <div className="grid gap-6 grid-cols-2 lg:grid-cols-5">
+            {basicProductsDisplay.map((product) => (
+              <ProductCard key={product.id} product={product} onAdd={addToCart} />
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {isAdmin ? (
+        <button
+          onClick={() => setAdminOpen(true)}
+          className="fixed bottom-8 right-8 z-50 rounded-full bg-[#6E3C47] px-8 py-5 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-2xl hover:scale-105 transition-all"
+        >
+          Painel Boutique
+        </button>
+      ) : null}
+
+      {adminOpen ? (
+        <div className="fixed inset-0 z-[100] bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="mx-auto h-full w-full max-w-7xl overflow-hidden rounded-[3rem] bg-[#FFF9F7] shadow-2xl flex flex-col">
+            <div className="p-10 border-b border-[#E9D7DB] flex items-center justify-between bg-white">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-[#C7A17A]">Curadoria Administrativa</p>
+                <h2 className="mt-2 text-4xl font-serif font-bold text-[#2A1F22]">Gerenciamento</h2>
+              </div>
+              <button
+                onClick={() => setAdminOpen(false)}
+                className="rounded-full border-2 border-[#E7C5CC] px-8 py-4 text-xs font-bold uppercase tracking-[0.14em] text-[#6E3C47] hover:bg-[#6E3C47] hover:text-white transition-all"
+              >
+                Sair do Painel
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-10 space-y-12 no-scrollbar">
+              <div className="grid gap-10 lg:grid-cols-[1fr_450px]">
+                <div className="rounded-[2.5rem] border border-[#E9D7DB] bg-white p-10 shadow-sm space-y-10">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#C7A17A]">Inventário</p>
+                      <h3 className="mt-2 text-3xl font-serif font-bold text-[#2A1F22]">Novo Item</h3>
+                    </div>
+                    <button
+                      onClick={saveProductToFirestore}
+                      disabled={savingProduct}
+                      className="rounded-full bg-[#6E3C47] px-10 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white disabled:opacity-60 shadow-xl hover:scale-105 transition-all"
+                    >
+                      {savingProduct ? "Reservando..." : "Adicionar à Maison"}
+                    </button>
+                  </div>
+
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#8B6670] ml-4">Nome do Produto</label>
+                      <input value={productForm.name} onChange={(e) => handleFormChange("name", e.target.value)} className="h-14 w-full rounded-2xl border border-[#E9D7DB] bg-[#FFF9F7] px-6 outline-none text-sm focus:ring-2 focus:ring-[#6E3C47]/10 transition-all" placeholder="Ex: Macacão Fitness Premium Satin" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#8B6670] ml-4">Coleção</label>
+                      <select value={productForm.collection} onChange={(e) => handleFormChange("collection", e.target.value)} className="h-14 w-full rounded-2xl border border-[#E9D7DB] bg-[#FFF9F7] px-6 outline-none text-sm appearance-none">
+                        <option>Moda Fitness</option>
+                        <option>Linha Básica</option>
+                        <option>Plus Size</option>
+                        <option>Casual Chic</option>
+                        <option>Exclusivo Boutique</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#8B6670] ml-4">Categoria</label>
+                      <select value={productForm.category} onChange={(e) => handleFormChange("category", e.target.value)} className="h-14 w-full rounded-2xl border border-[#E9D7DB] bg-[#FFF9F7] px-6 outline-none text-sm appearance-none">
+                        <option>Tops</option>
+                        <option>Leggings</option>
+                        <option>Shorts</option>
+                        <option>Macacões</option>
+                        <option>Conjuntos</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#8B6670] ml-4">Preço (R$)</label>
+                      <input className="h-14 w-full rounded-2xl border border-[#E9D7DB] bg-[#FFF9F7] px-6 outline-none text-sm" value={productForm.price} onChange={(e) => handleFormChange("price", e.target.value)} placeholder="129,90" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#8B6670] ml-4">Estoque</label>
+                      <input className="h-14 w-full rounded-2xl border border-[#E9D7DB] bg-[#FFF9F7] px-6 outline-none text-sm" value={productForm.stock} onChange={(e) => handleFormChange("stock", e.target.value)} placeholder="Ex: 15" />
+                    </div>
+
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#8B6670] ml-4">Editorial de Imagem</label>
+                      <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+                        <input className="h-14 w-full rounded-2xl border border-[#E9D7DB] bg-[#FFF9F7] px-6 outline-none text-sm" value={productForm.image} onChange={(e) => handleFormChange("image", e.target.value)} placeholder="URL da foto principal" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const url = await uploadImage(file);
+                            if (url) handleFormChange("image", url);
+                          }}
+                          className="hidden"
+                          id="file-upload"
+                        />
+                        <label htmlFor="file-upload" className="flex items-center justify-center rounded-2xl border-2 border-dashed border-[#E7C5CC] px-8 h-14 text-[10px] font-bold uppercase tracking-widest text-[#6E3C47] cursor-pointer hover:bg-secondary/30 transition-all">
+                          Upload
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4 pt-4">
+                    <label className="flex items-center gap-3 rounded-2xl border border-[#E7C5CC] px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-[#6E3C47] cursor-pointer">
+                      <input type="checkbox" checked={productForm.featured} onChange={(e) => handleFormChange("featured", e.target.checked)} className="accent-[#6E3C47]" /> Destaque Home
+                    </label>
+                    <label className="flex items-center gap-3 rounded-2xl border border-[#E7C5CC] px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-[#6E3C47] cursor-pointer">
+                      <input type="checkbox" checked={productForm.published} onChange={(e) => handleFormChange("published", e.target.checked)} className="accent-[#6E3C47]" /> Publicado
+                    </label>
+                    <label className="flex items-center gap-3 rounded-2xl border border-[#E7C5CC] px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-[#6E3C47] cursor-pointer">
+                      <input type="checkbox" checked={productForm.bestseller} onChange={(e) => handleFormChange("bestseller", e.target.checked)} className="accent-[#6E3C47]" /> Best Seller
+                    </label>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                  {[
-                    { name: 'Tops', img: 'https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=600&q=80' },
-                    { name: 'Leggings', img: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=600&q=80' },
-                    { name: 'Shorts', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80' },
-                    { name: 'Macacões', img: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=600&q=80' },
-                  ].map((cat) => (
-                    <div 
-                      key={cat.name} 
-                      onClick={() => {
-                        setSelectedCategory(cat.name);
-                        scrollTo('vitrine');
-                      }}
-                      className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden cursor-pointer shadow-md hover:shadow-2xl transition-all duration-700"
-                    >
-                      <Image src={cat.img} alt={cat.name} fill className="object-cover transition-transform duration-[1.5s] group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors" />
-                      <div className="absolute bottom-6 left-0 right-0 px-4">
-                        <h3 className="text-xl md:text-2xl font-serif font-bold text-white uppercase tracking-tight text-center">{cat.name}</h3>
+                <div className="space-y-8">
+                  <div className="rounded-[2.5rem] border border-[#E9D7DB] bg-white p-10 shadow-sm space-y-6">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#C7A17A]">Preview Vitrine</p>
+                    <div className="overflow-hidden rounded-[2rem] bg-[#F3EFF0] aspect-[3/4] relative">
+                      {productForm.image ? (
+                        <img src={productForm.image} alt="Preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs font-bold uppercase tracking-widest text-[#8B6670]/40">Aguardando editorial</div>
+                      )}
+                    </div>
+                    <div className="text-center space-y-3">
+                      <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-[#8B6670]">{productForm.collection}</p>
+                      <h3 className="text-2xl font-serif font-bold text-[#2A1F22]">{productForm.name || "Nome da Peça"}</h3>
+                      <p className="text-3xl font-light text-[#6E3C47]">{formatPrice(productForm.price)}</p>
+                    </div>
+                  </div>
+                  
+                  {saveMessage && (
+                    <div className="p-6 rounded-2xl bg-[#6E3C47]/5 border border-[#6E3C47]/10 text-center">
+                      <p className="text-sm font-bold text-[#6E3C47] italic">{saveMessage}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-10 border-t border-[#E9D7DB]">
+                <div className="mb-12">
+                  <h3 className="text-3xl font-serif font-bold text-[#2A1F22]">Catálogo Atual</h3>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  {/* PASSO 3 — USAR PRODUTOS REAIS NO ADMIN */}
+                  {storeProducts.map((product) => (
+                    <div key={`admin-${product.id}`} className="rounded-[2rem] border border-[#E9D7DB] bg-white p-6 shadow-sm flex gap-6 hover:shadow-lg transition-all group">
+                      <div className="h-32 w-24 rounded-2xl overflow-hidden shrink-0 shadow-inner bg-[#F3EFF0]">
+                        <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                      </div>
+                      <div className="min-w-0 flex-1 flex flex-col justify-between">
+                        <div className="space-y-1">
+                          <h3 className="line-clamp-2 text-base font-bold text-[#2A1F22] uppercase tracking-tight">{product.name}</h3>
+                          <p className="text-[10px] font-bold text-[#C7A17A] uppercase tracking-widest">{product.collection}</p>
+                          <p className="text-lg font-light text-[#6E3C47]">{formatPrice(product.price)}</p>
+                        </div>
+                        <div className="flex gap-2">
+                           <button className="rounded-full border border-[#E7C5CC] px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#6E3C47] hover:bg-secondary transition-all">Editar</button>
+                           <span className="text-[8px] font-mono text-muted-foreground self-center ml-auto">ID: {product.id.slice(-6).toUpperCase()}</span>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </section>
-
-            <section id="mais-vendidos" className="py-20 md:py-32 container mx-auto px-6 text-center">
-              <div className="space-y-4 mb-16">
-                <span className="text-[13px] font-bold uppercase tracking-[0.3em] text-primary/60">Essencial Toda Bela</span>
-                <h2 className="text-4xl md:text-6xl font-serif font-bold text-primary">Linha Básica</h2>
-              </div>
-
-              <div className="grid gap-x-4 gap-y-12 grid-cols-2 lg:grid-cols-5">
-                {basicProducts.map((product) => (
-                  <ProductCard key={product.id} {...product} onAddToCart={() => addToCart(product)} onBuyNow={() => addToCart(product, true)} />
-                ))}
-              </div>
-            </section>
-          </>
-        )}
-
-        <Newsletter />
-      </main>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <footer className="bg-black text-white pt-24 pb-12">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-24 space-y-8">
-            <h2 className="text-6xl md:text-8xl font-serif font-bold tracking-tighter">Toda Bela</h2>
-            <p className="max-w-4xl mx-auto text-lg md:text-xl text-white/70 font-light leading-relaxed italic">
-              Toda Bela é mais que uma marca — é um movimento de evolução. Inspiramos presença, propósito e estilo em cada detalhe.
+        <div className="mx-auto max-w-[1440px] px-8 xl:px-14">
+          <div className="mb-24 text-center space-y-10">
+            <h2 className="text-7xl md:text-9xl font-serif font-bold tracking-tighter">Toda Bela</h2>
+            <p className="mx-auto max-w-4xl text-lg md:text-xl text-white/70 font-light leading-relaxed italic">
+              Toda Bela é mais que uma marca — é um movimento de evolução. Inspiramos presença, propósito e estilo em cada detalhe. 
+              Para quem vive com intenção e constrói sua própria jornada de excelência.
             </p>
           </div>
-          <div className="pt-12 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/30">
-              © 2026 Toda Bela • Todos os direitos reservados.
-            </p>
+
+          <div className="grid gap-16 md:grid-cols-2 lg:grid-cols-4 border-t border-white/10 pt-16">
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold uppercase tracking-widest text-[#C7A17A]">Atendimento</h3>
+              <div className="space-y-3 text-white/60 font-light italic">
+                <p>Seg a Qui 07h-17h | Sex 07h-16h</p>
+                <p className="text-white font-bold not-italic">WhatsApp: (11) 99999-9999</p>
+                <p>contato@todobela.com.br</p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold uppercase tracking-widest text-[#C7A17A]">Suporte</h3>
+              <div className="space-y-3 text-white/60 font-light flex flex-col items-start">
+                <button className="hover:text-white transition-colors">Acompanhar Pedido</button>
+                <button className="hover:text-white transition-colors">Trocas e Devoluções</button>
+                <button className="hover:text-white transition-colors">Política de Privacidade</button>
+              </div>
+            </div>
+            <div className="space-y-6 lg:col-span-2 bg-white/5 p-10 rounded-[3rem] border border-white/5">
+              <h3 className="text-xl font-bold uppercase tracking-widest text-[#C7A17A]">Newsletter</h3>
+              <p className="text-white/60 font-light italic mb-6">Receba as novidades da boutique em seu melhor e-mail.</p>
+              <div className="flex gap-4">
+                <input placeholder="seu@email.com" className="flex-1 bg-white/10 border-none rounded-full px-6 text-sm outline-none focus:ring-1 focus:ring-[#C7A17A]" />
+                <button className="bg-white text-black px-8 py-4 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-[#C7A17A] transition-all">Assinar</button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-24 pt-12 border-t border-white/5 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">© 2026 Toda Bela • Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
-
-      {/* Carrinho Lateral */}
-      {cartOpen && (
-        <div className="fixed inset-0 z-[100] bg-primary/20 backdrop-blur-sm">
-          <div className="ml-auto h-full w-full max-w-full sm:max-w-md bg-background shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
-            <div className="flex items-center justify-between p-8 border-b border-accent/10">
-              <h3 className="text-3xl font-serif font-bold text-primary">Carrinho</h3>
-              <Button variant="ghost" size="icon" className="rounded-full h-12 w-12" onClick={() => setCartOpen(false)}>
-                <X className="h-6 w-6 text-primary" />
-              </Button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar">
-              {!cartItems.length ? (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
-                  <ShoppingBagIcon className="h-16 w-16 text-accent/20" />
-                  <p className="text-sm text-primary/40 italic font-light">Seu carrinho aguarda por peças incríveis.</p>
-                </div>
-              ) : (
-                cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-6 p-6 rounded-[2rem] bg-white shadow-sm border border-accent/5 hover:shadow-lg transition-all">
-                    <div className="h-28 w-20 rounded-2xl overflow-hidden shrink-0 shadow-sm">
-                      <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between py-1">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-serif font-bold text-primary text-sm leading-tight line-clamp-2">{item.name}</h4>
-                        <button onClick={() => removeItem(item.id)} className="text-accent/40 hover:text-red-500 transition-colors shrink-0 ml-2"><Trash2 className="h-4 w-4" /></button>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="font-bold text-primary text-sm">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.price)}</p>
-                        <div className="flex items-center gap-3 bg-secondary/40 rounded-full px-4 py-1.5 shadow-inner">
-                          <button onClick={() => updateQuantity(item.id, -1)} className="hover:scale-125 transition-transform"><Minus className="h-2.5 w-2.5 text-primary" /></button>
-                          <span className="text-[11px] font-bold w-4 text-center">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, 1)} className="hover:scale-125 transition-transform"><Plus className="h-2.5 w-2.5 text-primary" /></button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="p-8 bg-white border-t border-accent/10 space-y-8">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-accent uppercase tracking-widest">Subtotal</span>
-                <span className="text-3xl font-serif font-bold text-primary">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cartSubtotal)}
-                </span>
-              </div>
-              <Button onClick={handleCheckout} disabled={!cartItems.length} className="w-full h-16 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-[0.3em] shadow-xl hover:bg-accent transition-all duration-500">
-                Finalizar Compra
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <LoginDialog 
-        open={isLoginOpen} 
-        onOpenChange={setIsLoginOpen} 
-        onAdminLogin={() => setShowAdmin(true)}
-      />
-      <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
-      <CheckoutDialog 
-        open={isCheckoutOpen} 
-        onOpenChange={setIsCheckoutOpen}
-        cartItems={cartItems}
-        total={cartSubtotal}
-        onSuccess={onOrderSuccess}
-      />
     </div>
   );
 }
