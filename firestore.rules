@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v13.0
+     * TODA BELA - REGRAS DE SEGURANÇA v14.0
      * Sistema de Pedidos e Gestão Administrativa
      */
 
@@ -45,6 +45,12 @@ service cloud.firestore {
         resource.data.customer.email.lower() == request.auth.token.email.lower()
       ));
       
+      // Listagem (queries): Requer filtro por userId ou Email para clientes, ou ser Admin
+      allow list: if isAdmin() || (isSignedIn() && (
+        request.query.filters.userId == request.auth.uid ||
+        request.query.filters['customer.email'] == request.auth.token.email.lower()
+      ));
+
       // Apenas Admin pode atualizar status ou deletar
       allow update, delete: if isAdmin();
     }
@@ -60,9 +66,9 @@ service cloud.firestore {
       allow read, delete: if isAdmin();
     }
     
-    // Papéis Admin: Permite que o usuário verifique sua própria permissão
-    match /roles_admin/{adminUid} {
-      allow get: if isSignedIn() && request.auth.uid == adminUid;
+    // Papéis Admin: Permite que o usuário verifique sua própria permissão de forma segura
+    match /roles_admin/{uid} {
+      allow get: if isSignedIn() && request.auth.uid == uid;
       allow list: if isAdmin();
     }
     

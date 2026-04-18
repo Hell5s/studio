@@ -59,7 +59,7 @@ export function OrderManagement() {
   const isActuallyAdmin = !!adminRole;
 
   const ordersQuery = useMemoFirebase(() => {
-    // SÓ DISPARA A CONSULTA SE FOR ADMIN CONFIRMADO E NÃO ESTIVER CARREGANDO O STATUS
+    // PROTEÇÃO CRÍTICA: Só dispara a consulta administrativa se o usuário estiver confirmado como Admin
     if (!db || !isActuallyAdmin || isAdminLoading) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
   }, [db, isActuallyAdmin, isAdminLoading]);

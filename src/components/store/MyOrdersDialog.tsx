@@ -37,6 +37,7 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user?.uid || !open) return null;
     
+    // IMPORTANTE: O filtro por userId garante que as regras de segurança permitam a listagem
     return query(
       collection(db, 'orders'), 
       where('userId', '==', user.uid), 
