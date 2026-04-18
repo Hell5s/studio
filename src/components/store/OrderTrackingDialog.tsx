@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useFirestore } from '@/firebase';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 interface OrderTrackingDialogProps {
   open: boolean;
@@ -31,6 +33,7 @@ interface OrderTrackingDialogProps {
 }
 
 export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogProps) {
+  const db = useFirestore();
   const [orderId, setOrderId] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,27 +48,64 @@ export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogP
     setError(null);
     setTrackingData(null);
 
-    // Simulação de busca de pedido
-    setTimeout(() => {
-      if (orderId.toLowerCase().includes('erro')) {
-        setError("Pedido não encontrado. Verifique os dados e tente novamente.");
+    try {
+      const cleanId = orderId.trim().replace('#', '');
+      const cleanEmail = email.trim().toLowerCase();
+
+      // Primeiro tentamos por ID exato (mais eficiente)
+      const docRef = doc(db, 'orders', cleanId);
+      const docSnap = await getDoc(docRef);
+
+      let orderData = null;
+      let finalId = cleanId;
+
+      if (docSnap.exists()) {
+        orderData = docSnap.data();
       } else {
+        // Se não achar por ID longo, buscamos todos os pedidos do email e filtramos pelo sufixo
+        const q = query(collection(db, 'orders'), where('customerEmail', '==', cleanEmail));
+        const querySnapshot = await getDocs(q);
+        
+        const matchingOrder = querySnapshot.docs.find(d => 
+          d.id.toLowerCase().endsWith(cleanId.toLowerCase())
+        );
+
+        if (matchingOrder) {
+          orderData = matchingOrder.data();
+          finalId = matchingOrder.id;
+        }
+      }
+
+      if (orderData) {
+        if (orderData.customerEmail?.toLowerCase() !== cleanEmail) {
+          setError("E-mail não corresponde ao pedido informado.");
+          setLoading(false);
+          return;
+        }
+
+        const status = orderData.status || "Pendente";
+        
         setTrackingData({
-          id: orderId.toUpperCase().startsWith('#') ? orderId.toUpperCase() : `#${orderId}`,
-          status: "Em Trânsito",
-          lastUpdate: "Hoje, às 14:20",
-          estimatedDelivery: "25 de Outubro",
+          id: `#${finalId.slice(-6).toUpperCase()}`,
+          status: status,
+          lastUpdate: orderData.updatedAt?.toDate ? orderData.updatedAt.toDate().toLocaleString('pt-BR') : "Recentemente",
+          estimatedDelivery: status === 'Entregue' ? "Entregue" : "Em processamento",
           steps: [
-            { title: "Pedido Realizado", date: "18 Out, 09:00", completed: true, icon: <Clock className="h-4 w-4" /> },
-            { title: "Pagamento Confirmado", date: "18 Out, 09:15", completed: true, icon: <CheckCircle2 className="h-4 w-4" /> },
-            { title: "Em Separação", date: "19 Out, 11:30", completed: true, icon: <Package className="h-4 w-4" /> },
-            { title: "Enviado à Transportadora", date: "20 Out, 14:20", current: true, icon: <Truck className="h-4 w-4" /> },
-            { title: "Saiu para Entrega", date: "Previsão: 24 Out", icon: <MapPin className="h-4 w-4" /> },
+            { title: "Pedido Realizado", date: orderData.createdAt?.toDate ? orderData.createdAt.toDate().toLocaleDateString('pt-BR') : '-', completed: true, icon: <Clock className="h-4 w-4" /> },
+            { title: "Pagamento Confirmado", date: orderData.updatedAt?.toDate ? orderData.updatedAt.toDate().toLocaleDateString('pt-BR') : '-', completed: status !== 'Pendente', icon: <CheckCircle2 className="h-4 w-4" /> },
+            { title: "Em Separação", date: 'Aguardando', completed: ['Enviado', 'Entregue'].includes(status), icon: <Package className="h-4 w-4" /> },
+            { title: "Enviado à Transportadora", date: 'Em breve', current: status === 'Enviado', completed: status === 'Entregue', icon: <Truck className="h-4 w-4" /> },
+            { title: "Saiu para Entrega", date: 'A definir', icon: <MapPin className="h-4 w-4" /> },
           ]
         });
+      } else {
+        setError("Pedido não localizado. Verifique o ID e o e-mail.");
       }
+    } catch (err) {
+      setError("Falha na conexão. Tente novamente mais tarde.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -91,11 +131,11 @@ export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogP
               <div className="space-y-4">
                 <div className="grid gap-2">
                   <Label htmlFor="orderId" className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-4">
-                    Número do Pedido
+                    Número do Pedido (ID)
                   </Label>
                   <Input 
                     id="orderId" 
-                    placeholder="Ex: #12345" 
+                    placeholder="Ex: #ABC123" 
                     className="rounded-full h-14 bg-secondary/30 border-none px-6 focus:ring-2 focus:ring-primary/10 transition-all text-primary"
                     value={orderId}
                     onChange={e => setOrderId(e.target.value)}
@@ -162,7 +202,7 @@ export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogP
                   <div key={i} className="flex gap-8 relative group">
                     <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 z-10 transition-all duration-500 ${
                       step.completed ? "bg-primary text-primary-foreground shadow-lg" : 
-                      step.current ? "bg-accent text-accent-foreground shadow-lg animate-float" : 
+                      step.current ? "bg-accent text-accent-foreground shadow-lg scale-110" : 
                       "bg-white border-2 border-secondary text-primary/20"
                     }`}>
                       {step.icon}
@@ -194,6 +234,7 @@ export function OrderTrackingDialog({ open, onOpenChange }: OrderTrackingDialogP
                 <Button 
                   variant="outline"
                   className="rounded-full h-14 border-primary/10 text-primary bg-white hover:bg-secondary/50 font-bold uppercase tracking-widest text-[9px] transition-all"
+                  onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                 >
                   Precisa de Ajuda? Fale Conosco
                 </Button>

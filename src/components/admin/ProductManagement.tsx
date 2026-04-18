@@ -38,11 +38,15 @@ export function ProductManagement() {
 
   const { data: products, isLoading } = useCollection(productsQuery);
 
-  const filteredProducts = products?.filter(p => 
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.collection?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products?.filter(p => {
+    const q = searchTerm.toLowerCase();
+    return (
+      p.id?.toLowerCase().includes(q) ||
+      p.name?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q) ||
+      p.collection?.toLowerCase().includes(q)
+    );
+  });
 
   const handleDelete = (productId: string, productName: string) => {
     if (confirm(`Deseja realmente excluir "${productName}" do catálogo?`)) {
@@ -61,7 +65,7 @@ export function ProductManagement() {
         <div className="relative w-full md:w-96 group">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-accent/40 group-focus-within:text-primary transition-colors" />
           <Input 
-            placeholder="Pesquisar por nome, coleção ou categoria..." 
+            placeholder="Pesquisar por nome, ID ou coleção..." 
             className="pl-14 h-16 rounded-full border-none bg-white shadow-sm focus:ring-2 focus:ring-primary/10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -110,6 +114,7 @@ export function ProductManagement() {
                           <Badge variant="ghost" className="text-[8px] font-black uppercase p-0 h-auto leading-none text-accent">
                              {product.category || 'Geral'}
                           </Badge>
+                          <span className="text-[8px] text-muted-foreground font-mono">ID: {product.id.slice(-6).toUpperCase()}</span>
                           {product.sourceUrl && (
                             <button 
                               onClick={() => window.open(product.sourceUrl, '_blank')}

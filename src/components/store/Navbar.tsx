@@ -15,11 +15,13 @@ interface NavbarProps {
   cartCount: number;
   isAdmin?: boolean;
   onOpenAdmin?: () => void;
+  onSearch?: (query: string) => void;
 }
 
-export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmin, onOpenAdmin }: NavbarProps) {
+export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmin, onOpenAdmin, onSearch }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -27,9 +29,14 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch?.(searchValue);
+  };
+
   const links = [
     { name: 'Novidades', href: '#vitrine' },
-    { name: 'Mais vendidos', href: '#vitrine' },
+    { name: 'Mais vendidos', href: '#mais-vendidos' },
     { name: 'Coleções', href: '#colecoes' },
     { name: 'Rastrear Pedido', onClick: onOpenTrack },
   ];
@@ -85,15 +92,20 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
 
           {/* Ações Lado Direito (Desktop) */}
           <div className="hidden lg:flex items-center justify-end gap-6 w-1/3">
-            <div className="flex items-center overflow-hidden rounded-full border border-primary/10 bg-secondary/20 h-11 w-48">
+            <form onSubmit={handleSearchSubmit} className="flex items-center overflow-hidden rounded-full border border-primary/10 bg-secondary/20 h-11 w-48">
               <input
-                placeholder="Busca..."
+                placeholder="Busca por nome ou ID..."
                 className="flex-1 bg-transparent px-5 text-[11px] outline-none text-primary"
+                value={searchValue}
+                onChange={(e) => {
+                  setSearchValue(e.target.value);
+                  onSearch?.(e.target.value);
+                }}
               />
-              <button className="flex h-11 w-11 items-center justify-center border-l border-primary/10 text-primary hover:bg-white transition-colors">
+              <button type="submit" className="flex h-11 w-11 items-center justify-center border-l border-primary/10 text-primary hover:bg-white transition-colors">
                 <Search className="h-3.5 w-3.5" />
               </button>
-            </div>
+            </form>
 
             <div className="flex items-center gap-2">
               <Button 
