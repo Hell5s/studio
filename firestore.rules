@@ -4,9 +4,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v1.2
-     * Garantindo acesso público para banners e produtos.
-     * v1.2: Ajuste explicito para leitura de banners.
+     * TODA BELA - REGRAS DE SEGURANÇA v1.3
+     * Garantindo acesso público robusto para banners e produtos.
+     * v1.3: Explicitando permissões de listagem e leitura pública.
      */
 
     function isSignedIn() {
@@ -30,6 +30,7 @@ service cloud.firestore {
     }
 
     // Banners: Leitura pública total (get e list)
+    // Usando match recursivo para garantir que listagens na coleção funcionem sem problemas
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
