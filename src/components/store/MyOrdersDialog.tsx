@@ -33,8 +33,10 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
   const db = useFirestore();
   const { user } = useUser();
 
+  // Consulta memoizada e protegida: só dispara se o usuário estiver logado e o modal aberto
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user?.uid || !open) return null;
+    
     return query(
       collection(db, 'orders'), 
       where('userId', '==', user.uid), 
@@ -46,7 +48,7 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
   const { data: orders, isLoading } = useCollection(ordersQuery);
 
   const formatPrice = (val: number) => 
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
   const formatDate = (date: any) => {
     if (!date) return 'Recentemente';
