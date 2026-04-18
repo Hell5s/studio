@@ -167,7 +167,7 @@ export default function TodaBelaStorefront() {
             <div className="text-center mb-12 md:mb-20 space-y-4">
               <div className="flex items-center justify-center gap-3">
                  <div className="h-px w-6 bg-accent/40" />
-                 <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Nossa Seleção</span>
+                 <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Coleções</span>
                  <div className="h-px w-6 bg-accent/40" />
               </div>
               <h2 className="text-4xl md:text-6xl font-headline font-bold text-primary">Universo Toda Bela</h2>
