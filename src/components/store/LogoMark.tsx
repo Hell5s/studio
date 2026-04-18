@@ -44,7 +44,7 @@ export function LogoMark({ className }: LogoMarkProps) {
         <div className="flex items-center gap-2">
           <div className="h-px w-4 bg-accent/40" />
           <p className="text-[9px] uppercase tracking-[0.45em] text-accent font-bold">
-            Curadoria de Luxo
+            Moda Feminina
           </p>
         </div>
       </div>

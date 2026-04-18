@@ -151,7 +151,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         {[
           { icon: <Truck className="h-5 w-5" />, title: "Entrega Expressa Boutique", desc: "Frete VIP para todo o país" },
           { icon: <ShieldCheck className="h-5 w-5" />, title: "Compra Protegida", desc: "Segurança absoluta em seus dados" },
-          { icon: <Sparkles className="h-5 w-5" />, title: "Curadoria Toda Bela", desc: "Peça selecionada por especialistas" }
+          { icon: <Sparkles className="h-5 w-5" />, title: "Selo Toda Bela", desc: "Peça selecionada por especialistas" }
         ].map((item, idx) => (
           <div key={idx} className="flex items-center gap-6 p-6 rounded-3xl bg-secondary/30 border border-primary/5">
             <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-accent shadow-sm">

@@ -208,7 +208,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               <Package className="h-8 w-8 text-accent" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Curadoria Especializada</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Gestão de Produtos</p>
               <h3 className="text-3xl font-headline font-bold">Novo Item da Maison</h3>
             </div>
           </div>

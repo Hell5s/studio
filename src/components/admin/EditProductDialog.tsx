@@ -214,7 +214,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Ajuste de Curadoria</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Gestão de Produto</p>
               <h3 className="text-2xl font-headline font-bold">{formData.name || 'Editando Peça'}</h3>
             </div>
           </div>

@@ -214,14 +214,14 @@ export function AdminShopeeImport() {
                   disabled={loading}
                 />
               </div>
-              <Button 
+              <button 
                 onClick={handleSearch} 
                 disabled={loading || !url}
                 className="rounded-full h-16 px-10 font-bold uppercase tracking-widest text-[10px] bg-primary text-primary-foreground hover:scale-105 transition-all shadow-xl shadow-primary/20"
               >
                 {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
                 Importar Produto
-              </Button>
+              </button>
             </div>
           </div>
 
@@ -316,21 +316,20 @@ export function AdminShopeeImport() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-6 pt-10">
-                <Button 
+                <button 
                   className="flex-1 rounded-full h-16 font-bold bg-primary text-primary-foreground uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
                   onClick={() => saveToFirestore(true)}
                   disabled={saving}
                 >
                   {saving ? <Loader2 className="h-6 w-6 animate-spin" /> : "Publicar na Vitrine"}
-                </Button>
-                <Button 
-                  variant="outline"
+                </button>
+                <button 
                   className="flex-1 rounded-full h-16 font-bold border-primary/10 text-primary hover:bg-secondary/50 uppercase tracking-widest text-[10px] transition-all"
                   onClick={() => saveToFirestore(false)}
                   disabled={saving}
                 >
                   Salvar como Rascunho
-                </Button>
+                </button>
               </div>
             </Card>
           </div>
@@ -343,7 +342,7 @@ export function AdminShopeeImport() {
             <Package className="h-12 w-12" />
           </div>
           <div className="space-y-2">
-            <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Aguardando Curadoria</h5>
+            <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Aguardando Importação</h5>
             <p className="text-xs text-muted-foreground max-w-xs font-light italic">Insira um link da Shopee acima para iniciar a automação do seu estoque.</p>
           </div>
         </div>

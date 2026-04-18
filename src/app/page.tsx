@@ -167,7 +167,7 @@ export default function TodaBelaStorefront() {
             <div className="text-center mb-20 space-y-4">
               <div className="flex items-center justify-center gap-3">
                  <div className="h-px w-6 bg-accent/40" />
-                 <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Nossa Curadoria</span>
+                 <span className="text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Nossa Seleção</span>
                  <div className="h-px w-6 bg-accent/40" />
               </div>
               <h2 className="text-4xl md:text-6xl font-headline font-bold text-primary">Universo Toda Bela</h2>
@@ -222,7 +222,7 @@ export default function TodaBelaStorefront() {
                   </p>
                 </div>
                 <button className="rounded-full border-2 border-primary px-12 py-6 text-sm font-bold uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all shadow-xl">
-                  Conheça a Curadoria
+                  Conheça a Coleção
                 </button>
               </div>
             </div>
@@ -315,7 +315,7 @@ export default function TodaBelaStorefront() {
           </div>
 
           <div className="mt-24 pt-8 border-t border-white/10 text-center space-y-4">
-            <p className="text-[9px] uppercase tracking-[0.4em] text-white/30">© 2024 Toda Bela • Curadoria de Luxo Acessível • Todos os direitos reservados</p>
+            <p className="text-[9px] uppercase tracking-[0.4em] text-white/30">© 2024 Toda Bela • Moda de Luxo Acessível • Todos os direitos reservados</p>
             <p className="text-[8px] uppercase tracking-[0.2em] text-white/20">CNPJ: 00.000.000/0001-00 • Rua da Moda, 1234 - São Paulo/SP</p>
           </div>
         </div>

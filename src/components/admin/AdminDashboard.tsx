@@ -208,7 +208,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
                 <Settings className="h-10 w-10 text-accent/40 animate-spin-slow" />
               </div>
               <h5 className="font-headline font-bold text-primary uppercase tracking-[0.3em]">Módulo em Ajuste</h5>
-              <p className="text-xs text-muted-foreground max-w-xs font-light italic">Refinando as ferramentas de curadoria para sua boutique exclusiva.</p>
+              <p className="text-xs text-muted-foreground max-w-xs font-light italic">Refinando as ferramentas de gestão para sua boutique exclusiva.</p>
             </div>
           )}
         </div>
@@ -218,5 +218,3 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     </div>
   );
 }
-
-    
