@@ -90,16 +90,17 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         </div>
       </div>
 
-      {/* Indicadores do Slider */}
-      <div className="absolute bottom-10 right-10 z-30 flex gap-3">
+      {/* Indicadores do Slider Centralizados */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-4">
         {images.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrentImage(i)}
             className={cn(
-              "h-1.5 transition-all duration-500 rounded-full",
-              currentImage === i ? "w-12 bg-accent" : "w-3 bg-white/30"
+              "h-2 w-2 transition-all duration-500 rounded-full",
+              currentImage === i ? "bg-accent scale-125 shadow-[0_0_10px_rgba(199,161,122,0.4)]" : "bg-white/40"
             )}
+            aria-label={`Ir para slide ${i + 1}`}
           />
         ))}
       </div>
