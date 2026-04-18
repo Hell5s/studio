@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "Product": {
@@ -47,6 +46,8 @@
       "description": "Registros de pedidos feitos pelos clientes.",
       "properties": {
         "id": { "type": "string" },
+        "orderNumber": { "type": "string" },
+        "userId": { "type": "string" },
         "customerName": { "type": "string" },
         "customerEmail": { "type": "string", "format": "email" },
         "customerPhone": { "type": "string" },

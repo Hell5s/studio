@@ -3,8 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v8.7
-     * Correção definitiva para listagem de pedidos por e-mail e rastreio.
+     * TODA BELA - REGRAS DE SEGURANÇA v8.8
+     * Suporte para listagem por UID e E-mail.
      */
 
     function isSignedIn() {
@@ -36,8 +36,11 @@ service cloud.firestore {
       allow create: if true;
       // Permite buscar por ID (rastreio público seguro)
       allow get: if true; 
-      // Permite listar apenas se for admin ou se a consulta estiver filtrada pelo e-mail do dono
-      allow list: if isAdmin() || (isSignedIn() && request.auth.token.email != null && resource.data.customerEmail == request.auth.token.email);
+      // Permite listar se for admin ou se a consulta estiver filtrada pelo UID ou E-mail do dono
+      allow list: if isAdmin() || (isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        (request.auth.token.email != null && resource.data.customerEmail == request.auth.token.email)
+      ));
       allow update, delete: if isAdmin();
     }
 
