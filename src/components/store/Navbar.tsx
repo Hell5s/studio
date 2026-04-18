@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Menu, X, Heart } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, X, Heart, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LogoMark } from './LogoMark';
@@ -13,9 +13,11 @@ interface NavbarProps {
   onOpenTrack: () => void;
   onOpenCart: () => void;
   cartCount: number;
+  isAdmin?: boolean;
+  onOpenAdmin?: () => void;
 }
 
-export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: NavbarProps) {
+export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmin, onOpenAdmin }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -94,8 +96,13 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
             </div>
 
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 text-primary/70 hover:text-primary" onClick={onOpenLogin}>
-                <User className="h-4.5 w-4.5" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn("rounded-full h-10 w-10 text-primary/70 hover:text-primary", isAdmin && "bg-accent/10 text-accent")} 
+                onClick={isAdmin ? onOpenAdmin : onOpenLogin}
+              >
+                {isAdmin ? <ShieldCheck className="h-4.5 w-4.5" /> : <User className="h-4.5 w-4.5" />}
               </Button>
               <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 text-primary/70 hover:text-primary">
                 <Heart className="h-4.5 w-4.5" />
@@ -172,7 +179,9 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
               </nav>
 
               <div className="mt-auto pb-10 space-y-4">
-                 <button onClick={() => { onOpenLogin(); setMobileMenuOpen(false); }} className="w-full py-5 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-widest">Minha Conta</button>
+                 <button onClick={() => { isAdmin ? onOpenAdmin?.() : onOpenLogin(); setMobileMenuOpen(false); }} className="w-full py-5 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-widest">
+                   {isAdmin ? "Painel Admin" : "Minha Conta"}
+                 </button>
                  <button onClick={() => { onOpenTrack(); setMobileMenuOpen(false); }} className="w-full py-5 rounded-full border border-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest">Rastrear Pedido</button>
               </div>
             </div>

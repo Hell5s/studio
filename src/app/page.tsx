@@ -25,10 +25,12 @@ import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
 import { LogoMark } from '@/components/store/LogoMark';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
+import { AdminDashboard } from '@/components/admin/AdminDashboard';
+import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Image from 'next/image';
@@ -37,8 +39,11 @@ const WHATSAPP_NUMBER = "5511999999999";
 
 export default function Home() {
   const db = useFirestore();
+  const { user } = useUser();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Novidades");
   
   const [cartOpen, setCartOpen] = useState(false);
@@ -50,11 +55,26 @@ export default function Home() {
     content: ''
   });
 
+  // Verificação de Admin
+  const adminDocRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'roles_admin', user.uid);
+  }, [db, user]);
+  const { data: adminRole } = useDoc(adminDocRef);
+  const isAdmin = !!adminRole;
+
+  // Consultas de dados
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(12));
+    return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(20));
   }, [db]);
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
+
+  const categoriesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'categories');
+  }, [db]);
+  const { data: categories } = useCollection(categoriesQuery);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -114,6 +134,26 @@ export default function Home() {
     el?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  if (showAdmin && isAdmin) {
+    return (
+      <div className="h-screen w-full">
+        <AdminDashboard 
+          productsCount={products?.length || 0} 
+          categoriesCount={categories?.length || 0}
+          onOpenAI={() => setIsAIGeneratorOpen(true)}
+        />
+        <AIProductGenerator open={isAIGeneratorOpen} onOpenChange={setIsAIGeneratorOpen} />
+        {/* Botão flutuante para voltar à loja */}
+        <Button 
+          onClick={() => setShowAdmin(false)}
+          className="fixed bottom-10 right-10 rounded-full h-16 px-10 bg-black text-white font-bold uppercase tracking-widest shadow-2xl z-[100] hover:scale-105 transition-all"
+        >
+          Voltar para a Loja
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-white overflow-x-hidden">
       <Navbar 
@@ -121,6 +161,8 @@ export default function Home() {
         onOpenTrack={() => setIsTrackOpen(true)} 
         onOpenCart={() => setCartOpen(true)}
         cartCount={cartCount}
+        isAdmin={isAdmin}
+        onOpenAdmin={() => setShowAdmin(true)}
       />
 
       <main className="pt-[140px] md:pt-[180px]">
@@ -157,12 +199,11 @@ export default function Home() {
               <p className="text-accent text-[11px] font-bold uppercase tracking-[0.3em]">Escolha o estilo que combina com você</p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-8">
               {[
                 { name: 'Vestidos', img: 'https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=600&q=80' },
                 { name: 'Conjuntos', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80' },
                 { name: 'Moda Festa', img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=600&q=80' },
-                { name: 'Casual Chic', img: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80' },
                 { name: 'Moda Praia', img: 'https://images.unsplash.com/photo-1502301197179-65228ab57f78?auto=format&fit=crop&w=600&q=80' },
                 { name: 'Plus Size', img: 'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=600&q=80' },
                 { name: 'Moda Fitness', img: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=600&q=80' },
@@ -339,7 +380,11 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
+      <LoginDialog 
+        open={isLoginOpen} 
+        onOpenChange={setIsLoginOpen} 
+        onAdminLogin={() => setShowAdmin(true)}
+      />
       <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
     </div>
   );
