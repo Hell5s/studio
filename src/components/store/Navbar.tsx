@@ -94,8 +94,8 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
           <div className="hidden lg:flex items-center justify-end gap-6 w-1/3">
             <form onSubmit={handleSearchSubmit} className="flex items-center overflow-hidden rounded-full border border-primary/10 bg-secondary/20 h-11 w-48">
               <input
-                placeholder="Busca por nome ou ID..."
-                className="flex-1 bg-transparent px-5 text-[11px] outline-none text-primary"
+                placeholder="buscar produto"
+                className="flex-1 bg-transparent px-5 text-[11px] outline-none text-primary placeholder:text-primary/30"
                 value={searchValue}
                 onChange={(e) => {
                   setSearchValue(e.target.value);
@@ -125,7 +125,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
                 className="relative flex items-center gap-2 px-5 h-11 rounded-full bg-primary text-white hover:bg-black transition-all shadow-lg group"
               >
                 <ShoppingBag className="h-4 w-4" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.15em]">Carrinho</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em]">Sacola</span>
                 {cartCount > 0 && (
                   <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[9px] font-bold text-white shadow-lg">
                     {cartCount}
@@ -192,7 +192,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
 
               <div className="mt-auto pb-10 space-y-4">
                  <button onClick={() => { isAdmin ? onOpenAdmin?.() : onOpenLogin(); setMobileMenuOpen(false); }} className="w-full py-5 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-widest">
-                   {isAdmin ? "Painel Admin" : "Minha Conta"}
+                   {isAdmin ? "Painel Maison" : "Minha Conta"}
                  </button>
                  <button onClick={() => { onOpenTrack(); setMobileMenuOpen(false); }} className="w-full py-5 rounded-full border border-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest">Rastrear Pedido</button>
               </div>
