@@ -45,7 +45,7 @@ export function ProductCard({
     return doc(db, 'users', user.uid, 'favorites', stringId);
   }, [db, user?.uid, stringId]);
 
-  const { data: favoriteData } = useDoc(favoriteRef);
+  const { data: favoriteData, isLoading: isFavLoading } = useDoc(favoriteRef);
   const isFavorited = !!favoriteData;
 
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -55,7 +55,7 @@ export function ProductCard({
     if (!user) {
       toast({
         title: "Acesso necessário",
-        description: "Faça login ou acesse como visitante no menu para salvar peças.",
+        description: "Faça login ou acesse como visitante no menu para salvar suas peças favoritas.",
         variant: "destructive"
       });
       return;
@@ -67,7 +67,7 @@ export function ProductCard({
       deleteDocumentNonBlocking(favoriteRef);
       toast({
         title: "Removido",
-        description: "Peça removida da sua lista.",
+        description: "Peça removida da sua lista de desejos.",
       });
     } else {
       setDocumentNonBlocking(favoriteRef, {
@@ -77,7 +77,7 @@ export function ProductCard({
       }, { merge: true });
       toast({
         title: "Favoritado",
-        description: "Salvo com sucesso!",
+        description: "Peça salva em seus favoritos!",
       });
     }
   };
@@ -109,6 +109,7 @@ export function ProductCard({
         
         <button 
           onClick={toggleFavorite}
+          disabled={isFavLoading}
           className={cn(
             "absolute right-4 top-4 h-11 w-11 rounded-full backdrop-blur-md flex items-center justify-center transition-all z-10 shadow-sm",
             isFavorited 
@@ -116,7 +117,7 @@ export function ProductCard({
               : "bg-white/95 text-[#6E3C47] hover:bg-[#6E3C47] hover:text-white"
           )}
         >
-          <Heart className={cn("h-4.5 w-4.5", isFavorited && "fill-current")} />
+          <Heart className={cn("h-4.5 w-4.5 transition-transform duration-300", isFavorited && "fill-current scale-110")} />
         </button>
 
         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 hidden md:flex items-center justify-center z-10">
