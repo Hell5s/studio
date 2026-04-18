@@ -30,6 +30,7 @@ import { Separator } from '@/components/ui/separator';
 interface NavbarProps {
   onOpenLogin: () => void;
   onOpenTrack: () => void;
+  onOpenOrders: () => void;
   onOpenCart: () => void;
   cartCount: number;
   isAdmin?: boolean;
@@ -37,7 +38,7 @@ interface NavbarProps {
   onSearch?: (query: string) => void;
 }
 
-export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmin, onOpenAdmin, onSearch }: NavbarProps) {
+export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, cartCount, isAdmin, onOpenAdmin, onSearch }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -163,7 +164,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
                   <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-primary/5">
                     <DropdownMenuLabel className="px-4 py-3">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bem-vinda</p>
-                      <p className="text-xs font-semibold text-primary truncate">{user.email}</p>
+                      <p className="text-xs font-semibold text-primary truncate">{user.email || 'Usuária'}</p>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-primary/5" />
                     
@@ -183,7 +184,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
                     </DropdownMenuItem>
 
                     <DropdownMenuItem 
-                      onClick={onOpenTrack}
+                      onClick={onOpenOrders}
                       className="rounded-xl px-4 py-3 cursor-pointer text-primary hover:bg-primary/5"
                     >
                       <Package className="mr-3 h-4 w-4 text-muted-foreground" />
@@ -354,6 +355,12 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount, isAdmi
                           <ShieldCheck className="h-4 w-4" /> GERENCIAR LOJA
                         </button>
                       )}
+                      <button 
+                        onClick={() => { onOpenOrders(); setMobileMenuOpen(false); }} 
+                        className="w-full py-4 rounded-md border border-primary text-primary text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                      >
+                        <Package className="h-4 w-4" /> MEUS PEDIDOS
+                      </button>
                       <button 
                         onClick={handleLogout} 
                         className="w-full py-4 rounded-md border border-red-100 text-red-500 text-[10px] font-bold uppercase tracking-widest"

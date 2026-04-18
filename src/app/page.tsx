@@ -11,6 +11,7 @@ import { Newsletter } from '@/components/store/Newsletter';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
+import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { Loader2, ChevronRight, ShieldCheck, Instagram, Facebook, Youtube, Twitter, CreditCard } from 'lucide-react';
@@ -25,6 +26,7 @@ export default function TodaBelaStorefront() {
   const [isAdminView, setIsAdminView] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
+  const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [searchQuery, setSearchValue] = useState("");
@@ -120,6 +122,7 @@ export default function TodaBelaStorefront() {
       <Navbar 
         onOpenLogin={() => setIsLoginOpen(true)}
         onOpenTrack={() => setIsTrackOpen(true)}
+        onOpenOrders={() => setIsMyOrdersOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
         cartCount={cartCount}
         isAdmin={isAdmin} 
@@ -360,6 +363,7 @@ export default function TodaBelaStorefront() {
       {/* Diálogos e Modais */}
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
       <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
+      <MyOrdersDialog open={isMyOrdersOpen} onOpenChange={setIsMyOrdersOpen} />
       <CheckoutDialog 
         open={isCheckoutOpen} 
         onOpenChange={setIsCheckoutOpen} 
