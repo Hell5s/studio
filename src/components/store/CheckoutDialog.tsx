@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from '@/components/ui/separator';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 interface CheckoutDialogProps {
@@ -37,6 +37,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
     email: user?.email || '',
     address: '',
     city: '',
+    state: '',
     zipCode: ''
   });
 
@@ -61,33 +62,37 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
 
     setLoading(true);
     try {
-      const orderNumber = `PED-${Date.now().toString().slice(-6)}`;
+      const orderNumber = `PED-${Date.now()}`;
       
       const payload = {
         orderNumber,
         userId: user.uid,
-        customerName: formData.name,
-        customerEmail: formData.email.toLowerCase().trim() || user.email?.toLowerCase().trim() || '',
-        customerPhone: formData.phone,
-        customerAddress: {
-          street: formData.address,
+        customer: {
+          name: formData.name,
+          email: formData.email.toLowerCase().trim() || user.email?.toLowerCase().trim() || '',
+          phone: formData.phone,
+          address: formData.address,
           city: formData.city,
-          zipCode: formData.zipCode
+          state: formData.state || 'SP',
+          zip: formData.zipCode
         },
         items: cartItems.map(item => ({
-          id: item.id,
+          productId: item.id,
           name: item.name,
-          price: item.price,
-          quantity: item.quantity,
+          price: Number(item.price || 0),
+          quantity: Number(item.quantity || 1),
           image: item.image
         })),
-        total,
-        status: "Pendente",
+        subtotal: total,
+        total: total,
+        status: "Pedido recebido",
+        trackingCode: "Aguardando envio",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
 
-      await addDocumentNonBlocking(collection(db, 'orders'), payload);
+      // Usando setDoc para garantir o ID do pedido que criamos
+      await setDoc(doc(db, 'orders', orderNumber), payload);
       
       setOrderComplete(true);
       setTimeout(() => {
@@ -97,6 +102,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
       }, 3000);
 
     } catch (error) {
+      console.error(error);
       toast({
         title: "Erro ao processar",
         description: "Não foi possível registrar seu pedido. Tente novamente em instantes.",
@@ -119,7 +125,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
           </div>
           <h3 className="text-3xl font-headline font-bold text-primary">Pedido Recebido!</h3>
           <p className="text-muted-foreground italic font-light leading-relaxed">
-            Sua seleção foi reservada com sucesso. Entraremos em contato via WhatsApp em breve.
+            Sua seleção foi reservada com sucesso. Acompanhe o status em "Meus Pedidos" no menu superior.
           </p>
         </DialogContent>
       </Dialog>
@@ -198,6 +204,20 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
                   onChange={e => setFormData({...formData, address: e.target.value})}
                   className="h-14 rounded-2xl bg-secondary/30 border-none px-6" 
                 />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input 
+                    placeholder="Cidade" 
+                    value={formData.city}
+                    onChange={e => setFormData({...formData, city: e.target.value})}
+                    className="h-14 rounded-2xl bg-secondary/30 border-none px-6" 
+                  />
+                  <Input 
+                    placeholder="Estado (Ex: SP)" 
+                    value={formData.state}
+                    onChange={e => setFormData({...formData, state: e.target.value})}
+                    className="h-14 rounded-2xl bg-secondary/30 border-none px-6" 
+                  />
+                </div>
               </div>
             </div>
           </div>

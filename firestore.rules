@@ -3,8 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v8.8
-     * Suporte para listagem por UID e E-mail.
+     * TODA BELA - REGRAS DE SEGURANÇA v9.0
+     * Sistema de Pedidos Privados e Gestão Administrativa
      */
 
     function isSignedIn() {
@@ -19,32 +19,23 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Produtos: Leitura pública, escrita apenas admin
-    match /products/{productId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
+    // Produtos e Categorias: Leitura pública, escrita apenas admin
+    match /products/{productId} { allow read: if true; allow write: if isAdmin(); }
+    match /categories/{categoryId} { allow read: if true; allow write: if isAdmin(); }
 
-    // Categorias: Leitura pública
-    match /categories/{categoryId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Pedidos: Criação pública, gestão admin, leitura pelo dono do pedido
+    // Pedidos: Sistema Privado solicitado
     match /orders/{orderId} {
-      allow create: if true;
-      // Permite buscar por ID (rastreio público seguro)
-      allow get: if true; 
-      // Permite listar se for admin ou se a consulta estiver filtrada pelo UID ou E-mail do dono
-      allow list: if isAdmin() || (isSignedIn() && (
-        resource.data.userId == request.auth.uid || 
-        (request.auth.token.email != null && resource.data.customerEmail == request.auth.token.email)
-      ));
+      // Cliente pode criar o próprio pedido
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      
+      // Cliente lê apenas os próprios pedidos. Admin lê tudo.
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      
+      // Apenas Admin pode atualizar status ou deletar
       allow update, delete: if isAdmin();
     }
 
-    // Favoritos: Permitir que qualquer usuário autenticado gerencie seu próprio subconjunto
+    // Favoritos: Gestão por UID
     match /users/{userId}/favorites/{favId} {
       allow read, write: if isOwner(userId);
     }
