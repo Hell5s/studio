@@ -40,7 +40,7 @@ export function ProductCard({
 
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700">
-      <div className="relative aspect-[3/4] overflow-hidden bg-secondary/10">
+      <div className="relative aspect-[3/4] overflow-hidden bg-[#F3EFF0]">
         <Image
           src={image}
           alt={name}
@@ -51,19 +51,19 @@ export function ProductCard({
         />
         
         {badge && (
-          <Badge className="absolute top-4 left-4 bg-primary text-white border-none px-4 py-1.5 font-bold uppercase text-[8px] rounded-full tracking-widest z-10 shadow-lg">
+          <Badge className="absolute top-4 left-4 bg-[#6E3C47] text-white border-none px-4 py-1.5 font-bold uppercase text-[8px] rounded-full tracking-widest z-10 shadow-lg">
             {badge}
           </Badge>
         )}
         
-        <button className="absolute right-4 top-4 h-11 w-11 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center text-primary shadow-sm hover:bg-primary hover:text-white transition-all z-10">
+        <button className="absolute right-4 top-4 h-11 w-11 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center text-[#6E3C47] shadow-sm hover:bg-[#6E3C47] hover:text-white transition-all z-10">
           <Heart className="h-4.5 w-4.5" />
         </button>
 
         {/* Quick View */}
         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 hidden md:flex items-center justify-center z-10">
           <Link href={`/products/${id}`}>
-            <Button className="rounded-full bg-white text-primary font-bold uppercase text-[9px] tracking-[0.4em] px-8 py-6 shadow-2xl hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-700">
+            <Button className="rounded-full bg-white text-[#6E3C47] font-bold uppercase text-[9px] tracking-[0.4em] px-8 py-6 shadow-2xl hover:bg-[#6E3C47] hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-700">
               Ver Detalhes
             </Button>
           </Link>
@@ -72,29 +72,29 @@ export function ProductCard({
 
       <div className="px-1 pb-4 pt-6 text-center flex flex-col flex-1">
         <Link href={`/products/${id}`} className="block group-hover:text-primary transition-colors mb-2">
-          <h3 className="line-clamp-2 text-[14px] md:text-[15px] uppercase leading-tight tracking-tight text-primary font-medium min-h-[2.5rem]">
+          <h3 className="line-clamp-2 text-[15px] uppercase leading-tight tracking-tight text-[#3A3133] font-medium min-h-[2.5rem]">
             {name}
           </h3>
         </Link>
         
         <div className="mt-auto space-y-2">
           <div className="space-y-1">
-            <p className="text-[22px] md:text-[28px] font-light text-primary leading-none">
+            <p className="text-[22px] md:text-[28px] font-light text-[#2A1F22] leading-none">
               {formatCurrency(price)}
             </p>
             {oldPrice && (
-              <p className="text-[12px] text-primary/40 line-through font-light italic">
+              <p className="text-[12px] text-[#6D575D]/40 line-through font-light italic">
                 {formatCurrency(oldPrice)}
               </p>
             )}
-            <p className="text-[13px] md:text-[14px] text-primary/60 font-medium italic">
+            <p className="text-[13px] md:text-[14px] text-[#6D575D] font-medium italic">
               ou 10x de {formatCurrency(price / 10)}
             </p>
           </div>
 
           <button
             onClick={onAddToCart}
-            className="mt-6 w-full rounded-full border border-primary/20 bg-transparent px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.25em] text-primary transition-all hover:bg-secondary/50 hover:border-primary active:scale-95"
+            className="mt-6 w-full rounded-full border border-[#E7C5CC] bg-transparent px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.25em] text-[#6E3C47] transition-all hover:bg-[#F7E8EA] hover:border-[#6E3C47] active:scale-95"
           >
             Adicionar
           </button>

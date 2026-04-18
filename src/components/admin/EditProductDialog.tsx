@@ -6,7 +6,6 @@ import {
   Save, 
   Loader2, 
   Sparkles,
-  Link as LinkIcon,
   Upload,
   ShoppingBag,
   Package,
@@ -22,7 +21,6 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -153,7 +151,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       console.error("Erro no upload:", error);
       toast({ 
         title: "Erro no upload", 
-        description: error.message || "Não foi possível enviar a imagem. Verifique se o bucket do Storage está configurado.",
+        description: error.message || "Não foi possível enviar a imagem.",
         variant: "destructive" 
       });
     } finally {

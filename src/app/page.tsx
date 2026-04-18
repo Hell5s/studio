@@ -16,8 +16,8 @@ import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking } from '@/firebase';
-import { collection, query, orderBy, limit, doc, serverTimestamp } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
@@ -26,8 +26,6 @@ import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Image from 'next/image';
-
-const WHATSAPP_NUMBER = "5511999999999";
 
 export default function Home() {
   const db = useFirestore();
@@ -59,7 +57,7 @@ export default function Home() {
   // Consultas de dados
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(20));
+    return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(50));
   }, [db]);
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
@@ -69,10 +67,23 @@ export default function Home() {
   }, [db]);
   const { data: categories } = useCollection(categoriesQuery);
 
+  // Lógica de filtragem baseada na referência
+  const launchProducts = useMemo(() => {
+    if (!products) return [];
+    const featured = products.filter(p => p.featured || p.bestseller || p.badge === 'Novo');
+    return (featured.length ? featured : products).slice(0, 4);
+  }, [products]);
+
+  const basicProducts = useMemo(() => {
+    if (!products) return [];
+    const basics = products.filter(p => p.collection === 'Linha Básica' || p.category === 'Básicos');
+    return (basics.length ? basics : products.slice(4)).slice(0, 5);
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     if (selectedCategory === "Novidades") return products;
-    return products.filter(p => p.category === selectedCategory);
+    return products.filter(p => p.category === selectedCategory || p.collection === selectedCategory);
   }, [products, selectedCategory]);
 
   const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
@@ -161,7 +172,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-12">
             <h2 className="text-3xl md:text-5xl font-serif font-bold text-primary tracking-tight">Lançamentos</h2>
             <button 
-              onClick={() => scrollTo('colecoes')}
+              onClick={() => { setSelectedCategory("Novidades"); scrollTo('colecoes'); }}
               className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors"
             >
               Ver Tudo <ChevronRight className="h-4 w-4" />
@@ -172,7 +183,7 @@ export default function Home() {
             <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-accent" /></div>
           ) : (
             <div className="grid gap-x-4 gap-y-12 grid-cols-2 lg:grid-cols-4">
-              {filteredProducts.map((product) => (
+              {launchProducts.map((product) => (
                 <ProductCard key={product.id} {...product} onAddToCart={() => addToCart(product)} onBuyNow={() => addToCart(product, true)} />
               ))}
             </div>
@@ -184,17 +195,15 @@ export default function Home() {
           <div className="container mx-auto px-6 text-center">
             <div className="space-y-4 mb-16">
               <h2 className="text-4xl md:text-6xl font-serif font-bold text-primary">Nossas Coleções</h2>
-              <p className="text-accent text-[11px] font-bold uppercase tracking-[0.3em]">Escolha o estilo que combina com você</p>
+              <p className="text-accent text-[11px] font-bold uppercase tracking-[0.3em]">Peças que acompanham seu ritmo</p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
               {[
-                { name: 'Vestidos', img: 'https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=600&q=80' },
-                { name: 'Conjuntos', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80' },
-                { name: 'Moda Festa', img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=600&q=80' },
-                { name: 'Moda Praia', img: 'https://images.unsplash.com/photo-1502301197179-65228ab57f78?auto=format&fit=crop&w=600&q=80' },
-                { name: 'Plus Size', img: 'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=600&q=80' },
-                { name: 'Moda Fitness', img: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=600&q=80' },
+                { name: 'Tops', img: 'https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=600&q=80' },
+                { name: 'Leggings', img: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=600&q=80' },
+                { name: 'Shorts', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80' },
+                { name: 'Macacões', img: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=600&q=80' },
               ].map((cat) => (
                 <div 
                   key={cat.name} 
@@ -223,7 +232,7 @@ export default function Home() {
           </div>
 
           <div className="grid gap-x-4 gap-y-12 grid-cols-2 lg:grid-cols-5">
-            {filteredProducts.slice(0, 5).map((product) => (
+            {basicProducts.map((product) => (
               <ProductCard key={product.id} {...product} onAddToCart={() => addToCart(product)} onBuyNow={() => addToCart(product, true)} />
             ))}
           </div>

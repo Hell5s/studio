@@ -54,7 +54,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     oldPrice: '',
     description: '',
     longDescription: '',
-    category: 'Vestidos',
+    category: 'Tops',
     collection: 'Moda Fitness',
     badge: 'Novo',
     image: '',
@@ -112,7 +112,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     onOpenChange(false);
     setFormData({
       name: '', price: '', oldPrice: '', description: '', longDescription: '',
-      category: 'Vestidos', collection: 'Moda Fitness', badge: 'Novo', image: '', 
+      category: 'Tops', collection: 'Moda Fitness', badge: 'Novo', image: '', 
       gallery: '', stock: '', sizes: 'P, M, G, GG', colors: '', published: true, 
       featured: false, bestseller: false, sourceUrl: ''
     });
@@ -142,7 +142,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       console.error("Erro no upload:", error);
       toast({ 
         title: "Erro no upload", 
-        description: error.message || "Não foi possível enviar a imagem. Verifique as permissões do Storage.",
+        description: error.message || "Não foi possível enviar a imagem.",
         variant: "destructive" 
       });
     } finally {
@@ -233,7 +233,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
                     className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
-                    placeholder="Ex: Vestido Midi Satin Rouge"
+                    placeholder="Ex: Top Alongado Decote Alto"
                   />
                 </div>
                 <div className="space-y-2">
@@ -247,7 +247,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <option>Plus Size</option>
                     <option>Vestidos</option>
                     <option>Conjuntos</option>
-                    <option>Moda Festa</option>
+                    <option>Linha Básica</option>
                     <option>Casual Chic</option>
                   </select>
                 </div>
@@ -263,7 +263,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <option>Shorts</option>
                     <option>Macacões</option>
                     <option>Blusas</option>
-                    <option>Vestidos</option>
+                    <option>Acessórios</option>
                   </select>
                 </div>
               </div>
@@ -335,7 +335,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   value={formData.sourceUrl}
                   onChange={e => setFormData({...formData, sourceUrl: e.target.value})}
                   className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
-                  placeholder="Link Privado Shopee/Fornecedor"
+                  placeholder="Link Shopee (Privado)"
                 />
               </div>
             </section>

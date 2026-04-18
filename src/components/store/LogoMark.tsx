@@ -10,34 +10,19 @@ interface LogoMarkProps {
 
 export function LogoMark({ className }: LogoMarkProps) {
   return (
-    <div className={cn("flex flex-col items-center group cursor-pointer", className)}>
-      <div className="relative flex items-center justify-center mb-1">
-        {/* Monograma Sofisticado */}
-        <div className="relative h-14 w-14 md:h-16 md:w-16 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full border-[0.5px] border-accent/20 animate-[spin_40s_linear_infinite]" />
-          <div className="absolute inset-1 rounded-full border-[1.5px] border-accent/40 flex items-center justify-center bg-white shadow-sm group-hover:border-accent group-hover:shadow-md transition-all duration-700">
-            <span className="text-2xl md:text-3xl font-serif font-light text-primary leading-none tracking-tighter">
-              T<span className="text-accent italic font-normal -ml-0.5">B</span>
-            </span>
-          </div>
-        </div>
+    <div className={cn("flex items-center gap-3 group cursor-pointer", className)}>
+      <div className="relative flex h-12 w-12 items-center justify-center rounded-full border border-[#E9D7DB] bg-white shadow-sm transition-all group-hover:border-accent">
+        <svg viewBox="0 0 120 120" className="h-7 w-7" fill="none">
+          <circle cx="60" cy="60" r="42" stroke="#C7A17A" strokeWidth="4" />
+          <path
+            d="M44 39C44 35.6863 46.6863 33 50 33H70C73.3137 33 76 35.6863 76 39V41C76 44.3137 73.3137 47 70 47H64V83H56V47H50C46.6863 47 44 44.3137 44 41V39Z"
+            fill="#6E3C47"
+          />
+        </svg>
       </div>
-
-      <div className="text-center flex flex-col items-center">
-        <h1 className="text-xl md:text-2xl font-serif font-bold tracking-[0.2em] text-primary uppercase leading-none">
-          Toda Bela
-        </h1>
-        
-        {/* Subtítulo com fio único e delicado */}
-        <div className="flex items-center gap-3 mt-1.5">
-          <div className="h-[0.5px] w-4 md:w-8 bg-accent/30" />
-          
-          <p className="text-[7px] md:text-[8px] font-medium uppercase tracking-[0.5em] text-accent/80 whitespace-nowrap">
-            Moda Feminina
-          </p>
-          
-          <div className="h-[0.5px] w-4 md:w-8 bg-accent/30" />
-        </div>
+      <div className="leading-none text-left">
+        <p className="text-3xl font-semibold tracking-[-0.05em] text-[#6E3C47]">Toda Bela</p>
+        <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#C7A17A]">Moda Feminina</p>
       </div>
     </div>
   );
