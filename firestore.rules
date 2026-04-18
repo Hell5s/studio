@@ -4,9 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v1.3
-     * Garantindo acesso público robusto para banners e produtos.
-     * v1.3: Explicitando permissões de listagem e leitura pública.
+     * TODA BELA - REGRAS DE SEGURANÇA v1.5
+     * Estabilização de acesso público e proteção administrativa.
      */
 
     function isSignedIn() {
@@ -15,6 +14,12 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    // Banners: Acesso público total para leitura (get e list)
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // Produtos: Leitura pública total
@@ -29,23 +34,21 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Banners: Leitura pública total (get e list)
-    // Usando match recursivo para garantir que listagens na coleção funcionem sem problemas
-    match /banners/{bannerId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
     // Newsletter: Qualquer um pode se inscrever
     match /newsletter_subscribers/{subscriberId} {
       allow create: if true;
       allow read, delete: if isAdmin();
     }
 
-    // Controle de Admin: Apenas o próprio admin ou outros admins podem ler
+    // Controle de Admin: Apenas o próprio admin
     match /roles_admin/{adminUid} {
       allow get: if isSignedIn() && request.auth.uid == adminUid;
       allow list: if isAdmin();
+    }
+    
+    // Regra de fallback: Negar tudo que não foi explicitamente permitido
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -59,37 +59,35 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (serverError: FirestoreError) => {
-        // Estabilizando a extração do caminho para depuração
-        let path = 'collection-query';
-        try {
-          if (targetRefOrQuery) {
-            // Tenta extrair o caminho diretamente se for uma CollectionReference
-            if ('path' in targetRefOrQuery) {
-              path = (targetRefOrQuery as any).path;
-            } 
-            // Tenta extrair de uma Query de forma segura
-            else if ('_query' in targetRefOrQuery) {
-              const queryImpl = (targetRefOrQuery as any)._query;
-              if (queryImpl && queryImpl.path) {
-                path = queryImpl.path.toString();
+        // CRITICAL: Defer the error handling to the next execution cycle.
+        // This prevents the "Unexpected state" error in Firebase SDK which occurs
+        // when state updates or global events are triggered directly inside the observer callback.
+        setTimeout(() => {
+          let path = 'collection-query';
+          try {
+            if (targetRefOrQuery) {
+              if ('path' in targetRefOrQuery) {
+                path = (targetRefOrQuery as any).path;
+              } else if ((targetRefOrQuery as any)._query?.path) {
+                path = (targetRefOrQuery as any)._query.path.toString();
               }
             }
+          } catch (e) {
+            // Silently fallback to default path
           }
-        } catch (e) {
-          // Fallback silencioso para o caminho padrão de erro
-        }
 
-        const contextualError = new FirestorePermissionError({
-          operation: 'list',
-          path,
-        });
+          const contextualError = new FirestorePermissionError({
+            operation: 'list',
+            path,
+          });
 
-        // Emite o erro através do emissor central de forma síncrona para evitar falhas de asserção
-        errorEmitter.emit('permission-error', contextualError);
+          // Emit the error through the central emitter
+          errorEmitter.emit('permission-error', contextualError);
 
-        setError(contextualError);
-        setData(null);
-        setIsLoading(false);
+          setError(contextualError);
+          setData(null);
+          setIsLoading(false);
+        }, 0);
       }
     );
 

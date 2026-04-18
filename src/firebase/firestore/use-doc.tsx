@@ -58,18 +58,21 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (serverError: FirestoreError) => {
-        // Synchronous error handling to prevent SDK internal assertion failures
-        const contextualError = new FirestorePermissionError({
-          operation: 'get',
-          path: memoizedDocRef.path,
-        });
+        // CRITICAL: Defer the error handling to the next execution cycle.
+        // This prevents the "Unexpected state" error in Firebase SDK.
+        setTimeout(() => {
+          const contextualError = new FirestorePermissionError({
+            operation: 'get',
+            path: memoizedDocRef.path,
+          });
 
-        // Emit the error through the central emitter
-        errorEmitter.emit('permission-error', contextualError);
+          // Emit the error through the central emitter
+          errorEmitter.emit('permission-error', contextualError);
 
-        setError(contextualError);
-        setData(null);
-        setIsLoading(false);
+          setError(contextualError);
+          setData(null);
+          setIsLoading(false);
+        }, 0);
       }
     );
 
