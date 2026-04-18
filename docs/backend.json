@@ -39,6 +39,22 @@
       },
       "required": ["id", "name", "order"]
     },
+    "Banner": {
+      "title": "Banner",
+      "type": "object",
+      "description": "Banners promocionais da home",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "active": { "type": "boolean" },
+        "order": { "type": "number" },
+        "ctaText": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "imageUrl", "active"]
+    },
     "NewsletterSubscriber": {
       "title": "NewsletterSubscriber",
       "type": "object",
@@ -69,6 +85,14 @@
           "entityName": "Category",
           "schema": { "$ref": "#/backend/entities/Category" },
           "description": "Categorias de produtos"
+        }
+      },
+      {
+        "path": "/banners/{bannerId}",
+        "definition": {
+          "entityName": "Banner",
+          "schema": { "$ref": "#/backend/entities/Banner" },
+          "description": "Banners da home"
         }
       },
       {

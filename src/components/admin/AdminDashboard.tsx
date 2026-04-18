@@ -12,7 +12,8 @@ import {
   Package,
   Layers,
   Download,
-  ExternalLink
+  ExternalLink,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { AdminShopeeImport } from './AdminShopeeImport';
 import { ProductManagement } from './ProductManagement';
 import { AddProductDialog } from './AddProductDialog';
+import { BannerManagement } from './BannerManagement';
 
 interface AdminDashboardProps {
   productsCount: number;
@@ -30,7 +32,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'shopee' | 'config'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'produtos' | 'categorias' | 'shopee' | 'banners' | 'config'>('dashboard');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const db = useFirestore();
 
@@ -43,6 +45,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
     { id: 'dashboard', label: 'Visão Geral', icon: <LayoutDashboard className="h-4 w-4" /> },
     { id: 'shopee', label: 'Importar Produto', icon: <Download className="h-4 w-4" /> },
     { id: 'produtos', label: 'Catálogo', icon: <Package className="h-4 w-4" /> },
+    { id: 'banners', label: 'Banners AI', icon: <ImageIcon className="h-4 w-4" /> },
     { id: 'categorias', label: 'Coleções', icon: <Layers className="h-4 w-4" /> },
     { id: 'config', label: 'Configurações', icon: <Settings className="h-4 w-4" /> },
   ];
@@ -98,7 +101,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
           <div className="flex gap-4">
             <Button onClick={onOpenAI} variant="ghost" className="rounded-full text-primary hover:bg-primary/5 h-12 px-6 font-bold text-[10px] uppercase tracking-widest">
               <Sparkles className="mr-2 h-4 w-4" />
-              Gerar com AI
+              Copys com IA
             </Button>
             <Button onClick={() => setIsAddOpen(true)} className="rounded-full bg-primary text-primary-foreground font-bold text-[10px] px-8 h-12 shadow-xl shadow-primary/20 uppercase tracking-widest">
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -158,14 +161,6 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
                       </div>
                     </div>
                   ))}
-                  {(!recentProducts || recentProducts.length === 0) && (
-                    <div className="text-center py-20">
-                      <div className="h-20 w-20 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-4">
-                        <Package className="h-10 w-10 text-primary/20" />
-                      </div>
-                      <p className="text-muted-foreground italic font-light">Nenhum produto cadastrado no momento.</p>
-                    </div>
-                  )}
                 </div>
               </Card>
             </>
@@ -173,6 +168,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI }: Adm
 
           {activeTab === 'shopee' && <AdminShopeeImport />}
           {activeTab === 'produtos' && <ProductManagement />}
+          {activeTab === 'banners' && <BannerManagement />}
           {(activeTab === 'categorias' || activeTab === 'config') && (
             <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
               <div className="h-24 w-24 rounded-full bg-accent/5 flex items-center justify-center">
