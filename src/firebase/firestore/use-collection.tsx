@@ -25,28 +25,13 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null; // Error object, or null.
 }
 
-/* Internal implementation of Query:
-  https://github.com/firebase/firebase-js-sdk/blob/c5f08a9bc5da0d2b0207802c972d53724ccef055/packages/firestore/src/lite-api/reference.ts#L143
-*/
-export interface InternalQuery extends Query<DocumentData> {
-  _query: {
-    path: {
-      canonicalString(): string;
-      toString(): string;
-    }
-  }
-}
-
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
  */
 export function useCollection<T = any>(
     targetRefOrQuery: CollectionReference<DocumentData> | Query<DocumentData> | null | undefined,
 ): UseCollectionResult<T> {
-  type ResultItemType = WithId<T>;
-  type StateDataType = ResultItemType[] | null;
-
-  const [data, setData] = useState<StateDataType>(null);
+  const [data, setData] = useState<WithId<T>[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
@@ -64,31 +49,31 @@ export function useCollection<T = any>(
     const unsubscribe = onSnapshot(
       targetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: ResultItemType[] = [];
-        for (const doc of snapshot.docs) {
+        const results: WithId<T>[] = [];
+        snapshot.forEach((doc) => {
           results.push({ ...(doc.data() as T), id: doc.id });
-        }
+        });
         setData(results);
         setError(null);
         setIsLoading(false);
       },
-      (serverError: FirestoreError) => {
-        const path: string =
-          (targetRefOrQuery as any).type === 'collection'
-            ? (targetRefOrQuery as CollectionReference).path
-            : (targetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
+      async (serverError: FirestoreError) => {
+        // Safely attempt to extract path context for the permission error
+        const path = (targetRefOrQuery as any).path || 
+                     (targetRefOrQuery as any)._query?.path?.toString() || 
+                     'unknown-query-path';
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
         });
 
+        // Emit the error through the central emitter for consistent handling
+        errorEmitter.emit('permission-error', contextualError);
+
         setError(contextualError);
         setData(null);
         setIsLoading(false);
-        
-        // Logamos o erro no console para debug, mas evitamos o crash visual
-        console.warn('Firestore Access Denied:', contextualError.message);
       }
     );
 

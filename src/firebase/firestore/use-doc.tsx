@@ -30,9 +30,7 @@ export interface UseDocResult<T> {
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
 ): UseDocResult<T> {
-  type StateDataType = WithId<T> | null;
-
-  const [data, setData] = useState<StateDataType>(null);
+  const [data, setData] = useState<WithId<T> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
@@ -58,17 +56,18 @@ export function useDoc<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (serverError: FirestoreError) => {
+      async (serverError: FirestoreError) => {
         const contextualError = new FirestorePermissionError({
           operation: 'get',
           path: memoizedDocRef.path,
         });
 
+        // Emit the error through the central emitter for consistent handling
+        errorEmitter.emit('permission-error', contextualError);
+
         setError(contextualError);
         setData(null);
         setIsLoading(false);
-
-        console.warn('Firestore Access Denied:', contextualError.message);
       }
     );
 
