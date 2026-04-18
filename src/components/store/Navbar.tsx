@@ -31,7 +31,7 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
   ];
 
   const rightLinks = [
-    { name: 'Moda Festa', href: '#catalogo' },
+    { name: 'Rastrear Pedido', onClick: onOpenTrack },
     { name: 'Coleções', href: '#catalogo' },
   ];
 
@@ -77,14 +77,25 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenCart, cartCount }: Navb
           <div className="flex items-center justify-end gap-10 flex-1">
             <nav className="hidden lg:flex items-center gap-10">
               {rightLinks.map((link) => (
-                <Link 
-                  key={link.name} 
-                  href={link.href}
-                  className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A1F22]/70 hover:text-[#6E3C47] transition-colors relative group"
-                >
-                  {link.name}
-                  <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent transition-all duration-500 group-hover:w-full" />
-                </Link>
+                link.onClick ? (
+                  <button
+                    key={link.name}
+                    onClick={link.onClick}
+                    className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A1F22]/70 hover:text-[#6E3C47] transition-colors relative group"
+                  >
+                    {link.name}
+                    <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent transition-all duration-500 group-hover:w-full" />
+                  </button>
+                ) : (
+                  <Link 
+                    key={link.name} 
+                    href={link.href!}
+                    className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A1F22]/70 hover:text-[#6E3C47] transition-colors relative group"
+                  >
+                    {link.name}
+                    <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent transition-all duration-500 group-hover:w-full" />
+                  </Link>
+                )
               ))}
             </nav>
 
