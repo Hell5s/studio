@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Product": {
@@ -111,8 +112,8 @@
       "schema": { "$ref": "#/backend/entities/NewsletterSubscriber" },
       "description": "Assinantes da newsletter"
     },
-    "/roles_admin/{adminUid}": {
-      "description": "Papéis administrativos"
+    "/roles_admin/{uid}": {
+      "description": "Papéis administrativos por UID"
     },
     "/users/{userId}/favorites/{productId}": {
       "schema": { "$ref": "#/backend/entities/Favorite" },

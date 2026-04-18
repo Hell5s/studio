@@ -7,7 +7,7 @@ import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
 import { Newsletter } from '@/components/store/Newsletter';
-import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, Info, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ export default function MeusPedidosPage() {
       collection(db, 'orders'), 
       where('userId', '==', user.uid), 
       orderBy('createdAt', 'desc'),
-      limit(50)
+      limit(20)
     );
   }, [db, user?.uid]);
 
@@ -70,7 +70,7 @@ export default function MeusPedidosPage() {
                 <span className="italic font-light text-accent">Toda Bela</span>
               </h1>
               <p className="text-base md:text-2xl text-muted-foreground font-light italic max-w-2xl leading-relaxed">
-                Acompanhe o status e os detalhes de cada uma de suas escolhas em nossa boutique.
+                Acompanhe o status e os detalhes de cada uma de suas escolhas.
               </p>
            </div>
         </header>
@@ -79,14 +79,14 @@ export default function MeusPedidosPage() {
           {isUserLoading || isOrdersLoading ? (
             <div className="py-40 flex flex-col items-center justify-center space-y-6">
               <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando seus dados...</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando...</p>
             </div>
           ) : !user ? (
             <div className="py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-primary/5 shadow-editorial">
               <Info className="h-12 w-12 text-accent/20 mx-auto mb-6" />
               <h3 className="text-2xl font-headline font-bold text-primary mb-4">Acesso Necessário</h3>
-              <p className="text-muted-foreground italic font-light max-w-xs mx-auto mb-8">Por favor, realize o login para visualizar seu histórico de pedidos.</p>
-              <Button className="rounded-full px-12 h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px]">Acessar minha conta</Button>
+              <p className="text-muted-foreground italic font-light max-w-xs mx-auto mb-8">Faça login para ver seu histórico de pedidos.</p>
+              <Button className="rounded-full px-12 h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px]">Acessar Conta</Button>
             </div>
           ) : orders && orders.length > 0 ? (
             <div className="grid gap-12">
@@ -107,7 +107,7 @@ export default function MeusPedidosPage() {
                           </div>
                        </div>
                        <div className="text-left md:text-right space-y-1">
-                          <p className="text-[10px] font-bold uppercase text-primary/30 tracking-widest">Total do Investimento</p>
+                          <p className="text-[10px] font-bold uppercase text-primary/30 tracking-widest">Total</p>
                           <p className="text-4xl font-headline font-bold text-primary">{formatPrice(order.total)}</p>
                        </div>
                     </div>
@@ -116,7 +116,7 @@ export default function MeusPedidosPage() {
                        <div className="lg:col-span-7 p-8 md:p-12 space-y-10">
                           <div className="space-y-6">
                              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent flex items-center gap-3">
-                                <Package className="h-4 w-4" /> Itens Selecionados ({order.items?.length})
+                                <Package className="h-4 w-4" /> Itens ({order.items?.length})
                              </p>
                              <div className="space-y-6">
                                 {order.items?.map((item: any, i: number) => (
@@ -138,11 +138,11 @@ export default function MeusPedidosPage() {
                             <div className="p-8 rounded-[2.5rem] bg-primary text-primary-foreground space-y-4">
                                <div className="flex items-center gap-3">
                                   <Truck className="h-6 w-6 text-accent" />
-                                  <p className="text-xs font-bold uppercase tracking-[0.3em] text-accent">Rastreamento da Peça</p>
+                                  <p className="text-xs font-bold uppercase tracking-[0.3em] text-accent">Rastreamento</p>
                                </div>
                                <div className="flex justify-between items-center">
                                   <p className="text-2xl font-mono font-medium tracking-tighter">{order.trackingCode}</p>
-                                  <button className="text-[10px] font-bold uppercase tracking-widest underline underline-offset-4 decoration-accent">Copiar Código</button>
+                                  <button className="text-[10px] font-bold uppercase tracking-widest underline underline-offset-4 decoration-accent">Copiar</button>
                                </div>
                             </div>
                           )}
@@ -151,13 +151,12 @@ export default function MeusPedidosPage() {
                        <div className="lg:col-span-5 bg-secondary/20 p-8 md:p-12 space-y-12">
                           <div className="space-y-6">
                              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent flex items-center gap-3">
-                                <MapPin className="h-4 w-4" /> Destino Editorial
+                                <MapPin className="h-4 w-4" /> Entrega
                              </p>
                              <div className="space-y-4 bg-white/50 p-8 rounded-[2rem] border border-primary/5 shadow-sm">
                                 <div className="space-y-1">
                                    <p className="text-lg font-bold text-primary">{order.customer?.name}</p>
                                    <p className="text-sm text-muted-foreground italic">{order.customer?.email}</p>
-                                   <p className="text-sm text-muted-foreground italic">{order.customer?.phone}</p>
                                 </div>
                                 <Separator className="bg-primary/5" />
                                 <div className="text-sm text-muted-foreground leading-relaxed italic space-y-1">
@@ -175,15 +174,13 @@ export default function MeusPedidosPage() {
             </div>
           ) : (
             <div className="py-40 text-center space-y-10 bg-white/50 rounded-[4rem] border-2 border-dashed border-primary/5 shadow-editorial">
-              <div className="h-24 w-24 rounded-full bg-secondary flex items-center justify-center mx-auto text-accent/30">
-                <ShoppingBag className="h-10 w-10" />
-              </div>
+              <ShoppingBag className="h-10 w-10 text-accent/30 mx-auto" />
               <div className="space-y-4">
-                 <h3 className="text-3xl font-headline font-bold text-primary">Nenhuma peça ainda</h3>
-                 <p className="text-muted-foreground italic font-light max-w-sm mx-auto leading-relaxed">Sua jornada com a Toda Bela começa no momento da sua primeira escolha. Que tal conhecer nossos lançamentos?</p>
+                 <h3 className="text-3xl font-headline font-bold text-primary">Nenhum pedido</h3>
+                 <p className="text-muted-foreground italic font-light max-w-sm mx-auto">Sua jornada começa com a primeira escolha.</p>
               </div>
               <Link href="/">
-                <Button className="rounded-full px-12 h-16 bg-primary text-white font-bold uppercase tracking-[0.3em] text-[10px] shadow-2xl hover:scale-105 transition-all">Explorar Coleção</Button>
+                <Button className="rounded-full px-12 h-16 bg-primary text-white font-bold uppercase text-[10px]">Explorar Coleção</Button>
               </Link>
             </div>
           )}
