@@ -13,6 +13,7 @@
         "badge": { "type": "string" },
         "categoryId": { "type": "string" },
         "category": { "type": "string" },
+        "collection": { "type": "string" },
         "image": { "type": "string", "format": "uri" },
         "images": { "type": "array", "items": { "type": "string" } },
         "description": { "type": "string" },

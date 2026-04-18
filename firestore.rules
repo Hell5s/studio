@@ -4,8 +4,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v1.7
+     * TODA BELA - REGRAS DE SEGURANÇA v1.8
      * Estabilização de acesso público e proteção administrativa.
+     * Forçando redeploy para aplicar permissões de listagem de banners.
      */
 
     function isSignedIn() {
@@ -17,20 +18,21 @@ service cloud.firestore {
     }
 
     // Banners: Acesso público total e explícito para leitura
+    // Essencial para o Hero e a vitrine funcionarem sem erros de permissão
     match /banners/{bannerId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     // Produtos: Leitura pública total
     match /products/{productId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     // Categorias: Leitura pública total
     match /categories/{categoryId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
@@ -40,7 +42,7 @@ service cloud.firestore {
       allow read, delete: if isAdmin();
     }
 
-    // Controle de Admin: Apenas o próprio admin
+    // Controle de Admin: Apenas o próprio admin pode ler seu cargo
     match /roles_admin/{adminUid} {
       allow get: if isSignedIn() && request.auth.uid == adminUid;
       allow list: if isAdmin();
