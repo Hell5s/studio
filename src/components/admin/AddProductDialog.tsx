@@ -25,6 +25,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useFirebase, addDocumentNonBlocking } from '@/firebase';
@@ -46,6 +47,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -53,15 +55,22 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     description: '',
     longDescription: '',
     category: 'Vestidos',
+    collection: 'Moda Fitness',
     badge: 'Novo',
     image: '',
+    gallery: '',
     stock: '',
-    sizes: 'P, M, G',
+    sizes: 'P, M, G, GG',
     colors: '',
     published: true,
     featured: false,
+    bestseller: false,
     sourceUrl: ''
   });
+
+  const parsePrice = (val: string) => {
+    return Number(String(val).replace(/\./g, "").replace(",", ".")) || 0;
+  };
 
   const handleSave = async () => {
     if (!formData.name || !formData.price || !formData.image) {
@@ -76,28 +85,36 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     setLoading(true);
     const productsRef = collection(db, 'products');
     
+    const galleryImages = formData.gallery
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
     addDocumentNonBlocking(productsRef, {
       ...formData,
-      price: Number(formData.price),
-      oldPrice: formData.oldPrice ? Number(formData.oldPrice) : null,
+      price: parsePrice(formData.price),
+      oldPrice: formData.oldPrice ? parsePrice(formData.oldPrice) : null,
       stock: formData.stock ? Number(formData.stock) : 0,
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
+      images: galleryImages.length > 0 ? galleryImages : [formData.image],
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       source: 'Manual'
     });
 
     toast({
       title: "Produto Cadastrado",
-      description: `${formData.name} foi adicionado à Maison.`,
+      description: `${formData.name} foi adicionado à Boutique.`,
     });
     
     setLoading(false);
     onOpenChange(false);
     setFormData({
       name: '', price: '', oldPrice: '', description: '', longDescription: '',
-      category: 'Vestidos', badge: 'Novo', image: '', stock: '', sizes: 'P, M, G',
-      colors: '', published: true, featured: false, sourceUrl: ''
+      category: 'Vestidos', collection: 'Moda Fitness', badge: 'Novo', image: '', 
+      gallery: '', stock: '', sizes: 'P, M, G, GG', colors: '', published: true, 
+      featured: false, bestseller: false, sourceUrl: ''
     });
   };
 
@@ -111,7 +128,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       setFormData(prev => ({ ...prev, image: downloadURL }));
-      toast({ title: "Imagem carregada" });
+      toast({ title: "Imagem carregada com sucesso" });
     } catch (error) {
       toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
@@ -132,10 +149,10 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     setGeneratingAI(true);
     try {
       const features = [
-        ...(formData.colors ? [`Disponível nas cores: ${formData.colors}`] : []),
+        ...(formData.colors ? [`Cores: ${formData.colors}`] : []),
         ...(formData.sizes ? [`Tamanhos: ${formData.sizes}`] : []),
-        "Tecido premium",
-        "Corte sofisticado"
+        "Modelagem exclusiva Toda Bela",
+        "Tecido de alta tecnologia"
       ];
 
       const result = await adminGenerateProductDescription({
@@ -154,13 +171,13 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       }));
 
       toast({
-        title: "Descrição Criada!",
-        description: "A IA gerou um texto editorial para sua peça.",
+        title: "Descrição Editorial Gerada!",
+        description: "O texto foi criado seguindo a voz da marca.",
       });
     } catch (error) {
       toast({
         title: "Erro na IA",
-        description: "Não foi possível gerar o texto agora.",
+        description: "Não foi possível conectar ao motor de IA.",
         variant: "destructive"
       });
     } finally {
@@ -177,8 +194,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               <Package className="h-8 w-8 text-accent" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Cadastro de Nova Peça</p>
-              <h3 className="text-3xl font-headline font-bold">Curadoria Manual</h3>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Curadoria Especializada</p>
+              <h3 className="text-3xl font-headline font-bold">Novo Item da Maison</h3>
             </div>
           </div>
           <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-14 bg-white text-primary hover:bg-accent hover:text-white font-bold uppercase tracking-widest text-[10px] shadow-xl">
@@ -193,7 +210,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-accent">
                 <Layers className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Básicas</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-widest">Coleção e Identidade</h4>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="md:col-span-2 space-y-2">
@@ -202,35 +219,37 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
                     className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
-                    placeholder="Ex: Vestido Midi Satin"
+                    placeholder="Ex: Vestido Midi Satin Rouge"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Coleção</Label>
                   <select 
-                    value={formData.category}
-                    onChange={e => setFormData({...formData, category: e.target.value})}
+                    value={formData.collection}
+                    onChange={e => setFormData({...formData, collection: e.target.value})}
                     className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 text-sm"
                   >
+                    <option>Moda Fitness</option>
+                    <option>Plus Size</option>
                     <option>Vestidos</option>
                     <option>Conjuntos</option>
                     <option>Moda Festa</option>
                     <option>Casual Chic</option>
-                    <option>Plus Size</option>
-                    <option>Moda Fitness</option>
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Badge</Label>
+                  <Label>Categoria</Label>
                   <select 
-                    value={formData.badge}
-                    onChange={e => setFormData({...formData, badge: e.target.value})}
+                    value={formData.category}
+                    onChange={e => setFormData({...formData, category: e.target.value})}
                     className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 text-sm"
                   >
-                    <option>Novo</option>
-                    <option>Destaque</option>
-                    <option>Mais Vendido</option>
-                    <option>Oferta</option>
+                    <option>Tops</option>
+                    <option>Leggings</option>
+                    <option>Shorts</option>
+                    <option>Macacões</option>
+                    <option>Blusas</option>
+                    <option>Vestidos</option>
                   </select>
                 </div>
               </div>
@@ -239,31 +258,29 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-accent">
                 <ShoppingBag className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Preços e Estoque</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-widest">Financeiro e Logística</h4>
               </div>
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <Label>Preço de Venda</Label>
+                  <Label>Preço da Loja (R$)</Label>
                   <Input 
-                    type="number"
                     value={formData.price}
                     onChange={e => setFormData({...formData, price: e.target.value})}
                     className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
-                    placeholder="0.00"
+                    placeholder="129,90"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Preço Comparativo (De)</Label>
+                  <Label>Preço Comparativo (R$)</Label>
                   <Input 
-                    type="number"
                     value={formData.oldPrice}
                     onChange={e => setFormData({...formData, oldPrice: e.target.value})}
                     className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
-                    placeholder="0.00"
+                    placeholder="169,90"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Qtd em Estoque</Label>
+                  <Label>Estoque Total</Label>
                   <Input 
                     type="number"
                     value={formData.stock}
@@ -278,7 +295,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-accent">
                 <ImageIcon className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Mídia e Fornecedor</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-widest">Mídia e Distribuição</h4>
               </div>
               <div className="space-y-4">
                 <div className="grid md:grid-cols-[1fr_auto] gap-4">
@@ -286,18 +303,25 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     value={formData.image}
                     onChange={e => setFormData({...formData, image: e.target.value})}
                     className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
-                    placeholder="URL da Imagem Principal"
+                    placeholder="URL ou Upload da Imagem Principal"
                   />
-                  <Button variant="outline" className="rounded-2xl h-14 border-primary/10" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="h-4 w-4" />
+                  <Button variant="outline" className="rounded-2xl h-14 border-primary/10" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                   </Button>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                 </div>
+                <Label>Galeria de Imagens (uma URL por linha)</Label>
+                <Textarea 
+                   value={formData.gallery}
+                   onChange={e => setFormData({...formData, gallery: e.target.value})}
+                   className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[90px]"
+                   placeholder="https://imagem1.jpg&#10;https://imagem2.jpg"
+                />
                 <Input 
                   value={formData.sourceUrl}
                   onChange={e => setFormData({...formData, sourceUrl: e.target.value})}
                   className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
-                  placeholder="Link do Fornecedor (Shopee)"
+                  placeholder="Link Privado Shopee/Fornecedor"
                 />
               </div>
             </section>
@@ -306,7 +330,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-accent">
                   <Sparkles className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Descrição e Atributos</h4>
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Conteúdo e Persuasão</h4>
                 </div>
                 <Button 
                   variant="outline" 
@@ -316,22 +340,22 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   className="rounded-full border-accent/20 text-accent hover:bg-accent hover:text-white"
                 >
                   {generatingAI ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Sparkles className="h-3 w-3 mr-2" />}
-                  Gerar com AI
+                  Gerar Copys com IA
                 </Button>
               </div>
               <div className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label>Tamanhos (separados por vírgula)</Label>
+                    <Label>Tamanhos Disponíveis</Label>
                     <Input 
                       value={formData.sizes}
                       onChange={e => setFormData({...formData, sizes: e.target.value})}
                       className="rounded-2xl h-14 border-primary/5 bg-white shadow-sm"
-                      placeholder="P, M, G"
+                      placeholder="P, M, G, GG"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Cores (separados por vírgula)</Label>
+                    <Label>Cores Principais</Label>
                     <Input 
                       value={formData.colors}
                       onChange={e => setFormData({...formData, colors: e.target.value})}
@@ -341,12 +365,12 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Descrição Curta</Label>
+                  <Label>Resumo Vitrine (Curta)</Label>
                   <Textarea 
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
-                    className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[100px]"
-                    placeholder="Resumo impactante para a vitrine"
+                    className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[80px]"
+                    placeholder="Uma frase impactante para a listagem"
                   />
                 </div>
                 <div className="space-y-2">
@@ -354,8 +378,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   <Textarea 
                     value={formData.longDescription}
                     onChange={e => setFormData({...formData, longDescription: e.target.value})}
-                    className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[200px]"
-                    placeholder="História da peça, modelagem e estilo..."
+                    className="rounded-2xl border-primary/5 bg-white shadow-sm min-h-[160px]"
+                    placeholder="História da peça, tecidos, cuidados e sugestões de uso..."
                   />
                 </div>
               </div>
@@ -367,7 +391,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             <div className="sticky top-28 space-y-8">
               <div className="rounded-[3rem] bg-white shadow-2xl overflow-hidden border border-primary/5">
                 <div className="p-6 bg-secondary/30 border-b border-primary/5 flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent">Prévia Vitrine</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent">Prévia Boutique</span>
                   <Badge variant="outline" className="rounded-full">{formData.badge}</Badge>
                 </div>
                 <div className="aspect-[3/4] bg-muted relative">
@@ -380,24 +404,34 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   )}
                 </div>
                 <div className="p-8 text-center space-y-4">
-                  <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-accent">{formData.category}</p>
-                  <h5 className="font-headline font-bold text-xl text-primary truncate">{formData.name || 'Nome do Produto'}</h5>
+                  <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-accent">{formData.collection}</p>
+                  <h5 className="font-headline font-bold text-xl text-primary truncate">{formData.name || 'Nome da Peça'}</h5>
                   <div className="space-y-1">
-                    <p className="text-3xl font-light text-primary">R$ {formData.price ? Number(formData.price).toFixed(2) : '0.00'}</p>
-                    <p className="text-[10px] text-muted-foreground/60 italic">ou 10x de R$ {formData.price ? (Number(formData.price) / 10).toFixed(2) : '0.00'}</p>
+                    <p className="text-3xl font-light text-primary">R$ {formData.price || '0,00'}</p>
+                    <p className="text-[10px] text-muted-foreground/60 italic">ou 10x de R$ {(parsePrice(formData.price) / 10).toFixed(2)}</p>
                   </div>
                 </div>
               </div>
 
               <div className="p-8 rounded-[2.5rem] bg-primary text-primary-foreground space-y-6">
-                <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent">Visibilidade</h6>
-                <div className="flex items-center justify-between">
-                  <Label className="text-white">Publicar na Vitrine</Label>
-                  <Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-white">Destaque na Home</Label>
-                  <Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} />
+                <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent">Status da Peça</h6>
+                <div className="space-y-4">
+                   <div className="flex items-center justify-between">
+                    <Label className="text-white">Publicar Agora</Label>
+                    <Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-white">Destaque Principal</Label>
+                    <Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-white">Mais Vendido</Label>
+                    <Checkbox 
+                      checked={formData.bestseller} 
+                      onCheckedChange={(checked) => setFormData({...formData, bestseller: !!checked})}
+                      className="border-white data-[state=checked]:bg-accent data-[state=checked]:text-primary"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

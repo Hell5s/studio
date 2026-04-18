@@ -6,18 +6,17 @@ import {
   Search, 
   Edit, 
   Trash2, 
-  Eye, 
   Loader2, 
   Filter, 
-  MoreVertical,
   CheckCircle2,
   XCircle,
   Package,
   ArrowUpDown,
-  ExternalLink
+  ExternalLink,
+  Star
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +32,7 @@ export function ProductManagement() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const productsQuery = useMemoFirebase(() => {
+    if (!db) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
   }, [db]);
 
@@ -40,7 +40,8 @@ export function ProductManagement() {
 
   const filteredProducts = products?.filter(p => 
     p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.collection?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleDelete = (productId: string, productName: string) => {
@@ -60,7 +61,7 @@ export function ProductManagement() {
         <div className="relative w-full md:w-96 group">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-accent/40 group-focus-within:text-primary transition-colors" />
           <Input 
-            placeholder="Pesquisar no catálogo..." 
+            placeholder="Pesquisar por nome, coleção ou categoria..." 
             className="pl-14 h-16 rounded-full border-none bg-white shadow-sm focus:ring-2 focus:ring-primary/10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -83,9 +84,9 @@ export function ProductManagement() {
             <thead>
               <tr className="bg-secondary/20 border-b border-primary/5">
                 <th className="px-10 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Produto</th>
-                <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Categoria</th>
+                <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Coleção</th>
                 <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Preço</th>
-                <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
+                <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Destaque</th>
                 <th className="px-10 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-right">Ações</th>
               </tr>
             </thead>
@@ -106,11 +107,13 @@ export function ProductManagement() {
                       <div className="flex flex-col gap-1 min-w-0">
                         <span className="font-bold text-primary truncate max-w-[200px]">{product.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">{product.source || 'Curadoria'}</span>
+                          <Badge variant="ghost" className="text-[8px] font-black uppercase p-0 h-auto leading-none text-accent">
+                             {product.category || 'Geral'}
+                          </Badge>
                           {product.sourceUrl && (
                             <button 
                               onClick={() => window.open(product.sourceUrl, '_blank')}
-                              className="text-[9px] text-accent hover:underline flex items-center gap-1 font-bold uppercase tracking-widest"
+                              className="text-[9px] text-primary/40 hover:text-primary flex items-center gap-1 font-bold uppercase tracking-widest"
                             >
                               <ExternalLink className="h-2.5 w-2.5" /> Fornecedor
                             </button>
@@ -120,30 +123,32 @@ export function ProductManagement() {
                     </div>
                   </td>
                   <td className="px-6 py-6">
-                    <Badge variant="outline" className="rounded-full border-primary/10 text-[9px] font-bold uppercase tracking-widest py-1.5 px-4">
-                      {product.category || 'Geral'}
-                    </Badge>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
+                      {product.collection || 'Default'}
+                    </span>
                   </td>
                   <td className="px-6 py-6">
                     <div className="flex flex-col">
-                      <span className="font-bold text-primary">R$ {product.price?.toFixed(2)}</span>
+                      <span className="font-bold text-primary">R$ {product.price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                       {product.oldPrice && (
-                        <span className="text-[10px] text-muted-foreground/50 line-through">R$ {product.oldPrice?.toFixed(2)}</span>
+                        <span className="text-[10px] text-muted-foreground/50 line-through">R$ {product.oldPrice?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-6">
-                    {product.published !== false ? (
-                      <div className="flex items-center gap-2 text-green-600">
-                        <CheckCircle2 className="h-4 w-4" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest">Publicado</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-amber-600">
-                        <XCircle className="h-4 w-4" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest">Rascunho</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {product.published !== false ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-amber-600" />
+                      )}
+                      {product.bestseller && (
+                        <Star className="h-4 w-4 text-accent fill-accent" />
+                      )}
+                      {product.featured && (
+                        <Badge className="bg-primary text-white text-[8px] px-2 py-0.5">HOME</Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="px-10 py-6 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -177,7 +182,7 @@ export function ProductManagement() {
               </div>
               <div className="space-y-2">
                 <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Catálogo Vazio</h5>
-                <p className="text-xs text-muted-foreground max-w-xs font-light italic">Não encontramos nenhum produto com estes critérios de busca.</p>
+                <p className="text-xs text-muted-foreground max-w-xs font-light italic">Adicione sua primeira peça para ver a boutique ganhar vida.</p>
               </div>
             </div>
           )}

@@ -10,7 +10,8 @@ import {
   Upload,
   ShoppingBag,
   Package,
-  Layers
+  Layers,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,8 +26,9 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { doc } from 'firebase/firestore';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
@@ -46,20 +48,24 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: '',
-    price: 0,
-    oldPrice: 0,
+    price: '',
+    oldPrice: '',
     description: '',
     longDescription: '',
     category: '',
+    collection: '',
     badge: '',
     image: '',
-    stock: 0,
+    gallery: '',
+    stock: '',
     sizes: '',
     colors: '',
     published: true,
     featured: false,
+    bestseller: false,
     sourceUrl: ''
   });
 
@@ -67,22 +73,30 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     if (product) {
       setFormData({
         name: product.name || '',
-        price: product.price || 0,
-        oldPrice: product.oldPrice || 0,
+        price: product.price?.toString() || '',
+        oldPrice: product.oldPrice?.toString() || '',
         description: product.description || '',
         longDescription: product.longDescription || '',
         category: product.category || '',
+        collection: product.collection || 'Moda Fitness',
         badge: product.badge || '',
-        image: product.image || product.images?.[0] || '',
-        stock: product.stock || 0,
+        image: product.image || '',
+        gallery: product.images?.join('\n') || '',
+        stock: product.stock?.toString() || '',
         sizes: product.sizes?.join(', ') || '',
         colors: product.colors?.join(', ') || '',
         published: product.published !== false,
         featured: !!product.featured,
+        bestseller: !!product.bestseller,
         sourceUrl: product.sourceUrl || ''
       });
     }
   }, [product]);
+
+  const parsePrice = (val: string) => {
+    if (!val) return 0;
+    return Number(String(val).replace(/\./g, "").replace(",", ".")) || 0;
+  };
 
   const handleSave = () => {
     if (!product?.id) return;
@@ -90,19 +104,25 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     setLoading(true);
     const docRef = doc(db, 'products', product.id);
     
+    const galleryImages = formData.gallery
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
     updateDocumentNonBlocking(docRef, {
       ...formData,
-      price: Number(formData.price),
-      oldPrice: Number(formData.oldPrice),
-      stock: Number(formData.stock),
+      price: parsePrice(formData.price),
+      oldPrice: formData.oldPrice ? parsePrice(formData.oldPrice) : null,
+      stock: Number(formData.stock) || 0,
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
-      updatedAt: new Date().toISOString()
+      images: galleryImages.length > 0 ? galleryImages : [formData.image],
+      updatedAt: serverTimestamp()
     });
 
     toast({
-      title: "Edição salva",
-      description: "As alterações foram aplicadas ao catálogo com sucesso.",
+      title: "Atualização Concluída",
+      description: "As alterações foram sincronizadas com o catálogo.",
     });
     
     setLoading(false);
@@ -119,7 +139,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       setFormData(prev => ({ ...prev, image: downloadURL }));
-      toast({ title: "Upload concluído" });
+      toast({ title: "Imagem atualizada" });
     } catch (error) {
       toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
@@ -130,8 +150,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
       toast({
-        title: "Dados insuficientes",
-        description: "Preencha o nome e preço para a IA criar a descrição.",
+        title: "Dados incompletos",
+        description: "Nome e preço são base para a IA.",
         variant: "destructive"
       });
       return;
@@ -139,20 +159,13 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
     setGeneratingAI(true);
     try {
-      const features = [
-        ...(formData.colors ? [`Disponível nas cores: ${formData.colors}`] : []),
-        ...(formData.sizes ? [`Tamanhos: ${formData.sizes}`] : []),
-        "Tecido premium",
-        "Corte sofisticado"
-      ];
-
       const result = await adminGenerateProductDescription({
         productName: formData.name,
         category: formData.category,
         price: `R$ ${formData.price}`,
         oldPrice: formData.oldPrice ? `R$ ${formData.oldPrice}` : undefined,
         badge: formData.badge,
-        keyFeatures: features
+        keyFeatures: [formData.colors, formData.sizes].filter(Boolean)
       });
 
       setFormData(prev => ({ 
@@ -161,16 +174,9 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         description: result.description.split('.')[0] + '.'
       }));
 
-      toast({
-        title: "Descrição Criada!",
-        description: "A IA gerou um texto editorial para sua peça.",
-      });
+      toast({ title: "IA: Texto Criado" });
     } catch (error) {
-      toast({
-        title: "Erro na IA",
-        description: "Não foi possível gerar o texto agora.",
-        variant: "destructive"
-      });
+      toast({ title: "IA Indisponível", variant: "destructive" });
     } finally {
       setGeneratingAI(false);
     }
@@ -185,14 +191,19 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
           </DialogHeader>
           <div className="flex items-center gap-6">
             <div className="h-20 w-20 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-md border border-white/10 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <img src={formData.image} className="h-full w-full object-cover" alt="Preview" />
+              {formData.image ? (
+                <img src={formData.image} className="h-full w-full object-cover" alt="Preview" />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center"><ImageIcon className="h-6 w-6 opacity-20" /></div>
+              )}
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               </div>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Edição de Curadoria</p>
-              <h3 className="text-2xl font-headline font-bold">{formData.name || 'Nova Peça'}</h3>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Ajuste de Curadoria</p>
+              <h3 className="text-2xl font-headline font-bold">{formData.name || 'Editando Peça'}</h3>
             </div>
           </div>
         </div>
@@ -200,69 +211,40 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         <div className="p-10 grid md:grid-cols-2 gap-10">
           <div className="space-y-8">
             <div className="grid gap-4">
-              <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Package className="h-3 w-3" /> Essencial</Label>
-              <div className="grid gap-2">
-                <Label>Nome do Produto</Label>
-                <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none focus:ring-1 focus:ring-accent" />
-              </div>
+              <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Package className="h-3 w-3" /> Identidade</Label>
+              <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Nome do Produto" />
               <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Coleção</Label>
-                  <input value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Badge</Label>
-                  <input value={formData.badge} onChange={e => setFormData({...formData, badge: e.target.value})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
-                </div>
+                <Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} placeholder="Coleção" />
+                <Input value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="Categoria" />
               </div>
             </div>
 
             <div className="grid gap-4">
-              <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Layers className="h-3 w-3" /> Estoque e Variantes</Label>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="grid gap-2">
-                  <Label>Preço</Label>
-                  <input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Estoque</Label>
-                  <input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Venda (De)</Label>
-                  <input type="number" value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: Number(e.target.value)})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
-                </div>
+              <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Layers className="h-3 w-3" /> Valores e Atributos</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} placeholder="Preço (129,90)" />
+                <Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} placeholder="Antigo (169,90)" />
               </div>
-              <div className="grid gap-2">
-                <Label>Tamanhos (P, M, G...)</Label>
-                <input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="h-12 w-full rounded-xl bg-white border border-primary/5 px-4 text-sm outline-none" />
+              <div className="grid grid-cols-2 gap-4">
+                <Input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} placeholder="Estoque" />
+                <Input value={formData.badge} onChange={e => setFormData({...formData, badge: e.target.value})} placeholder="Badge (Novo, Oferta)" />
               </div>
+              <Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} placeholder="Tamanhos (P, M, G)" />
+              <Input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} placeholder="Cores (Preto, Azul)" />
             </div>
           </div>
 
           <div className="space-y-8">
             <div className="grid gap-4">
               <div className="flex items-center justify-between">
-                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Sparkles className="h-3 w-3" /> Conteúdo Editorial</Label>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleAIGenerate} 
-                  disabled={generatingAI}
-                  className="rounded-full border-accent/20 text-accent hover:bg-accent hover:text-white h-8"
-                >
+                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Sparkles className="h-3 w-3" /> Editorial IA</Label>
+                <Button variant="outline" size="sm" onClick={handleAIGenerate} disabled={generatingAI} className="h-8 rounded-full border-accent/20 text-accent">
                   {generatingAI ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Sparkles className="h-3 w-3 mr-2" />}
-                  Gerar com IA
+                  Atualizar Texto
                 </Button>
               </div>
-              <div className="grid gap-2">
-                <Label>Resumo (Vitrine)</Label>
-                <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="rounded-xl border-primary/5 bg-white min-h-[80px]" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Descrição Completa</Label>
-                <Textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} className="rounded-xl border-primary/5 bg-white min-h-[160px]" />
-              </div>
+              <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Resumo Vitrine" className="min-h-[80px]" />
+              <Textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} placeholder="Descrição Completa" className="min-h-[160px]" />
             </div>
 
             <div className="p-6 rounded-3xl bg-secondary/30 border border-primary/5 space-y-4">
@@ -271,8 +253,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                 <Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="font-bold">Destaque</Label>
-                <Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} />
+                <Label className="font-bold">Mais Vendido</Label>
+                <Checkbox checked={formData.bestseller} onCheckedChange={(v) => setFormData({...formData, bestseller: !!v})} />
               </div>
             </div>
           </div>
