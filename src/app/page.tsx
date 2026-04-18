@@ -126,40 +126,41 @@ export default function Home() {
       <main className="pt-[100px] md:pt-[160px]">
         <Hero onShopNow={() => scrollTo('colecoes')} />
 
-        {/* Coleções - Essência da Marca */}
+        {/* Nossas Coleções */}
         <section id="colecoes" className="py-16 md:py-32 md:py-40 bg-white">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12 md:mb-20 space-y-3 md:space-y-4">
-              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.6em] text-accent">Curadoria Exclusiva</span>
-              <h2 className="text-3xl md:text-6xl font-serif font-bold text-primary">Nossas Coleções</h2>
+              <h2 className="text-3xl md:text-6xl font-serif font-bold text-primary">Nossas coleções</h2>
+              <p className="text-xs md:text-lg text-primary/60 font-light italic">Escolha o estilo que combina com você</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
               {[
                 { name: 'Vestidos', img: 'https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=600&q=80', id: 'vestidos' },
                 { name: 'Conjuntos', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80', id: 'conjuntos' },
                 { name: 'Moda Festa', img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=600&q=80', id: 'festa' },
                 { name: 'Casual Chic', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80', id: 'casual' },
+                { name: 'Plus Size', img: 'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=600&q=80', id: 'plus-size' },
+                { name: 'Moda Fitness', img: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=600&q=80', id: 'fitness' },
               ].map((cat) => (
                 <div 
-                  key={cat.name} 
+                  key={cat.id} 
                   onClick={() => {
-                    setSelectedCategory(cat.name === 'Casual Chic' ? 'Casual' : cat.name);
+                    setSelectedCategory(cat.name);
                     scrollTo('vitrine');
                   }}
-                  className="group relative aspect-[3/4] rounded-[2rem] md:rounded-[3rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700"
+                  className="group relative aspect-[3/4] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-700"
                 >
                   <Image 
                     src={cat.img} 
                     alt={cat.name} 
                     fill 
-                    className="object-cover transition-transform duration-[2s] group-hover:scale-110" 
+                    className="object-cover transition-transform duration-[1.5s] group-hover:scale-110" 
                     data-ai-hint="fashion editorial"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent" />
-                  <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 text-white">
-                    <h3 className="text-xl md:text-3xl font-serif font-bold">{cat.name}</h3>
-                    <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] md:opacity-0 group-hover:opacity-100 transition-all duration-700 mt-2">Explorar Peças</p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center p-4 text-center">
+                    <h3 className="text-lg md:text-3xl font-serif font-bold text-white shadow-sm">{cat.name}</h3>
                   </div>
                 </div>
               ))}
@@ -176,7 +177,7 @@ export default function Home() {
                 <h2 className="text-3xl md:text-7xl font-serif font-bold text-primary">Mais vendidos</h2>
               </div>
               <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-                {["Novidades", "Vestidos", "Conjuntos", "Casual"].map((category) => (
+                {["Novidades", "Vestidos", "Conjuntos", "Casual Chic", "Plus Size", "Moda Fitness"].map((category) => (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
