@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, Loader2, Copy, Check, X } from 'lucide-react';
+import { Sparkles, Loader2, Copy, Check } from 'lucide-react';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,10 +66,10 @@ export function AIProductGenerator({ open, onOpenChange }: AIProductGeneratorPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] z-[100]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-brand-plum" />
+            <Sparkles className="h-5 w-5 text-accent" />
             Gerador Toda Bela AI
           </DialogTitle>
           <DialogDescription>

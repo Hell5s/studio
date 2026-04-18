@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -15,7 +16,6 @@ import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export default function TodaBelaStorefront() {
   const db = useFirestore();
@@ -49,7 +49,7 @@ export default function TodaBelaStorefront() {
   }, [db]);
   const { data: storeProducts, isLoading } = useCollection(productsQuery);
 
-  // Filtragem de Busca e Categorização
+  // Filtragem de Busca
   const filteredProducts = useMemo(() => {
     if (!storeProducts) return [];
     const search = searchQuery.toLowerCase().trim();
