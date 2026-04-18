@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -67,7 +66,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
       
       const payload = {
         orderNumber: orderId,
-        userId: user.uid, // OBRIGATÓRIO para as novas regras de segurança
+        userId: user.uid, // OBRIGATÓRIO: Vincula o pedido ao usuário logado
         customer: {
           name: formData.name,
           email: formData.email.toLowerCase().trim() || user.email?.toLowerCase().trim() || '',
@@ -88,8 +87,8 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
         total: total,
         status: "Pedido recebido",
         trackingCode: "Aguardando envio",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        createdAt: serverTimestamp(), // OBRIGATÓRIO
+        updatedAt: serverTimestamp()  // OBRIGATÓRIO
       };
 
       await setDoc(doc(db, 'orders', orderId), payload);
@@ -101,11 +100,11 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
         setOrderComplete(false);
       }, 3000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao processar pedido:", error);
       toast({
         title: "Erro ao processar",
-        description: "Não foi possível registrar seu pedido. Verifique sua conexão.",
+        description: error.message || "Não foi possível registrar seu pedido.",
         variant: "destructive"
       });
     } finally {

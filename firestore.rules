@@ -1,10 +1,9 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v21.0
+     * TODA BELA - REGRAS DE SEGURANÇA v22.0
      * Sistema de Propriedade por userId
      */
 
@@ -29,15 +28,12 @@ service cloud.firestore {
 
     // Pedidos: Sistema de Propriedade Privada por userId
     match /orders/{orderId} {
-      // Qualquer usuário autenticado pode criar um pedido
+      // Criação permitida para usuários logados
       allow create: if isSignedIn();
 
       // Leitura, atualização e exclusão permitidas APENAS se for o dono ou admin
-      // Nota: Para listar (query), o filtro userId == request.auth.uid deve estar presente
       allow read, update, delete: if isAdmin() || (isSignedIn() && (
-        resource.data.userId == request.auth.uid || 
-        // Fallback temporário para migração: permite ler se o e-mail bater e userId não existir
-        (!('userId' in resource.data) && resource.data.customer.email == request.auth.token.email)
+        resource.data.userId == request.auth.uid
       ));
     }
 

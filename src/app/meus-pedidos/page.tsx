@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -36,7 +35,7 @@ export default function MeusPedidosPage() {
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
-  // Consulta de Pedidos filtrada OBRIGATORIAMENTE por userId
+  // Consulta de Pedidos filtrada OBRIGATORIAMENTE por userId para satisfazer as Security Rules
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -55,13 +54,18 @@ export default function MeusPedidosPage() {
     setIsMigrating(true);
     try {
       // Busca pedidos que batem com o e-mail mas não têm userId (legado)
+      // Nota: Esta consulta pode exigir permissão específica temporária se as regras forem muito rígidas
       const q = query(collection(db, 'orders'), where('customer.email', '==', user.email));
       const snapshot = await getDocs(q);
       
       let count = 0;
       for (const orderDoc of snapshot.docs) {
-        if (!orderDoc.data().userId) {
-          await updateDoc(orderDoc.ref, { userId: user.uid });
+        const data = orderDoc.data();
+        if (!data.userId) {
+          await updateDoc(orderDoc.ref, { 
+            userId: user.uid,
+            updatedAt: new Date().toISOString()
+          });
           count++;
         }
       }
@@ -71,7 +75,7 @@ export default function MeusPedidosPage() {
       } else {
         toast({ title: "Tudo em ordem", description: "Não encontramos pedidos pendentes de sincronização." });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       toast({ title: "Erro na sincronização", description: "Não foi possível recuperar pedidos antigos no momento.", variant: "destructive" });
     } finally {
@@ -200,7 +204,15 @@ export default function MeusPedidosPage() {
                                </div>
                                <div className="flex justify-between items-center">
                                   <p className="text-2xl font-mono font-medium tracking-tighter">{order.trackingCode}</p>
-                                  <button className="text-[10px] font-bold uppercase tracking-widest underline underline-offset-4 decoration-accent">Copiar</button>
+                                  <button 
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(order.trackingCode);
+                                      toast({ title: "Código Copiado" });
+                                    }}
+                                    className="text-[10px] font-bold uppercase tracking-widest underline underline-offset-4 decoration-accent"
+                                  >
+                                    Copiar
+                                  </button>
                                </div>
                             </div>
                           )}

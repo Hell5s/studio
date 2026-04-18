@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo } from 'react';
@@ -36,8 +35,9 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Consulta memoizada e protegida: filtra estritamente por userId para respeitar as regras
+  // Consulta memoizada e protegida: filtra estritamente por userId para respeitar as Security Rules
   const ordersQuery = useMemoFirebase(() => {
+    // Só executa a query se o usuário estiver logado e o diálogo aberto
     if (!db || !user?.uid || !open) return null;
     return query(
       collection(db, 'orders'), 
@@ -155,7 +155,12 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
               })}
               <div className="text-center pt-8">
                 <Link href="/meus-pedidos">
-                  <Button className="rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] h-14 px-12">Ver Histórico Completo</Button>
+                  <Button 
+                    onClick={() => onOpenChange(false)}
+                    className="rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] h-14 px-12"
+                  >
+                    Ver Histórico Completo
+                  </Button>
                 </Link>
               </div>
             </div>
