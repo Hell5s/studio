@@ -48,6 +48,20 @@
       "properties": {
         "id": { "type": "string" },
         "customerName": { "type": "string" },
+        "customerEmail": { "type": "string", "format": "email" },
+        "customerPhone": { "type": "string" },
+        "customerAddress": {
+          "type": "object",
+          "properties": {
+            "street": { "type": "string" },
+            "number": { "type": "string" },
+            "complement": { "type": "string" },
+            "neighborhood": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string" },
+            "zipCode": { "type": "string" }
+          }
+        },
         "items": { "type": "array", "items": { "type": "object" } },
         "total": { "type": "number" },
         "status": { "type": "string", "enum": ["Pendente", "Pago", "Enviado", "Entregue", "Cancelado"] },
@@ -92,5 +106,3 @@
     }
   }
 }
-
-    

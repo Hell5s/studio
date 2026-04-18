@@ -22,6 +22,7 @@ import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
+import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Image from 'next/image';
@@ -35,6 +36,7 @@ export default function Home() {
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Novidades");
   
   const [cartOpen, setCartOpen] = useState(false);
@@ -88,7 +90,7 @@ export default function Home() {
     });
     if (!buyNow) setCartOpen(true);
     if (buyNow) {
-      setTimeout(() => handleCheckout(), 200);
+      setTimeout(() => setIsCheckoutOpen(true), 200);
     }
   };
 
@@ -108,35 +110,13 @@ export default function Home() {
 
   const handleCheckout = () => {
     if (!cartItems.length) return;
-
-    // Registrar pedido no Firestore antes de ir para o WhatsApp
-    const orderData = {
-      customerName: user?.displayName || "Cliente Toda Bela",
-      customerEmail: user?.email || null,
-      items: cartItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.image
-      })),
-      total: cartSubtotal,
-      status: 'Pendente',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-
-    addDocumentNonBlocking(collection(db, 'orders'), orderData);
-
-    const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-    const lines = cartItems.map(item => `- ${item.name} | Qtd: ${item.quantity} | ${formatCurrency(item.price)}`);
-    const message = encodeURIComponent(
-      `Olá! Quero finalizar meu pedido na Toda Bela:%0A%0A${lines.join("%0A")}%0A%0ASubtotal: ${formatCurrency(cartSubtotal)}`
-    );
-    
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
-    setCartItems([]);
     setCartOpen(false);
+    setIsCheckoutOpen(true);
+  };
+
+  const onOrderSuccess = () => {
+    setCartItems([]);
+    setIsCheckoutOpen(false);
   };
 
   const openInfo = (title: string, content: string) => {
@@ -394,8 +374,13 @@ export default function Home() {
         onAdminLogin={() => setShowAdmin(true)}
       />
       <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
+      <CheckoutDialog 
+        open={isCheckoutOpen} 
+        onOpenChange={setIsCheckoutOpen}
+        cartItems={cartItems}
+        total={cartSubtotal}
+        onSuccess={onOrderSuccess}
+      />
     </div>
   );
 }
-
-    
