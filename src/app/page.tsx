@@ -25,13 +25,20 @@ import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Image from 'next/image';
 
-// Fallback estático (mantido conforme PASSO 4)
+// Fallback estático para garantir que o site nunca fique vazio
 const staticLaunchProducts = [
   { id: '1', name: "Top Alongado com Decote Alto", price: 99.9, image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80", badge: 'Novo' },
-  { id: '2', name: "Macaquinho Contrastante", price: 159.9, image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", badge: 'Novo' }
+  { id: '2', name: "Macaquinho Contrastante", price: 159.9, image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", badge: 'Novo' },
+  { id: '3', name: "Calça Legging com Cós em V", price: 169.9, image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80", badge: 'Destaque' },
+  { id: '4', name: "Short com Recorte Premium", price: 109.9, image: "https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&w=900&q=80", badge: 'Novo' }
+];
+
+const staticBasicProducts = [
+  { id: '5', name: "Top Básico Alças Reguláveis", price: 69.9, image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80", collection: 'Linha Básica' },
+  { id: '6', name: "Calça Legging Básica", price: 99.9, image: "https://images.unsplash.com/photo-1506629905607-d9c297d7d122?auto=format&fit=crop&w=900&q=80", collection: 'Linha Básica' },
+  { id: '7', name: "Conjunto Básico Lilás", price: 69.9, image: "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=900&q=80", collection: 'Linha Básica' }
 ];
 
 export default function Home() {
@@ -49,7 +56,7 @@ export default function Home() {
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
 
-  // PASSO 1 — PRODUTOS REAIS EM TEMPO REAL
+  // Sincronização Real dos Produtos
   const [storeProducts, setStoreProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
 
@@ -59,7 +66,7 @@ export default function Home() {
       return;
     }
 
-    const q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(50));
+    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const products = snapshot.docs.map(doc => ({
@@ -74,12 +81,6 @@ export default function Home() {
     return () => unsubscribe();
   }, [db]);
 
-  const [infoDialog, setInfoDialog] = useState<{ open: boolean; title: string; content: string }>({
-    open: false,
-    title: '',
-    content: ''
-  });
-
   // Verificação de Admin
   const adminDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -88,13 +89,13 @@ export default function Home() {
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
-  // PASSO 4 — GARANTIR FALLBACK
+  // Lógica de Fallback (PASSO 4)
   const storefrontProducts = useMemo(() => {
     if (storeProducts.length) return storeProducts;
-    return staticLaunchProducts; // Fallback se o banco estiver vazio
+    return [...staticLaunchProducts, ...staticBasicProducts];
   }, [storeProducts]);
 
-  // Lógica de filtragem baseada nos produtos reais
+  // Lógica de filtragem
   const filteredProducts = useMemo(() => {
     let items = storefrontProducts;
     
@@ -164,22 +165,18 @@ export default function Home() {
     setIsCheckoutOpen(false);
   };
 
-  const openInfo = (title: string, content: string) => {
-    setInfoDialog({ open: true, title, content });
-  };
-
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
     el?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // PASSO 3 — USAR PRODUTOS REAIS NO ADMIN
+  // Usar produtos reais no Admin (PASSO 3)
   if (showAdmin && isAdmin) {
     return (
       <div className="h-screen w-full">
         <AdminDashboard 
           productsCount={storeProducts.length} 
-          categoriesCount={0} // Pode ser expandido futuramente
+          categoriesCount={0}
           onOpenAI={() => setIsAIGeneratorOpen(true)}
           onExit={() => setShowAdmin(false)}
         />
