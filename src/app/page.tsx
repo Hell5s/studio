@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Loader2, 
   ShoppingBagIcon,
@@ -17,8 +17,8 @@ import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Newsletter } from '@/components/store/Newsletter';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
+import { useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, orderBy, limit, doc, onSnapshot } from 'firebase/firestore';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
@@ -28,9 +28,17 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Image from 'next/image';
 
+// Fallback estático (mantido conforme PASSO 4)
+const staticLaunchProducts = [
+  { id: '1', name: "Top Alongado com Decote Alto", price: 99.9, image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80", badge: 'Novo' },
+  { id: '2', name: "Macaquinho Contrastante", price: 159.9, image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", badge: 'Novo' }
+];
+
 export default function Home() {
   const db = useFirestore();
   const { user } = useUser();
+  
+  // Estados de UI
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -38,9 +46,33 @@ export default function Home() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Novidades");
   const [searchQuery, setSearchQuery] = useState("");
-  
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
+
+  // PASSO 1 — PRODUTOS REAIS EM TEMPO REAL
+  const [storeProducts, setStoreProducts] = useState<any[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!db) {
+      setProductsLoading(false);
+      return;
+    }
+
+    const q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(50));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const products = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      setStoreProducts(products);
+      setProductsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [db]);
 
   const [infoDialog, setInfoDialog] = useState<{ open: boolean; title: string; content: string }>({
     open: false,
@@ -56,23 +88,15 @@ export default function Home() {
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
-  // Consultas de dados
-  const productsQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(50));
-  }, [db]);
-  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
+  // PASSO 4 — GARANTIR FALLBACK
+  const storefrontProducts = useMemo(() => {
+    if (storeProducts.length) return storeProducts;
+    return staticLaunchProducts; // Fallback se o banco estiver vazio
+  }, [storeProducts]);
 
-  const categoriesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return collection(db, 'categories');
-  }, [db]);
-  const { data: categories } = useCollection(categoriesQuery);
-
-  // Lógica de filtragem
+  // Lógica de filtragem baseada nos produtos reais
   const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    let items = products;
+    let items = storefrontProducts;
     
     if (selectedCategory !== "Novidades") {
       items = items.filter(p => p.category === selectedCategory || p.collection === selectedCategory);
@@ -88,21 +112,13 @@ export default function Home() {
     }
     
     return items;
-  }, [products, selectedCategory, searchQuery]);
-
-  const launchProducts = useMemo(() => {
-    if (searchQuery) return []; // Ocultar seções fixas durante busca
-    if (!products) return [];
-    const featured = products.filter(p => p.featured || p.bestseller || p.badge === 'Novo');
-    return (featured.length ? featured : products).slice(0, 4);
-  }, [products, searchQuery]);
+  }, [storefrontProducts, selectedCategory, searchQuery]);
 
   const basicProducts = useMemo(() => {
-    if (searchQuery) return []; // Ocultar seções fixas durante busca
-    if (!products) return [];
-    const basics = products.filter(p => p.collection === 'Linha Básica' || p.category === 'Básicos');
-    return (basics.length ? basics : products.slice(4)).slice(0, 5);
-  }, [products, searchQuery]);
+    if (searchQuery) return []; 
+    const basics = storefrontProducts.filter(p => p.collection === 'Linha Básica' || p.category === 'Básicos');
+    return (basics.length ? basics : storefrontProducts.slice(4)).slice(0, 5);
+  }, [storefrontProducts, searchQuery]);
 
   const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
   const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + (item.quantity * item.price), 0), [cartItems]);
@@ -157,12 +173,13 @@ export default function Home() {
     el?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // PASSO 3 — USAR PRODUTOS REAIS NO ADMIN
   if (showAdmin && isAdmin) {
     return (
       <div className="h-screen w-full">
         <AdminDashboard 
-          productsCount={products?.length || 0} 
-          categoriesCount={categories?.length || 0}
+          productsCount={storeProducts.length} 
+          categoriesCount={0} // Pode ser expandido futuramente
           onOpenAI={() => setIsAIGeneratorOpen(true)}
           onExit={() => setShowAdmin(false)}
         />
@@ -186,25 +203,17 @@ export default function Home() {
       <main className="pt-[140px] md:pt-[180px]">
         {!searchQuery && <Hero onShopNow={() => scrollTo('vitrine')} />}
 
-        {/* Vitrine de Produtos */}
         <section id="vitrine" className="py-20 md:py-32 container mx-auto px-6">
           <div className="flex items-center justify-between mb-12">
             <h2 className="text-3xl md:text-5xl font-serif font-bold text-primary tracking-tight">
-              {searchQuery ? `Resultados para "${searchQuery}"` : selectedCategory === "Novidades" ? "Lançamentos" : selectedCategory}
+              {productsLoading ? "Carregando Boutique..." : (searchQuery ? `Resultados para "${searchQuery}"` : selectedCategory === "Novidades" ? "Lançamentos" : selectedCategory)}
             </h2>
-            {searchQuery ? (
+            {searchQuery && (
                <button 
                 onClick={() => setSearchQuery("")}
                 className="text-sm font-bold uppercase tracking-widest text-accent hover:text-primary"
               >
                 Limpar Busca
-              </button>
-            ) : (
-              <button 
-                onClick={() => { setSelectedCategory("Novidades"); scrollTo('colecoes'); }}
-                className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors"
-              >
-                Ver Coleções <ChevronRight className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -222,7 +231,7 @@ export default function Home() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-32 text-center space-y-4">
                   <SearchX className="h-16 w-16 text-primary/20" />
-                  <p className="text-lg text-primary/40 italic font-light">Nenhum objeto de desejo encontrado para sua busca.</p>
+                  <p className="text-lg text-primary/40 italic font-light">Nenhum objeto de desejo encontrado.</p>
                   <Button variant="outline" onClick={() => setSearchQuery("")} className="rounded-full px-8">Ver todo o catálogo</Button>
                 </div>
               )}
@@ -232,7 +241,6 @@ export default function Home() {
 
         {!searchQuery && (
           <>
-            {/* Nossas Coleções */}
             <section id="colecoes" className="py-20 md:py-32 bg-[#F4ECEE]">
               <div className="container mx-auto px-6 text-center">
                 <div className="space-y-4 mb-16">
@@ -266,7 +274,6 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Linha Básica */}
             <section id="mais-vendidos" className="py-20 md:py-32 container mx-auto px-6 text-center">
               <div className="space-y-4 mb-16">
                 <span className="text-[13px] font-bold uppercase tracking-[0.3em] text-primary/60">Essencial Toda Bela</span>
@@ -290,50 +297,9 @@ export default function Home() {
           <div className="text-center mb-24 space-y-8">
             <h2 className="text-6xl md:text-8xl font-serif font-bold tracking-tighter">Toda Bela</h2>
             <p className="max-w-4xl mx-auto text-lg md:text-xl text-white/70 font-light leading-relaxed italic">
-              Toda Bela é mais que uma marca — é um movemento de evolução. Inspiramos presença, propósito e estilo em cada detalhe. Para quem vive com intenção e constrói sua própria jornada.
+              Toda Bela é mais que uma marca — é um movimento de evolução. Inspiramos presença, propósito e estilo em cada detalhe.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 pb-20 border-b border-white/10">
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold uppercase tracking-widest text-accent">Atendimento</h3>
-              <div className="space-y-3 text-sm text-white/60 font-medium">
-                <p>Seg a Qui 07h-17h e Sex 07h-16h</p>
-                <p>Whatsapp: (11) 99999-9999</p>
-                <p>contato@todobela.com.br</p>
-              </div>
-            </div>
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold uppercase tracking-widest text-accent">Pedidos</h3>
-              <ul className="space-y-3 text-sm text-white/60 font-medium cursor-pointer">
-                <li onClick={() => setIsTrackOpen(true)} className="hover:text-white">Acompanhar pedido</li>
-                <li onClick={() => openInfo("Trocas e Devoluções", "Você tem até 7 dias para solicitar a troca ou devolução.")} className="hover:text-white">Trocas e devoluções</li>
-                <li className="hover:text-white">Prazos e entrega</li>
-              </ul>
-            </div>
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold uppercase tracking-widest text-accent">Ajuda</h3>
-              <ul className="space-y-3 text-sm text-white/60 font-medium cursor-pointer">
-                <li className="hover:text-white">Trabalhe conosco</li>
-                <li className="hover:text-white">Política de privacidade</li>
-                <li className="hover:text-white">Termos de uso</li>
-              </ul>
-            </div>
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold uppercase tracking-widest text-accent">Revenda</h3>
-              <p className="text-sm text-white/60 leading-relaxed">Seja uma parceira Toda Bela e tenha acesso a condições especiais.</p>
-              <Button className="rounded-full bg-white text-black font-bold uppercase text-[10px] tracking-widest px-8">Quero Revender</Button>
-            </div>
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold uppercase tracking-widest text-accent">Segurança</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {['Visa', 'Master', 'Pix', 'Seguro'].map(p => (
-                  <div key={p} className="bg-white/5 rounded-lg py-3 px-4 text-center text-[10px] font-bold uppercase">{p}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-
           <div className="pt-12 text-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/30">
               © 2026 Toda Bela • Todos os direitos reservados.
@@ -398,28 +364,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* Diálogo de Informações Institucionais */}
-      <Dialog open={infoDialog.open} onOpenChange={(open) => setInfoDialog(prev => ({ ...prev, open }))}>
-        <DialogContent className="sm:max-w-[500px] rounded-[3rem] p-0 border-none shadow-2xl bg-background overflow-hidden">
-          <div className="bg-primary p-10 text-primary-foreground relative">
-            <DialogHeader className="relative z-10 space-y-2">
-              <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mb-4">
-                <Info className="h-6 w-6 text-accent" />
-              </div>
-              <DialogTitle className="text-2xl font-serif font-bold">{infoDialog.title}</DialogTitle>
-            </DialogHeader>
-          </div>
-          <div className="p-10">
-            <DialogDescription className="text-primary/70 text-base leading-relaxed italic font-light">
-              {infoDialog.content}
-            </DialogDescription>
-            <Button onClick={() => setInfoDialog(prev => ({ ...prev, open: false }))} className="w-full mt-10 rounded-full h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-xl">
-              Entendido
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <LoginDialog 
         open={isLoginOpen} 
