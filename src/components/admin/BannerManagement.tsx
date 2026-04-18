@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, useFirestore, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
 
 export function BannerManagement() {
@@ -19,7 +19,12 @@ export function BannerManagement() {
   const [prompt, setPrompt] = useState('');
   const [previewImage, setPreviewImage] = useState('');
 
-  const bannersQuery = query(collection(db, 'banners'), orderBy('createdAt', 'desc'));
+  // Memoização da consulta para evitar erros de asserção interna e loops de renderização
+  const bannersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'banners'), orderBy('createdAt', 'desc'));
+  }, [db]);
+  
   const { data: banners, isLoading } = useCollection(bannersQuery);
 
   const handleGenerate = async () => {
@@ -36,8 +41,7 @@ export function BannerManagement() {
     } catch (error) {
       toast({ title: "Erro na IA", description: "Não foi possível gerar a imagem agora.", variant: "destructive" });
     } finally {
-      setIsGenerating(true);
-      setTimeout(() => setIsGenerating(false), 2000); // Simular processamento de download/preview
+      setIsGenerating(false);
     }
   };
 
@@ -92,7 +96,7 @@ export function BannerManagement() {
               <Button 
                 onClick={handleGenerate} 
                 disabled={isGenerating}
-                className="rounded-full h-16 px-10 bg-primary shadow-xl hover:scale-105 transition-all"
+                className="rounded-full h-16 px-10 bg-primary shadow-xl hover:scale-105 transition-all text-white"
               >
                 {isGenerating ? <Loader2 className="animate-spin h-5 w-5" /> : <Sparkles className="h-5 w-5 mr-2" />}
                 Gerar com IA

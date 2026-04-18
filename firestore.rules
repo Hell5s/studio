@@ -5,7 +5,7 @@ service cloud.firestore {
 
     /**
      * TODA BELA - REGRAS DE SEGURANÇA REFINADAS
-     * Atualizado para garantir leitura pública de banners e produtos.
+     * Garantindo leitura pública de banners e produtos.
      */
 
     function isSignedIn() {
@@ -28,7 +28,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Banners: Essencial para o Hero da Home (Leitura pública)
+    // Banners: Leitura pública total (get e list)
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();

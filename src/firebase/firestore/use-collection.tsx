@@ -59,12 +59,10 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // Safe path extraction for contextual errors
-        let path = 'unknown-query-path';
-        if ((targetRefOrQuery as any).path) {
+        // Safe path extraction using public API only
+        let path = 'collection-query';
+        if ('path' in targetRefOrQuery) {
           path = (targetRefOrQuery as any).path;
-        } else if ((targetRefOrQuery as any)._query?.path?.segments) {
-          path = (targetRefOrQuery as any)._query.path.segments.join('/');
         }
 
         const contextualError = new FirestorePermissionError({

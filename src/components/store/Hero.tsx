@@ -5,19 +5,23 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 
 export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const db = useFirestore();
   const [currentImage, setCurrentImage] = useState(0);
 
-  // Buscar banners ativos do Firestore
-  const bannersQuery = query(
-    collection(db, 'banners'), 
-    where('active', '==', true),
-    orderBy('order', 'asc')
-  );
+  // Buscar banners ativos do Firestore com memoização para evitar loops e erros de asserção
+  const bannersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(
+      collection(db, 'banners'), 
+      where('active', '==', true),
+      orderBy('order', 'asc')
+    );
+  }, [db]);
+  
   const { data: banners } = useCollection(bannersQuery);
 
   // Fallback se não houver banners cadastrados
@@ -25,7 +29,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     {
       url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80",
       title: "Elegância que Inspira",
-      subtitle: "Curadoria exclusiva de peças que unem sofisticação e conforto."
+      subtitle: "Curadoria exclusiva de peças que unem sofisticação e conforto.",
+      ctaText: "Comprar Agora"
     }
   ];
 
