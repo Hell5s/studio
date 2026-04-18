@@ -10,19 +10,43 @@ interface LogoMarkProps {
 
 export function LogoMark({ className }: LogoMarkProps) {
   return (
-    <div className={cn("flex items-center gap-3 group cursor-pointer", className)}>
-      <div className="relative flex h-12 w-12 items-center justify-center rounded-full border border-[#E9D7DB] bg-white shadow-sm transition-all group-hover:border-accent">
-        <svg viewBox="0 0 120 120" className="h-7 w-7" fill="none">
-          <circle cx="60" cy="60" r="42" stroke="#C7A17A" strokeWidth="4" />
-          <path
-            d="M44 39C44 35.6863 46.6863 33 50 33H70C73.3137 33 76 35.6863 76 39V41C76 44.3137 73.3137 47 70 47H64V83H56V47H50C46.6863 47 44 44.3137 44 41V39Z"
-            fill="#6E3C47"
-          />
-        </svg>
+    <div className={cn("flex items-center gap-4 group cursor-pointer", className)}>
+      {/* Selo Monograma Premium */}
+      <div className="relative flex h-14 w-14 items-center justify-center">
+        {/* Círculo Externo com Efeito de Anel */}
+        <div className="absolute inset-0 rounded-full border border-accent/30 scale-100 group-hover:scale-110 transition-transform duration-700" />
+        
+        {/* Círculo Interno Principal */}
+        <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-[0_4px_20px_-4px_rgba(110,60,71,0.15)] border border-primary/5 transition-all duration-500 group-hover:shadow-[0_8px_30px_-4px_rgba(199,161,122,0.3)]">
+          <svg viewBox="0 0 100 100" className="h-6 w-6" fill="none">
+            {/* Monograma Estilizado */}
+            <path
+              d="M35 30H65M50 30V75M40 75H60"
+              stroke="#6E3C47"
+              strokeWidth="4"
+              strokeLinecap="serif"
+            />
+            <path
+              d="M30 40C30 35 35 30 40 30M60 30C65 30 70 35 70 40M70 65C70 70 65 75 60 75M40 75C35 75 30 70 30 65"
+              stroke="#C7A17A"
+              strokeWidth="2"
+              strokeDasharray="2 4"
+            />
+          </svg>
+        </div>
       </div>
-      <div className="leading-none text-left">
-        <p className="text-3xl font-semibold tracking-[-0.05em] text-[#6E3C47]">Toda Bela</p>
-        <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#C7A17A]">Moda Feminina</p>
+
+      {/* Logotipo Textual Editorial */}
+      <div className="flex flex-col text-left">
+        <h1 className="font-headline text-3xl font-bold tracking-tight text-primary leading-none mb-1">
+          Toda <span className="italic font-light text-accent">Bela</span>
+        </h1>
+        <div className="flex items-center gap-2">
+          <div className="h-px w-4 bg-accent/40" />
+          <p className="text-[9px] uppercase tracking-[0.45em] text-accent font-bold">
+            Curadoria de Luxo
+          </p>
+        </div>
       </div>
     </div>
   );
