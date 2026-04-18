@@ -3,8 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * TODA BELA - REGRAS DE SEGURANÇA v22.0
-     * Sistema de Propriedade por userId
+     * TODA BELA - REGRAS DE SEGURANÇA
      */
 
     function isSignedIn() {
@@ -15,7 +14,7 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    // Produtos e Categorias: Leitura pública, escrita apenas admin
+    // Produtos e Categorias: Leitura pública para a vitrine
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -28,10 +27,10 @@ service cloud.firestore {
 
     // Pedidos: Sistema de Propriedade Privada por userId
     match /orders/{orderId} {
-      // Criação permitida para usuários logados
+      // Criação permitida para qualquer usuário logado
       allow create: if isSignedIn();
 
-      // Leitura, atualização e exclusão permitidas APENAS se for o dono ou admin
+      // Leitura, atualização e exclusão: Apenas o dono (userId) ou Administradores
       allow read, update, delete: if isAdmin() || (isSignedIn() && (
         resource.data.userId == request.auth.uid
       ));
@@ -48,19 +47,19 @@ service cloud.firestore {
       allow read, delete: if isAdmin();
     }
     
-    // Papéis Administrativos: Dono lê seu status, admin lista todos
+    // Papéis Administrativos: Dono lê seu status para habilitar painel
     match /roles_admin/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
       allow list: if isAdmin();
     }
     
-    // Banners: Leitura pública, gestão admin
+    // Banners: Leitura pública para a home
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Bloqueio padrão
+    // Bloqueio padrão para outros documentos
     match /{document=**} {
       allow read, write: if false;
     }
