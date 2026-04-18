@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   ShoppingBag, 
   Search, 
@@ -12,8 +12,7 @@ import {
   Truck, 
   XCircle,
   MoreVertical,
-  ExternalLink,
-  ChevronDown
+  X
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
@@ -57,10 +56,19 @@ export function OrderManagement() {
 
   const { data: orders, isLoading } = useCollection(ordersQuery);
 
-  const filteredOrders = orders?.filter(order => 
-    order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    const s = searchTerm.toLowerCase().trim().replace('#', '');
+    if (!s) return orders;
+
+    return orders.filter(order => 
+      order.id.toLowerCase().includes(s) ||
+      order.customerName?.toLowerCase().includes(s) ||
+      order.customerEmail?.toLowerCase().includes(s) ||
+      order.customerPhone?.toLowerCase().includes(s) ||
+      order.status?.toLowerCase().includes(s)
+    );
+  }, [orders, searchTerm]);
 
   const updateStatus = (orderId: string, newStatus: string) => {
     const orderRef = doc(db, 'orders', orderId);
@@ -80,14 +88,22 @@ export function OrderManagement() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-accent/40" />
+        <div className="relative w-full md:w-96 group">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-accent/40 group-focus-within:text-primary transition-colors" />
           <Input 
             placeholder="Buscar por ID ou nome..." 
-            className="pl-14 h-16 rounded-full border-none bg-white shadow-sm"
+            className="pl-14 pr-12 h-16 rounded-full border-none bg-white shadow-sm focus:ring-2 focus:ring-primary/10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')}
+              className="absolute right-6 top-1/2 -translate-y-1/2 text-accent/40 hover:text-primary"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -111,10 +127,13 @@ export function OrderManagement() {
                     <Loader2 className="h-10 w-10 animate-spin text-accent/40 mx-auto" />
                   </td>
                 </tr>
-              ) : filteredOrders?.map((order) => (
+              ) : filteredOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-secondary/10 transition-colors">
                   <td className="px-10 py-6">
-                    <span className="font-bold text-primary font-mono text-xs">#{order.id.slice(-6).toUpperCase()}</span>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-primary font-mono text-xs">#{order.id.slice(-6).toUpperCase()}</span>
+                      <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-tight">{order.customerName}</span>
+                    </div>
                   </td>
                   <td className="px-6 py-6 text-[11px] text-muted-foreground">
                     {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('pt-BR') : 'Agora mesmo'}
@@ -167,14 +186,14 @@ export function OrderManagement() {
             </tbody>
           </table>
           
-          {(!filteredOrders || filteredOrders.length === 0) && !isLoading && (
+          {(filteredOrders.length === 0) && !isLoading && (
             <div className="py-32 flex flex-col items-center justify-center text-center space-y-6">
               <div className="h-24 w-24 rounded-full bg-secondary/50 flex items-center justify-center text-primary/20">
                 <ShoppingBag className="h-12 w-12" />
               </div>
               <div className="space-y-2">
-                <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Nenhum pedido ainda</h5>
-                <p className="text-xs text-muted-foreground max-w-xs font-light italic">Os pedidos aparecerão aqui em tempo real assim que os clientes finalizarem o carrinho.</p>
+                <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Nenhum pedido encontrado</h5>
+                <p className="text-xs text-muted-foreground max-w-xs font-light italic">Tente buscar por um ID diferente ou pelo nome da cliente.</p>
               </div>
             </div>
           )}
@@ -183,5 +202,3 @@ export function OrderManagement() {
     </div>
   );
 }
-
-    

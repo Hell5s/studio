@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Search, 
   Edit, 
@@ -13,7 +13,8 @@ import {
   Package,
   ArrowUpDown,
   ExternalLink,
-  Star
+  Star,
+  X
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
@@ -38,15 +39,19 @@ export function ProductManagement() {
 
   const { data: products, isLoading } = useCollection(productsQuery);
 
-  const filteredProducts = products?.filter(p => {
-    const q = searchTerm.toLowerCase();
-    return (
-      p.id?.toLowerCase().includes(q) ||
-      p.name?.toLowerCase().includes(q) ||
-      p.category?.toLowerCase().includes(q) ||
-      p.collection?.toLowerCase().includes(q)
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    const s = searchTerm.toLowerCase().trim();
+    if (!s) return products;
+
+    return products.filter(p => 
+      p.id?.toLowerCase().includes(s) ||
+      p.name?.toLowerCase().includes(s) ||
+      p.category?.toLowerCase().includes(s) ||
+      p.collection?.toLowerCase().includes(s) ||
+      p.badge?.toLowerCase().includes(s)
     );
-  });
+  }, [products, searchTerm]);
 
   const handleDelete = (productId: string, productName: string) => {
     if (confirm(`Deseja realmente excluir "${productName}" do catálogo?`)) {
@@ -66,10 +71,18 @@ export function ProductManagement() {
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-accent/40 group-focus-within:text-primary transition-colors" />
           <Input 
             placeholder="Pesquisar por nome, ID ou coleção..." 
-            className="pl-14 h-16 rounded-full border-none bg-white shadow-sm focus:ring-2 focus:ring-primary/10"
+            className="pl-14 pr-12 h-16 rounded-full border-none bg-white shadow-sm focus:ring-2 focus:ring-primary/10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')}
+              className="absolute right-6 top-1/2 -translate-y-1/2 text-accent/40 hover:text-primary"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
         
         <div className="flex gap-4 w-full md:w-auto">
@@ -101,7 +114,7 @@ export function ProductManagement() {
                     <Loader2 className="h-10 w-10 animate-spin text-accent/40 mx-auto" />
                   </td>
                 </tr>
-              ) : filteredProducts?.map((product) => (
+              ) : filteredProducts.map((product) => (
                 <tr key={product.id} className="hover:bg-secondary/10 transition-colors group">
                   <td className="px-10 py-6">
                     <div className="flex items-center gap-6">
@@ -180,14 +193,14 @@ export function ProductManagement() {
             </tbody>
           </table>
           
-          {(!filteredProducts || filteredProducts.length === 0) && !isLoading && (
+          {(filteredProducts.length === 0) && !isLoading && (
             <div className="py-32 flex flex-col items-center justify-center text-center space-y-6">
               <div className="h-24 w-24 rounded-full bg-secondary/50 flex items-center justify-center text-primary/20">
                 <Package className="h-12 w-12" />
               </div>
               <div className="space-y-2">
-                <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Catálogo Vazio</h5>
-                <p className="text-xs text-muted-foreground max-w-xs font-light italic">Adicione sua primeira peça para ver a boutique ganhar vida.</p>
+                <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Nenhum item encontrado</h5>
+                <p className="text-xs text-muted-foreground max-w-xs font-light italic">Tente buscar por outro termo ou limpe os filtros.</p>
               </div>
             </div>
           )}
