@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Hero({ onShopNow }: { onShopNow?: () => void }) {
@@ -33,7 +32,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   }, [images.length]);
 
   return (
-    <section className="relative w-full h-[80vh] min-h-[600px] overflow-hidden bg-black">
+    <section className="relative w-full h-[85vh] min-h-[600px] overflow-hidden bg-black">
       {/* Imagem de Fundo com Transição */}
       {images.map((img, idx) => (
         <div
@@ -59,32 +58,32 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
       {/* Gradientes de Profundidade */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent z-20" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-20" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent z-20" />
 
       {/* Conteúdo Editorial */}
-      <div className="container mx-auto h-full px-6 md:px-14 flex items-end pb-20 md:pb-32 relative z-30">
-        <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-left-10 duration-1000">
-          <div className="space-y-4">
+      <div className="container mx-auto h-full px-6 md:px-14 flex items-center justify-start relative z-30 pt-20">
+        <div className="max-w-3xl space-y-10 animate-in fade-in slide-in-from-left-10 duration-1000">
+          <div className="space-y-6">
             <h1 className="text-5xl md:text-8xl font-serif font-bold text-white uppercase tracking-tighter leading-[0.9]">
-              Essência <br />
-              <span className="italic font-light text-accent">Moderna</span>
+              Elegância <br />
+              <span className="italic font-light text-accent">que Inspira</span>
             </h1>
-            <p className="text-lg md:text-2xl text-white/85 font-light italic max-w-xl">
-              Peças que acompanham seu ritmo com conforto, presença e o estilo que você merece.
+            <p className="text-lg md:text-2xl text-white/90 font-light italic max-w-xl leading-relaxed">
+              Curadoria exclusiva de peças que unem sofisticação e conforto para mulheres que desejam marcar presença com autenticidade.
             </p>
           </div>
           
-          <div className="flex flex-wrap gap-5">
+          <div className="flex flex-wrap gap-5 pt-4">
             <Button 
               onClick={onShopNow}
-              className="rounded-full bg-white text-primary px-10 py-8 text-lg font-bold uppercase tracking-widest shadow-2xl hover:scale-105 transition-all"
+              className="rounded-full bg-white text-primary px-12 py-8 text-lg font-bold uppercase tracking-widest shadow-2xl hover:scale-105 transition-all border-none"
             >
-              Conferir Agora
+              Comprar Agora
             </Button>
             <Button 
               variant="outline"
               onClick={onShopNow}
-              className="rounded-full border-white/20 text-white px-10 py-8 text-lg font-bold uppercase tracking-widest hover:bg-white hover:text-primary transition-all"
+              className="rounded-full border-white text-white px-12 py-8 text-lg font-bold uppercase tracking-widest hover:bg-white hover:text-primary transition-all"
             >
               Ver Looks
             </Button>
