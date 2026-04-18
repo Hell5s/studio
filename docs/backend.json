@@ -83,6 +83,7 @@
     "Favorite": {
       "title": "Favorite",
       "type": "object",
+      "description": "Representa um produto favoritado por uma usuária.",
       "properties": {
         "productId": { "type": "string" },
         "addedAt": { "type": "string", "format": "date-time" }
