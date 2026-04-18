@@ -153,16 +153,19 @@ export default function Home() {
         <section id="colecoes" className="py-20 md:py-32 bg-[#F4ECEE]">
           <div className="container mx-auto px-6 text-center">
             <div className="space-y-4 mb-16">
-              <span className="text-[13px] font-bold uppercase tracking-[0.3em] text-accent">Curadoria Exclusiva</span>
               <h2 className="text-4xl md:text-6xl font-serif font-bold text-primary">Nossas Coleções</h2>
+              <p className="text-accent text-[11px] font-bold uppercase tracking-[0.3em]">Escolha o estilo que combina com você</p>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
               {[
                 { name: 'Vestidos', img: 'https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=600&q=80' },
                 { name: 'Conjuntos', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80' },
                 { name: 'Moda Festa', img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=600&q=80' },
-                { name: 'Casual Chic', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80' },
+                { name: 'Casual Chic', img: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80' },
+                { name: 'Moda Praia', img: 'https://images.unsplash.com/photo-1502301197179-65228ab57f78?auto=format&fit=crop&w=600&q=80' },
+                { name: 'Plus Size', img: 'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=600&q=80' },
+                { name: 'Moda Fitness', img: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=600&q=80' },
               ].map((cat) => (
                 <div 
                   key={cat.name} 
@@ -170,12 +173,12 @@ export default function Home() {
                     setSelectedCategory(cat.name);
                     scrollTo('vitrine');
                   }}
-                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-700"
+                  className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden cursor-pointer shadow-md hover:shadow-2xl transition-all duration-700"
                 >
                   <Image src={cat.img} alt={cat.name} fill className="object-cover transition-transform duration-[1.5s] group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <div className="absolute bottom-6 left-6 text-left">
-                    <h3 className="text-2xl md:text-3xl font-serif font-bold text-white uppercase tracking-tight">{cat.name}</h3>
+                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors" />
+                  <div className="absolute bottom-6 left-0 right-0 px-4">
+                    <h3 className="text-xl md:text-2xl font-serif font-bold text-white uppercase tracking-tight text-center">{cat.name}</h3>
                   </div>
                 </div>
               ))}
@@ -205,7 +208,7 @@ export default function Home() {
           <div className="text-center mb-24 space-y-8">
             <h2 className="text-6xl md:text-8xl font-serif font-bold tracking-tighter">Toda Bela</h2>
             <p className="max-w-4xl mx-auto text-lg md:text-xl text-white/70 font-light leading-relaxed italic">
-              Toda Bela é mais que uma marca — é um movimento de evolução. Inspiramos presença, propósito e estilo em cada detalhe. Para quem vive com intenção e constrói sua própria jornada.
+              Toda Bela é mais que uma marca — é um movemento de evolução. Inspiramos presença, propósito e estilo em cada detalhe. Para quem vive com intenção e constrói sua própria jornada.
             </p>
           </div>
 
