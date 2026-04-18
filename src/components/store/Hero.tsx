@@ -33,7 +33,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   }, [images.length]);
 
   return (
-    <section className="relative w-full min-h-[85vh] md:min-h-[90vh] flex items-center bg-[#F5F1ED] overflow-hidden pt-10 md:pt-0">
+    <section className="relative w-full min-h-[85vh] md:min-h-[90vh] flex items-center bg-[#F5F1ED] overflow-hidden pt-12 md:pt-0">
       {/* Elementos Decorativos de Fundo */}
       <div className="absolute top-0 right-0 w-1/2 h-full opacity-5 pointer-events-none">
         <svg viewBox="0 0 500 500" className="w-full h-full text-primary fill-current">
@@ -47,30 +47,27 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         <div className="space-y-6 md:space-y-12 animate-in fade-in slide-in-from-left-10 duration-1000 order-2 lg:order-1">
           <div className="space-y-2 text-center lg:text-left">
             <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent">Lançamento Exclusivo</span>
-            <h2 className="text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-primary leading-[1] md:leading-[0.9] tracking-tighter">
-              Elegância que se <br className="hidden md:block" />
-              <span className="italic font-light text-accent">destaca</span> em <br className="hidden md:block" />
-              cada detalhe
-            </h2>
+            <div className="flex flex-col gap-1 md:gap-3">
+              <h2 className="text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-primary leading-[1] md:leading-[0.9] tracking-tighter">
+                Noites <br />
+                <span className="italic font-light text-accent">inesquecíveis</span> <br />
+                pedem <br />
+                <span className="italic font-light">looks</span> <br />
+                <span className="font-bold">poderosos</span>
+              </h2>
+            </div>
           </div>
 
           <div className="max-w-md mx-auto lg:mx-0 space-y-6 md:space-y-8 text-center lg:text-left">
             <p className="text-sm md:text-lg text-primary/70 font-light italic leading-relaxed">
-              Peças pensadas para valorizar sua presença em qualquer ocasião. Redescubra sua autenticidade através de nossa curadoria.
+              A Toda Bela nasceu para vestir mulheres que não temem o protagonismo, através de uma curadoria fashion atemporal.
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
               <Button 
                 onClick={onShopNow}
                 className="rounded-full bg-primary text-white px-8 md:px-10 h-14 md:h-16 text-[10px] font-bold uppercase tracking-[0.4em] shadow-xl hover:bg-accent transition-all duration-500 transform hover:scale-105"
               >
-                COMPRAR AGORA <ArrowRight className="ml-3 h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={onShopNow}
-                className="rounded-full border-primary/20 text-primary px-8 md:px-10 h-14 md:h-16 text-[10px] font-bold uppercase tracking-[0.4em] hover:bg-white transition-all duration-500"
-              >
-                VER COLEÇÃO
+                COMPRAR COLEÇÃO <ArrowRight className="ml-3 h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -117,7 +114,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               variant="outline"
               className="w-full rounded-full h-10 md:h-12 border-accent/20 text-primary text-[8px] md:text-[9px] font-bold uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all"
             >
-              CONHECER PEÇAS
+              VER PEÇAS
             </Button>
           </div>
         </div>

@@ -123,7 +123,7 @@ export default function Home() {
         cartCount={cartCount}
       />
 
-      <main className="pt-[80px] md:pt-[120px]">
+      <main className="pt-[100px] md:pt-[160px]">
         <Hero onShopNow={() => scrollTo('colecoes')} />
 
         {/* Coleções - Essência da Marca */}
