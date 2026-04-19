@@ -134,11 +134,14 @@ export function Navbar({
               )}
             </button>
 
-            {/* Carrinho de Compras */}
-            <button onClick={onOpenCart} className="relative flex items-center justify-center h-10 w-10 text-primary hover:bg-secondary rounded-full transition-colors">
-              <ShoppingBag className="h-5 w-5" />
+            {/* Carrinho de Compras - Texto em vez de Ícone */}
+            <button 
+              onClick={onOpenCart} 
+              className="relative flex items-center gap-2 text-primary hover:bg-secondary rounded-full transition-colors h-10 px-4"
+            >
+              <span className="text-[11px] font-bold tracking-[0.2em] uppercase">Carrinho</span>
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white shadow-lg">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white shadow-lg">
                   {cartCount}
                 </span>
               )}
