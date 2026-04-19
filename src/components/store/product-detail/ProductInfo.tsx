@@ -52,6 +52,33 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
     return true;
   };
 
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({
+        title: "Acesso necessário",
+        description: "Faça login para salvar suas peças favoritas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!favoriteRef) return;
+
+    if (isFavorited) {
+      deleteDocumentNonBlocking(favoriteRef);
+      toast({ title: "Removido dos favoritos" });
+    } else {
+      setDocumentNonBlocking(favoriteRef, {
+        productId: stringId,
+        productName: product.name,
+        productImage: product.image,
+        addedAt: serverTimestamp()
+      }, { merge: true });
+      toast({ title: "Salvo nos seus favoritos!" });
+    }
+  };
+
   const handleAddToCartClick = () => {
     if (!validateSelection()) return;
     const cartProduct = { ...product, quantity, selectedSize, selectedColor };
@@ -196,7 +223,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
       <div className="space-y-4 pt-8">
         <Button 
           onClick={handleBuyNowClick}
-          className="w-full h-20 rounded-[2rem] text-sm font-bold uppercase tracking-[0.3em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 group"
+          className="w-full h-20 rounded-[2rem] text-sm font-bold uppercase tracking-[0.15em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 group"
         >
           <CreditCard className="mr-3 h-5 w-5" />
           Finalizar Pedido
