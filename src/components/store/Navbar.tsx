@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Heart, Package, Menu } from 'lucide-react';
+import { ShoppingBag, User, Search, Heart, Package, Menu, LayoutDashboard } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, doc } from 'firebase/firestore';
 import { LogoMark } from './LogoMark';
@@ -19,7 +19,7 @@ interface NavbarProps {
   onSearch?: (query: string) => void;
 }
 
-export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, onSearch }: NavbarProps) {
+export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, onSearch, onOpenAdmin }: NavbarProps) {
   const [searchValue, setSearchValue] = useState("");
   const { user } = useUser();
   const db = useFirestore();
@@ -104,6 +104,16 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             </Link>
             
             <div className="h-4 w-px bg-primary/10 hidden sm:block" />
+
+            {isAdmin && (
+              <button 
+                onClick={onOpenAdmin}
+                className="p-2 text-primary/60 hover:text-accent transition-all"
+                title="Painel Administrativo"
+              >
+                <LayoutDashboard className="h-5 w-5 stroke-[1.5]" />
+              </button>
+            )}
 
             <button 
               onClick={onOpenLogin} 
