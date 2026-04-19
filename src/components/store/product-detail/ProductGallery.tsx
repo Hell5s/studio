@@ -37,9 +37,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       });
       return;
     }
-
     if (!favoriteRef) return;
-
     if (isFavorited) {
       deleteDocumentNonBlocking(favoriteRef);
       toast({ title: "Removido dos favoritos" });
@@ -56,12 +54,12 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
 
   return (
     <div className="relative">
-      {/* Desktop: Grid layout for massive editorial view */}
+      {/* Desktop: Grid 2 colunas estilo Kaisan */}
       <div className="hidden md:grid grid-cols-2 gap-2">
         {images.map((img, idx) => (
-          <div 
-            key={idx} 
-            className="relative aspect-[3/4] overflow-hidden bg-white group"
+          <div
+            key={idx}
+            className="relative aspect-[3/4] overflow-hidden bg-[#F5F5F5] group"
           >
             <Image
               src={img}
@@ -69,19 +67,19 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
               fill
               className="object-cover transition-transform duration-[2s] group-hover:scale-105"
               priority={idx === 0}
-              sizes="(max-width: 1200px) 100vw, 50vw"
+              sizes="(max-width: 1200px) 50vw, 33vw"
             />
           </div>
         ))}
       </div>
 
-      {/* Mobile: Vertical Stack Layout */}
+      {/* Mobile: Empilhado verticalmente */}
       <div className="flex flex-col md:hidden gap-1">
         {images.map((img, idx) => (
-          <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-white">
+          <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F5F5F5]">
             <Image
               src={img}
-              alt={`${name} mobile ${idx + 1}`}
+              alt={`${name} - ${idx + 1}`}
               fill
               className="object-cover"
               priority={idx === 0}
@@ -91,17 +89,17 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         ))}
       </div>
 
-      {/* Favorite Button Overlay */}
-      <button 
+      {/* Botão Favorito flutuando - estilo Kaisan */}
+      <button
         onClick={handleToggleFavorite}
         className={cn(
-          "absolute top-4 right-4 h-10 w-10 rounded-full flex items-center justify-center transition-all z-20 shadow-md",
-          isFavorited 
-            ? "bg-primary text-white" 
-            : "bg-white text-gray-400 hover:text-primary"
+          "absolute top-4 right-4 h-10 w-10 rounded-full flex items-center justify-center transition-all z-20 shadow-md border",
+          isFavorited
+            ? "bg-black text-white border-black"
+            : "bg-white/90 text-gray-400 border-gray-200 hover:border-black hover:text-black"
         )}
       >
-        <Heart className={cn("h-5 w-5", isFavorited && "fill-current")} />
+        <Heart className={cn("h-4 w-4", isFavorited && "fill-current")} />
       </button>
     </div>
   );
