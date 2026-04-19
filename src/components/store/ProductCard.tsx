@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo } from 'react';
@@ -111,7 +112,7 @@ export function ProductCard({
 
         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center z-10">
           <Link href={`/products/${id}`}>
-            <Button className="rounded-full bg-white text-primary font-bold uppercase text-[9px] tracking-[0.4em] px-8 py-6 shadow-2xl hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-700">
+            <Button className="rounded-full bg-white text-primary font-bold uppercase text-[9px] tracking-widest px-8 py-6 shadow-2xl hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-700">
               Ver Detalhes
             </Button>
           </Link>
@@ -138,7 +139,7 @@ export function ProductCard({
 
           <Link href={`/products/${id}`} className="block mt-4">
             <button
-              className="w-full rounded-full border border-primary/10 bg-transparent px-6 py-3 text-[10px] font-bold uppercase tracking-[0.25em] text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
+              className="w-full rounded-full border border-primary/10 bg-transparent px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
             >
               Comprar Agora
             </button>

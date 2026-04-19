@@ -81,7 +81,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
     if (!validateSelection()) return;
     onAddToCart?.(product, false);
     toast({
-      title: "Adicionado à sacola",
+      title: "Adicionado ao carrinho",
       description: "Você pode continuar explorando ou finalizar seu pedido agora."
     });
   };
@@ -95,10 +95,10 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
     <div className="space-y-10 animate-in fade-in slide-in-from-right-10 duration-1000">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Badge className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.3em] text-[9px]">
+          <Badge className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold uppercase tracking-widest text-[9px]">
             {product.badge || "Seleção Exclusiva"}
           </Badge>
-          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
             {product.category}
           </span>
         </div>
@@ -116,7 +116,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
               </span>
             )}
           </div>
-          <p className="text-xs font-bold text-accent uppercase tracking-[0.2em]">
+          <p className="text-xs font-bold text-accent uppercase tracking-widest">
             até 10x de {formatCurrency(product.price / 10)} sem juros
           </p>
         </div>
@@ -130,7 +130,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         {product.colors && product.colors.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60">Cor: {selectedColor || "Selecione"}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Cor: {selectedColor || "Selecione"}</span>
             </div>
             <div className="flex flex-wrap gap-3">
               {product.colors.map((color: string) => (
@@ -154,7 +154,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         {product.sizes && product.sizes.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60">Tamanho: {selectedSize || "Selecione"}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Tamanho: {selectedSize || "Selecione"}</span>
               <button className="text-[10px] font-bold text-accent uppercase underline underline-offset-4 decoration-accent/30">Guia de Medidas</button>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -182,14 +182,14 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
           <Button 
             onClick={handleAddToCartClick}
             variant="outline"
-            className="w-full rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.3em] border-primary text-primary hover:bg-secondary/50 transition-all duration-500"
+            className="w-full rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.1em] border-primary text-primary hover:bg-secondary/50 transition-all duration-500"
           >
             <ShoppingBag className="mr-2 h-4 w-4" />
             Adicionar ao carrinho
           </Button>
           <Button 
             onClick={handleBuyNowClick}
-            className="w-full rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.5em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
+            className="w-full rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.1em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
           >
             <CreditCard className="mr-2 h-4 w-4" />
             Comprar Agora
@@ -201,14 +201,14 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
             variant="outline" 
             onClick={handleToggleFavorite}
             className={cn(
-              "rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 transition-all",
+              "rounded-full py-6 text-[10px] font-bold uppercase tracking-widest border-primary/10 transition-all",
               isFavorited ? "bg-[#6E3C47] text-white" : "hover:bg-white text-primary"
             )}
           >
             <Heart className={cn("mr-2 h-4 w-4", isFavorited && "fill-current")} /> 
             {isFavorited ? "Favoritado" : "Favoritos"}
           </Button>
-          <Button variant="outline" className="rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 hover:bg-white text-primary">
+          <Button variant="outline" className="rounded-full py-6 text-[10px] font-bold uppercase tracking-widest border-primary/10 hover:bg-white text-primary">
             <Share2 className="mr-2 h-4 w-4" /> Compartilhar
           </Button>
         </div>
