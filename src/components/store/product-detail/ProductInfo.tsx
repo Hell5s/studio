@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Share2, Star, Minus, Plus, Ruler, Heart } from 'lucide-react';
+import { Share2, Star, Minus, Plus, Ruler, Heart, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -57,6 +57,16 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
     if (!validateSelection()) return;
     const cartProduct = { ...product, quantity, selectedSize, selectedColor };
     onAddToCart?.(cartProduct, true);
+  };
+
+  const handleAddToCartClick = () => {
+    if (!validateSelection()) return;
+    const cartProduct = { ...product, quantity, selectedSize, selectedColor };
+    onAddToCart?.(cartProduct, false);
+    toast({
+      title: "Item adicionado!",
+      description: "A peça foi reservada no seu carrinho.",
+    });
   };
 
   const scrollToReviews = () => {
@@ -169,13 +179,24 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         </div>
       </div>
 
-      {/* Botão COMPRE AGORA - estilo Toda Bela Premium */}
-      <Button
-        onClick={handleBuyNowClick}
-        className="w-full h-14 text-[13px] font-bold uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-500 rounded-none shadow-xl shadow-primary/10"
-      >
-        COMPRE AGORA
-      </Button>
+      {/* Botões de Ação - estilo Toda Bela Premium */}
+      <div className="space-y-3">
+        <Button
+          onClick={handleBuyNowClick}
+          className="w-full h-14 text-[13px] font-bold uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-500 rounded-none shadow-xl shadow-primary/10"
+        >
+          COMPRE AGORA
+        </Button>
+        
+        <Button
+          variant="outline"
+          onClick={handleAddToCartClick}
+          className="w-full h-14 text-[13px] font-bold uppercase tracking-[0.2em] border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-3"
+        >
+          <ShoppingBag className="h-4 w-4" />
+          ADICIONAR AO CARRINHO
+        </Button>
+      </div>
 
       {/* Acordeons - estilo Kaisan */}
       <div className="border-t border-gray-100">
@@ -187,16 +208,6 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
             </AccordionTrigger>
             <AccordionContent className="pb-4 text-[12px] text-gray-500 leading-relaxed">
               {product.longDescription || product.description}
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="care" className="border-b border-gray-100">
-            <AccordionTrigger className="px-0 py-4 hover:no-underline text-[14px] font-light text-[#333] [&>svg]:hidden flex justify-between">
-              <span>Cuidados com seu produto</span>
-              <Plus className="h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 data-[state=open]:rotate-45" />
-            </AccordionTrigger>
-            <AccordionContent className="pb-4 text-[12px] text-gray-500 leading-relaxed">
-              Lavar à mão para preservar as fibras. Secar à sombra.
             </AccordionContent>
           </AccordionItem>
 
