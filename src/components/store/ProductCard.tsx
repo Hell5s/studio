@@ -1,12 +1,16 @@
 
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
   id: string | number;
@@ -27,11 +31,53 @@ export function ProductCard({
   image,
   onAddToCart,
 }: ProductCardProps) {
+  const { user } = useUser();
+  const db = useFirestore();
+  const { toast } = useToast();
+  const stringId = String(id);
+
+  const favoriteRef = useMemo(() => {
+    if (!db || !user?.uid || !stringId) return null;
+    return doc(db, 'users', user.uid, 'favorites', stringId);
+  }, [db, user?.uid, stringId]);
+
+  const { data: favoriteData } = useDoc(favoriteRef);
+  const isFavorited = !!favoriteData;
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      toast({
+        title: "Acesso necessário",
+        description: "Faça login para salvar suas peças favoritas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!favoriteRef) return;
+
+    if (isFavorited) {
+      deleteDocumentNonBlocking(favoriteRef);
+      toast({ title: "Removido dos favoritos" });
+    } else {
+      setDocumentNonBlocking(favoriteRef, {
+        productId: stringId,
+        productName: name,
+        productImage: image,
+        addedAt: serverTimestamp()
+      }, { merge: true });
+      toast({ title: "Salvo nos seus favoritos!" });
+    }
   };
 
   return (
@@ -52,8 +98,16 @@ export function ProductCard({
           </Badge>
         )}
         
-        <button className="absolute right-4 top-4 h-11 w-11 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all z-10">
-          <Heart className="h-5 w-5" />
+        <button 
+          onClick={handleToggleFavorite}
+          className={cn(
+            "absolute right-4 top-4 h-11 w-11 rounded-full backdrop-blur-sm flex items-center justify-center transition-all z-10",
+            isFavorited 
+              ? "bg-primary text-white" 
+              : "bg-white/90 text-primary hover:bg-primary hover:text-white"
+          )}
+        >
+          <Heart className={cn("h-5 w-5", isFavorited && "fill-current")} />
         </button>
 
         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center z-10">

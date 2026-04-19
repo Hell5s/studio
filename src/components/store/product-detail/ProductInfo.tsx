@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -35,7 +36,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
     if (!user) {
       toast({
         title: "Acesso necessário",
-        description: "Faça login ou acesse como visitante no menu para salvar suas peças favoritas.",
+        description: "Faça login para salvar suas peças favoritas.",
         variant: "destructive"
       });
       return;
@@ -50,6 +51,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
       setDocumentNonBlocking(favoriteRef, {
         productId: stringId,
         productName: product.name,
+        productImage: product.image,
         addedAt: serverTimestamp()
       }, { merge: true });
       toast({ title: "Salvo nos seus favoritos!" });
@@ -98,7 +100,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Badge className="bg-primary/5 text-primary border-primary/10 px-4 py-1.5 rounded-full font-bold uppercase tracking-[0.3em] text-[9px]">
-            {product.badge || "Coleção Exclusiva"}
+            {product.badge || "Seleção Exclusiva"}
           </Badge>
           <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">
             {product.category}

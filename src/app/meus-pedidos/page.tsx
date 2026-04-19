@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -93,6 +94,7 @@ export default function MeusPedidosPage() {
         onOpenTrack={() => {}}
         onOpenOrders={() => {}}
         onOpenCart={() => {}}
+        onOpenFavorites={() => {}}
         cartCount={0}
         isAdmin={isAdmin}
       />
