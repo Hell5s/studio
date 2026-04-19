@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -32,7 +33,6 @@ export default function EconomizePage() {
 
   const saleProducts = useMemo(() => {
     if (!allProducts) return [];
-    // Filtra produtos que têm um preço antigo maior que o preço atual (desconto)
     return allProducts.filter(p => p.oldPrice && p.oldPrice > p.price);
   }, [allProducts]);
 
@@ -45,6 +45,20 @@ export default function EconomizePage() {
       return [...prev, { ...product, quantity: 1 }];
     });
     setIsCheckoutOpen(true);
+  };
+
+  const updateQuantity = (id: string, delta: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = Math.max(1, (item.quantity || 1) + delta);
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    }));
+  };
+
+  const removeFromCart = (id: string) => {
+    setCart(prev => prev.filter(item => item.id !== id));
   };
 
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
@@ -114,6 +128,8 @@ export default function EconomizePage() {
         open={isCheckoutOpen} 
         onOpenChange={setIsCheckoutOpen} 
         cartItems={cart}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
         total={cartTotal}
         onSuccess={() => setCart([])}
       />

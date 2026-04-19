@@ -12,9 +12,10 @@ import { doc, serverTimestamp } from 'firebase/firestore';
 
 interface ProductInfoProps {
   product: any;
+  onAddToCart?: () => void;
 }
 
-export function ProductInfo({ product }: ProductInfoProps) {
+export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
   const { toast } = useToast();
   const db = useFirestore();
   const { user } = useUser();
@@ -23,7 +24,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
   const stringId = String(product?.id);
 
-  // Referência estável para o favorito
   const favoriteRef = React.useMemo(() => {
     if (!db || !user?.uid || !stringId) return null;
     return doc(db, 'users', user.uid, 'favorites', stringId);
@@ -79,20 +79,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
   const handleAddToCart = () => {
     if (!validateSelection()) return;
-
-    toast({
-      title: "Adicionado ao carrinho",
-      description: `${product.name} foi reservado para você.`,
-    });
+    onAddToCart?.();
   };
 
   const handleBuyNow = () => {
     if (!validateSelection()) return;
-    
-    toast({
-      title: "Redirecionando...",
-      description: "Estamos preparando sua reserva exclusiva.",
-    });
+    onAddToCart?.(); // Adiciona e já abre o carrinho (padrão do sistema agora)
   };
 
   return (
@@ -121,7 +113,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             )}
           </div>
           <p className="text-xs font-bold text-accent uppercase tracking-[0.2em]">
-            {product.installments || "até 10x sem juros"}
+            até 10x de {formatCurrency(product.price / 10)} sem juros
           </p>
         </div>
       </div>
@@ -193,7 +185,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </Button>
           <Button 
             onClick={handleBuyNow}
-            className="w-full rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
+            className="w-full rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.5em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
           >
             <CreditCard className="mr-2 h-4 w-4" />
             Comprar Agora

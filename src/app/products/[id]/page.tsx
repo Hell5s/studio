@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -30,7 +31,6 @@ export default function ProductDetailPage() {
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   
-  // Carrinho local (simplificado para detalhe)
   const [cart, setCart] = useState<any[]>([]);
 
   const productRef = useMemo(() => {
@@ -50,6 +50,34 @@ export default function ProductDetailPage() {
   }, [db, product]);
 
   const { data: relatedProducts } = useCollection(relatedQuery);
+
+  const addToCart = (prod: any) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === prod.id);
+      if (existing) {
+        return prev.map(item => item.id === prod.id ? { ...item, quantity: (item.quantity || 0) + 1 } : item);
+      }
+      return [...prev, { ...prod, quantity: 1 }];
+    });
+    setIsCheckoutOpen(true);
+  };
+
+  const updateQuantity = (id: string, delta: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = Math.max(1, (item.quantity || 1) + delta);
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    }));
+  };
+
+  const removeFromCart = (id: string) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  };
+
+  const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
+  const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
   if (isLoading) {
     return (
@@ -76,12 +104,11 @@ export default function ProductDetailPage() {
         onOpenLogin={() => setIsLoginOpen(true)} 
         onOpenCart={() => setIsCheckoutOpen(true)}
         onOpenFavorites={() => setIsFavoritesOpen(true)}
-        cartCount={cart.length}
+        cartCount={cartCount}
       />
       
       <main className="pt-24 md:pt-32 pb-12 md:pb-20">
         <div className="container mx-auto px-6 md:px-12">
-          {/* Breadcrumb / Back */}
           <div className="mb-8 md:mb-12">
             <Link href="/" className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground hover:text-primary transition-colors">
               <ArrowLeft className="h-3 w-3 transition-transform group-hover:-translate-x-1" />
@@ -90,7 +117,6 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="grid lg:grid-cols-12 gap-10 md:gap-16 xl:gap-24 items-start">
-            {/* Gallery Column */}
             <div className="lg:col-span-7 xl:col-span-8">
               <ProductGallery 
                 images={product.images || [product.image]} 
@@ -98,13 +124,11 @@ export default function ProductDetailPage() {
               />
             </div>
 
-            {/* Info Column */}
             <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-32">
-              <ProductInfo product={product} />
+              <ProductInfo product={product} onAddToCart={() => addToCart(product)} />
             </div>
           </div>
 
-          {/* Detailed Content Section */}
           <div className="mt-16 md:mt-32 grid lg:grid-cols-12 gap-10 md:gap-16 xl:gap-24 border-t border-primary/5 pt-16 md:pt-32">
             <div className="lg:col-span-7 xl:col-span-8 space-y-16 md:space-y-24">
               <section>
@@ -145,7 +169,6 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Related Products */}
           {relatedProducts && relatedProducts.length > 0 && (
             <div className="mt-24 md:mt-40">
               <RelatedProducts products={relatedProducts} />
@@ -165,7 +188,9 @@ export default function ProductDetailPage() {
         open={isCheckoutOpen} 
         onOpenChange={setIsCheckoutOpen} 
         cartItems={cart}
-        total={0}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
+        total={cartTotal}
         onSuccess={() => setCart([])}
       />
     </div>
