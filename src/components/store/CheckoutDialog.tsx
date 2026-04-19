@@ -119,6 +119,9 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md rounded-[3rem] p-12 border-none shadow-2xl bg-white text-center space-y-6">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Pedido Recebido</DialogTitle>
+          </DialogHeader>
           <div className="h-20 w-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
              <CheckCircle2 className="h-10 w-10 text-primary animate-in zoom-in duration-500" />
           </div>
@@ -141,7 +144,9 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, total, onSuccess
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Carrinho Editorial</p>
-              <h3 className="text-3xl font-headline font-bold">Minha Seleção</h3>
+              <DialogHeader>
+                <DialogTitle className="text-3xl font-headline font-bold text-white">Minha Seleção</DialogTitle>
+              </DialogHeader>
             </div>
           </div>
           <Button variant="ghost" className="rounded-full text-white/60 hover:text-white" onClick={() => onOpenChange(false)}>Fechar</Button>

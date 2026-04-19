@@ -208,7 +208,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Gestão de Produtos</p>
-              <h3 className="text-3xl font-headline font-bold">Novo Item da Boutique</h3>
+              <DialogHeader>
+                <DialogTitle className="text-3xl font-headline font-bold text-white">Novo Item da Boutique</DialogTitle>
+              </DialogHeader>
             </div>
           </div>
           <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-14 bg-white text-primary hover:bg-accent hover:text-white font-bold uppercase tracking-widest text-[10px] shadow-xl">
