@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -6,7 +7,7 @@ import { collection, query, where, orderBy, limit, doc, getDocs, updateDoc } fro
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
 import { Newsletter } from '@/components/store/Newsletter';
-import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, RefreshCw, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, RefreshCw } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -90,8 +91,6 @@ export default function MeusPedidosPage() {
     <div className="min-h-screen bg-[#FFF9F7] selection:bg-accent/30 selection:text-primary overflow-x-hidden">
       <Navbar 
         onOpenLogin={() => {}} 
-        onOpenTrack={() => {}}
-        onOpenOrders={() => {}}
         onOpenCart={() => {}}
         onOpenFavorites={() => {}}
         cartCount={0}
@@ -184,6 +183,10 @@ export default function MeusPedidosPage() {
                                      </div>
                                      <div className="flex-1 min-w-0">
                                         <h5 className="text-lg font-bold text-primary leading-tight line-clamp-1">{item.name}</h5>
+                                        <div className="flex gap-3 text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">
+                                           {item.selectedSize && <span>Tam: {item.selectedSize}</span>}
+                                           {item.selectedColor && <span className="text-accent">Cor: {item.selectedColor}</span>}
+                                        </div>
                                         <p className="text-xs text-muted-foreground italic mt-1">{item.quantity} un • {formatPrice(item.price)}</p>
                                      </div>
                                      <p className="text-lg font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>

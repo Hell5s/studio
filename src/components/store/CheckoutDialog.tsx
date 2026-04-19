@@ -1,8 +1,8 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { ShoppingBag, CreditCard, Truck, Loader2, CheckCircle2, ShieldCheck, MapPin, Trash2, Plus, Minus, ArrowLeft, X, Tag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ShoppingBag, Loader2, CheckCircle2, ArrowLeft, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Sheet,
@@ -10,7 +10,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Separator } from '@/components/ui/separator';
 import { useUser, useFirestore } from '@/firebase';
 import { serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +30,7 @@ const shippingMethods = [
   { id: 'express', name: 'Entrega Expressa VIP', time: '10-15 dias', price: 19.90 },
 ];
 
-export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity, onRemoveItem, total, onSuccess }: CheckoutDialogProps) {
+export function CheckoutDialog({ open, onOpenChange, cartItems, onRemoveItem, total, onSuccess }: CheckoutDialogProps) {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
@@ -71,7 +70,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     }
 
     setIsCalculating(true);
-    // Simulação de consulta logística
     setTimeout(() => {
       setIsCalculating(false);
       setFormData(prev => ({ ...prev, zipCode: zipCode }));
@@ -130,7 +128,9 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           price: Number(item.price || 0),
           quantity: Number(item.quantity || 1),
           image: item.image,
-          category: item.category || 'Geral'
+          category: item.category || 'Geral',
+          selectedSize: item.selectedSize || null,
+          selectedColor: item.selectedColor || null
         })),
         subtotal: total,
         shipping: {
@@ -206,13 +206,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               </SheetTitle>
             </SheetHeader>
           )}
-          {step === 'cart' && (
-            <div className="flex items-center gap-4">
-              <button className="text-[11px] font-bold uppercase tracking-wider text-gray-400 hover:text-black transition-colors">
-                Editar
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Conteúdo com scroll */}
@@ -241,9 +234,10 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className="text-[12px] font-semibold text-black leading-tight line-clamp-2">{item.name}</p>
                       <p className="text-[10px] text-gray-400">Sku: {item.sku || item.id?.slice(-6).toUpperCase()}</p>
-                      {item.selectedSize && (
-                        <p className="text-[10px] text-gray-400">Tamanho: {item.selectedSize}</p>
-                      )}
+                      <div className="flex flex-wrap gap-2 text-[10px] text-gray-500 font-medium">
+                        {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
+                        {item.selectedColor && <span>COR: {item.selectedColor}</span>}
+                      </div>
                       <p className="text-[10px] text-gray-400">Quantidade: {item.quantity}</p>
                       <p className="text-[13px] font-bold text-black">{formatCurrency(item.price * item.quantity)}</p>
                     </div>
@@ -305,15 +299,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 </div>
                 <p className="text-[10px] text-gray-400 text-right">
                   Parcele em até 10x de {formatCurrency(finalTotal / 10)} sem juros
-                </p>
-              </div>
-
-              {/* Info frete grátis */}
-              <div className="pt-3 pb-2">
-                <p className="text-[10px] text-gray-500 leading-relaxed">
-                  <span className="font-bold text-black">FRETE GRÁTIS</span><br />
-                  Sul e Sudeste acima de <span className="font-semibold">R$ 249,00</span><br />
-                  Demais regiões acima de <span className="font-semibold">R$ 299,00</span>
                 </p>
               </div>
             </div>

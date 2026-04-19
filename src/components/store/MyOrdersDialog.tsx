@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import {
@@ -11,9 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, Info } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { ShoppingBag, Loader2, Package, MapPin, Tag, Clock, CheckCircle2, Truck, XCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -36,9 +34,7 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Consulta memoizada e protegida: filtra estritamente por userId para respeitar as Security Rules
   const ordersQuery = useMemoFirebase(() => {
-    // Só executa a query se o usuário estiver logado e o diálogo aberto
     if (!db || !user?.uid || !open) return null;
     return query(
       collection(db, 'orders'), 
@@ -130,6 +126,10 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <h5 className="text-sm font-bold text-primary leading-tight line-clamp-1">{item.name}</h5>
+                                  <div className="flex gap-3 text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
+                                    {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
+                                    {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
+                                  </div>
                                   <p className="mt-1 text-[11px] text-muted-foreground italic">Qtd: {item.quantity} • {formatPrice(item.price)}</p>
                                 </div>
                                 <p className="text-sm font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>

@@ -2,13 +2,13 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Share2, Star, Minus, Plus, Ruler, Heart, ShoppingBag } from 'lucide-react';
+import { Share2, Star, Minus, Plus, Ruler, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import {
   Accordion,
   AccordionContent,
@@ -108,28 +108,37 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         </p>
       </div>
 
-      {/* Seletor de Cor - miniaturas quadradas */}
+      {/* Seletor de Cor - estilo refinado */}
       {product.colors && product.colors.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {product.colors.map((color: string) => (
-            <button
-              key={color}
-              onClick={() => setSelectedColor(color)}
-              className={cn(
-                "relative h-16 w-14 overflow-hidden border-2 transition-all",
-                selectedColor === color ? "border-black" : "border-transparent"
-              )}
-              title={color}
-            >
-              <Image src={product.image} alt={color} fill className="object-cover" />
-            </button>
-          ))}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wider">Cor: <span className="text-black font-bold">{selectedColor || 'Selecione'}</span></p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {product.colors.map((color: string) => (
+              <button
+                key={color}
+                onClick={() => setSelectedColor(color)}
+                className={cn(
+                  "relative h-16 w-14 overflow-hidden border-2 transition-all group",
+                  selectedColor === color ? "border-black" : "border-transparent hover:border-gray-200"
+                )}
+                title={color}
+              >
+                <Image src={product.image} alt={color} fill className="object-cover" />
+                <div className={cn(
+                  "absolute inset-0 bg-black/5 transition-opacity",
+                  selectedColor === color ? "opacity-0" : "group-hover:opacity-0"
+                )} />
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Tamanho + Quantidade na mesma linha - estilo Kaisan */}
-      <div className="space-y-2">
-        <p className="text-[12px] font-medium text-gray-500">Tamanho</p>
+      <div className="space-y-3 pt-2">
+        <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wider">Tamanho</p>
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-wrap gap-1.5">
             {product.sizes?.map((size: string) => (
@@ -139,7 +148,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
                 className={cn(
                   "min-w-[52px] h-9 px-3 rounded-full flex items-center justify-center text-[11px] font-semibold transition-all border",
                   selectedSize === size
-                    ? "border-black border-2 text-black bg-white"
+                    ? "border-black border-2 text-black bg-white shadow-sm"
                     : "border-gray-200 text-gray-500 bg-white hover:border-gray-400"
                 )}
               >
@@ -181,7 +190,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
       </div>
 
       {/* Botões de Ação - estilo Toda Bela Premium */}
-      <div className="space-y-3">
+      <div className="space-y-3 pt-4">
         <Button
           onClick={handleBuyNowClick}
           className="w-full h-14 text-[13px] font-bold uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-500 rounded-none shadow-xl shadow-primary/10"
@@ -192,7 +201,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         <Button
           variant="outline"
           onClick={handleAddToCartClick}
-          className="w-full h-11 text-[11px] font-bold uppercase tracking-[0.15em] border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-2.5"
+          className="w-full h-11 text-[10px] font-bold uppercase tracking-[0.15em] border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-2.5"
         >
           <ShoppingBag className="h-3.5 w-3.5" />
           ADICIONAR AO CARRINHO
@@ -200,7 +209,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
       </div>
 
       {/* Acordeons - estilo Kaisan */}
-      <div className="border-t border-gray-100">
+      <div className="border-t border-gray-100 pt-2">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="description" className="border-b border-gray-100">
             <AccordionTrigger className="px-0 py-4 hover:no-underline text-[14px] font-light text-[#333] [&>svg]:hidden flex justify-between">
