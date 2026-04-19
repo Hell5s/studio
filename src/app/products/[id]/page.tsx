@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -15,6 +16,7 @@ import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
+import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -26,6 +28,7 @@ export default function ProductDetailPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   
   // Carrinho local (simplificado para detalhe)
@@ -75,6 +78,7 @@ export default function ProductDetailPage() {
         onOpenTrack={() => setIsTrackOpen(true)}
         onOpenOrders={() => setIsMyOrdersOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
+        onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cart.length}
       />
       
@@ -147,7 +151,7 @@ export default function ProductDetailPage() {
           {/* Related Products */}
           {relatedProducts && relatedProducts.length > 0 && (
             <div className="mt-24 md:mt-40">
-              RelatedProducts
+              <RelatedProducts products={relatedProducts} />
             </div>
           )}
         </div>
@@ -159,6 +163,7 @@ export default function ProductDetailPage() {
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
       <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
       <MyOrdersDialog open={isMyOrdersOpen} onOpenChange={setIsMyOrdersOpen} />
+      <FavoritesDialog open={isFavoritesOpen} onOpenChange={setIsFavoritesOpen} />
       <CheckoutDialog 
         open={isCheckoutOpen} 
         onOpenChange={setIsCheckoutOpen} 

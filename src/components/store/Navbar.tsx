@@ -3,25 +3,49 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Menu, X, Heart, ShieldCheck, Package } from 'lucide-react';
+import { ShoppingBag, User, Search, Heart, Package, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LogoMark } from './LogoMark';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
 
 interface NavbarProps {
   onOpenLogin: () => void;
   onOpenTrack: () => void;
   onOpenOrders: () => void;
   onOpenCart: () => void;
+  onOpenFavorites: () => void;
   cartCount: number;
   isAdmin?: boolean;
   onOpenAdmin?: () => void;
   onSearch?: (query: string) => void;
 }
 
-export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, cartCount, isAdmin, onOpenAdmin, onSearch }: NavbarProps) {
+export function Navbar({ 
+  onOpenLogin, 
+  onOpenTrack, 
+  onOpenOrders, 
+  onOpenCart, 
+  onOpenFavorites,
+  cartCount, 
+  isAdmin, 
+  onOpenAdmin, 
+  onSearch 
+}: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const { user } = useUser();
+  const db = useFirestore();
+
+  // Contador de Favoritos em tempo real
+  const favoritesQuery = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return query(collection(db, 'users', user.uid, 'favorites'));
+  }, [db, user?.uid]);
+
+  const { data: favorites } = useCollection(favoritesQuery);
+  const favoritesCount = favorites?.length || 0;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -103,10 +127,18 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
               <User className="h-5 w-5" />
             </Button>
 
-            {/* Favoritos */}
-            <Button variant="ghost" size="icon" className="rounded-full text-primary hover:bg-secondary h-10 w-10">
-              <Heart className="h-5 w-5" />
-            </Button>
+            {/* Favoritos com Contador */}
+            <button 
+              onClick={onOpenFavorites}
+              className="relative flex items-center justify-center h-10 w-10 text-primary hover:bg-secondary rounded-full transition-colors"
+            >
+              <Heart className={cn("h-5 w-5", favoritesCount > 0 && "fill-accent text-accent")} />
+              {favoritesCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[8px] font-bold text-white shadow-lg">
+                  {favoritesCount}
+                </span>
+              )}
+            </button>
 
             <button onClick={onOpenCart} className="relative flex items-center justify-center h-10 w-10 text-primary hover:bg-secondary rounded-full transition-colors">
               <ShoppingBag className="h-5 w-5" />

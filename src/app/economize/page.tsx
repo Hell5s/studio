@@ -12,6 +12,7 @@ import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
+import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { Loader2, Tag } from 'lucide-react';
 
 export default function EconomizePage() {
@@ -19,6 +20,7 @@ export default function EconomizePage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [cart, setCart] = useState<any[]>([]);
 
@@ -56,6 +58,7 @@ export default function EconomizePage() {
         onOpenTrack={() => setIsTrackOpen(true)}
         onOpenOrders={() => setIsMyOrdersOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
+        onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cartCount}
       />
 
@@ -109,6 +112,7 @@ export default function EconomizePage() {
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
       <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
       <MyOrdersDialog open={isMyOrdersOpen} onOpenChange={setIsMyOrdersOpen} />
+      <FavoritesDialog open={isFavoritesOpen} onOpenChange={setIsFavoritesOpen} />
       <CheckoutDialog 
         open={isCheckoutOpen} 
         onOpenChange={setIsCheckoutOpen} 

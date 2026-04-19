@@ -14,6 +14,7 @@ import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
+import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { Loader2 } from 'lucide-react';
 
@@ -26,6 +27,7 @@ export default function TodaBelaStorefront() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [searchQuery, setSearchValue] = useState("");
@@ -111,6 +113,7 @@ export default function TodaBelaStorefront() {
         onOpenTrack={() => setIsTrackOpen(true)}
         onOpenOrders={() => setIsMyOrdersOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
+        onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cartCount}
         isAdmin={isAdmin} 
         onOpenAdmin={() => setIsAdminView(true)}
@@ -254,6 +257,7 @@ export default function TodaBelaStorefront() {
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
       <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
       <MyOrdersDialog open={isMyOrdersOpen} onOpenChange={setIsMyOrdersOpen} />
+      <FavoritesDialog open={isFavoritesOpen} onOpenChange={setIsFavoritesOpen} />
       <CheckoutDialog 
         open={isCheckoutOpen} 
         onOpenChange={setIsCheckoutOpen} 
