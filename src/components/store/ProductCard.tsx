@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo } from 'react';
@@ -137,12 +136,13 @@ export function ProductCard({
             10x {formatCurrency(price / 10)}
           </p>
 
-          <button
-            onClick={onAddToCart}
-            className="mt-4 w-full rounded-full border border-primary/10 bg-transparent px-6 py-3 text-[10px] font-bold uppercase tracking-[0.25em] text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
-          >
-            Carrinho
-          </button>
+          <Link href={`/products/${id}`} className="block mt-4">
+            <button
+              className="w-full rounded-full border border-primary/10 bg-transparent px-6 py-3 text-[10px] font-bold uppercase tracking-[0.25em] text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
+            >
+              Comprar Agora
+            </button>
+          </Link>
         </div>
       </div>
     </article>
