@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Heart, Package, ShieldCheck, Menu } from 'lucide-react';
+import { ShoppingBag, User, Search, Heart, Package, Menu } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, doc } from 'firebase/firestore';
 import { LogoMark } from './LogoMark';
@@ -128,10 +128,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
             <button 
               className="p-2 text-accent hover:text-primary transition-all"
-              title="Segurança"
+              title="Favoritos"
               onClick={onOpenFavorites}
             >
-              <ShieldCheck className="h-5 w-5 stroke-[1.5]" />
+              <Heart className="h-5 w-5 stroke-[1.5]" />
             </button>
 
             <button className="lg:hidden text-primary p-2">
