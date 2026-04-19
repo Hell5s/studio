@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { ProductForm } from '@/components/admin/ProductForm';
+import { cn } from '@/lib/utils';
 
 export default function AdminProductsPage() {
   const db = useFirestore();
@@ -259,7 +260,7 @@ export default function AdminProductsPage() {
                     <Package className="h-16 w-16 text-primary/10 mx-auto" />
                     <div className="space-y-1">
                       <p className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Catálogo Vazio</p>
-                      <p className="text-sm text-muted-foreground italic font-light">Inicie a curadoria da sua boutique adicionando peças exclusivas.</p>
+                      <p className="text-sm text-muted-foreground italic font-light">Inicie a seleção da sua boutique adicionando peças exclusivas.</p>
                     </div>
                   </td>
                 </tr>

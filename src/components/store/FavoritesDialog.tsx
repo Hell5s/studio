@@ -59,7 +59,7 @@ export function FavoritesDialog({ open, onOpenChange }: FavoritesDialogProps) {
             <Heart className="h-40 w-40 fill-current" />
           </div>
           <DialogHeader className="relative z-10">
-            <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent mb-2">Curadoria Pessoal</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent mb-2">Seleção Pessoal</p>
             <DialogTitle className="text-4xl font-headline font-bold">
               Minha <span className="italic font-light text-accent">Wishlist</span>
             </DialogTitle>
@@ -91,7 +91,6 @@ export function FavoritesDialog({ open, onOpenChange }: FavoritesDialogProps) {
               {favorites.map((item: any) => (
                 <div key={item.id} className="group flex gap-6 items-center p-4 rounded-[2.5rem] bg-white shadow-sm border border-primary/5 hover:shadow-editorial transition-all duration-500">
                   <div className="h-28 w-24 rounded-2xl overflow-hidden shadow-sm shrink-0 border border-primary/5 relative">
-                    {/* Tentativa de pegar a imagem do favorito ou placeholder */}
                     <img 
                       src={item.productImage || 'https://picsum.photos/seed/placeholder/300/400'} 
                       className="h-full w-full object-cover" 
