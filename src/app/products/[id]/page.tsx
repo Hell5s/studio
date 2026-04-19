@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -75,9 +74,8 @@ export default function ProductDetailPage() {
     <div className="min-h-screen bg-background selection:bg-accent/30 selection:text-primary overflow-x-hidden">
       <Navbar 
         onOpenLogin={() => setIsLoginOpen(true)} 
-        onOpenTrack={() => setIsTrackOpen(true)}
-        onOpenOrders={() => setIsMyOrdersOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
+        onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cart.length}
       />
       

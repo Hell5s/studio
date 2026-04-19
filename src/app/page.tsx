@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -110,9 +109,8 @@ export default function TodaBelaStorefront() {
     <div className="min-h-screen bg-background selection:bg-accent/30 selection:text-primary overflow-x-hidden">
       <Navbar 
         onOpenLogin={() => setIsLoginOpen(true)}
-        onOpenTrack={() => setIsTrackOpen(true)}
-        onOpenOrders={() => setIsMyOrdersOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
+        onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cartCount}
         isAdmin={isAdmin} 
         onOpenAdmin={() => setIsAdminView(true)}
