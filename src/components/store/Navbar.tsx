@@ -24,7 +24,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const { user } = useUser();
   const db = useFirestore();
 
-  // Verificação de Admin para exibir o link do Dashboard
+  // Verificação de Admin para lógica interna se necessário
   const adminDocRef = useMemoFirebase(() => {
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
@@ -133,15 +133,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             >
               <ShieldCheck className="h-5 w-5 stroke-[1.5]" />
             </button>
-
-            {isAdmin && (
-               <Link 
-                href="/admin/products" 
-                className="hidden xl:block text-[9px] font-black uppercase tracking-[0.2em] text-accent hover:text-primary ml-2"
-               >
-                 Dash
-               </Link>
-            )}
 
             <button className="lg:hidden text-primary p-2">
               <Menu className="h-5 w-5" />
