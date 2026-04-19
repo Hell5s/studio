@@ -59,27 +59,6 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
     onAddToCart?.(cartProduct, true);
   };
 
-  const handleToggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!user) {
-      toast({ title: "Acesso necessário", description: "Faça login para favoritar.", variant: "destructive" });
-      return;
-    }
-    if (!favoriteRef) return;
-    if (isFavorited) {
-      deleteDocumentNonBlocking(favoriteRef);
-      toast({ title: "Removido dos favoritos" });
-    } else {
-      setDocumentNonBlocking(favoriteRef, {
-        productId: product.id,
-        productName: product.name,
-        productImage: product.image,
-        addedAt: serverTimestamp()
-      }, { merge: true });
-      toast({ title: "Salvo nos favoritos!" });
-    }
-  };
-
   const scrollToReviews = () => {
     const el = document.getElementById('avaliacoes');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -190,10 +169,10 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         </div>
       </div>
 
-      {/* Botão COMPRE AGORA - estilo Kaisan */}
+      {/* Botão COMPRE AGORA - estilo Toda Bela Premium */}
       <Button
         onClick={handleBuyNowClick}
-        className="w-full h-14 text-[13px] font-bold uppercase tracking-[0.15em] bg-black text-white hover:bg-gray-900 transition-colors rounded-none"
+        className="w-full h-14 text-[13px] font-bold uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-500 rounded-none shadow-xl shadow-primary/10"
       >
         COMPRE AGORA
       </Button>
