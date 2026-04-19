@@ -13,7 +13,8 @@ import {
   Box, 
   Globe,
   ImageIcon,
-  X
+  X,
+  Palette
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +71,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     originalPrice: '',
     image: '',
     gallery: [] as string[],
+    variations: [] as { color: string; image: string }[],
     metaTitle: '',
     metaDescription: '',
     tags: '',
@@ -90,65 +92,60 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         metaTitle: initialData.seo?.metaTitle || '',
         metaDescription: initialData.seo?.metaDescription || '',
         gallery: initialData.images || [],
+        variations: initialData.variations || [],
         colors: initialData.colors?.join(', ') || '',
         sizes: initialData.sizes?.join(', ') || 'P, M, G, GG'
       });
     }
   }, [initialData]);
 
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '');
-  };
-
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     setFormData(prev => ({
       ...prev,
       name,
-      slug: generateSlug(name)
+      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
     }));
   };
 
-  const price = parseFloat(formData.price) || 0;
-  const cost = parseFloat(formData.cost) || 0;
-  const profit = price - cost;
-  const margin = price > 0 ? (profit / price) * 100 : 0;
+  const handleAddVariation = () => {
+    setFormData(prev => ({
+      ...prev,
+      variations: [...prev.variations, { color: '', image: '' }]
+    }));
+  };
+
+  const handleVariationChange = (index: number, field: string, value: string) => {
+    const newVars = [...formData.variations];
+    newVars[index] = { ...newVars[index], [field]: value };
+    setFormData({ ...formData, variations: newVars });
+  };
+
+  const handleRemoveVariation = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variations: prev.variations.filter((_, i) => i !== index)
+    }));
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, isGallery = false) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-
-    if (!storage) {
-      toast({
-        title: "Erro de Configuração",
-        description: "O serviço de armazenamento não está disponível.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setUploading(true);
     try {
       const uploadedUrls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const storageRef = ref(storage, `products/${Date.now()}-${file.name.replace(/\s+/g, '_')}`);
+        const storageRef = ref(storage!, `products/${Date.now()}-${file.name}`);
         const snapshot = await uploadBytes(storageRef, file);
         const url = await getDownloadURL(snapshot.ref);
         uploadedUrls.push(url);
       }
-
       if (isGallery) {
         setFormData(prev => ({ ...prev, gallery: [...prev.gallery, ...uploadedUrls] }));
       } else {
         setFormData(prev => ({ ...prev, image: uploadedUrls[0] }));
       }
-      
       toast({ title: "Upload concluído" });
     } catch (error: any) {
       toast({ title: "Erro no upload", variant: "destructive" });
@@ -160,7 +157,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
-      toast({ title: "Preencha o nome e preço primeiro", variant: "destructive" });
+      toast({ title: "Preencha nome e preço", variant: "destructive" });
       return;
     }
     setGeneratingAI(true);
@@ -176,7 +173,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         longDescription: res.description,
         description: res.description.split('.')[0] + '.'
       }));
-      toast({ title: "Descrição editorial gerada!" });
+      toast({ title: "Descrição gerada!" });
     } catch (e) {
       toast({ title: "Erro na IA", variant: "destructive" });
     } finally {
@@ -186,13 +183,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
   const handleSave = async () => {
     const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
-
     if (!formData.name || !formData.price || !finalMainImage) {
-      toast({ 
-        title: "Campos obrigatórios", 
-        description: "Nome, preço e pelo menos uma imagem são necessários.", 
-        variant: "destructive" 
-      });
+      toast({ title: "Campos obrigatórios", description: "Preencha nome, preço e imagem.", variant: "destructive" });
       return;
     }
 
@@ -207,10 +199,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         price: parseFloat(formData.price),
         oldPrice: formData.oldPrice ? parseFloat(formData.oldPrice) : null,
         cost: parseFloat(formData.cost) || 0,
-        profit,
-        margin,
         stock: parseInt(formData.stock),
-        originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
         image: finalMainImage,
         images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
         colors: formData.colors.split(',').map(c => c.trim()).filter(Boolean),
@@ -241,7 +230,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <h1 className="text-4xl font-headline font-bold text-primary tracking-tighter">
             {initialData ? 'Editar Peça' : 'Novo Item da Boutique'}
           </h1>
-          <p className="text-muted-foreground italic font-light">Configure os detalhes editoriais e variações de cores.</p>
+          <p className="text-muted-foreground italic font-light">Gerencie detalhes editoriais e variações visuais.</p>
         </div>
         <div className="flex gap-4">
           <Button variant="outline" onClick={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">
@@ -270,12 +259,51 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="grid gap-2">
-                  <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Cores (separadas por vírgula)</Label>
-                  <Input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} placeholder="Vinho, Preto, Rose" className="rounded-2xl h-14 bg-secondary/20 border-none px-6" />
+                  <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Categorias Rápidas</Label>
+                  <Input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} placeholder="Vinho, Preto (Legado)" className="rounded-2xl h-14 bg-secondary/20 border-none px-6" />
                 </div>
                 <div className="grid gap-2">
                   <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos</Label>
                   <Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} placeholder="P, M, G" className="rounded-2xl h-14 bg-secondary/20 border-none px-6" />
+                </div>
+              </div>
+
+              {/* Seção de Variações Visuais */}
+              <div className="space-y-6 pt-4">
+                <div className="flex items-center justify-between px-4">
+                  <div className="flex items-center gap-2 text-accent">
+                    <Palette className="h-4 w-4" />
+                    <Label className="text-[10px] font-bold uppercase tracking-widest">Variações de Cores Visuais</Label>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[9px] font-bold uppercase">
+                    <Plus className="h-3 w-3 mr-1" /> Add Cor + Imagem
+                  </Button>
+                </div>
+                
+                <div className="grid gap-4">
+                  {formData.variations.map((v, i) => (
+                    <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5">
+                      <div className="flex-1 space-y-2">
+                        <Input 
+                          placeholder="Nome da Cor (ex: Dourado)" 
+                          value={v.color} 
+                          onChange={e => handleVariationChange(i, 'color', e.target.value)}
+                          className="h-10 text-xs bg-white border-none rounded-xl"
+                        />
+                      </div>
+                      <div className="flex-[2] space-y-2">
+                        <Input 
+                          placeholder="Link da Imagem para esta cor" 
+                          value={v.image} 
+                          onChange={e => handleVariationChange(i, 'image', e.target.value)}
+                          className="h-10 text-xs bg-white border-none rounded-xl"
+                        />
+                      </div>
+                      <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -288,16 +316,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                 </div>
                 <Textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} placeholder="Conte a história desta peça..." className="rounded-[2rem] min-h-[200px] bg-secondary/10 border-none p-6 text-primary/80 italic font-light leading-relaxed" />
               </div>
-            </div>
-          </Card>
-
-          <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-8 overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-10 opacity-[0.03]"><DollarSign className="h-40 w-40" /></div>
-            <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4 relative z-10"><TrendingUp className="h-5 w-5" /><h2 className="text-[11px] font-bold uppercase tracking-[0.4em]">Financeiro</h2></div>
-            <div className="grid md:grid-cols-3 gap-8 relative z-10">
-              <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Custo (R$)</Label><Input type="number" value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
-              <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Preço de Venda (R$)</Label><Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="rounded-2xl h-14 bg-primary text-white border-none px-6 placeholder:text-white/30" /></div>
-              <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Preço Comparativo (R$)</Label><Input type="number" value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="rounded-2xl h-14 bg-secondary/10 border-none px-6" /></div>
             </div>
           </Card>
 
@@ -330,16 +348,17 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <Card className="p-8 border-none bg-primary text-white shadow-xl rounded-[3rem] space-y-6">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Publicação</h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between"><span className="text-xs font-bold">Status do Produto</span><select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="bg-white/10 border-none rounded-xl h-10 px-3 text-xs outline-none"><option value="active" className="text-primary">Ativo</option><option value="inactive" className="text-primary">Inativo</option><option value="draft" className="text-primary">Rascunho</option></select></div>
               <div className="flex items-center justify-between"><span className="text-xs font-bold">Destaque na Home</span><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
               <div className="flex items-center justify-between"><span className="text-xs font-bold">Mais Vendido</span><Switch checked={formData.bestseller} onCheckedChange={v => setFormData({...formData, bestseller: v})} /></div>
             </div>
           </Card>
+          
           <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-6">
-            <div className="flex items-center gap-3 text-accent"><Globe className="h-4 w-4" /><h3 className="text-[10px] font-bold uppercase tracking-[0.3em]">SEO & Tags</h3></div>
+            <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4"><TrendingUp className="h-4 w-4" /><h3 className="text-[10px] font-bold uppercase tracking-[0.3em]">Valores</h3></div>
             <div className="space-y-4">
-              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Meta Título</Label><Input value={formData.metaTitle} onChange={e => setFormData({...formData, metaTitle: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none text-xs" /></div>
-              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Palavras-Chave (vírgula)</Label><Input value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} placeholder="moda, vestidos, seda" className="rounded-xl h-12 bg-secondary/10 border-none text-xs" /></div>
+              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço Loja (R$)</Label><Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none text-xs" /></div>
+              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço Antigo (R$)</Label><Input type="number" value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none text-xs" /></div>
+              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Estoque</Label><Input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none text-xs" /></div>
             </div>
           </Card>
         </div>
