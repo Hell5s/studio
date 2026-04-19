@@ -141,7 +141,7 @@ export function ProductCard({
             onClick={onAddToCart}
             className="mt-4 w-full rounded-full border border-primary/10 bg-transparent px-6 py-3 text-[10px] font-bold uppercase tracking-[0.25em] text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
           >
-            Adicionar
+            Carrinho
           </button>
         </div>
       </div>
