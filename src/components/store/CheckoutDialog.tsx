@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -164,7 +163,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-accent">Boutique Toda Bela</p>
               <DialogHeader>
                 <DialogTitle className="text-2xl md:text-3xl font-headline font-bold text-white">
-                  {step === 'cart' ? 'Minha Sacola' : 'Finalizar Pedido'}
+                  {step === 'cart' ? 'Meu Carrinho' : 'Finalizar Pedido'}
                 </DialogTitle>
               </DialogHeader>
             </div>
@@ -187,7 +186,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 <ShoppingBag className="h-10 w-10 text-accent/30" />
               </div>
               <div className="space-y-4">
-                 <h3 className="text-2xl font-headline font-bold text-primary">Sua sacola está vazia</h3>
+                 <h3 className="text-2xl font-headline font-bold text-primary">Seu carrinho está vazio</h3>
                  <p className="text-muted-foreground italic font-light max-w-xs mx-auto">Explore nossa coleção e escolha as peças que refletem sua essência.</p>
               </div>
               <Button onClick={() => onOpenChange(false)} className="rounded-full px-10 h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px]">Descobrir Looks</Button>
@@ -245,7 +244,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               {/* Order Summary */}
               <div className="lg:col-span-5">
                 <div className="p-8 rounded-[3rem] bg-white shadow-2xl border border-primary/5 space-y-8 lg:sticky lg:top-32">
-                  <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent text-center">Resumo da Sacola</h5>
+                  <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent text-center">Resumo do Carrinho</h5>
                   
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-2 border-b border-primary/5">

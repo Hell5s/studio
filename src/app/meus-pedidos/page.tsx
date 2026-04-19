@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -94,6 +93,7 @@ export default function MeusPedidosPage() {
         onOpenTrack={() => {}}
         onOpenOrders={() => {}}
         onOpenCart={() => {}}
+        onOpenFavorites={() => {}}
         cartCount={0}
         isAdmin={isAdmin}
       />
@@ -140,7 +140,7 @@ export default function MeusPedidosPage() {
             <div className="py-32 text-center bg-white rounded-[4rem] border-2 border-dashed border-primary/5 shadow-editorial max-w-4xl mx-auto">
               <ShoppingBag className="h-12 w-12 text-accent/20 mx-auto mb-6" />
               <h3 className="text-2xl font-headline font-bold text-primary mb-4">Acesso Necessário</h3>
-              <p className="text-muted-foreground italic font-light max-w-xs mx-auto mb-8">Realize o login para gerenciar sua sacola e acompanhar envios.</p>
+              <p className="text-muted-foreground italic font-light max-w-xs mx-auto mb-8">Realize o login para gerenciar seu carrinho e acompanhar envios.</p>
               <Button className="rounded-full px-12 h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px]" onClick={() => window.location.href = '/'}>Acessar Boutique</Button>
             </div>
           ) : orders && orders.length > 0 ? (
@@ -257,7 +257,7 @@ export default function MeusPedidosPage() {
                 <ShoppingBag className="h-10 w-10 text-accent/30" />
               </div>
               <div className="space-y-4">
-                 <h3 className="text-3xl font-headline font-bold text-primary">Sacola Vazia</h3>
+                 <h3 className="text-3xl font-headline font-bold text-primary">Carrinho Vazio</h3>
                  <p className="text-muted-foreground italic font-light max-w-xs mx-auto">Sua jornada editorial começa com a primeira escolha. Explore nossas novas coleções.</p>
               </div>
               <Link href="/">
