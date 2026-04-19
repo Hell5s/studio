@@ -14,7 +14,8 @@ import {
   Globe,
   ImageIcon,
   X,
-  Palette
+  Palette,
+  Image as ImageIconLucide
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -268,21 +269,30 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                 </div>
               </div>
 
-              {/* Seção de Variações Visuais */}
+              {/* Seção de Variações Visuais - ATUALIZADA */}
               <div className="space-y-6 pt-4">
                 <div className="flex items-center justify-between px-4">
                   <div className="flex items-center gap-2 text-accent">
                     <Palette className="h-4 w-4" />
-                    <Label className="text-[10px] font-bold uppercase tracking-widest">Variações de Cores Visuais</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest">Miniaturas por Cor (Branco, Preto, Dourado...)</Label>
                   </div>
                   <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[9px] font-bold uppercase">
-                    <Plus className="h-3 w-3 mr-1" /> Add Cor + Imagem
+                    <Plus className="h-3 w-3 mr-1" /> Add Nova Cor
                   </Button>
                 </div>
                 
                 <div className="grid gap-4">
                   {formData.variations.map((v, i) => (
                     <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5">
+                      <div className="h-14 w-11 rounded-lg overflow-hidden bg-white flex-shrink-0 border border-primary/10">
+                        {v.image ? (
+                          <img src={v.image} className="h-full w-full object-cover" alt="Thumb" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-secondary/50 text-primary/20">
+                            <ImageIconLucide className="h-4 w-4" />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 space-y-2">
                         <Input 
                           placeholder="Nome da Cor (ex: Dourado)" 
@@ -293,17 +303,20 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                       </div>
                       <div className="flex-[2] space-y-2">
                         <Input 
-                          placeholder="Link da Imagem para esta cor" 
+                          placeholder="Link da foto para esta miniatura" 
                           value={v.image} 
                           onChange={e => handleVariationChange(i, 'image', e.target.value)}
                           className="h-10 text-xs bg-white border-none rounded-xl"
                         />
                       </div>
-                      <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600">
+                      <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600 transition-colors p-2">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
+                  {formData.variations.length === 0 && (
+                    <p className="text-[9px] text-center text-muted-foreground italic">Nenhuma variação visual cadastrada. Clique em "Add Nova Cor" para começar.</p>
+                  )}
                 </div>
               </div>
 

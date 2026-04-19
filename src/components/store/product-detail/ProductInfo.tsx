@@ -31,7 +31,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Variações complexas ou apenas array de strings
+  // Variações visuais complexas ou apenas array de strings legado
   const colorVariations = useMemo(() => {
     if (product.variations && Array.isArray(product.variations) && product.variations.length > 0) {
       return product.variations;
@@ -118,11 +118,11 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         </p>
       </div>
 
-      {/* Seletor de Cores Visual */}
+      {/* Seletor de Cores Visual - MINIATURAS PREMIUM */}
       {colorVariations.length > 0 && (
         <div className="space-y-4">
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
-            Cor: <span className="text-primary">{selectedColor || 'Selecione uma opção'}</span>
+            Selecione a Cor: <span className="text-primary font-black ml-1">{selectedColor || ''}</span>
           </p>
           <div className="flex flex-wrap gap-3">
             {colorVariations.map((v: any, idx: number) => (
@@ -131,12 +131,12 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
                 onClick={() => setSelectedColor(v.color)}
                 className={cn(
                   "group flex flex-col items-center gap-2 transition-all",
-                  selectedColor === v.color ? "opacity-100" : "opacity-50 hover:opacity-100"
+                  selectedColor === v.color ? "opacity-100" : "opacity-60 hover:opacity-100"
                 )}
               >
                 <div className={cn(
                   "relative h-20 w-16 overflow-hidden border-2 transition-all shadow-sm",
-                  selectedColor === v.color ? "border-primary ring-1 ring-primary/20" : "border-transparent"
+                  selectedColor === v.color ? "border-primary ring-2 ring-primary/10 scale-105" : "border-transparent"
                 )}>
                   <Image 
                     src={v.image || product.image} 
@@ -144,10 +144,13 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
                     fill 
                     className="object-cover" 
                   />
+                  {selectedColor === v.color && (
+                    <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
+                  )}
                 </div>
                 <span className={cn(
-                  "text-[9px] font-bold uppercase tracking-tight",
-                  selectedColor === v.color ? "text-primary" : "text-muted-foreground"
+                  "text-[8px] font-bold uppercase tracking-tight",
+                  selectedColor === v.color ? "text-primary" : "text-muted-foreground/60"
                 )}>
                   {v.color}
                 </span>
@@ -215,7 +218,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         <Button
           variant="outline"
           onClick={handleAddToCartClick}
-          className="w-full h-11 text-[10px] font-bold uppercase tracking-[0.15em] border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-2.5"
+          className="w-full h-10 text-[10px] font-bold uppercase tracking-[0.15em] border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-2.5"
         >
           <ShoppingBag className="h-3.5 w-3.5" />
           ADICIONAR AO CARRINHO

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -9,7 +10,10 @@ import {
   ShoppingBag,
   Package,
   Layers,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Palette,
+  X,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,11 +68,32 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     published: true,
     featured: false,
     bestseller: false,
-    sourceUrl: ''
+    sourceUrl: '',
+    variations: [] as { color: string; image: string }[]
   });
 
   const parsePrice = (val: string) => {
     return Number(String(val).replace(/\./g, "").replace(",", ".")) || 0;
+  };
+
+  const handleAddVariation = () => {
+    setFormData(prev => ({
+      ...prev,
+      variations: [...prev.variations, { color: '', image: '' }]
+    }));
+  };
+
+  const handleVariationChange = (index: number, field: string, value: string) => {
+    const newVars = [...formData.variations];
+    newVars[index] = { ...newVars[index], [field]: value };
+    setFormData({ ...formData, variations: newVars });
+  };
+
+  const handleRemoveVariation = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variations: prev.variations.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSave = () => {
@@ -77,13 +102,12 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       .map((item) => item.trim())
       .filter(Boolean);
 
-    // Se a imagem principal estiver vazia, tenta pegar a primeira da galeria
     const finalMainImage = formData.image || (galleryImages.length > 0 ? galleryImages[0] : '');
 
     if (!formData.name || !formData.price || !finalMainImage) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, preencha o nome, o preço e adicione pelo menos uma imagem (principal ou galeria).",
+        description: "Por favor, preencha o nome, o preço e adicione pelo menos uma imagem.",
         variant: "destructive"
       });
       return;
@@ -121,7 +145,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       name: '', price: '', oldPrice: '', description: '', longDescription: '',
       category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
       gallery: '', stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
-      featured: false, bestseller: false, sourceUrl: ''
+      featured: false, bestseller: false, sourceUrl: '', variations: []
     });
   };
 
@@ -245,7 +269,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
                     className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                    placeholder="Ex: Top Alongado Decote Alto"
+                    placeholder="Ex: Vestido Midi Satin"
                   />
                 </div>
                 <div className="space-y-2">
@@ -281,6 +305,29 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <option>Acessórios</option>
                   </select>
                 </div>
+              </div>
+            </section>
+
+            {/* Variações Visuais - ADICIONADO AO MODAL DE NOVO PRODUTO */}
+            <section className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-accent">
+                  <Palette className="h-5 w-5" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Miniaturas por Cor</h4>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-[9px] font-bold uppercase text-accent border border-accent/10 px-4">Nova Cor</Button>
+              </div>
+              <div className="grid gap-4">
+                {formData.variations.map((v, i) => (
+                  <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
+                    <div className="h-14 w-11 rounded-lg overflow-hidden bg-secondary/20 flex-shrink-0">
+                      {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <ImageIcon className="h-full w-full p-3 opacity-10" />}
+                    </div>
+                    <input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-10 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-1 outline-none" />
+                    <input placeholder="Link da foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-10 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-[2] outline-none" />
+                    <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600 transition-colors"><X className="h-5 w-5" /></button>
+                  </div>
+                ))}
               </div>
             </section>
 
@@ -353,12 +400,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                    className="w-full rounded-2xl border-primary/5 bg-white shadow-sm min-h-[90px] px-4 py-3 outline-none"
                    placeholder="https://imagem1.jpg&#10;https://imagem2.jpg"
                 />
-                <input 
-                  value={formData.sourceUrl}
-                  onChange={e => setFormData({...formData, sourceUrl: e.target.value})}
-                  className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                  placeholder="Link Fornecedor (Opcional)"
-                />
               </div>
             </section>
 
@@ -391,7 +432,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Cores Principais</Label>
+                    <Label>Cores Principais (Tags)</Label>
                     <input 
                       value={formData.colors}
                       onChange={e => setFormData({...formData, colors: e.target.value})}
@@ -399,15 +440,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                       placeholder="Preto, Rose, Off White"
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Resumo Vitrine (Curta)</Label>
-                  <textarea 
-                    value={formData.description}
-                    onChange={e => setFormData({...formData, description: e.target.value})}
-                    className="w-full rounded-2xl border-primary/5 bg-white shadow-sm min-h-[80px] px-4 py-3 outline-none"
-                    placeholder="Uma frase impactante para a listagem"
-                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Descrição Completa (Editorial)</Label>
@@ -438,18 +470,12 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                       <ImageIcon className="h-12 w-12" />
                     </div>
                   )}
-                  {uploading && (
-                    <div className="absolute inset-0 bg-white/40 flex items-center justify-center backdrop-blur-sm">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  )}
                 </div>
                 <div className="p-8 text-center space-y-4">
                   <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-accent">{formData.collection}</p>
                   <h5 className="font-headline font-bold text-xl text-primary truncate">{formData.name || 'Nome da Peça'}</h5>
                   <div className="space-y-1">
                     <p className="text-3xl font-light text-primary">R$ {formData.price || '0,00'}</p>
-                    <p className="text-[10px] text-muted-foreground/60 italic">ou 10x de R$ {(parsePrice(formData.price) / 10).toFixed(2)}</p>
                   </div>
                 </div>
               </div>

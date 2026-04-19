@@ -10,7 +10,10 @@ import {
   ShoppingBag,
   Package,
   Layers,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Palette,
+  X,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,7 +67,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     published: true,
     featured: false,
     bestseller: false,
-    sourceUrl: ''
+    sourceUrl: '',
+    variations: [] as { color: string; image: string }[]
   });
 
   useEffect(() => {
@@ -86,7 +90,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         published: product.published !== false,
         featured: !!product.featured,
         bestseller: !!product.bestseller,
-        sourceUrl: product.sourceUrl || ''
+        sourceUrl: product.sourceUrl || '',
+        variations: product.variations || []
       });
     }
   }, [product]);
@@ -94,6 +99,26 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const parsePrice = (val: string) => {
     if (!val) return 0;
     return Number(String(val).replace(/\./g, "").replace(",", ".")) || 0;
+  };
+
+  const handleAddVariation = () => {
+    setFormData(prev => ({
+      ...prev,
+      variations: [...prev.variations, { color: '', image: '' }]
+    }));
+  };
+
+  const handleVariationChange = (index: number, field: string, value: string) => {
+    const newVars = [...formData.variations];
+    newVars[index] = { ...newVars[index], [field]: value };
+    setFormData({ ...formData, variations: newVars });
+  };
+
+  const handleRemoveVariation = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variations: prev.variations.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSave = () => {
@@ -231,6 +256,26 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               </div>
             </div>
 
+            {/* Variações Visuais no Modal */}
+            <div className="grid gap-4">
+              <div className="flex justify-between items-center">
+                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Palette className="h-3 w-3" /> Miniaturas Visuais</Label>
+                <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-7 text-[8px] font-bold uppercase text-accent border border-accent/10 px-3">Add Cor</Button>
+              </div>
+              <div className="space-y-3">
+                {formData.variations.map((v, i) => (
+                  <div key={i} className="flex gap-3 items-center bg-secondary/20 p-3 rounded-2xl border border-primary/5">
+                    <div className="h-10 w-8 rounded-lg overflow-hidden bg-white border border-primary/10 flex-shrink-0">
+                      {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center bg-secondary/50"><ImageIcon className="h-3 w-3 opacity-20" /></div>}
+                    </div>
+                    <Input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-8 text-[10px] bg-white border-none rounded-xl" />
+                    <Input placeholder="Link da foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-8 text-[10px] bg-white border-none rounded-xl flex-[2]" />
+                    <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600"><X className="h-4 w-4" /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-4">
               <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Layers className="h-3 w-3" /> Valores e Atributos</Label>
               <div className="grid grid-cols-2 gap-4">
@@ -242,7 +287,6 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                 <Input value={formData.badge} onChange={e => setFormData({...formData, badge: e.target.value})} placeholder="Badge (Novo, Oferta)" />
               </div>
               <Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} placeholder="Tamanhos (P, M, G)" />
-              <Input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} placeholder="Cores (Preto, Azul)" />
             </div>
           </div>
 
