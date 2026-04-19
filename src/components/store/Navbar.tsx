@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ShoppingBag, User, Search, Heart, Package, Menu, LayoutDashboard } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, doc } from 'firebase/firestore';
@@ -23,6 +24,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const [searchValue, setSearchValue] = useState("");
   const { user } = useUser();
   const db = useFirestore();
+  const router = useRouter();
 
   // Verificação de Admin para lógica interna se necessário
   const adminDocRef = useMemoFirebase(() => {
@@ -42,6 +44,15 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch?.(searchValue);
+  };
+
+  const handleAdminClick = () => {
+    if (onOpenAdmin) {
+      onOpenAdmin();
+    } else {
+      // Se não estiver na página inicial, navega para lá com o parâmetro de admin
+      router.push('/?admin=true');
+    }
   };
 
   const navLinks = [
@@ -107,7 +118,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
             {isAdmin && (
               <button 
-                onClick={onOpenAdmin}
+                onClick={handleAdminClick}
                 className="p-2 text-primary/60 hover:text-accent transition-all"
                 title="Painel Administrativo"
               >

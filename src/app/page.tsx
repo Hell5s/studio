@@ -1,9 +1,10 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { useSearchParams } from 'next/navigation';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -18,9 +19,10 @@ import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { Loader2 } from 'lucide-react';
 
-export default function TodaBelaStorefront() {
+function StorefrontContent() {
   const db = useFirestore();
   const { user } = useUser();
+  const searchParams = useSearchParams();
   
   // Estados de Interface
   const [isAdminView, setIsAdminView] = useState(false);
@@ -39,6 +41,13 @@ export default function TodaBelaStorefront() {
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
+  // Ativa visão de admin via parâmetro de URL
+  useEffect(() => {
+    if (searchParams.get('admin') === 'true' && isAdmin) {
+      setIsAdminView(true);
+    }
+  }, [searchParams, isAdmin]);
+
   // Carrinho
   const [cart, setCart] = useState<any[]>([]);
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
@@ -52,7 +61,6 @@ export default function TodaBelaStorefront() {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-    // Removido o setIsCheckoutOpen(true) para não abrir o carrinho automaticamente
   };
 
   const updateQuantity = (id: string, delta: number) => {
@@ -279,5 +287,13 @@ export default function TodaBelaStorefront() {
         onSuccess={() => setCart([])}
       />
     </div>
+  );
+}
+
+export default function TodaBelaStorefront() {
+  return (
+    <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+      <StorefrontContent />
+    </Suspense>
   );
 }
