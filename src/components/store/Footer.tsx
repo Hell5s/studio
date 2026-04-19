@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Instagram, 
   Facebook, 
@@ -13,18 +13,96 @@ import {
   HelpCircle,
   Mail,
   MapPin,
-  Phone
+  Phone,
+  X,
+  Sparkles
 } from 'lucide-react';
 import { LogoMark } from './LogoMark';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { OrderTrackingDialog } from './OrderTrackingDialog';
+
+const INFO_CONTENT: Record<string, { title: string; subtitle: string; content: React.ReactNode }> = {
+  'nossa-historia': {
+    title: 'Nossa História',
+    subtitle: 'O movimento por trás da marca',
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
+        <p>A Toda Bela nasceu do desejo de celebrar a potência da mulher brasileira através da moda. Iniciamos nossa jornada como uma pequena curadoria e hoje somos um destino para mulheres que buscam expressar sua confiança com sofisticação.</p>
+        <p>Nossa essência reside no equilíbrio entre o clássico e o contemporâneo, criando peças que não apenas vestem, mas acompanham momentos de conquista e celebração.</p>
+      </div>
+    )
+  },
+  'universo': {
+    title: 'Universo Toda Bela',
+    subtitle: 'Manifesto de estilo e propósito',
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
+        <p>Viver o Universo Toda Bela é entender que a moda é uma ferramenta de comunicação silenciosa. Valorizamos a produção ética, a qualidade impecável dos tecidos e o caimento que respeita as curvas femininas.</p>
+        <p>Cada coleção é um capítulo de uma história que escrevemos juntas, focada em elegância, autenticidade e a busca constante pela melhor versão de si mesma.</p>
+      </div>
+    )
+  },
+  'privacidade': {
+    title: 'Política de Privacidade',
+    subtitle: 'Segurança e transparência com seus dados',
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
+        <p>Sua privacidade é nossa prioridade máxima. Na Toda Bela, utilizamos as tecnologias mais avançadas de criptografia para garantir que seus dados pessoais e de pagamento estejam 100% protegidos.</p>
+        <p>Coletamos apenas as informações necessárias para processar seus pedidos e oferecer uma experiência personalizada na boutique. Nunca compartilhamos seus dados com terceiros sem seu consentimento explícito.</p>
+      </div>
+    )
+  },
+  'termos': {
+    title: 'Termos de Uso',
+    subtitle: 'Condições gerais da boutique',
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
+        <p>Ao navegar em nossa boutique, você concorda com os termos de excelência e respeito mútuo da nossa comunidade. Todos os preços e condições são válidos exclusivamente para compras realizadas no site.</p>
+        <p>As imagens dos produtos são produzidas em estúdio profissional para representar as cores e detalhes com a maior fidelidade possível.</p>
+      </div>
+    )
+  },
+  'trocas': {
+    title: 'Trocas e Devoluções',
+    subtitle: 'Garantia de satisfação Toda Bela',
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
+        <p>Queremos que você ame cada peça. Caso precise realizar uma troca, você tem até 30 dias corridos após o recebimento para solicitar através do nosso WhatsApp VIP.</p>
+        <p>A primeira troca é por nossa conta, garantindo que sua experiência de compra seja livre de preocupações e totalmente focada no seu bem-estar.</p>
+      </div>
+    )
+  },
+  'reembolso': {
+    title: 'Política de Reembolso',
+    subtitle: 'Transparência em cada transação',
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
+        <p>Em caso de desistência da compra, o reembolso será processado através do mesmo método de pagamento utilizado. Para PIX, o estorno ocorre em até 24h úteis.</p>
+        <p>Para cartões de crédito, a devolução segue o prazo da sua operadora, geralmente aparecendo em até duas faturas subsequentes.</p>
+      </div>
+    )
+  }
+};
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [activeInfo, setActiveInfo] = useState<string | null>(null);
+  const [isTrackOpen, setIsTrackOpen] = useState(false);
+
+  const handleOpenInfo = (id: string) => setActiveInfo(id);
+  const handleOpenWhatsApp = () => window.open('https://wa.me/5511999999999', '_blank');
+  const handleOpenMail = () => window.location.href = 'mailto:contato@todobela.com.br';
 
   return (
-    <footer className="bg-primary text-white pt-32 pb-12 overflow-hidden">
-      <div className="container mx-auto px-6">
-        {/* Top Grid: Brand Identity & Links */}
+    <footer className="bg-primary text-white pt-32 pb-12 overflow-hidden relative">
+      <div className="container mx-auto px-6 relative z-10">
         <div className="grid md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-24 mb-32">
           
           {/* Brand Column */}
@@ -36,12 +114,13 @@ export function Footer() {
               </p>
               <div className="flex gap-5">
                 {[
-                  { icon: <Instagram className="h-5 w-5" />, label: "Instagram" },
-                  { icon: <Facebook className="h-5 w-5" />, label: "Facebook" },
-                  { icon: <Youtube className="h-5 w-5" />, label: "YouTube" }
+                  { icon: <Instagram className="h-5 w-5" />, label: "Instagram", url: 'https://instagram.com/todabela' },
+                  { icon: <Facebook className="h-5 w-5" />, label: "Facebook", url: 'https://facebook.com/todabela' },
+                  { icon: <Youtube className="h-5 w-5" />, label: "YouTube", url: 'https://youtube.com/todabela' }
                 ].map((social) => (
                   <button 
                     key={social.label}
+                    onClick={() => window.open(social.url, '_blank')}
                     className="h-12 w-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-accent hover:border-accent transition-all duration-500 group"
                   >
                     <span className="group-hover:scale-110 transition-transform">{social.icon}</span>
@@ -56,22 +135,22 @@ export function Footer() {
             <div className="space-y-8">
               <h5 className="font-headline text-xl font-bold text-accent tracking-tight">Institucional</h5>
               <ul className="space-y-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
-                <li className="hover:text-accent cursor-pointer transition-colors">Nossa História</li>
-                <li className="hover:text-accent cursor-pointer transition-colors">Universo Toda Bela</li>
-                <li className="hover:text-accent cursor-pointer transition-colors">Blog Editorial</li>
-                <li className="hover:text-accent cursor-pointer transition-colors">Trabalhe Conosco</li>
-                <li className="hover:text-accent cursor-pointer transition-colors">Seja uma Revendedora</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={() => handleOpenInfo('nossa-historia')}>Nossa História</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={() => handleOpenInfo('universo')}>Universo Toda Bela</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={() => window.location.href = '/'}>Blog Editorial</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={handleOpenMail}>Trabalhe Conosco</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={handleOpenWhatsApp}>Seja uma Revendedora</li>
               </ul>
             </div>
             
             <div className="space-y-8">
               <h5 className="font-headline text-xl font-bold text-accent tracking-tight">Experiência</h5>
               <ul className="space-y-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
-                <li className="hover:text-accent cursor-pointer transition-colors">Acompanhar Pedido</li>
-                <li className="hover:text-accent cursor-pointer transition-colors">Trocas e Devoluções</li>
-                <li className="hover:text-accent cursor-pointer transition-colors">Guia de Medidas</li>
-                <li className="hover:text-accent cursor-pointer transition-colors">Cuidados com a Peça</li>
-                <li className="hover:text-accent cursor-pointer transition-colors">Perguntas Frequentes</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={() => setIsTrackOpen(true)}>Acompanhar Pedido</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={() => handleOpenInfo('trocas')}>Trocas e Devoluções</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={handleOpenWhatsApp}>Guia de Medidas</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={handleOpenWhatsApp}>Cuidados com a Peça</li>
+                <li className="hover:text-accent cursor-pointer transition-colors" onClick={handleOpenWhatsApp}>Perguntas Frequentes</li>
               </ul>
             </div>
           </div>
@@ -80,26 +159,26 @@ export function Footer() {
           <div className="lg:col-span-3 space-y-8">
             <h5 className="font-headline text-xl font-bold text-accent tracking-tight">Atendimento</h5>
             <div className="space-y-6">
-              <div className="flex items-start gap-4 group">
-                 <div className="h-10 w-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-accent/30 transition-colors">
+              <button onClick={handleOpenWhatsApp} className="flex items-start gap-4 group text-left w-full">
+                 <div className="h-10 w-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-accent/30 transition-colors shrink-0">
                     <Phone className="h-4 w-4 text-accent" />
                  </div>
                  <div className="space-y-1">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">WhatsApp VIP</p>
                     <p className="text-sm font-medium">(11) 99999-9999</p>
                  </div>
-              </div>
-              <div className="flex items-start gap-4 group">
-                 <div className="h-10 w-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-accent/30 transition-colors">
+              </button>
+              <button onClick={handleOpenMail} className="flex items-start gap-4 group text-left w-full">
+                 <div className="h-10 w-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-accent/30 transition-colors shrink-0">
                     <Mail className="h-4 w-4 text-accent" />
                  </div>
                  <div className="space-y-1">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">E-mail Editorial</p>
                     <p className="text-sm font-medium">contato@todobela.com.br</p>
                  </div>
-              </div>
+              </button>
               <div className="flex items-start gap-4">
-                 <div className="h-10 w-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5">
+                 <div className="h-10 w-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 shrink-0">
                     <MapPin className="h-4 w-4 text-accent" />
                  </div>
                  <div className="space-y-1">
@@ -138,10 +217,10 @@ export function Footer() {
               © {currentYear} Toda Bela Boutique • Todos os direitos reservados.
             </p>
             <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-[8px] font-bold uppercase tracking-[0.3em] text-white/20">
-              <span className="hover:text-accent cursor-pointer transition-colors">Termos de Uso</span>
-              <span className="hover:text-accent cursor-pointer transition-colors">Política de Privacidade</span>
-              <span className="hover:text-accent cursor-pointer transition-colors">Política de Reembolso</span>
-              <span className="hover:text-accent cursor-pointer transition-colors">Defesa do Consumidor</span>
+              <span className="hover:text-accent cursor-pointer transition-colors" onClick={() => handleOpenInfo('termos')}>Termos de Uso</span>
+              <span className="hover:text-accent cursor-pointer transition-colors" onClick={() => handleOpenInfo('privacidade')}>Política de Privacidade</span>
+              <span className="hover:text-accent cursor-pointer transition-colors" onClick={() => handleOpenInfo('reembolso')}>Política de Reembolso</span>
+              <span className="hover:text-accent cursor-pointer transition-colors" onClick={() => window.open('http://www.planalto.gov.br/ccivil_03/leis/l8078.htm', '_blank')}>Defesa do Consumidor</span>
             </div>
           </div>
 
@@ -173,6 +252,39 @@ export function Footer() {
       {/* Background Decorative Element */}
       <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-accent/5 blur-[120px] pointer-events-none" />
       <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-accent/5 blur-[120px] pointer-events-none" />
+
+      {/* Info Dialog */}
+      <Dialog open={!!activeInfo} onOpenChange={(o) => !o && setActiveInfo(null)}>
+        <DialogContent className="max-w-xl rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden bg-[#FFF9F7]">
+          {activeInfo && INFO_CONTENT[activeInfo] && (
+            <>
+              <div className="bg-primary p-10 text-primary-foreground relative">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <Sparkles className="h-24 w-24" />
+                </div>
+                <DialogHeader className="relative z-10">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent mb-2">Editorial</p>
+                  <DialogTitle className="text-3xl font-headline font-bold">{INFO_CONTENT[activeInfo].title}</DialogTitle>
+                  <DialogDescription className="text-white/60 italic mt-1">{INFO_CONTENT[activeInfo].subtitle}</DialogDescription>
+                </DialogHeader>
+              </div>
+              <div className="p-10">
+                {INFO_CONTENT[activeInfo].content}
+                <div className="mt-10 pt-8 border-t border-primary/5 text-center">
+                  <button 
+                    onClick={() => setActiveInfo(null)}
+                    className="text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary transition-colors"
+                  >
+                    Fechar Janela
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
     </footer>
   );
 }
