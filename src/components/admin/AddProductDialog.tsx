@@ -26,7 +26,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp, addDoc } from 'firebase/firestore';
 import { useFirestore, useFirebase, addDocumentNonBlocking } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Badge } from '@/components/ui/badge';
@@ -96,6 +96,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       stock: formData.stock ? Number(formData.stock) : 0,
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
+      image: formData.image,
       images: galleryImages.length > 0 ? galleryImages : [formData.image],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -132,7 +133,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
     setUploading(true);
     try {
-      const storageRef = ref(storage, `products/uploads/${Date.now()}-${file.name}`);
+      const storageRef = ref(storage, `products/uploads/${Date.now()}-${file.name.replace(/\s+/g, '_')}`);
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       setFormData(prev => ({ ...prev, image: downloadURL }));
@@ -141,7 +142,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       console.error("Erro no upload:", error);
       toast({ 
         title: "Erro no upload", 
-        description: error.message || "Não foi possível enviar a imagem.",
+        description: "Falha ao enviar arquivo para o Storage.",
         variant: "destructive" 
       });
     } finally {
@@ -314,12 +315,19 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               </div>
               <div className="space-y-4">
                 <div className="grid md:grid-cols-[1fr_auto] gap-4">
-                  <input 
-                    value={formData.image}
-                    onChange={e => setFormData({...formData, image: e.target.value})}
-                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                    placeholder="URL ou Upload da Imagem Principal"
-                  />
+                  <div className="relative flex-1">
+                    <input 
+                      value={formData.image}
+                      onChange={e => setFormData({...formData, image: e.target.value})}
+                      className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
+                      placeholder="URL ou Upload da Imagem Principal"
+                    />
+                    {uploading && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      </div>
+                    )}
+                  </div>
                   <Button variant="outline" className="rounded-2xl h-14 border-primary/10" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                   </Button>
@@ -415,6 +423,11 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
                       <ImageIcon className="h-12 w-12" />
+                    </div>
+                  )}
+                  {uploading && (
+                    <div className="absolute inset-0 bg-white/40 flex items-center justify-center backdrop-blur-sm">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   )}
                 </div>

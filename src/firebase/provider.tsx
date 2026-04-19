@@ -74,10 +74,12 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   });
 
   const functions = useMemo(() => {
+    if (!firebaseApp) return null;
     return getFunctions(firebaseApp, 'southamerica-east1');
   }, [firebaseApp]);
 
   const storage = useMemo(() => {
+    if (!firebaseApp) return null;
     return getStorage(firebaseApp);
   }, [firebaseApp]);
 
@@ -104,13 +106,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
-    const servicesAvailable = !!(firebaseApp && firestore && auth && functions && storage);
+    const servicesAvailable = !!(firebaseApp && firestore && auth && storage);
     return {
       areServicesAvailable: servicesAvailable,
       firebaseApp: servicesAvailable ? firebaseApp : null,
       firestore: servicesAvailable ? firestore : null,
       auth: servicesAvailable ? auth : null,
-      functions: servicesAvailable ? functions : null,
+      functions,
       storage: servicesAvailable ? storage : null,
       user: userAuthState.user,
       isUserLoading: userAuthState.isUserLoading,
@@ -136,7 +138,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     throw new Error('useFirebase must be used within a FirebaseProvider.');
   }
 
-  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth || !context.functions || !context.storage) {
+  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth || !context.storage) {
     throw new Error('Firebase core services not available. Check FirebaseProvider props.');
   }
 
@@ -144,7 +146,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     firebaseApp: context.firebaseApp,
     firestore: context.firestore,
     auth: context.auth,
-    functions: context.functions,
+    functions: context.functions!,
     storage: context.storage,
     user: context.user,
     isUserLoading: context.isUserLoading,

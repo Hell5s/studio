@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -125,14 +124,24 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, isGallery = false) => {
     const files = e.target.files;
-    if (!files || files.length === 0 || !storage) return;
+    if (!files || files.length === 0) return;
+
+    if (!storage) {
+      toast({
+        title: "Erro de Configuração",
+        description: "O serviço de armazenamento não está disponível. Verifique sua conexão.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setUploading(true);
     try {
       const uploadedUrls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
+        // Caminho organizado: produtos/timestamp-nome-arquivo
+        const storageRef = ref(storage, `products/${Date.now()}-${file.name.replace(/\s+/g, '_')}`);
         const snapshot = await uploadBytes(storageRef, file);
         const url = await getDownloadURL(snapshot.ref);
         uploadedUrls.push(url);
@@ -143,11 +152,22 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       } else {
         setFormData(prev => ({ ...prev, image: uploadedUrls[0] }));
       }
-      toast({ title: "Upload concluído" });
+      
+      toast({
+        title: "Upload concluído",
+        description: `${uploadedUrls.length} imagem(ns) enviada(s) com sucesso.`,
+      });
     } catch (error: any) {
-      toast({ title: "Erro no upload", description: error.message, variant: "destructive" });
+      console.error("Erro no upload do Storage:", error);
+      toast({ 
+        title: "Erro no upload", 
+        description: "Verifique se você tem permissão para enviar arquivos ou se o arquivo é muito grande.", 
+        variant: "destructive" 
+      });
     } finally {
       setUploading(false);
+      // Reseta o input para permitir selecionar o mesmo arquivo novamente
+      e.target.value = '';
     }
   };
 
@@ -198,7 +218,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         margin,
         stock: parseInt(formData.stock),
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
-        images: formData.gallery,
+        image: formData.image,
+        images: formData.gallery.length > 0 ? formData.gallery : [formData.image],
         seo: {
           metaTitle: formData.metaTitle || formData.name,
           metaDescription: formData.metaDescription || formData.description,
@@ -350,7 +371,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 pt-4">
+            <div className="grid grid-cols-2 gap-6 pt-4 relative z-10">
               <div className="bg-secondary/30 p-6 rounded-3xl border border-primary/5 text-center">
                 <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Lucro Bruto</p>
                 <p className="text-3xl font-bold text-primary">R$ {profit.toFixed(2)}</p>
@@ -396,7 +417,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                     </div>
                   )}
                   {uploading && (
-                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   )}
@@ -420,9 +441,10 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                   ))}
                   <button 
                     onClick={() => galleryInputRef.current?.click()}
-                    className="aspect-[3/4] rounded-2xl border-2 border-dashed border-primary/10 flex flex-col items-center justify-center hover:bg-secondary/20 transition-all text-primary/30"
+                    disabled={uploading}
+                    className="aspect-[3/4] rounded-2xl border-2 border-dashed border-primary/10 flex flex-col items-center justify-center hover:bg-secondary/20 transition-all text-primary/30 relative"
                   >
-                    <Plus className="h-8 w-8" />
+                    {uploading ? <Loader2 className="h-8 w-8 animate-spin" /> : <Plus className="h-8 w-8" />}
                     <span className="text-[8px] font-bold uppercase tracking-widest mt-2">Add Foto</span>
                   </button>
                 </div>
