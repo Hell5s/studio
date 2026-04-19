@@ -97,6 +97,21 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["orderNumber", "userId", "items", "total", "status", "createdAt"]
+    },
+    "Review": {
+      "title": "Review",
+      "type": "object",
+      "description": "Avaliação de produto deixada por uma cliente.",
+      "properties": {
+        "user": { "type": "string" },
+        "rating": { "type": "number" },
+        "headline": { "type": "string" },
+        "comment": { "type": "string" },
+        "size": { "type": "string" },
+        "recommended": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["user", "rating", "comment", "createdAt"]
     }
   },
   "auth": {
@@ -106,6 +121,10 @@
     "/products/{productId}": {
       "schema": { "$ref": "#/backend/entities/Product" },
       "description": "Catálogo completo de produtos"
+    },
+    "/products/{productId}/reviews/{reviewId}": {
+      "schema": { "$ref": "#/backend/entities/Review" },
+      "description": "Avaliações das clientes para cada produto"
     },
     "/orders/{orderId}": {
       "schema": { "$ref": "#/backend/entities/Order" },
