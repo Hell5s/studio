@@ -127,11 +127,16 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             </button>
 
             <button 
-              className="p-2 text-accent hover:text-primary transition-all"
+              className="relative p-2 text-accent hover:text-primary transition-all"
               title="Favoritos"
               onClick={onOpenFavorites}
             >
               <Heart className="h-5 w-5 stroke-[1.5]" />
+              {favoritesCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white text-[8px] font-black animate-in zoom-in duration-300">
+                  {favoritesCount}
+                </span>
+              )}
             </button>
 
             <button className="lg:hidden text-primary p-2">
