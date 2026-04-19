@@ -29,7 +29,6 @@ export function ProductCard({
   oldPrice,
   badge,
   image,
-  onAddToCart,
 }: ProductCardProps) {
   const { user } = useUser();
   const db = useFirestore();
@@ -81,7 +80,7 @@ export function ProductCard({
   };
 
   return (
-    <article className="group flex flex-col h-full bg-white transition-all duration-700">
+    <article className="group flex flex-col h-full bg-white transition-all duration-700 relative">
       <div className="relative aspect-[3/4] overflow-hidden bg-[#F3EFF0]">
         <Image
           src={image || 'https://picsum.photos/seed/placeholder/600/800'}
@@ -98,10 +97,11 @@ export function ProductCard({
           </Badge>
         )}
         
+        {/* Botão de Favoritos - Z-INDEX 20 para ficar acima do overlay */}
         <button 
           onClick={handleToggleFavorite}
           className={cn(
-            "absolute right-4 top-4 h-11 w-11 rounded-full backdrop-blur-sm flex items-center justify-center transition-all z-10",
+            "absolute right-4 top-4 h-11 w-11 rounded-full backdrop-blur-sm flex items-center justify-center transition-all z-20 shadow-sm border border-black/5",
             isFavorited 
               ? "bg-primary text-white" 
               : "bg-white/90 text-primary hover:bg-primary hover:text-white"

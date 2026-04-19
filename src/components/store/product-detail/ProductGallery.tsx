@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -89,17 +90,17 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         ))}
       </div>
 
-      {/* Botão Favorito flutuando - estilo Kaisan */}
+      {/* Botão Favorito flutuando - estilo Kaisan - Z-INDEX 20 */}
       <button
         onClick={handleToggleFavorite}
         className={cn(
-          "absolute top-4 right-4 h-10 w-10 rounded-full flex items-center justify-center transition-all z-20 shadow-md border",
+          "absolute top-4 right-4 h-12 w-12 rounded-full flex items-center justify-center transition-all z-20 shadow-lg border",
           isFavorited
-            ? "bg-black text-white border-black"
-            : "bg-white/90 text-gray-400 border-gray-200 hover:border-black hover:text-black"
+            ? "bg-primary text-white border-primary"
+            : "bg-white/90 text-gray-400 border-gray-200 hover:border-primary hover:text-primary"
         )}
       >
-        <Heart className={cn("h-4 w-4", isFavorited && "fill-current")} />
+        <Heart className={cn("h-6 w-6", isFavorited && "fill-current")} />
       </button>
     </div>
   );
