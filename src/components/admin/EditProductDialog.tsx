@@ -145,11 +145,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       updatedAt: serverTimestamp()
     });
 
-    toast({
-      title: "Atualização Concluída",
-      description: "As alterações foram sincronizadas com o catálogo.",
-    });
-    
+    toast({ title: "Alterações Salvas!" });
     setLoading(false);
     onOpenChange(false);
   };
@@ -158,29 +154,15 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     const file = e.target.files?.[0];
     if (!file || !product?.id) return;
 
-    if (!storage) {
-      toast({
-        title: "Erro de Configuração",
-        description: "O serviço de armazenamento não está disponível.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setUploading(true);
     try {
-      const storageRef = ref(storage, `products/${product.id}/${Date.now()}-${file.name}`);
+      const storageRef = ref(storage!, `products/${product.id}/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       setFormData(prev => ({ ...prev, image: downloadURL }));
       toast({ title: "Imagem atualizada" });
     } catch (error: any) {
-      console.error("Erro no upload:", error);
-      toast({ 
-        title: "Erro no upload", 
-        description: error.message || "Não foi possível enviar a imagem.",
-        variant: "destructive" 
-      });
+      toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -209,31 +191,22 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
-      toast({
-        title: "Dados incompletos",
-        description: "Nome e preço são base para a IA.",
-        variant: "destructive"
-      });
+      toast({ title: "Dados incompletos", variant: "destructive" });
       return;
     }
-
     setGeneratingAI(true);
     try {
       const result = await adminGenerateProductDescription({
         productName: formData.name,
         category: formData.category,
         price: `R$ ${formData.price}`,
-        oldPrice: formData.oldPrice ? `R$ ${formData.oldPrice}` : undefined,
-        badge: formData.badge,
         keyFeatures: [formData.colors, formData.sizes].filter(Boolean)
       });
-
       setFormData(prev => ({ 
         ...prev, 
         longDescription: result.description,
         description: result.description.split('.')[0] + '.'
       }));
-
       toast({ title: "IA: Texto Criado" });
     } catch (error) {
       toast({ title: "IA Indisponível", variant: "destructive" });
@@ -246,13 +219,10 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl bg-[#FFF9F7]">
         <div className="bg-primary p-8 text-primary-foreground relative">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Editar Produto</DialogTitle>
-          </DialogHeader>
           <div className="flex items-center gap-6">
             <div className="h-20 w-20 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-md border border-white/10 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               {formData.image ? (
-                <img src={formData.image} className="h-full w-full object-cover" alt="Preview" />
+                <img src={formData.image} className="h-full w-full object-cover" />
               ) : (
                 <div className="h-full w-full flex items-center justify-center"><ImageIcon className="h-6 w-6 opacity-20" /></div>
               )}
@@ -279,8 +249,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               </div>
             </div>
 
-            {/* Variações Visuais no Modal com Upload */}
-            <div className="grid gap-4">
+            {/* SEÇÃO DE CORES COM UPLOAD - EDIT */}
+            <div className="grid gap-4 bg-white p-6 rounded-3xl border border-primary/5 shadow-sm">
               <input 
                 type="file" 
                 ref={variationInputRef} 
@@ -289,14 +259,14 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                 onChange={handleVariationFileUpload} 
               />
               <div className="flex justify-between items-center">
-                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Palette className="h-3 w-3" /> Miniaturas por Cor (Upload)</Label>
+                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Palette className="h-3 w-3" /> Miniaturas por Cor (Clique p/ Upload)</Label>
                 <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-7 text-[8px] font-bold uppercase text-accent border border-accent/10 px-3">Add Cor</Button>
               </div>
               <div className="space-y-3">
                 {formData.variations.map((v, i) => (
                   <div key={i} className="flex gap-3 items-center bg-secondary/20 p-3 rounded-2xl border border-primary/5">
                     <div 
-                      className="h-10 w-8 rounded-lg overflow-hidden bg-white border border-primary/10 flex-shrink-0 relative cursor-pointer group/thumb"
+                      className="h-12 w-10 rounded-lg overflow-hidden bg-white border border-primary/10 flex-shrink-0 relative cursor-pointer group/thumb"
                       onClick={() => {
                         setActiveVariationIndex(i);
                         variationInputRef.current?.click();
@@ -305,21 +275,16 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                       {v.image ? (
                         <img src={v.image} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="h-full w-full flex items-center justify-center bg-secondary/50 text-primary/20">
-                          <Upload className="h-3 w-3" />
-                        </div>
+                        <div className="h-full w-full flex items-center justify-center bg-secondary/50 text-primary/20"><Upload className="h-3 w-3" /></div>
                       )}
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity">
-                         <Upload className="h-2 w-2 text-white" />
-                      </div>
                       {uploading && activeVariationIndex === i && (
                         <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
                           <Loader2 className="h-3 w-3 animate-spin text-primary" />
                         </div>
                       )}
                     </div>
-                    <Input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-8 text-[10px] bg-white border-none rounded-xl" />
-                    <Input placeholder="Link da foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-8 text-[10px] bg-white border-none rounded-xl flex-[2]" />
+                    <Input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-10 text-[10px] bg-white border-none rounded-xl" />
+                    <Input placeholder="Link da foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-10 text-[10px] bg-white border-none rounded-xl flex-[2]" />
                     <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600"><X className="h-4 w-4" /></button>
                   </div>
                 ))}
@@ -344,24 +309,15 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
             <div className="grid gap-4">
               <div className="flex items-center justify-between">
                 <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Sparkles className="h-3 w-3" /> Editorial IA</Label>
-                <Button variant="outline" size="sm" onClick={handleAIGenerate} disabled={generatingAI} className="h-8 rounded-full border-accent/20 text-accent">
-                  {generatingAI ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Sparkles className="h-3 w-3 mr-2" />}
-                  Atualizar Texto
-                </Button>
+                <Button variant="outline" size="sm" onClick={handleAIGenerate} disabled={generatingAI} className="h-8 rounded-full border-accent/20 text-accent">IA Editorial</Button>
               </div>
-              <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Resumo Vitrine" className="min-h-[80px]" />
-              <Textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} placeholder="Descrição Completa" className="min-h-[160px]" />
+              <Textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} placeholder="Descrição Completa" className="min-h-[200px]" />
             </div>
 
             <div className="p-6 rounded-3xl bg-secondary/30 border border-primary/5 space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-bold">Publicado</Label>
-                <Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="font-bold">Mais Vendido</Label>
-                <Checkbox checked={formData.bestseller} onCheckedChange={(v) => setFormData({...formData, bestseller: !!v})} />
-              </div>
+              <div className="flex items-center justify-between"><Label className="font-bold">Publicado</Label><Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} /></div>
+              <div className="flex items-center justify-between"><Label className="font-bold">Destaque na Home</Label><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
+              <div className="flex items-center justify-between"><Label className="font-bold">Mais Vendido</Label><Checkbox checked={formData.bestseller} onCheckedChange={(v) => setFormData({...formData, bestseller: !!v})} /></div>
             </div>
           </div>
         </div>
@@ -369,8 +325,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         <DialogFooter className="p-8 bg-secondary/20 border-t border-primary/5">
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-full px-8 text-[10px] font-bold uppercase tracking-widest">Cancelar</Button>
           <Button onClick={handleSave} disabled={loading} className="rounded-full px-12 h-14 bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-xl">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Salvar Alterações
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Salvar
           </Button>
         </DialogFooter>
       </DialogContent>

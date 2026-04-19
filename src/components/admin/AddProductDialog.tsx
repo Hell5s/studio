@@ -155,29 +155,15 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!storage) {
-      toast({
-        title: "Erro de Configuração",
-        description: "O serviço de armazenamento não está disponível.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setUploading(true);
     try {
-      const storageRef = ref(storage, `products/uploads/${Date.now()}-${file.name.replace(/\s+/g, '_')}`);
+      const storageRef = ref(storage!, `products/uploads/${Date.now()}-${file.name.replace(/\s+/g, '_')}`);
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       setFormData(prev => ({ ...prev, image: downloadURL }));
       toast({ title: "Imagem carregada com sucesso" });
     } catch (error: any) {
-      console.error("Erro no upload:", error);
-      toast({ 
-        title: "Erro no upload", 
-        description: "Falha ao enviar arquivo para o Storage.",
-        variant: "destructive" 
-      });
+      toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -206,30 +192,19 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
-      toast({
-        title: "Dados insuficientes",
-        description: "Preencha o nome e preço para a IA criar a descrição.",
-        variant: "destructive"
-      });
+      toast({ title: "Dados insuficientes", variant: "destructive" });
       return;
     }
 
     setGeneratingAI(true);
     try {
-      const features = [
-        ...(formData.colors ? [`Cores: ${formData.colors}`] : []),
-        ...(formData.sizes ? [`Tamanhos: ${formData.sizes}`] : []),
-        "Modelagem exclusiva Toda Bela",
-        "Tecido de alta tecnologia"
-      ];
-
       const result = await adminGenerateProductDescription({
         productName: formData.name,
         category: formData.category,
         price: `R$ ${formData.price}`,
         oldPrice: formData.oldPrice ? `R$ ${formData.oldPrice}` : undefined,
         badge: formData.badge,
-        keyFeatures: features
+        keyFeatures: ["Modelagem exclusiva Toda Bela", "Tecido de alta tecnologia"]
       });
 
       setFormData(prev => ({ 
@@ -238,23 +213,15 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
         description: result.description.split('.')[0] + '.'
       }));
 
-      toast({
-        title: "Descrição Editorial Gerada!",
-        description: "O texto foi criado seguindo a voz da marca.",
-      });
+      toast({ title: "Editorial IA Gerado!" });
     } catch (error) {
-      toast({
-        title: "Erro na IA",
-        description: "Não foi possível conectar ao motor de IA.",
-        variant: "destructive"
-      });
+      toast({ title: "Erro na IA", variant: "destructive" });
     } finally {
       setGeneratingAI(false);
     }
   };
 
-  const currentGalleryPreview = formData.gallery.split('\n')[0]?.trim();
-  const displayImage = formData.image || currentGalleryPreview;
+  const displayImage = formData.image || formData.gallery.split('\n')[0]?.trim();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -278,12 +245,12 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
         </div>
 
         <div className="p-10 grid xl:grid-cols-[1fr_400px] gap-12">
-          {/* Form Side */}
           <div className="space-y-12">
+            {/* 1. IDENTIDADE */}
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-accent">
                 <Layers className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Coleção e Identidade</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-widest">Identidade da Peça</h4>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="md:col-span-2 space-y-2">
@@ -306,7 +273,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <option>Plus Size</option>
                     <option>Vestidos</option>
                     <option>Conjuntos</option>
-                    <option>Linha Básica</option>
                     <option>Casual Chic</option>
                     <option>Nova Coleção</option>
                   </select>
@@ -322,17 +288,15 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <option>Leggings</option>
                     <option>Shorts</option>
                     <option>Macacões</option>
-                    <option>Blusas</option>
                     <option>Vestidos</option>
                     <option>Conjuntos</option>
-                    <option>Acessórios</option>
                   </select>
                 </div>
               </div>
             </section>
 
-            {/* Variações Visuais - COM OPÇÃO DE ESCOLHER FOTO */}
-            <section className="space-y-6">
+            {/* 2. VARIAÇÕES DE CORES - CRITICAL SECTION */}
+            <section className="space-y-6 bg-white p-8 rounded-[2.5rem] border border-primary/5 shadow-sm">
               <input 
                 type="file" 
                 ref={variationInputRef} 
@@ -343,15 +307,17 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-accent">
                   <Palette className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Miniaturas por Cor (Clique p/ Upload)</h4>
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Miniaturas por Cor (Clique na foto p/ Upload)</h4>
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-[9px] font-bold uppercase text-accent border border-accent/10 px-4">Nova Cor</Button>
+                <Button variant="outline" size="sm" onClick={handleAddVariation} className="h-8 text-[9px] font-bold uppercase text-accent border-accent/20 px-4 rounded-full">
+                  <Plus className="h-3 w-3 mr-1" /> Add Nova Cor
+                </Button>
               </div>
               <div className="grid gap-4">
                 {formData.variations.map((v, i) => (
-                  <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
+                  <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5 group">
                     <div 
-                      className="h-14 w-11 rounded-lg overflow-hidden bg-secondary/20 flex-shrink-0 relative cursor-pointer group"
+                      className="h-16 w-12 rounded-lg overflow-hidden bg-white flex-shrink-0 relative cursor-pointer shadow-sm hover:opacity-80 transition-opacity"
                       onClick={() => {
                         setActiveVariationIndex(i);
                         variationInputRef.current?.click();
@@ -371,14 +337,32 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                         </div>
                       )}
                     </div>
-                    <input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-10 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-1 outline-none" />
-                    <input placeholder="Link da foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-10 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-[2] outline-none" />
-                    <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600 transition-colors"><X className="h-5 w-5" /></button>
+                    <input 
+                      placeholder="Cor (ex: Branco)" 
+                      value={v.color} 
+                      onChange={e => handleVariationChange(i, 'color', e.target.value)} 
+                      className="h-12 text-xs bg-white border-none rounded-xl px-4 flex-1 outline-none shadow-sm" 
+                    />
+                    <input 
+                      placeholder="Link da imagem" 
+                      value={v.image} 
+                      onChange={e => handleVariationChange(i, 'image', e.target.value)} 
+                      className="h-12 text-xs bg-white border-none rounded-xl px-4 flex-[2] outline-none shadow-sm" 
+                    />
+                    <button onClick={() => handleRemoveVariation(i)} className="text-red-300 hover:text-red-500 transition-colors p-2">
+                      <X className="h-5 w-5" />
+                    </button>
                   </div>
                 ))}
+                {formData.variations.length === 0 && (
+                  <div className="text-center py-6 border-2 border-dashed border-primary/5 rounded-2xl">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest italic">Nenhuma cor cadastrada ainda.</p>
+                  </div>
+                )}
               </div>
             </section>
 
+            {/* 3. FINANCEIRO */}
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-accent">
                 <ShoppingBag className="h-5 w-5" />
@@ -416,10 +400,11 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               </div>
             </section>
 
+            {/* 4. MÍDIA */}
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-accent">
                 <ImageIcon className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Mídia e Distribuição</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-widest">Mídia Principal e Galeria</h4>
               </div>
               <div className="space-y-4">
                 <div className="grid md:grid-cols-[1fr_auto] gap-4">
@@ -428,20 +413,18 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                       value={formData.image}
                       onChange={e => setFormData({...formData, image: e.target.value})}
                       className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                      placeholder="URL ou Upload da Imagem Principal"
+                      placeholder="URL ou Upload da Capa"
                     />
                     {uploading && !activeVariationIndex && (
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                      </div>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>
                     )}
                   </div>
                   <Button variant="outline" className="rounded-2xl h-14 border-primary/10" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                    {uploading && !activeVariationIndex ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    <Upload className="h-4 w-4" />
                   </Button>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                 </div>
-                <Label>Galeria de Imagens (uma URL por linha)</Label>
+                <Label>Galeria de Detalhes (uma URL por linha)</Label>
                 <textarea 
                    value={formData.gallery}
                    onChange={e => setFormData({...formData, gallery: e.target.value})}
@@ -451,102 +434,53 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               </div>
             </section>
 
+            {/* 5. PERSUASÃO */}
             <section className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-accent">
                   <Sparkles className="h-5 w-5" />
                   <h4 className="text-[11px] font-bold uppercase tracking-widest">Conteúdo e Persuasão</h4>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleAIGenerate} 
-                  disabled={generatingAI}
-                  className="rounded-full border-accent/20 text-accent hover:bg-accent hover:text-white"
-                >
-                  {generatingAI ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Sparkles className="h-3 w-3 mr-2" />}
-                  Gerar Copys com IA
+                <Button variant="outline" size="sm" onClick={handleAIGenerate} disabled={generatingAI} className="rounded-full border-accent/20 text-accent">
+                  {generatingAI ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Sparkles className="h-3 w-3 mr-2" />} IA Editorial
                 </Button>
               </div>
               <div className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Tamanhos Disponíveis</Label>
-                    <input 
-                      value={formData.sizes}
-                      onChange={e => setFormData({...formData, sizes: e.target.value})}
-                      className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                      placeholder="P, M, G, GG"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Cores Principais (Tags)</Label>
-                    <input 
-                      value={formData.colors}
-                      onChange={e => setFormData({...formData, colors: e.target.value})}
-                      className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                      placeholder="Preto, Rose, Off White"
-                    />
-                  </div>
+                  <div className="space-y-2"><Label>Tamanhos</Label><input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none" /></div>
+                  <div className="space-y-2"><Label>Cores Tags</Label><input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none" /></div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Descrição Completa (Editorial)</Label>
-                  <textarea 
-                    value={formData.longDescription}
-                    onChange={e => setFormData({...formData, longDescription: e.target.value})}
-                    className="w-full rounded-2xl border-primary/5 bg-white shadow-sm min-h-[160px] px-4 py-3 outline-none"
-                    placeholder="História da peça, tecidos, cuidados e sugestões de uso..."
-                  />
+                  <Label>Descrição Editorial</Label>
+                  <textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} className="w-full rounded-2xl border-primary/5 bg-white shadow-sm min-h-[160px] px-4 py-3 outline-none" />
                 </div>
               </div>
             </section>
           </div>
 
-          {/* Preview Side */}
           <div className="space-y-8">
             <div className="sticky top-28 space-y-8">
               <div className="rounded-[3rem] bg-white shadow-2xl overflow-hidden border border-primary/5">
-                <div className="p-6 bg-secondary/30 border-b border-primary/5 flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent">Prévia Boutique</span>
-                  <Badge variant="outline" className="rounded-full">{formData.badge}</Badge>
-                </div>
                 <div className="aspect-[3/4] bg-muted relative">
                   {displayImage ? (
                     <img src={displayImage} className="w-full h-full object-cover" alt="Preview" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
-                      <ImageIcon className="h-12 w-12" />
-                    </div>
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground/30"><ImageIcon className="h-12 w-12" /></div>
                   )}
                 </div>
                 <div className="p-8 text-center space-y-4">
                   <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-accent">{formData.collection}</p>
                   <h5 className="font-headline font-bold text-xl text-primary truncate">{formData.name || 'Nome da Peça'}</h5>
-                  <div className="space-y-1">
-                    <p className="text-3xl font-light text-primary">R$ {formData.price || '0,00'}</p>
-                  </div>
+                  <p className="text-3xl font-light text-primary">R$ {formData.price || '0,00'}</p>
                 </div>
               </div>
 
               <div className="p-8 rounded-[2.5rem] bg-primary text-primary-foreground space-y-6">
                 <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent">Status da Peça</h6>
                 <div className="space-y-4">
-                   <div className="flex items-center justify-between">
-                    <Label className="text-white">Publicar Agora</Label>
-                    <Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-white">Destaque Principal</Label>
-                    <Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-white">Mais Vendido</Label>
-                    <Checkbox 
-                      checked={formData.bestseller} 
-                      onCheckedChange={(checked) => setFormData({...formData, bestseller: !!checked})}
-                      className="border-white data-[state=checked]:bg-accent data-[state=checked]:text-primary"
-                    />
-                  </div>
+                   <div className="flex items-center justify-between"><Label className="text-white">Publicar</Label><Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} /></div>
+                   <div className="flex items-center justify-between"><Label className="text-white">Destaque</Label><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
+                   <div className="flex items-center justify-between"><Label className="text-white">Mais Vendido</Label><Checkbox checked={formData.bestseller} onCheckedChange={(c) => setFormData({...formData, bestseller: !!c})} className="border-white" /></div>
                 </div>
               </div>
             </div>

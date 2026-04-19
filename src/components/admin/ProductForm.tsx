@@ -169,12 +169,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       const url = await getDownloadURL(snapshot.ref);
       
       handleVariationChange(activeVariationIndex, 'image', url);
-      // Também adiciona na galeria geral para conveniência
-      setFormData(prev => ({
-        ...prev,
-        gallery: [...prev.gallery, url]
-      }));
-      
       toast({ title: "Foto da cor carregada!" });
     } catch (error: any) {
       toast({ title: "Erro no upload da variação", variant: "destructive" });
@@ -234,20 +228,15 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
         colors: formData.colors.split(',').map(c => c.trim()).filter(Boolean),
         sizes: formData.sizes.split(',').map(s => s.trim()).filter(Boolean),
-        seo: {
-          metaTitle: formData.metaTitle || formData.name,
-          metaDescription: formData.metaDescription || formData.description,
-          tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean)
-        },
         createdAt: initialData?.createdAt || serverTimestamp(),
         updatedAt: serverTimestamp()
       };
 
       await setDoc(productRef, payload, { merge: true });
-      toast({ title: "Produto salvo com sucesso!" });
+      toast({ title: "Produto salvo!" });
       onSuccess();
     } catch (e: any) {
-      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+      toast({ title: "Erro ao salvar", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -260,167 +249,91 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <h1 className="text-4xl font-headline font-bold text-primary tracking-tighter">
             {initialData ? 'Editar Peça' : 'Novo Item da Boutique'}
           </h1>
-          <p className="text-muted-foreground italic font-light">Gerencie detalhes editoriais e variações visuais.</p>
+          <p className="text-muted-foreground italic font-light">Gestão visual de cores e detalhes editoriais.</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onClick={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">
-            Cancelar
-          </Button>
+          <Button variant="outline" onClick={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
           <Button onClick={handleSave} disabled={loading} className="rounded-full h-12 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-transform uppercase text-[10px] font-bold tracking-widest">
-            {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-            Salvar Produto
+            {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Produto
           </Button>
         </div>
       </header>
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-10">
         <div className="space-y-10">
-          <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-8">
-            <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
-              <Box className="h-5 w-5" />
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.4em]">Informações Principais</h2>
+          <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-10">
+            {/* 1. IDENTIDADE */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4"><Box className="h-5 w-5" /><h2 className="text-[11px] font-bold uppercase tracking-[0.4em]">Informações Principais</h2></div>
+              <div className="grid gap-6">
+                <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Nome do Produto</Label><Input value={formData.name} onChange={handleNameChange} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
+                <div className="grid md:grid-cols-2 gap-6">
+                   <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Coleção</Label><Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
+                   <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos</Label><Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
+                </div>
+              </div>
             </div>
-            
-            <div className="grid gap-6">
-              <div className="grid gap-2">
-                <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Nome do Produto</Label>
-                <Input value={formData.name} onChange={handleNameChange} placeholder="Ex: Vestido Midi Satin Noir" className="rounded-2xl h-14 bg-secondary/20 border-none px-6" />
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="grid gap-2">
-                  <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Categorias Rápidas</Label>
-                  <Input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} placeholder="Vinho, Preto (Legado)" className="rounded-2xl h-14 bg-secondary/20 border-none px-6" />
-                </div>
-                <div className="grid gap-2">
-                  <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos</Label>
-                  <Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} placeholder="P, M, G" className="rounded-2xl h-14 bg-secondary/20 border-none px-6" />
-                </div>
-              </div>
 
-              {/* Seção de Variações Visuais - ATUALIZADA COM UPLOAD */}
-              <div className="space-y-6 pt-4">
-                <div className="flex items-center justify-between px-4">
-                  <div className="flex items-center gap-2 text-accent">
-                    <Palette className="h-4 w-4" />
-                    <Label className="text-[10px] font-bold uppercase tracking-widest">Miniaturas por Cor (Escolha a Foto)</Label>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[9px] font-bold uppercase">
-                    <Plus className="h-3 w-3 mr-1" /> Add Nova Cor
-                  </Button>
+            {/* 2. VARIAÇÕES DE CORES (LISTA VISÍVEL) */}
+            <div className="space-y-6 bg-[#FFF9F7] p-8 rounded-[2.5rem] border border-primary/5 shadow-sm">
+              <input 
+                type="file" 
+                ref={variationInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleVariationUpload} 
+              />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-accent">
+                  <Palette className="h-5 w-5" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Miniaturas por Cor (Clique p/ Upload)</h4>
                 </div>
-                
-                <div className="grid gap-4">
-                  <input 
-                    type="file" 
-                    ref={variationInputRef} 
-                    className="hidden" 
-                    accept="image/*" 
-                    onChange={handleVariationUpload} 
-                  />
-                  {formData.variations.map((v, i) => (
-                    <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5 group">
-                      <div 
-                        className="h-14 w-11 rounded-lg overflow-hidden bg-white flex-shrink-0 border border-primary/10 relative cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => {
-                          setActiveVariationIndex(i);
-                          variationInputRef.current?.click();
-                        }}
-                      >
-                        {v.image ? (
-                          <img src={v.image} className="h-full w-full object-cover" alt="Thumb" />
-                        ) : (
-                          <div className="h-full w-full flex flex-col items-center justify-center bg-secondary/50 text-primary/20">
-                            <Upload className="h-4 w-4" />
-                            <span className="text-[6px] font-bold">FOTO</span>
-                          </div>
-                        )}
-                        {uploading && activeVariationIndex === i && (
-                          <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <Input 
-                          placeholder="Nome da Cor (ex: Dourado)" 
-                          value={v.color} 
-                          onChange={e => handleVariationChange(i, 'color', e.target.value)}
-                          className="h-10 text-xs bg-white border-none rounded-xl"
-                        />
-                      </div>
-                      <div className="flex-[2] space-y-2">
-                        <Input 
-                          placeholder="Link da foto (ou clique no ícone)" 
-                          value={v.image} 
-                          onChange={e => handleVariationChange(i, 'image', e.target.value)}
-                          className="h-10 text-xs bg-white border-none rounded-xl"
-                        />
-                      </div>
-                      <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600 transition-colors p-2">
-                        <X className="h-4 w-4" />
-                      </button>
+                <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[9px] font-bold uppercase border border-accent/20 px-4 rounded-full">Nova Cor</Button>
+              </div>
+              <div className="grid gap-4">
+                {formData.variations.map((v, i) => (
+                  <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
+                    <div 
+                      className="h-16 w-12 rounded-lg overflow-hidden bg-secondary/10 flex-shrink-0 relative cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
+                    >
+                      {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex flex-col items-center justify-center opacity-30"><Upload className="h-4 w-4" /><span className="text-[6px] font-bold uppercase">Foto</span></div>}
+                      {uploading && activeVariationIndex === i && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>}
                     </div>
-                  ))}
-                  {formData.variations.length === 0 && (
-                    <p className="text-[9px] text-center text-muted-foreground italic">Nenhuma variação visual cadastrada. Clique em "Add Nova Cor" para começar.</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <div className="flex justify-between items-center px-4">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Descrição Editorial</Label>
-                  <Button variant="ghost" size="sm" onClick={handleAIGenerate} disabled={generatingAI} className="h-8 text-accent text-[9px] font-bold uppercase">
-                    {generatingAI ? <Loader2 className="animate-spin h-3 w-3" /> : <Sparkles className="h-3 w-3" />} Melhore com IA
-                  </Button>
-                </div>
-                <Textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} placeholder="Conte a história desta peça..." className="rounded-[2rem] min-h-[200px] bg-secondary/10 border-none p-6 text-primary/80 italic font-light leading-relaxed" />
+                    <Input placeholder="Nome da Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-1" />
+                    <Input placeholder="Link da imagem" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-12 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-[2]" />
+                    <button onClick={() => handleRemoveVariation(i)} className="text-red-300 hover:text-red-500 transition-colors p-2"><X className="h-5 w-5" /></button>
+                  </div>
+                ))}
               </div>
             </div>
-          </Card>
 
-          <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-8">
-            <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4"><ImageIcon className="h-5 w-5" /><h2 className="text-[11px] font-bold uppercase tracking-[0.4em]">Mídia da Peça</h2></div>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Imagem Principal</Label>
-                <div className={cn("aspect-[3/4] rounded-[2.5rem] border-2 border-dashed border-primary/10 flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer transition-all hover:bg-secondary/20", formData.image && "border-none")} onClick={() => fileInputRef.current?.click()}>
-                  {formData.image ? (<><img src={formData.image} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="h-10 w-10 text-white" /></div></>) : (<div className="text-center space-y-2 p-6"><Upload className="h-10 w-10 text-accent/40 mx-auto" /><p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Upload Capa</p></div>)}
-                  {uploading && !activeVariationIndex && <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
+            {/* 3. EDITORIAL */}
+            <div className="space-y-6">
+               <div className="flex justify-between items-center px-4">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Descrição Editorial</Label>
+                  <Button variant="ghost" size="sm" onClick={handleAIGenerate} disabled={generatingAI} className="h-8 text-accent text-[9px] font-bold uppercase"><Sparkles className="h-3 w-3 mr-1" /> IA</Button>
                 </div>
-                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => handleUpload(e)} />
-              </div>
-              <div className="space-y-4">
-                <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Galeria de Detalhes</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  {formData.gallery.map((url, i) => (
-                    <div key={i} className="aspect-[3/4] rounded-2xl relative overflow-hidden group"><img src={url} className="w-full h-full object-cover" /><button onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, idx) => idx !== i) }))} className="absolute top-2 right-2 h-8 w-8 bg-white/90 rounded-full flex items-center justify-center text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><X className="h-4 w-4" /></button></div>
-                  ))}
-                  <button onClick={() => galleryInputRef.current?.click()} disabled={uploading} className="aspect-[3/4] rounded-2xl border-2 border-dashed border-primary/10 flex flex-col items-center justify-center hover:bg-secondary/20 transition-all text-primary/30 relative">{uploading ? <Loader2 className="h-8 w-8 animate-spin" /> : <Plus className="h-8 w-8" /><span className="text-[8px] font-bold uppercase tracking-widest mt-2">Add Foto</span>}</button>
-                </div>
-                <input type="file" ref={galleryInputRef} className="hidden" multiple accept="image/*" onChange={e => handleUpload(e, true)} />
-              </div>
+                <Textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} placeholder="Conte a história desta peça..." className="rounded-[2rem] min-h-[200px] bg-secondary/10 border-none p-6" />
             </div>
           </Card>
         </div>
 
         <div className="space-y-10">
-          <Card className="p-8 border-none bg-primary text-white shadow-xl rounded-[3rem] space-y-6">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Publicação</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between"><span className="text-xs font-bold">Destaque na Home</span><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
-              <div className="flex items-center justify-between"><span className="text-xs font-bold">Mais Vendido</span><Switch checked={formData.bestseller} onCheckedChange={v => setFormData({...formData, bestseller: v})} /></div>
-            </div>
-          </Card>
-          
-          <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-6">
+           <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-6">
             <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4"><TrendingUp className="h-4 w-4" /><h3 className="text-[10px] font-bold uppercase tracking-[0.3em]">Valores</h3></div>
             <div className="space-y-4">
-              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço Loja (R$)</Label><Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none text-xs" /></div>
-              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço Antigo (R$)</Label><Input type="number" value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none text-xs" /></div>
-              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Estoque</Label><Input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none text-xs" /></div>
+              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço Loja (R$)</Label><Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none" /></div>
+              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Estoque</Label><Input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none" /></div>
             </div>
+          </Card>
+
+          <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-6">
+            <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4"><ImageIcon className="h-5 w-5" /><h3 className="text-[10px] font-bold uppercase tracking-[0.3em]">Capa da Peça</h3></div>
+            <div className={cn("aspect-[3/4] rounded-[2rem] border-2 border-dashed border-primary/10 relative overflow-hidden group cursor-pointer", formData.image && "border-none")} onClick={() => fileInputRef.current?.click()}>
+               {formData.image ? <img src={formData.image} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center"><Upload className="h-10 w-10 text-accent/20" /></div>}
+            </div>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => handleUpload(e)} />
           </Card>
         </div>
       </div>
