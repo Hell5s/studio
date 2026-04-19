@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -7,15 +6,12 @@ import {
   Loader2, 
   Upload, 
   Sparkles,
-  ShoppingBag,
   Package,
   Layers,
   Image as ImageIcon,
   Palette,
   X,
-  Plus,
-  Link as LinkIcon,
-  DollarSign
+  Link as LinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,16 +21,15 @@ import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle, 
-  DialogFooter
+  DialogTitle
 } from '@/components/ui/dialog';
+import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useFirebase, setDocumentNonBlocking } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Badge } from '@/components/ui/badge';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 
 interface AddProductDialogProps {
@@ -299,7 +294,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                       className="h-16 w-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
                     >
-                      {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-30"><Upload className="h-4 w-4" /></div>}
+                      {v.image ? <img src={v.image} className="h-full w-full object-cover" alt="Variation" /> : <div className="h-full w-full flex items-center justify-center opacity-30"><Upload className="h-4 w-4" /></div>}
                       {uploading && activeVariationIndex === i && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>}
                     </div>
                     <Input placeholder="Cor (ex: Branco)" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 border-none bg-gray-50 rounded-xl" />
@@ -316,7 +311,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             <div className="sticky top-28 space-y-8">
               <Card className="rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-none">
                 <div className="aspect-[3/4] bg-gray-100 relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                  {formData.image ? <img src={formData.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30"><ImageIcon className="h-12 w-12" /><span className="text-[10px] font-bold mt-2">CAPA DO PRODUTO</span></div>}
+                  {formData.image ? <img src={formData.image} className="w-full h-full object-cover" alt="Product Preview" /> : <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30"><ImageIcon className="h-12 w-12" /><span className="text-[10px] font-bold mt-2">CAPA DO PRODUTO</span></div>}
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                   {uploading && !activeVariationIndex && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
                 </div>
