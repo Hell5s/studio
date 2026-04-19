@@ -59,7 +59,7 @@ export default function ProductDetailPage() {
       }
       return [...prev, { ...prod, quantity: 1 }];
     });
-    setIsCheckoutOpen(true);
+    // Removido o setIsCheckoutOpen(true) para não abrir o carrinho automaticamente
   };
 
   const updateQuantity = (id: string, delta: number) => {
