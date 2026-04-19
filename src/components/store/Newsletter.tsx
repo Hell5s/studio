@@ -22,11 +22,6 @@ export function Newsletter() {
   return (
     <section className="container mx-auto px-4 md:px-6 py-20 md:py-32 border-t border-gray-100 bg-white">
       <div className="flex flex-col items-center text-center space-y-4 md:space-y-6 mb-16 md:mb-24">
-        <div className="flex items-center gap-3">
-           <div className="h-px w-8 md:w-12 bg-black/10" />
-           <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.4em] text-gray-400">Curadoria Especial</span>
-           <div className="h-px w-8 md:w-12 bg-black/10" />
-        </div>
         <h2 className="text-3xl md:text-6xl font-bold uppercase tracking-tighter text-[#111] leading-none">
           Você também <span className="italic font-light text-gray-400">vai gostar</span>
         </h2>
