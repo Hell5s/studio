@@ -1,10 +1,7 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * TODA BELA - REGRAS DE SEGURANÇA
-     */
 
     function isSignedIn() {
       return request.auth != null;
@@ -14,7 +11,7 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    // Produtos e Categorias: Leitura pública para a vitrine
+    // Produtos: Leitura pública, escrita apenas Admin
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -25,41 +22,33 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Pedidos: Sistema de Propriedade Privada por userId
+    // Pedidos: Dono ou Admin
     match /orders/{orderId} {
-      // Criação permitida para qualquer usuário logado
       allow create: if isSignedIn();
-
-      // Leitura, atualização e exclusão: Apenas o dono (userId) ou Administradores
-      allow read, update, delete: if isAdmin() || (isSignedIn() && (
-        resource.data.userId == request.auth.uid
-      ));
+      allow read, update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
-    // Favoritos: Apenas o dono acessa
-    match /users/{userId}/favorites/{favId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
-    }
-
-    // Newsletter: Inscrição pública, gestão admin
-    match /newsletter_subscribers/{s} {
-      allow create: if true;
-      allow read, delete: if isAdmin();
-    }
-    
-    // Papéis Administrativos: Dono lê seu status para habilitar painel
+    // Papéis Administrativos
     match /roles_admin/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
       allow list: if isAdmin();
     }
     
-    // Banners: Leitura pública para a home
+    // Banners e Newsletter
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
     }
+    
+    match /newsletter_subscribers/{s} {
+      allow create: if true;
+      allow read, delete: if isAdmin();
+    }
 
-    // Bloqueio padrão para outros documentos
+    match /users/{userId}/favorites/{favId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
