@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Heart, Menu } from 'lucide-react';
+import { ShoppingBag, User, Search, Heart, Package, ShieldCheck, Menu } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, doc } from 'firebase/firestore';
 import { LogoMark } from './LogoMark';
@@ -44,84 +44,107 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     onSearch?.(searchValue);
   };
 
+  const navLinks = [
+    { label: 'COLEÇÕES', href: '/#colecoes' },
+    { label: 'PRODUTOS', href: '/#vitrine' },
+    { label: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
+    { label: 'ECONOMIZE', href: '/economize', highlight: true },
+  ];
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
-      {/* Barra de Promoção VIP */}
-      <div className="bg-primary text-[8px] md:text-[9px] font-bold uppercase tracking-[0.3em] text-white py-2 text-center border-b border-white/5">
-        Frete VIP Grátis em compras acima de R$ 299 • 10x sem juros no cartão
-      </div>
-
-      <nav className="bg-white/90 backdrop-blur-xl border-b border-primary/5 shadow-sm">
-        <div className="container mx-auto px-4 md:px-8 h-24 flex items-center justify-between">
+      <nav className="bg-white border-b border-primary/5 shadow-sm">
+        <div className="container mx-auto px-4 md:px-6 h-24 flex items-center justify-between gap-4">
           
-          {/* Lado Esquerdo: Busca e Menu */}
-          <div className="flex-1 flex items-center gap-4">
-            <button className="lg:hidden text-primary p-2 hover:bg-secondary/50 rounded-full transition-colors">
-              <Menu className="h-5 w-5" />
-            </button>
-            <form onSubmit={handleSearchSubmit} className="hidden lg:flex relative items-center group max-w-[260px]">
-              <Search className="absolute left-4 h-4 w-4 text-accent/40 group-focus-within:text-primary transition-colors" />
+          {/* Lado Esquerdo: Logo e Nav Links */}
+          <div className="flex items-center gap-10">
+            <Link href="/" className="flex-shrink-0 scale-75 md:scale-90 transform origin-left">
+              <LogoMark />
+            </Link>
+
+            <div className="hidden xl:flex items-center gap-8">
+              {navLinks.map((link) => (
+                <Link 
+                  key={link.label} 
+                  href={link.href}
+                  className={cn(
+                    "text-[10px] font-bold tracking-[0.2em] transition-all hover:opacity-70",
+                    link.highlight ? "text-accent border-b-2 border-accent/20 pb-0.5" : "text-primary/70"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Centro-Direito: Busca */}
+          <div className="flex-1 flex justify-center max-w-sm ml-auto hidden lg:flex">
+            <form onSubmit={handleSearchSubmit} className="relative w-full group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-accent/40 group-focus-within:text-primary transition-colors" />
               <input 
-                placeholder="BUSCAR INSPIRAÇÃO..." 
-                className="w-full h-11 bg-secondary/30 rounded-full pl-11 pr-4 text-[10px] font-bold tracking-widest outline-none border border-transparent focus:border-accent/20 transition-all uppercase"
+                placeholder="Procurar no site..." 
+                className="w-full h-11 bg-secondary/20 rounded-full pl-11 pr-4 text-[10px] font-bold tracking-widest outline-none border border-transparent focus:border-accent/10 transition-all uppercase"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
               />
             </form>
           </div>
 
-          {/* Centro: Identidade Visual de Luxo */}
-          <Link href="/" className="flex-shrink-0 scale-90 md:scale-100 hover:opacity-90 transition-opacity">
-            <LogoMark />
-          </Link>
-
-          {/* Lado Direito: Ações da Cliente */}
-          <div className="flex-1 flex items-center justify-end gap-2 md:gap-5">
-            {isAdmin && (
-               <Link 
-                href="/admin/products" 
-                className="hidden xl:block text-[9px] font-black uppercase tracking-[0.2em] text-accent hover:text-primary transition-colors border-r border-primary/5 pr-5 mr-1"
-               >
-                 Dashboard
-               </Link>
-            )}
+          {/* Lado Direito: Ações */}
+          <div className="flex items-center gap-3 md:gap-6">
+            <Link 
+              href="/meus-pedidos" 
+              className="hidden sm:flex items-center gap-2.5 group transition-all"
+            >
+              <Package className="h-4.5 w-4.5 text-primary/60 group-hover:text-primary" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60 group-hover:text-primary">
+                Meus Pedidos
+              </span>
+            </Link>
             
+            <div className="h-4 w-px bg-primary/10 hidden sm:block" />
+
             <button 
               onClick={onOpenLogin} 
-              className="p-2 text-primary/60 hover:text-primary hover:bg-secondary/50 rounded-full transition-all"
+              className="p-2 text-primary/60 hover:text-primary transition-all"
               title="Minha Conta"
             >
               <User className="h-5 w-5 stroke-[1.5]" />
             </button>
 
             <button 
-              onClick={onOpenFavorites} 
-              className="relative p-2 text-primary/60 hover:text-primary hover:bg-secondary/50 rounded-full transition-all"
-              title="Favoritos"
+              onClick={onOpenCart} 
+              className="relative p-2 text-primary/60 hover:text-primary transition-all"
+              title="Carrinho"
             >
-              <Heart className="h-5 w-5 stroke-[1.5]" />
-              {favoritesCount > 0 && (
-                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white text-[8px] font-black border-2 border-white">
-                  {favoritesCount}
+              <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
+              {cartCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white text-[8px] font-black">
+                  {cartCount}
                 </span>
               )}
             </button>
 
             <button 
-              onClick={onOpenCart} 
-              className="flex items-center gap-3 pl-5 pr-1.5 h-14 rounded-full hover:bg-secondary/60 transition-all group relative"
-              title="Carrinho"
+              className="p-2 text-accent hover:text-primary transition-all"
+              title="Segurança"
+              onClick={onOpenFavorites}
             >
-              <div className="flex flex-col items-end hidden lg:flex">
-                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-primary">Carrinho</span>
-                <span className="text-[8px] font-bold text-accent italic leading-none">Ver detalhes</span>
-              </div>
-              <div className="relative h-11 w-11 rounded-full bg-primary flex items-center justify-center shadow-xl shadow-primary/20 group-hover:scale-105 group-hover:bg-black transition-all duration-500">
-                <ShoppingBag className="h-4.5 w-4.5 text-white" />
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-primary text-[10px] font-black border-2 border-white animate-in zoom-in duration-300">
-                  {cartCount}
-                </span>
-              </div>
+              <ShieldCheck className="h-5 w-5 stroke-[1.5]" />
+            </button>
+
+            {isAdmin && (
+               <Link 
+                href="/admin/products" 
+                className="hidden xl:block text-[9px] font-black uppercase tracking-[0.2em] text-accent hover:text-primary ml-2"
+               >
+                 Dash
+               </Link>
+            )}
+
+            <button className="lg:hidden text-primary p-2">
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>
