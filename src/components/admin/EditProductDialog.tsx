@@ -45,10 +45,12 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const variationInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -184,6 +186,27 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     }
   };
 
+  const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || activeVariationIndex === null || !product?.id) return;
+    
+    setUploading(true);
+    try {
+      const storageRef = ref(storage!, `products/${product.id}/variations/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      
+      handleVariationChange(activeVariationIndex, 'image', url);
+      toast({ title: "Foto da cor carregada!" });
+    } catch (error: any) {
+      toast({ title: "Erro no upload da cor", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      setActiveVariationIndex(null);
+      e.target.value = '';
+    }
+  };
+
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
       toast({
@@ -234,7 +257,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                 <div className="h-full w-full flex items-center justify-center"><ImageIcon className="h-6 w-6 opacity-20" /></div>
               )}
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {uploading && activeVariationIndex === null ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               </div>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
             </div>
@@ -256,17 +279,44 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               </div>
             </div>
 
-            {/* Variações Visuais no Modal */}
+            {/* Variações Visuais no Modal com Upload */}
             <div className="grid gap-4">
+              <input 
+                type="file" 
+                ref={variationInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleVariationFileUpload} 
+              />
               <div className="flex justify-between items-center">
-                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Palette className="h-3 w-3" /> Miniaturas Visuais</Label>
+                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Palette className="h-3 w-3" /> Miniaturas por Cor (Upload)</Label>
                 <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-7 text-[8px] font-bold uppercase text-accent border border-accent/10 px-3">Add Cor</Button>
               </div>
               <div className="space-y-3">
                 {formData.variations.map((v, i) => (
                   <div key={i} className="flex gap-3 items-center bg-secondary/20 p-3 rounded-2xl border border-primary/5">
-                    <div className="h-10 w-8 rounded-lg overflow-hidden bg-white border border-primary/10 flex-shrink-0">
-                      {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center bg-secondary/50"><ImageIcon className="h-3 w-3 opacity-20" /></div>}
+                    <div 
+                      className="h-10 w-8 rounded-lg overflow-hidden bg-white border border-primary/10 flex-shrink-0 relative cursor-pointer group/thumb"
+                      onClick={() => {
+                        setActiveVariationIndex(i);
+                        variationInputRef.current?.click();
+                      }}
+                    >
+                      {v.image ? (
+                        <img src={v.image} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center bg-secondary/50 text-primary/20">
+                          <Upload className="h-3 w-3" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity">
+                         <Upload className="h-2 w-2 text-white" />
+                      </div>
+                      {uploading && activeVariationIndex === i && (
+                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                          <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                        </div>
+                      )}
                     </div>
                     <Input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-8 text-[10px] bg-white border-none rounded-xl" />
                     <Input placeholder="Link da foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-8 text-[10px] bg-white border-none rounded-xl flex-[2]" />

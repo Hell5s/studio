@@ -46,10 +46,12 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const variationInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -181,6 +183,27 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     }
   };
 
+  const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || activeVariationIndex === null) return;
+    
+    setUploading(true);
+    try {
+      const storageRef = ref(storage!, `products/variations/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      
+      handleVariationChange(activeVariationIndex, 'image', url);
+      toast({ title: "Foto da cor carregada!" });
+    } catch (error: any) {
+      toast({ title: "Erro no upload da variação", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      setActiveVariationIndex(null);
+      e.target.value = '';
+    }
+  };
+
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
       toast({
@@ -308,20 +331,45 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               </div>
             </section>
 
-            {/* Variações Visuais - ADICIONADO AO MODAL DE NOVO PRODUTO */}
+            {/* Variações Visuais - COM OPÇÃO DE ESCOLHER FOTO */}
             <section className="space-y-6">
+              <input 
+                type="file" 
+                ref={variationInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleVariationFileUpload} 
+              />
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-accent">
                   <Palette className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Miniaturas por Cor</h4>
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Miniaturas por Cor (Clique p/ Upload)</h4>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-[9px] font-bold uppercase text-accent border border-accent/10 px-4">Nova Cor</Button>
               </div>
               <div className="grid gap-4">
                 {formData.variations.map((v, i) => (
                   <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
-                    <div className="h-14 w-11 rounded-lg overflow-hidden bg-secondary/20 flex-shrink-0">
-                      {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <ImageIcon className="h-full w-full p-3 opacity-10" />}
+                    <div 
+                      className="h-14 w-11 rounded-lg overflow-hidden bg-secondary/20 flex-shrink-0 relative cursor-pointer group"
+                      onClick={() => {
+                        setActiveVariationIndex(i);
+                        variationInputRef.current?.click();
+                      }}
+                    >
+                      {v.image ? (
+                        <img src={v.image} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex flex-col items-center justify-center opacity-30">
+                          <Upload className="h-4 w-4" />
+                          <span className="text-[6px] font-bold">FOTO</span>
+                        </div>
+                      )}
+                      {uploading && activeVariationIndex === i && (
+                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        </div>
+                      )}
                     </div>
                     <input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-10 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-1 outline-none" />
                     <input placeholder="Link da foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-10 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-[2] outline-none" />
@@ -382,14 +430,14 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                       className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
                       placeholder="URL ou Upload da Imagem Principal"
                     />
-                    {uploading && (
+                    {uploading && !activeVariationIndex && (
                       <div className="absolute right-4 top-1/2 -translate-y-1/2">
                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
                       </div>
                     )}
                   </div>
                   <Button variant="outline" className="rounded-2xl h-14 border-primary/10" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploading && !activeVariationIndex ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                   </Button>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                 </div>
