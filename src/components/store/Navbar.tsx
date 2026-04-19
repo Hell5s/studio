@@ -103,6 +103,11 @@ export function Navbar({ onOpenLogin, onOpenTrack, onOpenOrders, onOpenCart, car
               <User className="h-5 w-5" />
             </Button>
 
+            {/* Favoritos */}
+            <Button variant="ghost" size="icon" className="rounded-full text-primary hover:bg-secondary h-10 w-10">
+              <Heart className="h-5 w-5" />
+            </Button>
+
             <button onClick={onOpenCart} className="relative flex items-center justify-center h-10 w-10 text-primary hover:bg-secondary rounded-full transition-colors">
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
