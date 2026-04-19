@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, Share2, ShieldCheck, Truck, Sparkles } from 'lucide-react';
+import { ShoppingBag, Heart, Share2, ShieldCheck, Truck, Sparkles, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -64,19 +64,33 @@ export function ProductInfo({ product }: ProductInfoProps) {
     }).format(value);
   };
 
-  const handleAddToCart = () => {
+  const validateSelection = () => {
     if ((product.sizes?.length && !selectedSize) || (product.colors?.length && !selectedColor)) {
       toast({
         title: "Seleção necessária",
         description: "Por favor, escolha as variações desejadas antes de prosseguir.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleAddToCart = () => {
+    if (!validateSelection()) return;
 
     toast({
       title: "Adicionado à sacola",
       description: `${product.name} foi reservado para você.`,
+    });
+  };
+
+  const handleBuyNow = () => {
+    if (!validateSelection()) return;
+    
+    toast({
+      title: "Redirecionando...",
+      description: "Estamos preparando sua reserva exclusiva.",
     });
   };
 
@@ -167,12 +181,24 @@ export function ProductInfo({ product }: ProductInfoProps) {
       </div>
 
       <div className="flex flex-col gap-4 pt-6">
-        <button 
-          onClick={handleAddToCart}
-          className="w-full rounded-full py-6 text-[11px] font-bold uppercase tracking-[0.5em] bg-[#6E3C47] text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
-        >
-          Garantir Exclusividade
-        </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Button 
+            onClick={handleAddToCart}
+            variant="outline"
+            className="w-full rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary text-primary hover:bg-secondary/50 transition-all duration-500"
+          >
+            <ShoppingBag className="mr-2 h-4 w-4" />
+            Adicionar à Sacola
+          </Button>
+          <Button 
+            onClick={handleBuyNow}
+            className="w-full rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
+          >
+            <CreditCard className="mr-2 h-4 w-4" />
+            Comprar Agora
+          </Button>
+        </div>
+        
         <div className="grid grid-cols-2 gap-4">
           <Button 
             variant="outline" 
