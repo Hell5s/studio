@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -73,10 +72,18 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   };
 
   const handleSave = () => {
-    if (!formData.name || !formData.price || !formData.image) {
+    const galleryImages = formData.gallery
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    // Se a imagem principal estiver vazia, tenta pegar a primeira da galeria
+    const finalMainImage = formData.image || (galleryImages.length > 0 ? galleryImages[0] : '');
+
+    if (!formData.name || !formData.price || !finalMainImage) {
       toast({
         title: "Campos obrigatórios",
-        description: "Preencha nome, preço e imagem principal.",
+        description: "Por favor, preencha o nome, o preço e adicione pelo menos uma imagem (principal ou galeria).",
         variant: "destructive"
       });
       return;
@@ -85,11 +92,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     setLoading(true);
     const productId = `prod-${Date.now()}`;
     const productRef = doc(db, 'products', productId);
-    
-    const galleryImages = formData.gallery
-      .split('\n')
-      .map((item) => item.trim())
-      .filter(Boolean);
 
     const payload = {
       ...formData,
@@ -99,8 +101,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       stock: formData.stock ? Number(formData.stock) : 0,
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
-      image: formData.image,
-      images: galleryImages.length > 0 ? galleryImages : [formData.image],
+      image: finalMainImage,
+      images: galleryImages.length > 0 ? galleryImages : [finalMainImage],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       source: 'Manual'
@@ -203,6 +205,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       setGeneratingAI(false);
     }
   };
+
+  const currentGalleryPreview = formData.gallery.split('\n')[0]?.trim();
+  const displayImage = formData.image || currentGalleryPreview;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -426,8 +431,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   <Badge variant="outline" className="rounded-full">{formData.badge}</Badge>
                 </div>
                 <div className="aspect-[3/4] bg-muted relative">
-                  {formData.image ? (
-                    <img src={formData.image} className="w-full h-full object-cover" alt="Preview" />
+                  {displayImage ? (
+                    <img src={displayImage} className="w-full h-full object-cover" alt="Preview" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
                       <ImageIcon className="h-12 w-12" />

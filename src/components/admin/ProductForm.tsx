@@ -198,8 +198,15 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.price || !formData.image) {
-      toast({ title: "Campos obrigatórios", description: "Nome, preço e imagem principal são necessários.", variant: "destructive" });
+    // Se a imagem principal estiver vazia, tenta pegar a primeira da galeria
+    const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
+
+    if (!formData.name || !formData.price || !finalMainImage) {
+      toast({ 
+        title: "Campos obrigatórios", 
+        description: "Nome, preço e pelo menos uma imagem (principal ou galeria) são necessários.", 
+        variant: "destructive" 
+      });
       return;
     }
 
@@ -218,8 +225,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         margin,
         stock: parseInt(formData.stock),
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
-        image: formData.image,
-        images: formData.gallery.length > 0 ? formData.gallery : [formData.image],
+        image: finalMainImage,
+        images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
         seo: {
           metaTitle: formData.metaTitle || formData.name,
           metaDescription: formData.metaDescription || formData.description,
