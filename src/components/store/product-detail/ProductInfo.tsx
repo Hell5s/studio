@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -191,9 +192,9 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         <Button
           variant="outline"
           onClick={handleAddToCartClick}
-          className="w-full h-14 text-[13px] font-bold uppercase tracking-[0.2em] border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-3"
+          className="w-full h-11 text-[11px] font-bold uppercase tracking-[0.15em] border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-2.5"
         >
-          <ShoppingBag className="h-4 w-4" />
+          <ShoppingBag className="h-3.5 w-3.5" />
           ADICIONAR AO CARRINHO
         </Button>
       </div>
