@@ -2,36 +2,23 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, Share2, ShieldCheck, Truck, Sparkles, CreditCard, Star, Minus, Plus, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Share2, Star, Minus, Plus, Ruler, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { doc, serverTimestamp } from 'firebase/firestore';
 
 interface ProductInfoProps {
   product: any;
   onAddToCart?: (product: any, openCart?: boolean) => void;
+  relatedProducts?: any[];
 }
 
-export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
+export function ProductInfo({ product, onAddToCart, relatedProducts }: ProductInfoProps) {
   const { toast } = useToast();
-  const db = useFirestore();
-  const { user } = useUser();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-
-  const stringId = String(product?.id);
-
-  const favoriteRef = React.useMemo(() => {
-    if (!db || !user?.uid || !stringId) return null;
-    return doc(db, 'users', user.uid, 'favorites', stringId);
-  }, [db, user?.uid, stringId]);
-
-  const { data: favoriteData } = useDoc(favoriteRef);
-  const isFavorited = !!favoriteData;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -52,33 +39,6 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
     return true;
   };
 
-  const handleToggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!user) {
-      toast({
-        title: "Acesso necessário",
-        description: "Faça login para salvar suas peças favoritas.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!favoriteRef) return;
-
-    if (isFavorited) {
-      deleteDocumentNonBlocking(favoriteRef);
-      toast({ title: "Removido dos favoritos" });
-    } else {
-      setDocumentNonBlocking(favoriteRef, {
-        productId: stringId,
-        productName: product.name,
-        productImage: product.image,
-        addedAt: serverTimestamp()
-      }, { merge: true });
-      toast({ title: "Salvo nos seus favoritos!" });
-    }
-  };
-
   const handleAddToCartClick = () => {
     if (!validateSelection()) return;
     const cartProduct = { ...product, quantity, selectedSize, selectedColor };
@@ -96,163 +56,144 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-right-10 duration-1000">
+    <div className="space-y-6">
       {/* Header Info */}
-      <div className="space-y-4">
+      <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <Badge className="bg-accent/10 text-accent border-none px-3 py-1 rounded-full font-bold uppercase tracking-widest text-[8px]">
-            {product.badge || "Exclusividade Boutique"}
-          </Badge>
-          <div className="flex items-center gap-1 text-accent">
-            {[1, 2, 3, 4, 5].map((s) => <Star key={s} className="h-3 w-3 fill-current" />)}
-            <span className="text-[10px] font-bold text-primary/40 ml-2 uppercase tracking-widest">(24 Avaliações)</span>
-          </div>
+           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">Toda Bela Boutique</span>
+           <button className="text-muted-foreground/40 hover:text-primary transition-colors">
+              <Share2 className="h-4 w-4" />
+           </button>
         </div>
-
-        <h1 className="text-3xl md:text-5xl font-headline font-bold text-primary leading-[1.1] tracking-tighter">
+        <h1 className="text-2xl font-headline font-bold text-primary leading-tight">
           {product.name}
         </h1>
-
-        <div className="flex flex-col gap-1 pt-2">
-          <div className="flex items-end gap-4">
-            <span className="text-4xl font-bold text-primary">{formatCurrency(product.price)}</span>
-            {product.oldPrice && (
-              <span className="text-lg text-muted-foreground/40 line-through font-light italic mb-1">
-                {formatCurrency(product.oldPrice)}
-              </span>
-            )}
+        <div className="flex items-center gap-2 text-accent pt-1">
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((s) => <Star key={s} className="h-3 w-3 fill-current" />)}
           </div>
-          <p className="text-[11px] font-bold text-accent uppercase tracking-[0.2em]">
-            Ou 10x de {formatCurrency(product.price / 10)} sem juros
-          </p>
+          <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">23 Comentário(s)</span>
         </div>
       </div>
 
-      {/* Description Summary */}
-      <p className="text-base text-muted-foreground leading-relaxed font-light italic border-l-2 border-primary/5 pl-6">
-        {product.description}
-      </p>
+      {/* Pricing */}
+      <div className="space-y-1 border-b border-primary/5 pb-6">
+        <div className="flex items-baseline gap-4">
+          <span className="text-3xl font-bold text-primary">{formatCurrency(product.price)}</span>
+          {product.oldPrice && (
+            <span className="text-sm text-muted-foreground/40 line-through italic">
+              {formatCurrency(product.oldPrice)}
+            </span>
+          )}
+        </div>
+        <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">
+          Ou 10x de {formatCurrency(product.price / 10)} sem juros
+        </p>
+      </div>
 
-      {/* Variations & Selection */}
-      <div className="space-y-8 pt-4">
+      {/* Selections */}
+      <div className="space-y-8 pt-2">
         {/* Colors Swatches */}
         {product.colors && product.colors.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Cor: <span className="text-primary">{selectedColor || "Escolha uma opção"}</span></span>
-            </div>
-            <div className="flex flex-wrap gap-4">
+          <div className="space-y-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Cores</span>
+            <div className="flex flex-wrap gap-2">
               {product.colors.map((color: string) => (
                 <button
                   key={color}
                   onClick={() => setSelectedColor(color)}
                   className={cn(
-                    "group relative flex items-center justify-center h-12 px-6 rounded-2xl border transition-all duration-500 overflow-hidden",
+                    "group relative flex items-center justify-center h-10 px-4 rounded-full border transition-all",
                     selectedColor === color 
-                      ? "bg-primary text-white border-primary shadow-xl scale-105" 
-                      : "bg-white text-primary/40 border-primary/5 hover:border-accent/40"
+                      ? "bg-primary text-white border-primary shadow-lg" 
+                      : "bg-white text-primary/60 border-primary/5 hover:border-accent/40"
                   )}
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-widest z-10">{color}</span>
-                  <div className={cn("absolute inset-0 bg-accent/10 opacity-0 group-hover:opacity-100 transition-opacity", selectedColor === color && "hidden")} />
+                  <span className="text-[9px] font-bold uppercase tracking-widest">{color}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Sizes Selection */}
-        {product.sizes && product.sizes.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Tamanho: <span className="text-primary">{selectedSize || "Selecione"}</span></span>
-              <button className="text-[10px] font-bold text-accent uppercase underline underline-offset-4 decoration-accent/20 hover:text-primary transition-colors">Guia de Medidas</button>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {product.sizes.map((size: string) => (
-                <button
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
-                  className={cn(
-                    "w-16 h-16 rounded-2xl flex items-center justify-center text-xs font-bold transition-all duration-500 border",
-                    selectedSize === size 
-                      ? "bg-primary text-white border-primary shadow-xl scale-110" 
-                      : "bg-white text-primary/40 border-primary/10 hover:bg-secondary/50 hover:text-primary"
-                  )}
+        {/* Sizes and Quantity Row */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Tamanho</span>
+            <div className="flex items-center bg-secondary/40 rounded-full p-0.5 border border-primary/5">
+                <button 
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-white transition-colors"
                 >
-                  {size}
+                  <Minus className="h-3 w-3" />
                 </button>
-              ))}
+                <span className="w-8 text-center text-xs font-bold">{quantity}</span>
+                <button 
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
             </div>
           </div>
-        )}
+          
+          <div className="flex flex-wrap gap-2">
+            {product.sizes?.map((size: string) => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center text-[10px] font-bold transition-all border",
+                  selectedSize === size 
+                    ? "bg-primary text-white border-primary shadow-md" 
+                    : "bg-white text-primary/40 border-primary/10 hover:border-primary/40"
+                )}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
 
-        {/* Quantity and Fav Group */}
-        <div className="flex items-center gap-6 pt-4">
-           <div className="flex items-center bg-secondary/30 rounded-2xl p-1 border border-primary/5">
-              <button 
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="h-12 w-12 rounded-xl flex items-center justify-center hover:bg-white transition-colors"
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-              <span className="w-12 text-center text-sm font-bold">{quantity}</span>
-              <button 
-                onClick={() => setQuantity(quantity + 1)}
-                className="h-12 w-12 rounded-xl flex items-center justify-center hover:bg-white transition-colors"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-           </div>
-           
-           <Button 
-            variant="outline" 
-            onClick={handleToggleFavorite}
-            className={cn(
-              "flex-1 h-14 rounded-2xl text-[10px] font-bold uppercase tracking-widest border-primary/5 transition-all",
-              isFavorited ? "bg-primary text-white" : "bg-white hover:bg-primary/5 text-primary/40"
-            )}
-          >
-            <Heart className={cn("mr-2 h-4 w-4", isFavorited && "fill-current")} /> 
-            {isFavorited ? "Peça Favoritada" : "Desejo"}
-          </Button>
+          <div className="flex items-center gap-6 pt-1">
+             <button className="flex items-center gap-2 text-[9px] font-bold text-primary/40 uppercase tracking-widest hover:text-accent transition-colors">
+                <HelpCircle className="h-3 w-3" /> Descubra seu tamanho
+             </button>
+             <button className="flex items-center gap-2 text-[9px] font-bold text-primary/40 uppercase tracking-widest hover:text-accent transition-colors">
+                <Ruler className="h-3 w-3" /> Tabela de medidas
+             </button>
+          </div>
         </div>
       </div>
 
-      {/* Primary Actions */}
-      <div className="space-y-4 pt-8">
+      {/* Primary Action Button */}
+      <div className="pt-6">
         <Button 
           onClick={handleBuyNowClick}
-          className="w-full h-20 rounded-[2rem] text-sm font-bold uppercase tracking-[0.15em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 group"
+          className="w-full h-16 rounded-full text-xs font-black uppercase tracking-[0.2em] bg-black text-white hover:bg-primary transition-all duration-700 shadow-2xl active:scale-95"
         >
-          <CreditCard className="mr-3 h-5 w-5" />
-          Finalizar Pedido
-          <ChevronRight className="ml-2 h-4 w-4 opacity-0 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
+          Compre Agora
         </Button>
-        
-        <Button 
+        <button 
           onClick={handleAddToCartClick}
-          variant="outline"
-          className="w-full h-16 rounded-[2rem] text-[10px] font-bold uppercase tracking-widest border-primary/10 text-primary/60 hover:bg-secondary/50 transition-all duration-500"
+          className="w-full mt-4 text-[9px] font-bold uppercase tracking-[0.3em] text-primary/40 hover:text-primary transition-colors py-2"
         >
-          <ShoppingBag className="mr-2 h-4 w-4" />
-          Manter no Carrinho
-        </Button>
+          Adicionar ao Carrinho
+        </button>
       </div>
 
-      {/* Trust Context */}
-      <div className="grid grid-cols-2 gap-4 pt-10">
-        <div className="flex flex-col items-center text-center p-6 rounded-3xl bg-secondary/20 border border-primary/5 group hover:bg-white transition-all">
-          <Truck className="h-6 w-6 text-accent mb-3 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] font-bold uppercase tracking-widest text-primary">Frete Expresso</p>
-          <p className="text-[8px] text-muted-foreground italic mt-1">Sua peça em até 10 dias</p>
+      {/* Complete the Look Small Section */}
+      {relatedProducts && relatedProducts.length > 0 && (
+        <div className="pt-8 border-t border-primary/5 space-y-4">
+           <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60">Complete o Look</h4>
+           <div className="flex gap-3">
+              {relatedProducts.slice(0, 2).map((item) => (
+                <Link key={item.id} href={`/products/${item.id}`} className="group relative h-24 w-20 overflow-hidden rounded-xl bg-secondary/20">
+                  <Image src={item.image} alt={item.name} fill className="object-cover transition-transform group-hover:scale-110" />
+                </Link>
+              ))}
+           </div>
         </div>
-        <div className="flex flex-col items-center text-center p-6 rounded-3xl bg-secondary/20 border border-primary/5 group hover:bg-white transition-all">
-          <ShieldCheck className="h-6 w-6 text-accent mb-3 group-hover:scale-110 transition-transform" />
-          <p className="text-[9px] font-bold uppercase tracking-widest text-primary">Pagamento Seguro</p>
-          <p className="text-[8px] text-muted-foreground italic mt-1">Ambiente criptografado</p>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

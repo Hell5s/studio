@@ -1,106 +1,112 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
+import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Expand, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 interface ProductGalleryProps {
   images: string[];
   name: string;
+  productId: string;
 }
 
-export function ProductGallery({ images, name }: ProductGalleryProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isZoomed, setIsZoomed] = useState(false);
+export function ProductGallery({ images, name, productId }: ProductGalleryProps) {
+  const { user } = useUser();
+  const db = useFirestore();
+  const { toast } = useToast();
 
-  const nextImage = () => setActiveIndex((prev) => (prev + 1) % images.length);
-  const prevImage = () => setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
+  const favoriteRef = React.useMemo(() => {
+    if (!db || !user?.uid || !productId) return null;
+    return doc(db, 'users', user.uid, 'favorites', productId);
+  }, [db, user?.uid, productId]);
+
+  const { data: favoriteData } = useDoc(favoriteRef);
+  const isFavorited = !!favoriteData;
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({
+        title: "Acesso necessário",
+        description: "Faça login para salvar suas peças favoritas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!favoriteRef) return;
+
+    if (isFavorited) {
+      deleteDocumentNonBlocking(favoriteRef);
+      toast({ title: "Removido dos favoritos" });
+    } else {
+      setDocumentNonBlocking(favoriteRef, {
+        productId,
+        productName: name,
+        productImage: images[0],
+        addedAt: serverTimestamp()
+      }, { merge: true });
+      toast({ title: "Salvo nos seus favoritos!" });
+    }
+  };
 
   return (
-    <div className="grid lg:grid-cols-[120px_1fr] gap-8">
-      {/* Thumbnails Sidebar - Desktop Only */}
-      <div className="hidden lg:flex flex-col gap-4 max-h-[800px] overflow-y-auto no-scrollbar pr-2">
+    <div className="relative">
+      {/* Desktop: Large Grid Layout */}
+      <div className="hidden md:grid grid-cols-2 gap-4">
         {images.map((img, idx) => (
-          <button
-            key={idx}
-            onClick={() => setActiveIndex(idx)}
+          <div 
+            key={idx} 
             className={cn(
-              "relative aspect-[3/4] w-full shrink-0 rounded-2xl overflow-hidden border-2 transition-all duration-500",
-              activeIndex === idx ? "border-accent shadow-xl scale-105" : "border-transparent opacity-40 hover:opacity-100"
+              "relative aspect-[3/4] overflow-hidden bg-secondary/10 group",
+              idx === 0 && images.length % 2 !== 0 ? "col-span-2 aspect-[16/10]" : ""
             )}
           >
             <Image
               src={img}
-              alt={`${name} thumbnail ${idx + 1}`}
+              alt={`${name} - Imagem ${idx + 1}`}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-[2s] group-hover:scale-105"
+              priority={idx === 0}
+              sizes="(max-width: 1200px) 100vw, 50vw"
             />
-          </button>
+          </div>
         ))}
       </div>
 
-      {/* Main Large Editorial Image */}
-      <div className="relative group">
-        <div 
-          className="relative aspect-[3/4.5] rounded-[3rem] md:rounded-[4rem] overflow-hidden bg-secondary/10 shadow-editorial cursor-zoom-in group"
-          onMouseEnter={() => setIsZoomed(true)}
-          onMouseLeave={() => setIsZoomed(false)}
-        >
-          <Image
-            src={images[activeIndex]}
-            alt={name}
-            fill
-            className={cn(
-              "object-cover transition-transform duration-[2s] ease-out",
-              isZoomed ? "scale-110" : "scale-100"
-            )}
-            priority
-            sizes="(max-width: 768px) 100vw, 60vw"
-          />
-          
-          {/* Decorative Corner Trace */}
-          <div className="absolute inset-8 border border-white/10 rounded-[2rem] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          
-          {/* Image Navigation Arrows */}
-          <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-            <button 
-              onClick={(e) => { e.stopPropagation(); prevImage(); }}
-              className="h-14 w-14 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-primary shadow-xl pointer-events-auto hover:bg-primary hover:text-white transition-all active:scale-95"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); nextImage(); }}
-              className="h-14 w-14 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-primary shadow-xl pointer-events-auto hover:bg-primary hover:text-white transition-all active:scale-95"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
+      {/* Mobile: Vertical Stack Layout */}
+      <div className="flex flex-col md:hidden gap-2">
+        {images.map((img, idx) => (
+          <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-secondary/10">
+            <Image
+              src={img}
+              alt={`${name} mobile ${idx + 1}`}
+              fill
+              className="object-cover"
+              priority={idx === 0}
+              sizes="100vw"
+            />
           </div>
-
-          {/* Expand Badge */}
-          <div className="absolute bottom-10 right-10 flex h-12 w-12 items-center justify-center rounded-full bg-black/20 backdrop-blur-md text-white opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-            <Expand className="h-5 w-5" />
-          </div>
-        </div>
-
-        {/* Mobile Thumbnails Row */}
-        <div className="flex lg:hidden gap-3 mt-6 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory px-2">
-          {images.map((img, idx) => (
-            <button
-              key={idx}
-              onClick={() => setActiveIndex(idx)}
-              className={cn(
-                "relative aspect-[3/4] h-24 shrink-0 rounded-xl overflow-hidden border-2 snap-start transition-all",
-                activeIndex === idx ? "border-accent scale-105" : "border-transparent opacity-60"
-              )}
-            >
-              <Image src={img} alt="thumb" fill className="object-cover" />
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
+
+      {/* Favorite Button Overlay (Matches Kaisan reference style) */}
+      <button 
+        onClick={handleToggleFavorite}
+        className={cn(
+          "absolute top-6 right-6 h-12 w-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all z-20 shadow-xl",
+          isFavorited 
+            ? "bg-primary text-white" 
+            : "bg-white/80 text-primary hover:bg-primary hover:text-white"
+        )}
+      >
+        <Heart className={cn("h-6 w-6", isFavorited && "fill-current")} />
+      </button>
     </div>
   );
 }
