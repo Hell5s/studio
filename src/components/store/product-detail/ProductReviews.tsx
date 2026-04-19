@@ -4,6 +4,7 @@
 import React from 'react';
 import { Star, User, CheckCircle2, ThumbsUp } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 interface Review {
   id: string;
