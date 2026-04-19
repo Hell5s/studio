@@ -10,14 +10,13 @@ import { Newsletter } from '@/components/store/Newsletter';
 import { Footer } from '@/components/store/Footer';
 import { ProductGallery } from '@/components/store/product-detail/ProductGallery';
 import { ProductInfo } from '@/components/store/product-detail/ProductInfo';
-import { ProductTabs } from '@/components/store/product-detail/ProductTabs';
-import { RelatedProducts } from '@/components/store/product-detail/RelatedProducts';
+import { ProductReviews } from '@/components/store/product-detail/ProductReviews';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { FavoritesDialog } from '@/components/store/FavoritesDialog';
-import { Loader2, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Loader2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -112,18 +111,19 @@ export default function ProductDetailPage() {
       
       <main className="pt-24 md:pt-32 pb-20">
         <div className="container mx-auto px-4 lg:px-8 xl:px-12">
-          {/* Breadcrumb */}
-          <nav className="mb-8 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+          {/* Breadcrumb - Matches Kaisan style */}
+          <nav className="mb-6 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">
             <Link href="/" className="hover:text-primary transition-colors">Início</Link>
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-2.5 w-2.5" />
             <Link href={`/#${product.category?.toLowerCase()}`} className="hover:text-primary transition-colors">{product.category}</Link>
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-2.5 w-2.5" />
             <span className="text-primary truncate">{product.name}</span>
+            <span className="ml-2 opacity-30">| REF: {product.sku || product.id.slice(-6).toUpperCase()}</span>
           </nav>
 
-          <div className="grid lg:grid-cols-12 gap-8 xl:gap-16 items-start">
-            {/* Left: Large Editorial Gallery */}
-            <div className="lg:col-span-8 xl:col-span-8">
+          <div className="grid lg:grid-cols-12 gap-6 xl:gap-12 items-start">
+            {/* Left: Large Editorial Gallery (2-column layout desktop) */}
+            <div className="lg:col-span-8">
               <ProductGallery 
                 images={product.images || [product.image]} 
                 name={product.name} 
@@ -131,22 +131,16 @@ export default function ProductDetailPage() {
               />
             </div>
 
-            {/* Right: Technical Purchase Column */}
-            <div className="lg:col-span-4 xl:col-span-4 lg:sticky lg:top-28">
+            {/* Right: technical Purchase Column */}
+            <div className="lg:col-span-4 lg:sticky lg:top-28">
               <ProductInfo product={product} onAddToCart={addToCart} relatedProducts={relatedProducts} />
-              
-              <div className="mt-8">
-                <ProductTabs product={product} />
-              </div>
             </div>
           </div>
 
-          {/* Related Products Section */}
-          {relatedProducts && relatedProducts.length > 0 && (
-            <div className="mt-32 border-t border-primary/5 pt-20">
-              <RelatedProducts products={relatedProducts} />
-            </div>
-          )}
+          {/* Detailed Reviews at bottom */}
+          <div className="mt-32">
+             <ProductReviews productId={product.id} />
+          </div>
         </div>
       </main>
 

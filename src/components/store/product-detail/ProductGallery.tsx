@@ -57,13 +57,13 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
 
   return (
     <div className="relative">
-      {/* Desktop: Large Grid Layout */}
-      <div className="hidden md:grid grid-cols-2 gap-4">
+      {/* Desktop: Grid layout for massive editorial view like reference */}
+      <div className="hidden md:grid grid-cols-2 gap-3">
         {images.map((img, idx) => (
           <div 
             key={idx} 
             className={cn(
-              "relative aspect-[3/4] overflow-hidden bg-secondary/10 group",
+              "relative aspect-[3/4] overflow-hidden bg-[#F3EFF0] group",
               idx === 0 && images.length % 2 !== 0 ? "col-span-2 aspect-[16/10]" : ""
             )}
           >
@@ -82,7 +82,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       {/* Mobile: Vertical Stack Layout */}
       <div className="flex flex-col md:hidden gap-2">
         {images.map((img, idx) => (
-          <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-secondary/10">
+          <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F3EFF0]">
             <Image
               src={img}
               alt={`${name} mobile ${idx + 1}`}
@@ -95,17 +95,17 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         ))}
       </div>
 
-      {/* Favorite Button Overlay (Matches Kaisan reference style) */}
+      {/* Favorite Button Overlay - Matches Kaisan floating style */}
       <button 
         onClick={handleToggleFavorite}
         className={cn(
-          "absolute top-6 right-6 h-12 w-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all z-20 shadow-xl",
+          "absolute top-4 right-4 h-11 w-11 rounded-full backdrop-blur-sm flex items-center justify-center transition-all z-20 shadow-lg",
           isFavorited 
             ? "bg-primary text-white" 
             : "bg-white/80 text-primary hover:bg-primary hover:text-white"
         )}
       >
-        <Heart className={cn("h-6 w-6", isFavorited && "fill-current")} />
+        <Heart className={cn("h-5 w-5", isFavorited && "fill-current")} />
       </button>
     </div>
   );
