@@ -294,8 +294,14 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
             <div className="grid gap-4">
               <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Layers className="h-3 w-3" /> Valores e Atributos</Label>
               <div className="grid grid-cols-2 gap-4">
-                <Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} placeholder="Preço (129,90)" />
-                <Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} placeholder="Antigo (169,90)" />
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Preço Venda</span>
+                  <Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} placeholder="129,90" />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Preço Original "De"</span>
+                  <Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} placeholder="169,90" />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} placeholder="Estoque" />
@@ -332,3 +338,4 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     </Dialog>
   );
 }
+

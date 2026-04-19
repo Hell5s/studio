@@ -109,7 +109,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     if (!formData.name || !formData.price || !finalMainImage) {
       toast({
         title: "Campos obrigatórios",
-        description: "Preencha nome, preço e imagem de capa (ou a galeria).",
+        description: "Preencha nome, preço de venda e imagem de capa.",
         variant: "destructive"
       });
       return;
@@ -247,9 +247,15 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <option>Moda Fitness</option><option>Vestidos</option><option>Conjuntos</option><option>Plus Size</option><option>Casual Chic</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Preço Vitrine (R$)</Label>
-                  <Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Preço Venda (R$)</Label>
+                    <Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Preço Original "De" (R$)</Label>
+                    <Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+                  </div>
                 </div>
               </div>
             </section>
@@ -314,7 +320,10 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 </div>
                 <div className="p-8 text-center space-y-2">
                   <h5 className="font-bold text-lg text-primary truncate">{formData.name || 'Nome da Peça'}</h5>
-                  <p className="text-2xl font-light text-primary">R$ {formData.price || '0,00'}</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <p className="text-2xl font-light text-primary">R$ {formData.price || '0,00'}</p>
+                    {formData.oldPrice && <p className="text-sm text-muted-foreground line-through italic">R$ {formData.oldPrice}</p>}
+                  </div>
                 </div>
               </Card>
 
@@ -338,3 +347,4 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     </Dialog>
   );
 }
+
