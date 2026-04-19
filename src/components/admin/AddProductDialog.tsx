@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -26,8 +27,8 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { collection, serverTimestamp, addDoc } from 'firebase/firestore';
-import { useFirestore, useFirebase, addDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useFirebase, setDocumentNonBlocking } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Badge } from '@/components/ui/badge';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
@@ -53,12 +54,12 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     oldPrice: '',
     description: '',
     longDescription: '',
-    category: 'Tops',
-    collection: 'Moda Fitness',
+    category: 'Vestidos',
+    collection: 'Nova Coleção',
     badge: 'Novo',
     image: '',
     gallery: '',
-    stock: '',
+    stock: '10',
     sizes: 'P, M, G, GG',
     colors: '',
     published: true,
@@ -71,7 +72,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     return Number(String(val).replace(/\./g, "").replace(",", ".")) || 0;
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!formData.name || !formData.price || !formData.image) {
       toast({
         title: "Campos obrigatórios",
@@ -82,15 +83,17 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     }
 
     setLoading(true);
-    const productsRef = collection(db, 'products');
+    const productId = `prod-${Date.now()}`;
+    const productRef = doc(db, 'products', productId);
     
     const galleryImages = formData.gallery
       .split('\n')
       .map((item) => item.trim())
       .filter(Boolean);
 
-    addDocumentNonBlocking(productsRef, {
+    const payload = {
       ...formData,
+      id: productId,
       price: parsePrice(formData.price),
       oldPrice: formData.oldPrice ? parsePrice(formData.oldPrice) : null,
       stock: formData.stock ? Number(formData.stock) : 0,
@@ -101,7 +104,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       source: 'Manual'
-    });
+    };
+
+    setDocumentNonBlocking(productRef, payload, { merge: true });
 
     toast({
       title: "Produto Cadastrado",
@@ -112,8 +117,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     onOpenChange(false);
     setFormData({
       name: '', price: '', oldPrice: '', description: '', longDescription: '',
-      category: 'Tops', collection: 'Moda Fitness', badge: 'Novo', image: '', 
-      gallery: '', stock: '', sizes: 'P, M, G, GG', colors: '', published: true, 
+      category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
+      gallery: '', stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
       featured: false, bestseller: false, sourceUrl: ''
     });
   };
@@ -251,6 +256,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <option>Conjuntos</option>
                     <option>Linha Básica</option>
                     <option>Casual Chic</option>
+                    <option>Nova Coleção</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -265,6 +271,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <option>Shorts</option>
                     <option>Macacões</option>
                     <option>Blusas</option>
+                    <option>Vestidos</option>
+                    <option>Conjuntos</option>
                     <option>Acessórios</option>
                   </select>
                 </div>
@@ -344,7 +352,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   value={formData.sourceUrl}
                   onChange={e => setFormData({...formData, sourceUrl: e.target.value})}
                   className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                  placeholder="Link Shopee (Privado)"
+                  placeholder="Link Fornecedor (Opcional)"
                 />
               </div>
             </section>
