@@ -51,7 +51,7 @@ export default function ProductDetailPage() {
 
   const { data: relatedProducts } = useCollection(relatedQuery);
 
-  const addToCart = (prod: any) => {
+  const addToCart = (prod: any, openCart: boolean = false) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === prod.id);
       if (existing) {
@@ -59,7 +59,10 @@ export default function ProductDetailPage() {
       }
       return [...prev, { ...prod, quantity: 1 }];
     });
-    // Removido o setIsCheckoutOpen(true) para não abrir o carrinho automaticamente
+    
+    if (openCart) {
+      setIsCheckoutOpen(true);
+    }
   };
 
   const updateQuantity = (id: string, delta: number) => {
@@ -125,7 +128,7 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-32">
-              <ProductInfo product={product} onAddToCart={() => addToCart(product)} />
+              <ProductInfo product={product} onAddToCart={addToCart} />
             </div>
           </div>
 

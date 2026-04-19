@@ -12,7 +12,7 @@ import { doc, serverTimestamp } from 'firebase/firestore';
 
 interface ProductInfoProps {
   product: any;
-  onAddToCart?: () => void;
+  onAddToCart?: (product: any, openCart?: boolean) => void;
 }
 
 export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
@@ -77,14 +77,18 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
     return true;
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCartClick = () => {
     if (!validateSelection()) return;
-    onAddToCart?.();
+    onAddToCart?.(product, false);
+    toast({
+      title: "Adicionado à sacola",
+      description: "Você pode continuar explorando ou finalizar seu pedido agora."
+    });
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNowClick = () => {
     if (!validateSelection()) return;
-    onAddToCart?.(); // Adiciona e já abre o carrinho (padrão do sistema agora)
+    onAddToCart?.(product, true);
   };
 
   return (
@@ -176,16 +180,16 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
       <div className="flex flex-col gap-4 pt-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Button 
-            onClick={handleAddToCart}
+            onClick={handleAddToCartClick}
             variant="outline"
-            className="w-full rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary text-primary hover:bg-secondary/50 transition-all duration-500"
+            className="w-full rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.3em] border-primary text-primary hover:bg-secondary/50 transition-all duration-500"
           >
             <ShoppingBag className="mr-2 h-4 w-4" />
             Adicionar ao carrinho
           </Button>
           <Button 
-            onClick={handleBuyNow}
-            className="w-full rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.5em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
+            onClick={handleBuyNowClick}
+            className="w-full rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.5em] bg-primary text-white hover:bg-black transition-all duration-700 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 group"
           >
             <CreditCard className="mr-2 h-4 w-4" />
             Comprar Agora
@@ -197,14 +201,14 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
             variant="outline" 
             onClick={handleToggleFavorite}
             className={cn(
-              "rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 transition-all",
+              "rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 transition-all",
               isFavorited ? "bg-[#6E3C47] text-white" : "hover:bg-white text-primary"
             )}
           >
             <Heart className={cn("mr-2 h-4 w-4", isFavorited && "fill-current")} /> 
             {isFavorited ? "Favoritado" : "Favoritos"}
           </Button>
-          <Button variant="outline" className="rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 hover:bg-white text-primary">
+          <Button variant="outline" className="rounded-full py-6 text-[10px] font-bold uppercase tracking-[0.3em] border-primary/10 hover:bg-white text-primary">
             <Share2 className="mr-2 h-4 w-4" /> Compartilhar
           </Button>
         </div>
