@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -83,7 +82,7 @@ export default function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FFF9F7]">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <Loader2 className="h-12 w-12 animate-spin text-primary/40" />
       </div>
     );
@@ -91,7 +90,7 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-[#FFF9F7] p-6 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-white p-6 text-center">
         <h1 className="text-2xl md:text-3xl font-headline font-bold text-primary">Peça não encontrada</h1>
         <Button onClick={() => router.push('/')} variant="outline" className="rounded-full px-12 h-14">
           Voltar para a Boutique
@@ -101,7 +100,7 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white selection:bg-accent/30 selection:text-primary overflow-x-hidden">
+    <div className="min-h-screen bg-white selection:bg-black/5 selection:text-black overflow-x-hidden">
       <Navbar 
         onOpenLogin={() => setIsLoginOpen(true)} 
         onOpenCart={() => setIsCheckoutOpen(true)}
@@ -110,19 +109,19 @@ export default function ProductDetailPage() {
       />
       
       <main className="pt-24 md:pt-32 pb-20">
-        <div className="container mx-auto px-4 lg:px-8 xl:px-12">
-          {/* Breadcrumb - Matches Kaisan style */}
-          <nav className="mb-6 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">
-            <Link href="/" className="hover:text-primary transition-colors">Início</Link>
-            <ChevronRight className="h-2.5 w-2.5" />
-            <Link href={`/#${product.category?.toLowerCase()}`} className="hover:text-primary transition-colors">{product.category}</Link>
-            <ChevronRight className="h-2.5 w-2.5" />
-            <span className="text-primary truncate">{product.name}</span>
-            <span className="ml-2 opacity-30">| REF: {product.sku || product.id.slice(-6).toUpperCase()}</span>
+        <div className="container mx-auto px-4 lg:px-6 max-w-[1300px]">
+          {/* Breadcrumb - Kaisan Pattern */}
+          <nav className="mb-8 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            <Link href="/" className="hover:text-black transition-colors">Início</Link>
+            <ChevronRight className="h-3 w-3" />
+            <Link href={`/#${product.category?.toLowerCase()}`} className="hover:text-black transition-colors">{product.category}</Link>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-black truncate">{product.name}</span>
+            <span className="ml-2 text-gray-200">| REF: {product.sku || product.id.slice(-6).toUpperCase()}</span>
           </nav>
 
-          <div className="grid lg:grid-cols-12 gap-6 xl:gap-12 items-start">
-            {/* Left: Large Editorial Gallery (2-column layout desktop) */}
+          <div className="grid lg:grid-cols-12 gap-10 items-start">
+            {/* Left: Editorial Gallery (65% width) */}
             <div className="lg:col-span-8">
               <ProductGallery 
                 images={product.images || [product.image]} 
@@ -131,14 +130,18 @@ export default function ProductDetailPage() {
               />
             </div>
 
-            {/* Right: technical Purchase Column */}
+            {/* Right: Technical Purchase Column (35% width) */}
             <div className="lg:col-span-4 lg:sticky lg:top-28">
-              <ProductInfo product={product} onAddToCart={addToCart} relatedProducts={relatedProducts} />
+              <ProductInfo 
+                product={product} 
+                onAddToCart={addToCart} 
+                relatedProducts={relatedProducts} 
+              />
             </div>
           </div>
 
-          {/* Detailed Reviews at bottom */}
-          <div className="mt-32">
+          {/* Full Width Professional Reviews Section */}
+          <div className="mt-24 pt-20">
              <ProductReviews productId={product.id} />
           </div>
         </div>

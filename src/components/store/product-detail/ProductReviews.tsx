@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -32,93 +31,85 @@ export function ProductReviews({ productId }: { productId: string }) {
   );
 
   return (
-    <section id="avaliacoes" className="pt-20 border-t border-primary/5">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-primary">Avaliações sobre o produto</h2>
-        <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-50 px-4 py-2 rounded-full">
-          <CheckCircle2 className="h-3.5 w-3.5" />
+    <section id="avaliacoes" className="pt-20 border-t border-gray-100">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+        <h2 className="text-[14px] font-bold uppercase tracking-widest text-[#444]">Avaliações sobre o produto</h2>
+        <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-50 px-4 py-2 rounded-full">
+          <CheckCircle2 className="h-4 w-4" />
           Compra 100% verificada
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-12">
-        {/* Left Column: Stats & Meta */}
-        <div className="lg:col-span-4 space-y-10">
-          <div className="flex items-center gap-6">
-            <div className="h-16 w-16 rounded-full border-2 border-black flex items-center justify-center">
-              <span className="text-xl font-bold">23</span>
+      <div className="grid lg:grid-cols-12 gap-16">
+        <div className="lg:col-span-4 space-y-12">
+          <div className="flex items-center gap-8">
+            <div className="h-20 w-20 rounded-full border-4 border-black flex items-center justify-center">
+              <span className="text-2xl font-bold">23</span>
             </div>
             <div className="space-y-1">
-              <StarRating rating={5} size="h-3.5 w-3.5" />
-              <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">23 avaliações</p>
+              <StarRating rating={5} size="h-4 w-4" />
+              <p className="text-[12px] font-bold uppercase text-gray-400 tracking-widest">23 avaliações</p>
             </div>
           </div>
 
-          <div className="space-y-4 pt-4">
-            <div className="flex items-center justify-between group">
-              <div className="flex items-center gap-3">
-                <StarRating rating={5} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Qualidade</span>
-              </div>
+          <div className="space-y-6 pt-4 border-t border-gray-50">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Qualidade</span>
+              <StarRating rating={5} />
             </div>
-            <div className="flex items-center justify-between group">
-              <div className="flex items-center gap-3">
-                <StarRating rating={5} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Preço</span>
-              </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Preço</span>
+              <StarRating rating={5} />
             </div>
-            <div className="flex items-center justify-between group">
-              <div className="flex items-center gap-3">
-                <StarRating rating={5} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Veste Bem</span>
-              </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Veste Bem</span>
+              <StarRating rating={5} />
             </div>
           </div>
 
-          <button className="w-full py-5 bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] transition-all hover:bg-primary active:scale-95">
-            Fazer Avaliação
+          <button className="w-full py-5 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-gray-800">
+            FAZER AVALIAÇÃO
           </button>
 
           <div className="grid grid-cols-2 gap-8 pt-6">
             <div className="space-y-4">
-              <h5 className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">Onde usar</h5>
-              <ul className="text-center space-y-2 text-[11px] font-light text-muted-foreground italic">
-                <li>Conforto</li>
-                <li>Lindo</li>
+              <h5 className="text-[11px] font-bold uppercase tracking-widest text-gray-300 text-center">Onde usar</h5>
+              <ul className="text-center space-y-2 text-[12px] font-medium text-gray-500 italic">
+                <li>Dia a dia</li>
+                <li>Treino</li>
               </ul>
             </div>
             <div className="space-y-4">
-              <h5 className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">Vantagens</h5>
-              <ul className="text-center space-y-2 text-[11px] font-light text-muted-foreground italic">
-                <li>Treino</li>
-                <li>Academia</li>
-                <li>Balada</li>
+              <h5 className="text-[11px] font-bold uppercase tracking-widest text-gray-300 text-center">Vantagens</h5>
+              <ul className="text-center space-y-2 text-[12px] font-medium text-gray-500 italic">
+                <li>Conforto</li>
+                <li>Beleza</li>
               </ul>
             </div>
           </div>
         </div>
 
-        {/* Right Column: List */}
-        <div className="lg:col-span-8 space-y-4">
+        <div className="lg:col-span-8 space-y-6">
           {mockReviews.map((review) => (
-            <article key={review.id} className="p-8 bg-white border border-primary/5 space-y-4 shadow-sm hover:shadow-md transition-shadow">
-              <StarRating rating={review.rating} />
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-primary">{review.headline}</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed font-light italic">{review.comment}</p>
+            <article key={review.id} className="p-10 bg-white border border-gray-100 space-y-6">
+              <StarRating rating={review.rating} size="h-3 w-3" />
+              <div className="space-y-3">
+                <h4 className="text-[13px] font-bold text-[#444] uppercase">{review.headline}</h4>
+                <p className="text-[13px] text-gray-500 leading-relaxed font-light italic">"{review.comment}"</p>
               </div>
               {review.recommended && (
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 italic">
-                  <div className="h-4 w-4 rounded-full border border-primary/10 flex items-center justify-center">
-                    <Check className="h-2.5 w-2.5" />
+                <div className="flex items-center gap-2 text-[11px] text-gray-400 italic">
+                  <div className="h-5 w-5 rounded-full border border-emerald-100 flex items-center justify-center bg-emerald-50">
+                    <Check className="h-3 w-3 text-emerald-500" />
                   </div>
                   Sim, recomendaria a um amigo.
                 </div>
               )}
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/80">
-                {review.user} | Tamanho: {review.size}
-              </p>
+              <div className="pt-4 border-t border-gray-50">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                  {review.user} | TAMANHO: {review.size}
+                </p>
+              </div>
             </article>
           ))}
         </div>

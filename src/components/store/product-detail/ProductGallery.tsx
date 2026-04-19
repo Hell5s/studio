@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -57,15 +56,12 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
 
   return (
     <div className="relative">
-      {/* Desktop: Grid layout for massive editorial view like reference */}
-      <div className="hidden md:grid grid-cols-2 gap-3">
+      {/* Desktop: Grid layout for massive editorial view */}
+      <div className="hidden md:grid grid-cols-2 gap-2">
         {images.map((img, idx) => (
           <div 
             key={idx} 
-            className={cn(
-              "relative aspect-[3/4] overflow-hidden bg-[#F3EFF0] group",
-              idx === 0 && images.length % 2 !== 0 ? "col-span-2 aspect-[16/10]" : ""
-            )}
+            className="relative aspect-[3/4] overflow-hidden bg-white group"
           >
             <Image
               src={img}
@@ -80,9 +76,9 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       </div>
 
       {/* Mobile: Vertical Stack Layout */}
-      <div className="flex flex-col md:hidden gap-2">
+      <div className="flex flex-col md:hidden gap-1">
         {images.map((img, idx) => (
-          <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F3EFF0]">
+          <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-white">
             <Image
               src={img}
               alt={`${name} mobile ${idx + 1}`}
@@ -95,14 +91,14 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         ))}
       </div>
 
-      {/* Favorite Button Overlay - Matches Kaisan floating style */}
+      {/* Favorite Button Overlay */}
       <button 
         onClick={handleToggleFavorite}
         className={cn(
-          "absolute top-4 right-4 h-11 w-11 rounded-full backdrop-blur-sm flex items-center justify-center transition-all z-20 shadow-lg",
+          "absolute top-4 right-4 h-10 w-10 rounded-full flex items-center justify-center transition-all z-20 shadow-md",
           isFavorited 
             ? "bg-primary text-white" 
-            : "bg-white/80 text-primary hover:bg-primary hover:text-white"
+            : "bg-white text-gray-400 hover:text-primary"
         )}
       >
         <Heart className={cn("h-5 w-5", isFavorited && "fill-current")} />

@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { ShoppingBag, Share2, Star, Minus, Plus, Ruler, Heart } from 'lucide-react';
+import { Share2, Star, Minus, Plus, Ruler, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import {
@@ -21,7 +22,7 @@ interface ProductInfoProps {
   relatedProducts?: any[];
 }
 
-export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
+export function ProductInfo({ product, onAddToCart, relatedProducts }: ProductInfoProps) {
   const { toast } = useToast();
   const { user } = useUser();
   const db = useFirestore();
@@ -55,16 +56,6 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
       return false;
     }
     return true;
-  };
-
-  const handleAddToCartClick = () => {
-    if (!validateSelection()) return;
-    const cartProduct = { ...product, quantity, selectedSize, selectedColor };
-    onAddToCart?.(cartProduct, false);
-    toast({
-      title: "Adicionado ao Carrinho",
-      description: "Você pode continuar navegando ou finalizar a compra."
-    });
   };
 
   const handleBuyNowClick = () => {
@@ -103,7 +94,6 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header Info - Matches Kaisan Reference */}
       <div className="space-y-1">
         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">MARCA: TODA BELA</p>
         <div className="flex items-start justify-between gap-4">
@@ -122,8 +112,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         </button>
       </div>
 
-      {/* Pricing - Matches Kaisan Reference */}
-      <div className="space-y-1">
+      <div className="space-y-1 border-t border-gray-100 pt-6">
         <p className="text-[28px] font-bold text-black leading-none">
           {formatCurrency(product.price)}
         </p>
@@ -132,16 +121,16 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         </p>
       </div>
 
-      {/* Colors Swatches - Small images as in reference */}
       {product.colors && product.colors.length > 0 && (
         <div className="space-y-3">
+          <p className="text-[13px] font-medium text-gray-500">Cor</p>
           <div className="flex flex-wrap gap-2">
             {product.colors.map((color: string) => (
               <button
                 key={color}
                 onClick={() => setSelectedColor(color)}
                 className={cn(
-                  "relative h-20 w-16 overflow-hidden border transition-all",
+                  "relative h-16 w-12 overflow-hidden border transition-all",
                   selectedColor === color ? "border-black border-2" : "border-gray-200"
                 )}
                 title={color}
@@ -153,7 +142,6 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         </div>
       )}
 
-      {/* Sizes and Quantity Row - Compact as in reference */}
       <div className="space-y-3">
         <p className="text-[13px] font-medium text-gray-500">Tamanho</p>
         <div className="flex items-center justify-between gap-4">
@@ -191,13 +179,9 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
           </div>
         </div>
 
-        {/* Action Links - Matches Reference Icons */}
         <div className="flex items-center gap-6 pt-2">
           <button className="flex items-center gap-2 text-[10px] font-bold text-black uppercase tracking-wider hover:opacity-70 transition-opacity">
-             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                <path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H6v10a2 2 0 002 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z" />
-             </svg>
-             DESCUBRA SEU TAMANHO
+             <Ruler className="h-4 w-4" /> DESCUBRA SEU TAMANHO
           </button>
           <button className="flex items-center gap-2 text-[10px] font-bold text-black uppercase tracking-wider hover:opacity-70 transition-opacity">
             <Ruler className="h-4 w-4" /> TABELA DE MEDIDAS
@@ -205,7 +189,6 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         </div>
       </div>
 
-      {/* Primary Action Button - Matches Reference (Big Black Block) */}
       <div className="pt-2">
         <Button 
           onClick={handleBuyNowClick}
@@ -215,13 +198,25 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
         </Button>
       </div>
 
-      {/* Compact Accordions - Matches Reference Style */}
+      {relatedProducts && relatedProducts.length > 0 && (
+        <div className="pt-6 space-y-4">
+           <p className="text-[11px] font-bold text-black uppercase tracking-widest">COMPLETE O LOOK</p>
+           <div className="flex gap-3">
+              {relatedProducts.slice(0, 2).map((item) => (
+                <Link key={item.id} href={`/products/${item.id}`} className="group relative h-24 w-20 overflow-hidden rounded-md bg-gray-50 border border-gray-100">
+                  <Image src={item.image} alt={item.name} fill className="object-cover transition-transform group-hover:scale-110" />
+                </Link>
+              ))}
+           </div>
+        </div>
+      )}
+
       <div className="space-y-[-1px] pt-4">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="description" className="border">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline text-[15px] font-light text-[#444] [&[data-state=open]>svg]:rotate-45">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline text-[15px] font-light text-[#444] [&_svg]:block [&[data-state=open] svg]:rotate-45">
               Descrição do Produto
-              <Plus className="h-4 w-4 shrink-0 transition-transform duration-200" />
+              <Plus className="h-4 w-4 shrink-0 transition-transform duration-200 text-gray-400" />
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-4 text-[13px] text-gray-500 leading-relaxed italic">
               {product.longDescription || product.description}
@@ -229,12 +224,12 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
           </AccordionItem>
 
           <AccordionItem value="care" className="border">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline text-[15px] font-light text-[#444] [&[data-state=open]>svg]:rotate-45">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline text-[15px] font-light text-[#444] [&_svg]:block [&[data-state=open] svg]:rotate-45">
               Cuidados com seu produto
-              <Plus className="h-4 w-4 shrink-0 transition-transform duration-200" />
+              <Plus className="h-4 w-4 shrink-0 transition-transform duration-200 text-gray-400" />
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-4 text-[13px] text-gray-500 leading-relaxed italic">
-              Lavar à mão para preservar as fibras. Secar à sombra.
+              Lavar à mão para preservar as fibras delicadas. Secar à sombra para evitar o desbotamento.
             </AccordionContent>
           </AccordionItem>
 
