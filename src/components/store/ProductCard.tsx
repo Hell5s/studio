@@ -120,7 +120,7 @@ export function ProductCard({
       </div>
 
       <div className="px-1 pb-4 pt-6 text-center flex flex-col flex-1">
-        <h3 className="line-clamp-2 text-[13px] uppercase leading-tight tracking-tight text-primary/80 font-medium mb-2">
+        <h3 className="line-clamp-2 text-[13px] uppercase leading-tight tracking-tight text-primary/80 font-bold mb-2">
           {name}
         </h3>
         
