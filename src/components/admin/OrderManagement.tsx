@@ -19,12 +19,14 @@ import {
   ExternalLink as LinkIcon,
   Tag
 } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, useUser, useDoc } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc, limit } from 'firebase/firestore';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -160,7 +162,6 @@ export function OrderManagement() {
         </div>
       </Card>
 
-      {/* Detalhes do Pedido - FOCO EM DROPSHIPPING */}
       <Dialog open={!!selectedOrder} onOpenChange={o => !o && setSelectedOrder(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
           {selectedOrder && (
@@ -175,7 +176,6 @@ export function OrderManagement() {
 
               <div className="p-10 grid lg:grid-cols-[1fr_320px] gap-10">
                 <div className="space-y-10">
-                  {/* Dados de Dropshipping - CRÍTICO */}
                   <section className="space-y-6">
                     <div className="flex items-center gap-3 text-accent border-b border-gray-200 pb-3">
                        <Tag className="h-5 w-5" />
@@ -193,7 +193,6 @@ export function OrderManagement() {
                              <div className="text-right"><p className="font-bold text-primary">R$ {item.price?.toFixed(2)}</p><p className="text-[10px] text-muted-foreground">Qtd: {item.quantity}</p></div>
                            </div>
                            
-                           {/* Bloco do Fornecedor */}
                            <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between">
                               <div className="space-y-1">
                                  <p className="text-[10px] font-bold uppercase text-accent tracking-widest">Fornecedor: {item.supplierName || 'Manual'}</p>
@@ -213,7 +212,6 @@ export function OrderManagement() {
                     </div>
                   </section>
 
-                  {/* Endereço de Envio */}
                   <section className="space-y-6">
                     <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3">
                        <MapPin className="h-5 w-5" />

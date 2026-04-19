@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -17,13 +18,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle
 } from '@/components/ui/dialog';
-import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -108,7 +109,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     if (!formData.name || !formData.price || !finalMainImage) {
       toast({
         title: "Campos obrigatórios",
-        description: "Preencha nome, preço e imagem de capa.",
+        description: "Preencha nome, preço e imagem de capa (ou a galeria).",
         variant: "destructive"
       });
       return;
@@ -230,7 +231,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
         <div className="p-10 grid xl:grid-cols-[1fr_400px] gap-10">
           <div className="space-y-10">
-            {/* 1. DADOS PÚBLICOS */}
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3">
                 <Layers className="h-5 w-5" />
@@ -254,7 +254,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               </div>
             </section>
 
-            {/* 2. DADOS DROPSHIPPING (RESTRITO) */}
             <section className="space-y-6 bg-white p-8 rounded-3xl border border-primary/5 shadow-sm">
               <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-3">
                 <LinkIcon className="h-5 w-5" />
@@ -280,7 +279,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               </div>
             </section>
 
-            {/* 3. VARIAÇÕES VISUAIS */}
             <section className="space-y-6">
               <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationFileUpload} />
               <div className="flex justify-between items-center text-primary border-b border-gray-200 pb-3">
@@ -306,7 +304,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             </section>
           </div>
 
-          {/* SIDEBAR DO DIALOG - STATUS E PREVIEW */}
           <div className="space-y-8">
             <div className="sticky top-28 space-y-8">
               <Card className="rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-none">
