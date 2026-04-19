@@ -4,6 +4,7 @@
 import React from 'react';
 import { BarChart3, TrendingUp, DollarSign, ShoppingBag, ArrowUpRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { 
   BarChart, 
   Bar, 

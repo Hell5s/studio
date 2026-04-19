@@ -11,7 +11,10 @@ import {
   AlertCircle,
   Clock,
   TrendingUp,
-  Package
+  Package,
+  Image as ImageIcon,
+  Tag,
+  Settings
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -119,10 +122,10 @@ export function AdminOverview({ onNavigate }: { onNavigate: (tab: any) => void }
             <h5 className="text-[11px] font-bold uppercase text-muted-foreground tracking-[0.2em]">Acesso Rápido</h5>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Novo Look", icon: <Package />, tab: 'products' },
-                { label: "Banners", icon: <ImageIcon />, tab: 'appearance' },
-                { label: "Criar Cupom", icon: <Tag />, tab: 'coupons' },
-                { label: "Configurar", icon: <Settings />, tab: 'settings' },
+                { label: "Novo Look", icon: <Package className="h-4 w-4" />, tab: 'products' },
+                { label: "Banners", icon: <ImageIcon className="h-4 w-4" />, tab: 'appearance' },
+                { label: "Criar Cupom", icon: <Tag className="h-4 w-4" />, tab: 'coupons' },
+                { label: "Configurar", icon: <Settings className="h-4 w-4" />, tab: 'settings' },
               ].map((link, i) => (
                 <button 
                   key={i}
