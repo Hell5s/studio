@@ -11,7 +11,7 @@ import { z } from 'genkit';
 
 const GenerateBannerInputSchema = z.object({
   prompt: z.string().describe('O conceito da campanha, ex: Coleção de Inverno Elegante.'),
-  aspectRatio: z.enum(['16:9', '1:1', '4:3']).default('16:9').describe('Proporção da imagem.'),
+  aspectRatio: z.enum(['16:9', '1:1', '4:3', '3:4', '9:16']).default('16:9').describe('Proporção da imagem.'),
 });
 export type GenerateBannerInput = z.infer<typeof GenerateBannerInputSchema>;
 
@@ -31,24 +31,39 @@ const generateBannerFlow = ai.defineFlow(
     outputSchema: GenerateBannerOutputSchema,
   },
   async (input) => {
-    // Prompt refinado para estética Toda Bela
-    const refinedPrompt = `High fashion editorial photography for 'Toda Bela' brand. 
+    // Prompt refinado para estética Toda Bela - Focado em Moda Premium
+    const refinedPrompt = `High-end fashion editorial photography for a boutique called 'Toda Bela'. 
     Theme: ${input.prompt}. 
-    Style: Sophisticated, minimalist, clean, warm feminine lighting, cinematic, 8k resolution, professional studio quality. 
-    Colors: Wine deep red, soft gold, cream, blush pink. 
-    No text, no logos, centered composition.`;
+    Aesthetic: Sophisticated, minimal, elegant, soft warm lighting, cinematic, 8k resolution. 
+    Composition: Wide shot suitable for a website banner, clean background, high fashion model.
+    Colors: Deep wine red, soft gold, cream, and champagne. 
+    Strictly no text, no watermarks, no logos in the image.`;
 
-    const { media } = await ai.generate({
-      model: 'googleai/imagen-3.0-generate-001',
-      prompt: refinedPrompt,
-    });
+    try {
+      const { media } = await ai.generate({
+        model: 'googleai/imagen-3.0-generate-001',
+        prompt: refinedPrompt,
+        config: {
+          aspectRatio: input.aspectRatio,
+          safetySettings: [
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+          ]
+        }
+      });
 
-    if (!media?.url) {
-      throw new Error('Falha ao gerar a imagem do banner.');
+      if (!media?.url) {
+        throw new Error('O modelo não retornou uma imagem válida.');
+      }
+
+      return {
+        imageUrl: media.url,
+      };
+    } catch (error: any) {
+      console.error('Erro na geração Imagen:', error);
+      throw new Error(`Falha na IA: ${error.message || 'Erro desconhecido'}`);
     }
-
-    return {
-      imageUrl: media.url,
-    };
   }
 );

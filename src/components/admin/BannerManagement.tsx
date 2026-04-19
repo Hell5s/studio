@@ -2,7 +2,19 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, Loader2, Plus, Trash2, Image as ImageIcon, CheckCircle2, XCircle, Save, Type, MousePointer2 } from 'lucide-react';
+import { 
+  Sparkles, 
+  Loader2, 
+  Plus, 
+  Trash2, 
+  Image as ImageIcon, 
+  CheckCircle2, 
+  XCircle, 
+  Save, 
+  Type, 
+  Layout,
+  Layers
+} from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,15 +23,16 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export function BannerManagement() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState('');
+  const [aspectRatio, setAspectRatio] = useState<'16:9' | '1:1' | '4:3'>('16:9');
   const [previewImage, setPreviewImage] = useState('');
   
-  // Novos campos para personalização do banner
   const [bannerData, setBannerData] = useState({
     title: 'Nova Coleção',
     subtitle: 'A essência da sofisticação para seus dias.',
@@ -40,12 +53,17 @@ export function BannerManagement() {
     }
 
     setIsGenerating(true);
+    setPreviewImage(''); // Limpa a anterior
     try {
-      const result = await generateBannerImage({ prompt });
+      const result = await generateBannerImage({ prompt, aspectRatio });
       setPreviewImage(result.imageUrl);
       toast({ title: "Imagem gerada!", description: "Sua campanha está pronta para visualização." });
-    } catch (error) {
-      toast({ title: "Erro na IA", description: "Não foi possível gerar a imagem agora.", variant: "destructive" });
+    } catch (error: any) {
+      toast({ 
+        title: "Erro na IA", 
+        description: error.message || "Não foi possível gerar a imagem agora.", 
+        variant: "destructive" 
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -57,6 +75,7 @@ export function BannerManagement() {
     addDocumentNonBlocking(collection(db, 'banners'), {
       ...bannerData,
       imageUrl: previewImage,
+      aspectRatio,
       active: true,
       order: (banners?.length || 0) + 1,
       createdAt: serverTimestamp()
@@ -64,11 +83,6 @@ export function BannerManagement() {
 
     setPreviewImage('');
     setPrompt('');
-    setBannerData({
-      title: 'Nova Coleção',
-      subtitle: 'A essência da sofisticação para seus dias.',
-      ctaText: 'Conferir Looks'
-    });
     toast({ title: "Banner Ativado", description: "Sua vitrine foi atualizada com a nova campanha." });
   };
 
@@ -79,7 +93,7 @@ export function BannerManagement() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Remover este banner?')) {
+    if (confirm('Remover este banner permanentemente?')) {
       deleteDocumentNonBlocking(doc(db, 'banners', id));
     }
   };
@@ -94,112 +108,160 @@ export function BannerManagement() {
       <div className="grid lg:grid-cols-[1fr_400px] gap-10">
         <div className="space-y-8">
           <Card className="p-10 border-none bg-white shadow-2xl rounded-[3rem] space-y-8">
-            <div className="space-y-4">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Conceito Visual (IA)</Label>
-              <div className="flex gap-4">
+            <div className="grid md:grid-cols-[1fr_200px] gap-6">
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Conceito Visual (IA)</Label>
                 <Input 
                   placeholder="Ex: Editorial de moda em um jardim luxuoso com luz de pôr do sol..." 
                   className="rounded-full h-16 px-8 bg-secondary/20 border-none focus:ring-2 focus:ring-primary/10"
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
                 />
-                <Button 
-                  onClick={handleGenerate} 
-                  disabled={isGenerating}
-                  className="rounded-full h-16 px-10 bg-primary shadow-xl hover:scale-105 transition-all text-white"
+              </div>
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Proporção</Label>
+                <select 
+                  value={aspectRatio}
+                  onChange={(e) => setAspectRatio(e.target.value as any)}
+                  className="w-full h-16 rounded-full px-6 bg-secondary/20 border-none text-sm font-bold text-primary outline-none"
                 >
-                  {isGenerating ? <Loader2 className="animate-spin h-5 w-5" /> : <Sparkles className="h-5 w-5 mr-2" />}
-                  Gerar com IA
-                </Button>
+                  <option value="16:9">Horizontal (16:9)</option>
+                  <option value="1:1">Quadrado (1:1)</option>
+                  <option value="4:3">Clássico (4:3)</option>
+                </select>
               </div>
             </div>
 
+            <Button 
+              onClick={handleGenerate} 
+              disabled={isGenerating}
+              className="w-full rounded-full h-16 bg-primary shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white font-bold uppercase tracking-widest text-[11px]"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="animate-spin h-5 w-5 mr-3" />
+                  Gerando Obra de Arte...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-5 w-5 mr-3" />
+                  Gerar Banner com IA
+                </>
+              )}
+            </Button>
+
             {previewImage && (
-              <div className="grid md:grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500">
-                <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500 bg-[#FFF9F7] p-8 rounded-[2rem] border border-primary/5">
+                <div className="space-y-6">
                   <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
                     <Type className="h-3 w-3" /> Títulos do Banner
                   </Label>
-                  <div className="space-y-3">
-                    <Input 
-                      placeholder="Título Principal" 
-                      value={bannerData.title}
-                      onChange={e => setBannerData({...bannerData, title: e.target.value})}
-                      className="bg-secondary/10 border-none"
-                    />
-                    <Input 
-                      placeholder="Subtítulo" 
-                      value={bannerData.subtitle}
-                      onChange={e => setBannerData({...bannerData, subtitle: e.target.value})}
-                      className="bg-secondary/10 border-none"
-                    />
-                    <Input 
-                      placeholder="Texto do Botão" 
-                      value={bannerData.ctaText}
-                      onChange={e => setBannerData({...bannerData, ctaText: e.target.value})}
-                      className="bg-secondary/10 border-none"
-                    />
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <span className="text-[9px] font-bold uppercase text-muted-foreground ml-2">Título Principal</span>
+                      <Input 
+                        placeholder="Ex: Nova Coleção" 
+                        value={bannerData.title}
+                        onChange={e => setBannerData({...bannerData, title: e.target.value})}
+                        className="bg-white border-none h-12 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-[9px] font-bold uppercase text-muted-foreground ml-2">Slogan / Descrição</span>
+                      <Input 
+                        placeholder="Ex: A essência da sofisticação" 
+                        value={bannerData.subtitle}
+                        onChange={e => setBannerData({...bannerData, subtitle: e.target.value})}
+                        className="bg-white border-none h-12 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-[9px] font-bold uppercase text-muted-foreground ml-2">Texto do Botão</span>
+                      <Input 
+                        placeholder="Ex: Conferir Looks" 
+                        value={bannerData.ctaText}
+                        onChange={e => setBannerData({...bannerData, ctaText: e.target.value})}
+                        className="bg-white border-none h-12 rounded-xl"
+                      />
+                    </div>
                   </div>
+                  <Button onClick={handleSaveBanner} className="w-full rounded-full bg-primary text-white font-bold h-14 shadow-xl hover:bg-accent transition-colors text-[10px] uppercase tracking-widest">
+                    <Save className="mr-2 h-5 w-5" /> Ativar na Vitrine
+                  </Button>
                 </div>
                 <div className="space-y-4">
-                   <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Prévia da Imagem</Label>
-                   <div className="aspect-video rounded-2xl overflow-hidden shadow-lg border border-primary/5">
-                      <img src={previewImage} className="w-full h-full object-cover" alt="Preview" />
+                   <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
+                     <ImageIcon className="h-3 w-3" /> Resultado da IA
+                   </Label>
+                   <div className={cn(
+                     "rounded-2xl overflow-hidden shadow-2xl border border-white relative bg-white",
+                     aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square'
+                   )}>
+                      <img src={previewImage} className="w-full h-full object-cover" alt="IA Result" />
+                      <div className="absolute inset-0 bg-black/20 flex flex-col justify-end p-6 text-white pointer-events-none">
+                         <h3 className="text-xl font-bold uppercase tracking-tighter leading-none">{bannerData.title}</h3>
+                         <p className="text-[10px] italic opacity-80 mt-1">{bannerData.subtitle}</p>
+                      </div>
                    </div>
                 </div>
               </div>
             )}
 
-            <div className="aspect-[21/9] rounded-[2.5rem] bg-secondary/30 overflow-hidden relative group border-2 border-dashed border-primary/10">
-              {previewImage ? (
-                <>
-                  <img src={previewImage} className="w-full h-full object-cover" alt="Final Preview" />
-                  {/* Simulação do texto do banner na prévia */}
-                  <div className="absolute inset-0 bg-black/20 flex flex-col justify-end p-8 text-white">
-                     <h3 className="text-2xl font-bold uppercase tracking-tighter">{bannerData.title}</h3>
-                     <p className="text-xs italic opacity-80">{bannerData.subtitle}</p>
-                  </div>
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                    <Button onClick={handleSaveBanner} className="rounded-full bg-white text-primary font-bold px-10 h-14 shadow-2xl hover:scale-105 transition-transform">
-                      <Save className="mr-2 h-5 w-5" /> Ativar na Home
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-primary/20 space-y-4">
-                  <ImageIcon className="h-16 w-16" />
-                  <p className="text-sm font-bold uppercase tracking-widest">Aguardando sua ideia</p>
+            {!previewImage && !isGenerating && (
+              <div className="aspect-[21/9] rounded-[2.5rem] bg-secondary/30 overflow-hidden relative group border-2 border-dashed border-primary/10 flex flex-col items-center justify-center text-primary/20 space-y-4">
+                <ImageIcon className="h-16 w-16" />
+                <div className="text-center">
+                  <p className="text-sm font-bold uppercase tracking-[0.2em]">Aguardando sua Curadoria</p>
+                  <p className="text-[10px] italic mt-1">Descreva o estilo e deixe a IA criar algo único.</p>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </Card>
         </div>
 
-        <Card className="p-10 border-none bg-primary text-white shadow-2xl rounded-[3rem] space-y-8">
-          <h5 className="text-xl font-headline font-bold">Banners Ativos</h5>
-          <div className="space-y-4 max-h-[600px] overflow-y-auto no-scrollbar">
+        <Card className="p-10 border-none bg-primary text-white shadow-2xl rounded-[3rem] space-y-8 h-fit lg:sticky lg:top-28">
+          <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+            <Layers className="h-5 w-5 text-accent" />
+            <h5 className="text-xl font-headline font-bold">Arquivos Ativos</h5>
+          </div>
+          <div className="space-y-6 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
             {isLoading ? (
               <div className="py-20 text-center opacity-20"><Loader2 className="animate-spin h-8 w-8 mx-auto" /></div>
             ) : banners?.length === 0 ? (
-              <p className="text-xs italic opacity-40 text-center py-10">Nenhuma campanha registrada.</p>
+              <div className="text-center py-10 opacity-30 space-y-2">
+                <Layout className="h-10 w-10 mx-auto" />
+                <p className="text-[10px] font-bold uppercase tracking-widest">Nenhuma campanha</p>
+              </div>
             ) : banners?.map(banner => (
-              <div key={banner.id} className="p-4 rounded-3xl bg-white/10 border border-white/5 space-y-3 group">
-                <div className="aspect-video rounded-2xl overflow-hidden relative">
+              <div key={banner.id} className="p-4 rounded-3xl bg-white/10 border border-white/5 space-y-4 group hover:bg-white/15 transition-all">
+                <div className="aspect-video rounded-2xl overflow-hidden relative shadow-lg">
                   <img src={banner.imageUrl} className="w-full h-full object-cover" />
-                  <button 
-                    onClick={() => handleDelete(banner.id)}
-                    className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button 
+                      onClick={() => handleDelete(banner.id)}
+                      className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"
+                      title="Excluir Permanentemente"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase truncate">{banner.title}</p>
-                    <p className="text-[8px] opacity-50 italic">Ativo na vitrine</p>
+                    <p className="text-[11px] font-bold uppercase truncate tracking-tight">{banner.title || 'Sem Título'}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className={cn("h-1.5 w-1.5 rounded-full", banner.active ? "bg-green-400" : "bg-white/20")} />
+                      <p className="text-[8px] opacity-50 uppercase font-black">{banner.active ? 'No Ar' : 'Pausado'}</p>
+                    </div>
                   </div>
-                  <button onClick={() => toggleStatus(banner)}>
-                    {banner.active ? <CheckCircle2 className="h-5 w-5 text-green-400" /> : <XCircle className="h-5 w-5 text-white/20" />}
+                  <button 
+                    onClick={() => toggleStatus(banner)}
+                    className={cn(
+                      "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
+                      banner.active ? "bg-accent text-primary" : "bg-white/10 text-white/40"
+                    )}
+                  >
+                    {banner.active ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
