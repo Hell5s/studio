@@ -64,6 +64,15 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
         </div>
 
         <nav className="flex-1 space-y-2">
+          {/* Botão de Ação Rápida Sidebar */}
+          <button 
+            onClick={() => setIsAddProductOpen(true)}
+            className="w-full mb-8 bg-primary text-white font-bold text-[10px] px-6 py-5 rounded-2xl shadow-xl shadow-primary/20 uppercase tracking-widest hover:scale-[1.02] transition-all flex items-center gap-3 border border-white/10"
+          >
+            <PlusCircle className="h-5 w-5 text-accent" />
+            Novo Produto
+          </button>
+
           {menuItems.map((item) => (
             <button 
               key={item.id} 
@@ -71,8 +80,8 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
               className={cn(
                 "w-full text-left px-5 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-3",
                 activeTab === item.id 
-                  ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
-                  : "text-muted-foreground hover:bg-secondary hover:text-primary"
+                  ? "bg-secondary text-primary shadow-sm scale-[1.02]" 
+                  : "text-muted-foreground hover:bg-secondary/50 hover:text-primary"
               )}
             >
               {item.icon}
