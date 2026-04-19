@@ -78,7 +78,6 @@ export default function ProductDetailPage() {
         onOpenTrack={() => setIsTrackOpen(true)}
         onOpenOrders={() => setIsMyOrdersOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
-        onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cart.length}
       />
       

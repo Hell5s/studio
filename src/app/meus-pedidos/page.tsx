@@ -94,7 +94,6 @@ export default function MeusPedidosPage() {
         onOpenTrack={() => {}}
         onOpenOrders={() => {}}
         onOpenCart={() => {}}
-        onOpenFavorites={() => {}}
         cartCount={0}
         isAdmin={isAdmin}
       />

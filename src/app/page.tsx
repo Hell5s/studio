@@ -113,7 +113,6 @@ export default function TodaBelaStorefront() {
         onOpenTrack={() => setIsTrackOpen(true)}
         onOpenOrders={() => setIsMyOrdersOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
-        onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cartCount}
         isAdmin={isAdmin} 
         onOpenAdmin={() => setIsAdminView(true)}

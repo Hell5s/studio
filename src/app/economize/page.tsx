@@ -58,7 +58,6 @@ export default function EconomizePage() {
         onOpenTrack={() => setIsTrackOpen(true)}
         onOpenOrders={() => setIsMyOrdersOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
-        onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cartCount}
       />
 
