@@ -2,17 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Package, ShieldCheck, Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ShoppingBag, User, Search, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LogoMark } from './LogoMark';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 
 interface NavbarProps {
   onOpenLogin: () => void;
-  onOpenTrack?: () => void;
-  onOpenOrders?: () => void;
   onOpenCart: () => void;
   onOpenFavorites: () => void;
   cartCount: number;
@@ -26,16 +22,12 @@ export function Navbar({
   onOpenCart, 
   onOpenFavorites,
   cartCount, 
-  isAdmin, 
-  onOpenAdmin, 
   onSearch 
 }: NavbarProps) {
-  const [scrolled, setScrolled] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useUser();
   const db = useFirestore();
 
-  // Busca contagem de favoritos para exibir no badge
   const favoritesQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(collection(db, 'users', user.uid, 'favorites'));
@@ -44,116 +36,52 @@ export function Navbar({
   const { data: favorites } = useCollection(favoritesQuery);
   const favoritesCount = favorites?.length || 0;
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch?.(searchValue);
   };
 
-  const navLinks = [
-    { label: 'COLEÇÕES', href: '/#colecoes' },
-    { label: 'PRODUTOS', href: '/#produtos' },
-    { label: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
-    { label: 'ECONOMIZE', href: '/economize', highlight: true },
-  ];
-
   return (
-    <header 
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
-        scrolled ? "bg-white/95 backdrop-blur-md py-3 shadow-sm" : "bg-white py-6"
-      )}
-    >
-      <div className="container mx-auto px-4 md:px-6 flex items-center justify-between gap-4">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 py-3">
+      <div className="container mx-auto px-4 flex items-center justify-between gap-4">
         
-        {/* Logo - Left Side */}
-        <div className="flex-shrink-0">
-          <Link href="/">
-            <LogoMark className="scale-75 md:scale-90 origin-left" />
-          </Link>
-        </div>
+        {/* Search Bar - Matches Reference */}
+        <form onSubmit={handleSearchSubmit} className="flex-1 max-w-sm flex items-center bg-[#F4F4F4] rounded-sm overflow-hidden">
+          <input 
+            placeholder="Procurar no site..." 
+            className="bg-transparent text-[13px] px-4 py-2.5 outline-none w-full"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+          />
+          <button type="submit" className="px-4 py-2.5 hover:bg-gray-200 transition-colors">
+            <Search className="h-4 w-4 text-black" />
+          </button>
+        </form>
 
-        {/* Nav Links - Center (Desktop) */}
-        <nav className="hidden lg:flex items-center gap-10">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.label} 
-              href={link.href}
-              className={cn(
-                "text-[11px] font-bold tracking-[0.2em] transition-colors",
-                link.highlight 
-                  ? "text-accent hover:text-accent/80 border-b border-accent/20" 
-                  : "text-primary/70 hover:text-primary"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Logo Placeholder / Brand Name (Optional in this layout) */}
+        <Link href="/" className="hidden lg:block">
+           <span className="font-headline font-bold text-xl tracking-tighter uppercase">Toda Bela</span>
+        </Link>
 
-        {/* Search and Actions - Right Side */}
-        <div className="flex items-center gap-2 md:gap-6 flex-shrink-0">
-          <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center bg-secondary/30 rounded-full h-11 px-4 w-40 lg:w-64 focus-within:w-56 lg:focus-within:w-80 transition-all duration-500">
-            <Search className="h-4 w-4 text-accent/40 mr-2" />
-            <input 
-              placeholder="Procurar no site..." 
-              className="bg-transparent text-[11px] outline-none text-primary w-full"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-            />
-          </form>
+        {/* Actions - Matches Reference */}
+        <div className="flex items-center gap-4 md:gap-6">
+          <button onClick={onOpenLogin} className="text-black hover:opacity-70 transition-opacity">
+            <User className="h-6 w-6 stroke-[1.5]" />
+          </button>
 
-          <div className="flex items-center gap-1 md:gap-2">
-            <Link href="/meus-pedidos">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="rounded-full text-primary hover:bg-secondary h-10 px-3 md:px-4"
-              >
-                <Package className="h-5 w-5 md:mr-2" />
-                <span className="hidden md:inline text-[9px] font-bold uppercase tracking-widest">Meus Pedidos</span>
-              </Button>
-            </Link>
-            
-            <Button variant="ghost" size="icon" className="rounded-full text-primary hover:bg-secondary h-10 w-10" onClick={onOpenLogin}>
-              <User className="h-5 w-5" />
-            </Button>
+          <button onClick={onOpenFavorites} className="relative text-black hover:opacity-70 transition-opacity">
+            <Heart className="h-6 w-6 stroke-[1.5]" />
+            <span className="absolute -bottom-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-white border border-gray-200 text-[10px] font-bold">
+              {favoritesCount}
+            </span>
+          </button>
 
-            {/* Favoritos */}
-            <button onClick={onOpenFavorites} className="relative flex items-center justify-center h-10 w-10 text-primary hover:bg-secondary rounded-full transition-colors">
-              <Heart className="h-5 w-5" />
-              {favoritesCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white shadow-lg">
-                  {favoritesCount}
-                </span>
-              )}
-            </button>
-
-            {/* Carrinho de Compras - Ícone + Nome */}
-            <button 
-              onClick={onOpenCart} 
-              className="relative flex items-center gap-2 text-primary hover:bg-secondary rounded-full transition-colors h-10 px-4"
-            >
-              <ShoppingBag className="h-5 w-5" />
-              <span className="text-[11px] font-bold tracking-[0.2em] uppercase">Carrinho</span>
-              {cartCount > 0 && (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white shadow-lg">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-
-            {isAdmin && (
-              <Button variant="ghost" size="icon" className="rounded-full text-accent hover:bg-accent/10 ml-2 h-10 w-10" onClick={onOpenAdmin}>
-                <ShieldCheck className="h-5 w-5" />
-              </Button>
-            )}
-          </div>
+          <button onClick={onOpenCart} className="relative text-black hover:opacity-70 transition-opacity">
+            <ShoppingBag className="h-6 w-6 stroke-[1.5]" />
+            <span className="absolute -bottom-1 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
+              {cartCount}
+            </span>
+          </button>
         </div>
       </div>
     </header>

@@ -1,12 +1,10 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { ShoppingBag, Share2, Star, Minus, Plus, Ruler, HelpCircle, ShieldCheck, Heart } from 'lucide-react';
+import { ShoppingBag, Share2, Star, Minus, Plus, Ruler, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link';
 import Image from 'next/image';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
@@ -23,7 +21,7 @@ interface ProductInfoProps {
   relatedProducts?: any[];
 }
 
-export function ProductInfo({ product, onAddToCart, relatedProducts }: ProductInfoProps) {
+export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
   const { toast } = useToast();
   const { user } = useUser();
   const db = useFirestore();
@@ -105,201 +103,151 @@ export function ProductInfo({ product, onAddToCart, relatedProducts }: ProductIn
 
   return (
     <div className="space-y-6">
-      {/* Header Info - Matches Kaisan layout */}
+      {/* Header Info - Matches Kaisan Reference */}
       <div className="space-y-1">
-        <div className="flex items-center justify-between">
-           <span className="text-[9px] font-bold uppercase tracking-widest text-primary/40">Marca: Toda Bela</span>
-           <button className="text-muted-foreground/30 hover:text-primary transition-colors">
-              <Share2 className="h-4 w-4" />
+        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">MARCA: TODA BELA</p>
+        <div className="flex items-start justify-between gap-4">
+           <h1 className="text-[17px] font-medium text-[#444] leading-[1.3] uppercase tracking-tight">
+             {product.name} | REF: {product.sku || product.id.slice(-6).toUpperCase()}
+           </h1>
+           <button className="text-gray-400 hover:text-black transition-colors pt-1">
+              <Share2 className="h-6 w-6 stroke-[1.5]" />
            </button>
         </div>
-        <h1 className="text-xl md:text-2xl font-bold text-primary leading-tight uppercase tracking-tight">
-          {product.name} | REF: {product.sku || product.id.slice(-6).toUpperCase()}
-        </h1>
-        <button onClick={scrollToReviews} className="flex items-center gap-2 text-accent pt-1 hover:opacity-70 transition-opacity">
+        <button onClick={scrollToReviews} className="flex items-center gap-2 text-gray-300 pt-1">
           <div className="flex items-center gap-0.5">
-            {[1, 2, 3, 4, 5].map((s) => <Star key={s} className="h-2.5 w-2.5 fill-current" />)}
+            {[1, 2, 3, 4, 5].map((s) => <Star key={s} className="h-3.5 w-3.5 fill-current" />)}
           </div>
-          <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest underline underline-offset-4 decoration-accent/10">23 Comentário(s)</span>
+          <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Avaliar!</span>
         </button>
       </div>
 
-      {/* Pricing - Matches Kaisan style */}
-      <div className="space-y-0.5 border-b border-primary/5 pb-4">
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-black text-primary">{formatCurrency(product.price)}</span>
-          {product.oldPrice && (
-            <span className="text-sm text-muted-foreground/40 line-through italic">
-              {formatCurrency(product.oldPrice)}
-            </span>
-          )}
-        </div>
-        <p className="text-[11px] font-bold text-primary/80 uppercase tracking-widest">
+      {/* Pricing - Matches Kaisan Reference */}
+      <div className="space-y-1">
+        <p className="text-[28px] font-bold text-black leading-none">
+          {formatCurrency(product.price)}
+        </p>
+        <p className="text-[14px] font-medium text-gray-500">
           10x de {formatCurrency(product.price / 10)} sem juros
         </p>
       </div>
 
-      {/* Colors Swatches */}
+      {/* Colors Swatches - Small images as in reference */}
       {product.colors && product.colors.length > 0 && (
         <div className="space-y-3">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Cores disponíveis</span>
           <div className="flex flex-wrap gap-2">
             {product.colors.map((color: string) => (
               <button
                 key={color}
                 onClick={() => setSelectedColor(color)}
                 className={cn(
-                  "group relative flex items-center justify-center h-12 w-12 rounded-lg border transition-all overflow-hidden",
-                  selectedColor === color 
-                    ? "border-primary ring-1 ring-primary" 
-                    : "border-primary/5 hover:border-accent/40"
+                  "relative h-20 w-16 overflow-hidden border transition-all",
+                  selectedColor === color ? "border-black border-2" : "border-gray-200"
                 )}
                 title={color}
               >
-                 <Image src={product.image} alt={color} fill className="object-cover opacity-80" />
-                 {selectedColor === color && <div className="absolute inset-0 bg-primary/10" />}
+                 <Image src={product.image} alt={color} fill className="object-cover" />
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Sizes and Quantity Row - Compact layout like reference */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Tamanho</span>
-          <div className="flex items-center bg-secondary/30 rounded-lg p-1 border border-primary/5">
-                <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="h-7 w-7 rounded-md flex items-center justify-center hover:bg-white transition-colors"
-                >
-                  <Minus className="h-3 w-3" />
-                </button>
-                <span className="w-8 text-center text-xs font-bold">{quantity}</span>
-                <button 
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="h-7 w-7 rounded-md flex items-center justify-center hover:bg-white transition-colors"
-                >
-                  <Plus className="h-3 w-3" />
-                </button>
-            </div>
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          {product.sizes?.map((size: string) => (
-            <button
-              key={size}
-              onClick={() => setSelectedSize(size)}
-              className={cn(
-                "w-12 h-12 rounded-lg flex items-center justify-center text-[11px] font-bold transition-all border",
-                selectedSize === size 
-                  ? "bg-white border-primary shadow-sm ring-1 ring-primary" 
-                  : "bg-white text-primary/40 border-primary/10 hover:border-primary/40"
-              )}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
+      {/* Sizes and Quantity Row - Compact as in reference */}
+      <div className="space-y-3">
+        <p className="text-[13px] font-medium text-gray-500">Tamanho</p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
+            {product.sizes?.map((size: string) => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                className={cn(
+                  "min-w-[60px] h-10 px-4 rounded-full flex items-center justify-center text-[12px] font-medium transition-all border",
+                  selectedSize === size 
+                    ? "bg-white border-black text-black border-2" 
+                    : "bg-white text-gray-400 border-gray-200"
+                )}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
 
-        <div className="flex items-center gap-6 pt-1">
-          <button className="flex items-center gap-2 text-[9px] font-bold text-primary/40 uppercase tracking-widest hover:text-accent transition-colors">
-            <HelpCircle className="h-3 w-3" /> Descubra seu tamanho
-          </button>
-          <button className="flex items-center gap-2 text-[9px] font-bold text-primary/40 uppercase tracking-widest hover:text-accent transition-colors">
-            <Ruler className="h-3 w-3" /> Tabela de medidas
-          </button>
-        </div>
-      </div>
-
-      {/* Primary Action Buttons - Matches Kaisan CTA */}
-      <div className="space-y-3 pt-4">
-        <Button 
-          onClick={handleBuyNowClick}
-          className="w-full h-14 text-xs font-black uppercase tracking-[0.2em] bg-black text-white hover:bg-primary transition-all duration-500 active:scale-95 rounded-none"
-        >
-          Compre Agora
-        </Button>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleAddToCartClick}
-            className="flex-[3] h-12 text-[10px] font-bold uppercase tracking-widest border-primary/10 text-primary hover:bg-secondary/50 rounded-none"
-          >
-            Adicionar ao carrinho
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleToggleFavorite}
-            className={cn(
-              "flex-1 h-12 rounded-none border-primary/10 transition-all",
-              isFavorited ? "bg-primary text-white" : "bg-white hover:bg-primary/5 text-primary/40"
-            )}
-          >
-            <Heart className={cn("h-4 w-4", isFavorited && "fill-current")} />
-          </Button>
-        </div>
-      </div>
-
-      {/* Complete the Look Small Section - Matches reference */}
-      {relatedProducts && relatedProducts.length > 0 && (
-        <div className="pt-6 border-t border-primary/5 space-y-4">
-           <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Complete o Look</h4>
-           <div className="flex gap-3">
-              {relatedProducts.slice(0, 3).map((item) => (
-                <Link key={item.id} href={`/products/${item.id}`} className="group relative h-24 w-20 overflow-hidden rounded-lg bg-secondary/20 shadow-sm border border-primary/5">
-                  <Image src={item.image} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                </Link>
-              ))}
-           </div>
-        </div>
-      )}
-
-      {/* Integrated Accordions in Sidebar - Matches Kaisan style */}
-      <Accordion type="single" collapsible className="w-full pt-4">
-        <AccordionItem value="item-1" className="border-b border-primary/5">
-          <AccordionTrigger className="hover:no-underline py-4 group text-[10px] font-bold uppercase tracking-widest text-primary/80">
-            Descrição do Produto
-          </AccordionTrigger>
-          <AccordionContent className="pb-4 text-[12px] text-muted-foreground leading-relaxed font-light italic">
-            <p>{product.longDescription || product.description}</p>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="item-2" className="border-b border-primary/5">
-          <AccordionTrigger className="hover:no-underline py-4 group text-[10px] font-bold uppercase tracking-widest text-primary/80">
-            Cuidados com seu produto
-          </AccordionTrigger>
-          <AccordionContent className="pb-4 text-[12px] text-muted-foreground leading-relaxed font-light italic">
-            <p className="mb-2">Para preservar a essência desta peça Toda Bela:</p>
-            <ul className="list-disc pl-4 space-y-1">
-              <li>Lavagem à mão com sabão neutro.</li>
-              <li>Secagem à sombra para manter a cor.</li>
-              <li>Evitar máquinas de secar.</li>
-            </ul>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="item-3" className="border-b border-primary/5">
-          <button 
-            onClick={scrollToReviews}
-            className="flex flex-1 items-center justify-between py-4 font-medium transition-all text-[10px] font-bold uppercase tracking-widest text-primary/80 w-full text-left"
-          >
-            Avaliações
-            <span className="text-accent text-[9px] font-black">★ 4.9</span>
-          </button>
-        </AccordionItem>
-      </Accordion>
-
-      {/* Trust & Benefits */}
-      <div className="grid grid-cols-1 gap-3 pt-4">
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/10">
-          <ShieldCheck className="h-4 w-4 text-accent" />
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Compra Segura</span>
-            <span className="text-[9px] text-muted-foreground italic">Troca grátis em até 7 dias</span>
+          <div className="flex items-center border border-gray-200 rounded-md bg-white">
+              <button 
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="h-9 w-9 flex items-center justify-center hover:bg-gray-50 transition-colors border-r border-gray-200"
+              >
+                <Minus className="h-3 w-3 text-gray-400" />
+              </button>
+              <span className="w-10 text-center text-[13px] font-bold">{quantity}</span>
+              <button 
+                onClick={() => setQuantity(quantity + 1)}
+                className="h-9 w-9 flex items-center justify-center hover:bg-gray-50 transition-colors border-l border-gray-200"
+              >
+                <Plus className="h-3 w-3 text-gray-400" />
+              </button>
           </div>
         </div>
+
+        {/* Action Links - Matches Reference Icons */}
+        <div className="flex items-center gap-6 pt-2">
+          <button className="flex items-center gap-2 text-[10px] font-bold text-black uppercase tracking-wider hover:opacity-70 transition-opacity">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                <path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H6v10a2 2 0 002 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z" />
+             </svg>
+             DESCUBRA SEU TAMANHO
+          </button>
+          <button className="flex items-center gap-2 text-[10px] font-bold text-black uppercase tracking-wider hover:opacity-70 transition-opacity">
+            <Ruler className="h-4 w-4" /> TABELA DE MEDIDAS
+          </button>
+        </div>
+      </div>
+
+      {/* Primary Action Button - Matches Reference (Big Black Block) */}
+      <div className="pt-2">
+        <Button 
+          onClick={handleBuyNowClick}
+          className="w-full h-16 text-[15px] font-bold uppercase tracking-[0.1em] bg-black text-white hover:bg-gray-900 transition-all rounded-none"
+        >
+          COMPRE AGORA
+        </Button>
+      </div>
+
+      {/* Compact Accordions - Matches Reference Style */}
+      <div className="space-y-[-1px] pt-4">
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="description" className="border">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline text-[15px] font-light text-[#444] [&[data-state=open]>svg]:rotate-45">
+              Descrição do Produto
+              <Plus className="h-4 w-4 shrink-0 transition-transform duration-200" />
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4 text-[13px] text-gray-500 leading-relaxed italic">
+              {product.longDescription || product.description}
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="care" className="border">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline text-[15px] font-light text-[#444] [&[data-state=open]>svg]:rotate-45">
+              Cuidados com seu produto
+              <Plus className="h-4 w-4 shrink-0 transition-transform duration-200" />
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4 text-[13px] text-gray-500 leading-relaxed italic">
+              Lavar à mão para preservar as fibras. Secar à sombra.
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="reviews" className="border">
+            <button 
+              onClick={scrollToReviews}
+              className="flex w-full items-center justify-between px-6 py-4 text-[15px] font-light text-[#444] hover:bg-gray-50 transition-colors"
+            >
+              Avaliações
+              <Plus className="h-4 w-4 text-gray-400" />
+            </button>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );
