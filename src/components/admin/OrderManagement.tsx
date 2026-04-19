@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -11,7 +10,10 @@ import {
   XCircle,
   MoreVertical,
   X,
-  ShoppingBag
+  ShoppingBag,
+  MapPin,
+  Package,
+  ExternalLink
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc, limit } from 'firebase/firestore';
@@ -25,7 +27,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<string, string> = {
   'Pedido recebido': 'bg-[#F7E8EA] text-[#6E3C47] border-[#E9C9CF]',
@@ -50,6 +59,7 @@ export function OrderManagement() {
   const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const adminDocRef = useMemoFirebase(() => {
     return user?.uid ? doc(db, 'roles_admin', user.uid) : null;
@@ -59,8 +69,6 @@ export function OrderManagement() {
   const isActuallyAdmin = !!adminRole;
 
   const ordersQuery = useMemoFirebase(() => {
-    // CRÍTICO: Só dispara a consulta global (sem filtros) se o status de admin estiver confirmado.
-    // Isso evita o erro de permissão insuficiente para usuários comuns.
     if (!db || isAdminLoading || !isActuallyAdmin) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
   }, [db, isActuallyAdmin, isAdminLoading]);
@@ -147,8 +155,8 @@ export function OrderManagement() {
             <thead>
               <tr className="bg-secondary/20 border-b border-primary/5">
                 <th className="px-10 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pedido / Cliente</th>
-                <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Data</th>
-                <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Peças</th>
+                <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logística</th>
+                <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">Peças</th>
                 <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total</th>
                 <th className="px-6 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
                 <th className="px-10 py-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-right">Ações</th>
@@ -163,18 +171,21 @@ export function OrderManagement() {
                 </tr>
               ) : filteredOrders.length > 0 ? (
                 filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-secondary/10 transition-colors">
+                  <tr key={order.id} className="hover:bg-secondary/10 transition-colors group cursor-pointer" onClick={() => setSelectedOrder(order)}>
                     <td className="px-10 py-6">
                       <div className="flex flex-col">
                         <span className="font-bold text-primary font-mono text-xs">{order.orderNumber || `#${order.id.slice(-6).toUpperCase()}`}</span>
                         <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-tight">{order.customer?.name || 'Cliente'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-6 text-[11px] text-muted-foreground">
-                      {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('pt-BR') : 'Recentemente'}
-                    </td>
                     <td className="px-6 py-6">
-                      <div className="flex -space-x-3 overflow-hidden">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-primary/60 uppercase">{order.shipping?.method || 'Padrão'}</span>
+                        <span className="text-[9px] text-muted-foreground italic">{order.customer?.city}, {order.customer?.state}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-6 text-center">
+                      <div className="flex justify-center -space-x-3">
                         {order.items?.slice(0, 3).map((item: any, i: number) => (
                           <div key={i} className="inline-block h-10 w-10 rounded-full ring-2 ring-white overflow-hidden bg-muted">
                             <img src={item.image} className="h-full w-full object-cover" alt={item.name} title={item.name} />
@@ -196,14 +207,14 @@ export function OrderManagement() {
                         {order.status || 'Pedido recebido'}
                       </Badge>
                     </td>
-                    <td className="px-10 py-6 text-right">
+                    <td className="px-10 py-6 text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-2xl p-2 border-primary/5 shadow-xl">
+                        <DropdownMenuContent align="end" className="rounded-2xl p-2 border-primary/5 shadow-xl bg-white">
                           {Object.keys(statusColors).map((status) => (
                             <DropdownMenuItem 
                               key={status}
@@ -237,6 +248,132 @@ export function OrderManagement() {
           </table>
         </div>
       </Card>
+
+      {/* Detalhes do Pedido */}
+      <Dialog open={!!selectedOrder} onOpenChange={(o) => !o && setSelectedOrder(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl bg-[#FFF9F7]">
+          {selectedOrder && (
+            <>
+              <div className="bg-primary p-10 text-primary-foreground flex items-center justify-between sticky top-0 z-20">
+                <div className="flex items-center gap-6">
+                  <div className="h-16 w-16 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                    <Package className="h-8 w-8 text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Detalhes do Pedido</p>
+                    <DialogHeader>
+                      <DialogTitle className="text-3xl font-headline font-bold text-white">{selectedOrder.orderNumber || 'Pedido Boutique'}</DialogTitle>
+                    </DialogHeader>
+                  </div>
+                </div>
+                <Badge className={cn("rounded-full px-6 py-2 uppercase tracking-widest text-[9px] font-bold", statusColors[selectedOrder.status])}>
+                  {selectedOrder.status}
+                </Badge>
+              </div>
+
+              <div className="p-10 grid md:grid-cols-[1fr_300px] gap-10">
+                <div className="space-y-10">
+                  {/* Cliente */}
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3 text-accent">
+                       <MapPin className="h-4 w-4" />
+                       <h4 className="text-[11px] font-bold uppercase tracking-[0.3em]">Dados do Cliente e Envio</h4>
+                    </div>
+                    <div className="p-8 rounded-[2rem] bg-white shadow-sm border border-primary/5 space-y-4">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase text-primary/30 tracking-widest">Nome Completo</p>
+                          <p className="text-sm font-bold text-primary">{selectedOrder.customer?.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase text-primary/30 tracking-widest">WhatsApp</p>
+                          <p className="text-sm font-bold text-primary">{selectedOrder.customer?.phone}</p>
+                        </div>
+                      </div>
+                      <Separator className="bg-primary/5" />
+                      <div>
+                        <p className="text-[10px] font-bold uppercase text-primary/30 tracking-widest">Endereço de Entrega</p>
+                        <p className="text-sm font-light italic text-primary/80">
+                          {selectedOrder.customer?.address}, {selectedOrder.customer?.city} - {selectedOrder.customer?.state}<br />
+                          CEP: {selectedOrder.customer?.zip}
+                        </p>
+                      </div>
+                      <div className="pt-2">
+                        <Badge variant="outline" className="rounded-full border-accent/20 text-accent text-[9px] px-3">
+                          <Truck className="h-3 w-3 mr-2" /> {selectedOrder.shipping?.method}
+                        </Badge>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Itens */}
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3 text-accent">
+                       <ShoppingBag className="h-4 w-4" />
+                       <h4 className="text-[11px] font-bold uppercase tracking-[0.3em]">Peças Selecionadas</h4>
+                    </div>
+                    <div className="space-y-4">
+                      {selectedOrder.items?.map((item: any, i: number) => (
+                        <div key={i} className="flex gap-6 items-center p-4 rounded-3xl bg-white shadow-sm border border-primary/5">
+                           <img src={item.image} className="h-20 w-16 object-cover rounded-xl shadow-sm" alt={item.name} />
+                           <div className="flex-1">
+                              <p className="text-sm font-bold text-primary">{item.name}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{item.category}</p>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-sm font-bold text-primary">{formatCurrency(item.price)}</p>
+                              <p className="text-[9px] text-muted-foreground">Qtd: {item.quantity}</p>
+                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="p-8 rounded-[2rem] bg-primary text-white space-y-6">
+                    <h5 className="text-[10px] font-bold uppercase tracking-widest text-accent">Resumo Financeiro</h5>
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-xs">
+                        <span className="opacity-60">Subtotal</span>
+                        <span className="font-bold">{formatCurrency(selectedOrder.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="opacity-60">Frete</span>
+                        <span className="font-bold">{formatCurrency(selectedOrder.shipping?.price || 0)}</span>
+                      </div>
+                      <Separator className="bg-white/10" />
+                      <div className="flex justify-between items-end">
+                        <span className="text-[10px] font-bold uppercase">Total</span>
+                        <span className="text-2xl font-bold text-accent">{formatCurrency(selectedOrder.total)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 rounded-[2rem] bg-secondary border border-primary/5 space-y-4">
+                     <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">Ações Rápidas</p>
+                     <Button 
+                        variant="outline" 
+                        className="w-full rounded-full h-12 text-[10px] font-bold uppercase border-primary/10"
+                        onClick={() => window.open(`https://wa.me/${selectedOrder.customer?.phone?.replace(/\D/g, '')}`, '_blank')}
+                     >
+                        WhatsApp Cliente
+                     </Button>
+                     {selectedOrder.trackingCode === "Aguardando envio" && (
+                        <Button 
+                          className="w-full rounded-full h-12 text-[10px] font-bold uppercase bg-accent text-white"
+                          onClick={() => updateStatus(selectedOrder.id, 'Pago')}
+                        >
+                          Confirmar Pagamento
+                        </Button>
+                     )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
