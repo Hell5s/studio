@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -80,7 +79,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
     if (!validateSelection()) return;
 
     toast({
-      title: "Adicionado à sacola",
+      title: "Adicionado ao carrinho",
       description: `${product.name} foi reservado para você.`,
     });
   };
@@ -188,7 +187,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             className="w-full rounded-full py-8 text-[10px] font-bold uppercase tracking-[0.3em] border-primary text-primary hover:bg-secondary/50 transition-all duration-500"
           >
             <ShoppingBag className="mr-2 h-4 w-4" />
-            Adicionar à Sacola
+            Adicionar ao carrinho
           </Button>
           <Button 
             onClick={handleBuyNow}
