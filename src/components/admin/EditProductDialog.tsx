@@ -33,6 +33,7 @@ import { doc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
+import { cn } from '@/lib/utils';
 
 interface EditProductDialogProps {
   product: any;
@@ -45,6 +46,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const variationInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(false);
@@ -62,7 +64,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     collection: '',
     badge: '',
     image: '',
-    gallery: '',
+    gallery: [] as string[],
     stock: '',
     sizes: '',
     colors: '',
@@ -85,7 +87,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         collection: product.collection || 'Moda Fitness',
         badge: product.badge || '',
         image: product.image || '',
-        gallery: product.images?.join('\n') || '',
+        gallery: product.images || [],
         stock: product.stock?.toString() || '',
         sizes: product.sizes?.join(', ') || '',
         colors: product.colors?.join(', ') || '',
@@ -129,10 +131,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     setLoading(true);
     const docRef = doc(db, 'products', product.id);
     
-    const galleryImages = formData.gallery
-      .split('\n')
-      .map((item) => item.trim())
-      .filter(Boolean);
+    const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
 
     updateDocumentNonBlocking(docRef, {
       ...formData,
@@ -141,7 +140,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       stock: Number(formData.stock) || 0,
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
-      images: galleryImages.length > 0 ? galleryImages : [formData.image],
+      image: finalMainImage,
+      images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
       updatedAt: serverTimestamp()
     });
 
@@ -165,6 +165,33 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !product?.id) return;
+    
+    setUploading(true);
+    try {
+      const newUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const storageRef = ref(storage!, `products/${product.id}/gallery/${Date.now()}-${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(snapshot.ref);
+        newUrls.push(url);
+      }
+      setFormData(prev => ({ 
+        ...prev, 
+        gallery: [...prev.gallery, ...newUrls] 
+      }));
+      toast({ title: `${newUrls.length} imagens adicionadas!` });
+    } catch (error: any) {
+      toast({ title: "Erro no upload da galeria", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
     }
   };
 
@@ -249,7 +276,36 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               </div>
             </div>
 
-            {/* SEÇÃO DE CORES COM UPLOAD - EDIT */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between text-primary border-b border-gray-200 pb-3">
+                <div className="flex items-center gap-3 text-accent">
+                  <ImageIcon className="h-5 w-5" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos</h4>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Fotos</Button>
+              </div>
+              <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
+              
+              <div className="grid grid-cols-4 md:grid-cols-5 gap-4">
+                 {formData.gallery.map((img, idx) => (
+                   <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))}
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                   </div>
+                 ))}
+                 {uploading && !activeVariationIndex && (
+                   <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20">
+                     <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                   </div>
+                 )}
+              </div>
+            </div>
+
             <div className="grid gap-4 bg-white p-6 rounded-3xl border border-primary/5 shadow-sm">
               <input 
                 type="file" 
@@ -338,4 +394,3 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     </Dialog>
   );
 }
-

@@ -12,7 +12,7 @@ import {
   DollarSign, 
   Box, 
   Globe,
-  ImageIcon,
+  Image as ImageIcon,
   X,
   Palette,
   Image as ImageIconLucide
@@ -274,6 +274,37 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               </div>
             </div>
 
+            {/* Galeria de Fotos */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between text-primary border-b border-gray-200 pb-3">
+                <div className="flex items-center gap-3 text-accent">
+                  <ImageIcon className="h-5 w-5" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos (Upload Múltiplo)</h4>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Fotos</Button>
+              </div>
+              <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={e => handleUpload(e, true)} />
+              
+              <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
+                 {formData.gallery.map((img, idx) => (
+                   <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))}
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                   </div>
+                 ))}
+                 {uploading && (
+                   <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20">
+                     <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                   </div>
+                 )}
+              </div>
+            </div>
+
             {/* 2. VARIAÇÕES DE CORES (LISTA VISÍVEL) */}
             <div className="space-y-6 bg-[#FFF9F7] p-8 rounded-[2.5rem] border border-primary/5 shadow-sm">
               <input 
@@ -341,4 +372,3 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     </div>
   );
 }
-

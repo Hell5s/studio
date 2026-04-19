@@ -12,7 +12,8 @@ import {
   Image as ImageIcon,
   Palette,
   X,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ import { doc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useFirebase, setDocumentNonBlocking } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
+import { cn } from '@/lib/utils';
 
 interface AddProductDialogProps {
   open: boolean;
@@ -43,6 +45,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const variationInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(false);
@@ -64,7 +67,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     collection: 'Nova Coleção',
     badge: 'Novo',
     image: '',
-    gallery: '',
+    gallery: [] as string[],
     stock: '10',
     sizes: 'P, M, G, GG',
     colors: '',
@@ -99,12 +102,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   };
 
   const handleSave = () => {
-    const galleryImages = formData.gallery
-      .split('\n')
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    const finalMainImage = formData.image || (galleryImages.length > 0 ? galleryImages[0] : '');
+    const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
 
     if (!formData.name || !formData.price || !finalMainImage) {
       toast({
@@ -129,7 +127,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
       image: finalMainImage,
-      images: galleryImages.length > 0 ? galleryImages : [finalMainImage],
+      images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -147,7 +145,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       name: '', price: '', oldPrice: '', cost: '', supplierUrl: '', supplierName: '',
       internalNotes: '', description: '', longDescription: '',
       category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
-      gallery: '', stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
+      gallery: [], stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
       featured: false, bestseller: false, variations: []
     });
   };
@@ -166,6 +164,33 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setUploading(true);
+    try {
+      const newUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const storageRef = ref(storage!, `products/gallery/${Date.now()}-${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(snapshot.ref);
+        newUrls.push(url);
+      }
+      setFormData(prev => ({ 
+        ...prev, 
+        gallery: [...prev.gallery, ...newUrls] 
+      }));
+      toast({ title: `${newUrls.length} imagens adicionadas!` });
+    } catch (error: any) {
+      toast({ title: "Erro no upload da galeria", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
     }
   };
 
@@ -260,6 +285,33 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               </div>
             </section>
 
+            <section className="space-y-6">
+              <div className="flex items-center justify-between text-primary border-b border-gray-200 pb-3">
+                <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos</h4></div>
+                <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Fotos</Button>
+              </div>
+              <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
+              
+              <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
+                 {formData.gallery.map((img, idx) => (
+                   <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))}
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                   </div>
+                 ))}
+                 {uploading && (
+                   <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20">
+                     <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                   </div>
+                 )}
+              </div>
+            </section>
+
             <section className="space-y-6 bg-white p-8 rounded-3xl border border-primary/5 shadow-sm">
               <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-3">
                 <LinkIcon className="h-5 w-5" />
@@ -347,4 +399,3 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     </Dialog>
   );
 }
-
