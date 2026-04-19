@@ -13,7 +13,9 @@ import {
   Image as ImageIcon,
   Palette,
   X,
-  Plus
+  Plus,
+  Link as LinkIcon,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +26,6 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -57,6 +58,10 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     name: '',
     price: '',
     oldPrice: '',
+    cost: '',
+    supplierUrl: '',
+    supplierName: '',
+    internalNotes: '',
     description: '',
     longDescription: '',
     category: 'Vestidos',
@@ -70,7 +75,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     published: true,
     featured: false,
     bestseller: false,
-    sourceUrl: '',
     variations: [] as { color: string; image: string }[]
   });
 
@@ -109,7 +113,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     if (!formData.name || !formData.price || !finalMainImage) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, preencha o nome, o preço e adicione pelo menos uma imagem.",
+        description: "Preencha nome, preço e imagem de capa.",
         variant: "destructive"
       });
       return;
@@ -124,14 +128,14 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       id: productId,
       price: parsePrice(formData.price),
       oldPrice: formData.oldPrice ? parsePrice(formData.oldPrice) : null,
+      cost: parsePrice(formData.cost),
       stock: formData.stock ? Number(formData.stock) : 0,
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
       image: finalMainImage,
       images: galleryImages.length > 0 ? galleryImages : [finalMainImage],
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      source: 'Manual'
+      updatedAt: serverTimestamp()
     };
 
     setDocumentNonBlocking(productRef, payload, { merge: true });
@@ -144,24 +148,24 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     setLoading(false);
     onOpenChange(false);
     setFormData({
-      name: '', price: '', oldPrice: '', description: '', longDescription: '',
+      name: '', price: '', oldPrice: '', cost: '', supplierUrl: '', supplierName: '',
+      internalNotes: '', description: '', longDescription: '',
       category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
       gallery: '', stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
-      featured: false, bestseller: false, sourceUrl: '', variations: []
+      featured: false, bestseller: false, variations: []
     });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
     try {
-      const storageRef = ref(storage!, `products/uploads/${Date.now()}-${file.name.replace(/\s+/g, '_')}`);
+      const storageRef = ref(storage!, `products/uploads/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      setFormData(prev => ({ ...prev, image: downloadURL }));
-      toast({ title: "Imagem carregada com sucesso" });
+      const url = await getDownloadURL(snapshot.ref);
+      setFormData(prev => ({ ...prev, image: url }));
+      toast({ title: "Imagem carregada!" });
     } catch (error: any) {
       toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
@@ -172,17 +176,15 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || activeVariationIndex === null) return;
-    
     setUploading(true);
     try {
       const storageRef = ref(storage!, `products/variations/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
-      
       handleVariationChange(activeVariationIndex, 'image', url);
-      toast({ title: "Foto da cor carregada!" });
+      toast({ title: "Foto da cor OK!" });
     } catch (error: any) {
-      toast({ title: "Erro no upload da variação", variant: "destructive" });
+      toast({ title: "Erro no upload da cor", variant: "destructive" });
     } finally {
       setUploading(false);
       setActiveVariationIndex(null);
@@ -192,297 +194,151 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
-      toast({ title: "Dados insuficientes", variant: "destructive" });
+      toast({ title: "Preencha nome e preço", variant: "destructive" });
       return;
     }
-
     setGeneratingAI(true);
     try {
-      const result = await adminGenerateProductDescription({
+      const res = await adminGenerateProductDescription({
         productName: formData.name,
         category: formData.category,
         price: `R$ ${formData.price}`,
-        oldPrice: formData.oldPrice ? `R$ ${formData.oldPrice}` : undefined,
-        badge: formData.badge,
-        keyFeatures: ["Modelagem exclusiva Toda Bela", "Tecido de alta tecnologia"]
+        keyFeatures: ["Modelagem exclusiva", "Dropshipping Premium"]
       });
-
-      setFormData(prev => ({ 
-        ...prev, 
-        longDescription: result.description,
-        description: result.description.split('.')[0] + '.'
-      }));
-
-      toast({ title: "Editorial IA Gerado!" });
-    } catch (error) {
-      toast({ title: "Erro na IA", variant: "destructive" });
+      setFormData(prev => ({ ...prev, longDescription: res.description, description: res.description.split('.')[0] + '.' }));
+      toast({ title: "IA: Editorial Gerado!" });
+    } catch (e) {
+      toast({ title: "IA Indisponível", variant: "destructive" });
     } finally {
       setGeneratingAI(false);
     }
   };
 
-  const displayImage = formData.image || formData.gallery.split('\n')[0]?.trim();
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl bg-[#FFF9F7]">
-        <div className="bg-primary p-8 text-primary-foreground flex items-center justify-between sticky top-0 z-20">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
+        <div className="bg-[#2A1F22] p-8 text-white flex items-center justify-between sticky top-0 z-20 shadow-lg">
           <div className="flex items-center gap-6">
-            <div className="h-16 w-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-              <Package className="h-8 w-8 text-accent" />
+            <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
+              <Package className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Gestão de Produtos</p>
-              <DialogHeader>
-                <DialogTitle className="text-3xl font-headline font-bold text-white">Novo Item da Boutique</DialogTitle>
-              </DialogHeader>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent/80">Novo Cadastro</p>
+              <DialogHeader><DialogTitle className="text-2xl font-bold">Peça de Boutique</DialogTitle></DialogHeader>
             </div>
           </div>
-          <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-14 bg-white text-primary hover:bg-accent hover:text-white font-bold uppercase tracking-widest text-[10px] shadow-xl">
+          <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-12 bg-accent text-primary hover:brightness-110 font-bold uppercase tracking-widest text-[10px] shadow-xl border-none">
             {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-            Salvar Produto
+            Publicar Produto
           </Button>
         </div>
 
-        <div className="p-10 grid xl:grid-cols-[1fr_400px] gap-12">
-          <div className="space-y-12">
-            {/* 1. IDENTIDADE */}
+        <div className="p-10 grid xl:grid-cols-[1fr_400px] gap-10">
+          <div className="space-y-10">
+            {/* 1. DADOS PÚBLICOS */}
             <section className="space-y-6">
-              <div className="flex items-center gap-3 text-accent">
+              <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3">
                 <Layers className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Identidade da Peça</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="md:col-span-2 space-y-2">
-                  <Label>Nome do Produto</Label>
-                  <input 
-                    value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
-                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                    placeholder="Ex: Vestido Midi Satin"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Coleção</Label>
-                  <select 
-                    value={formData.collection}
-                    onChange={e => setFormData({...formData, collection: e.target.value})}
-                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 text-sm"
-                  >
-                    <option>Moda Fitness</option>
-                    <option>Plus Size</option>
-                    <option>Vestidos</option>
-                    <option>Conjuntos</option>
-                    <option>Casual Chic</option>
-                    <option>Nova Coleção</option>
-                  </select>
+                  <Label>Nome da Peça</Label>
+                  <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label>Categoria</Label>
-                  <select 
-                    value={formData.category}
-                    onChange={e => setFormData({...formData, category: e.target.value})}
-                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 text-sm"
-                  >
-                    <option>Tops</option>
-                    <option>Leggings</option>
-                    <option>Shorts</option>
-                    <option>Macacões</option>
-                    <option>Vestidos</option>
-                    <option>Conjuntos</option>
+                  <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm">
+                    <option>Moda Fitness</option><option>Vestidos</option><option>Conjuntos</option><option>Plus Size</option><option>Casual Chic</option>
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Preço Vitrine (R$)</Label>
+                  <Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
                 </div>
               </div>
             </section>
 
-            {/* 2. VARIAÇÕES DE CORES - CRITICAL SECTION */}
-            <section className="space-y-6 bg-white p-8 rounded-[2.5rem] border border-primary/5 shadow-sm">
-              <input 
-                type="file" 
-                ref={variationInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleVariationFileUpload} 
-              />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-accent">
-                  <Palette className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Miniaturas por Cor (Clique na foto p/ Upload)</h4>
+            {/* 2. DADOS DROPSHIPPING (RESTRITO) */}
+            <section className="space-y-6 bg-white p-8 rounded-3xl border border-primary/5 shadow-sm">
+              <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-3">
+                <LinkIcon className="h-5 w-5" />
+                <h4 className="text-[11px] font-bold uppercase tracking-widest">Dados Operacionais (Apenas Admin)</h4>
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Link do Fornecedor (AliExpress, Shopee, etc)</Label>
+                  <Input value={formData.supplierUrl} onChange={e => setFormData({...formData, supplierUrl: e.target.value})} placeholder="https://..." className="bg-gray-50/50" />
                 </div>
-                <Button variant="outline" size="sm" onClick={handleAddVariation} className="h-8 text-[9px] font-bold uppercase text-accent border-accent/20 px-4 rounded-full">
-                  <Plus className="h-3 w-3 mr-1" /> Add Nova Cor
-                </Button>
+                <div className="space-y-2">
+                  <Label>Custo no Fornecedor (R$)</Label>
+                  <Input value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} placeholder="Ex: 45.00" className="bg-gray-50/50" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Nome do Fornecedor</Label>
+                  <Input value={formData.supplierName} onChange={e => setFormData({...formData, supplierName: e.target.value})} placeholder="Ex: Boutique Global Store" className="bg-gray-50/50" />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                   <Label>Observações Internas</Label>
+                   <Textarea value={formData.internalNotes} onChange={e => setFormData({...formData, internalNotes: e.target.value})} placeholder="Ex: Tamanho chinês é menor, pedir um número a mais." className="bg-gray-50/50" />
+                </div>
+              </div>
+            </section>
+
+            {/* 3. VARIAÇÕES VISUAIS */}
+            <section className="space-y-6">
+              <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationFileUpload} />
+              <div className="flex justify-between items-center text-primary border-b border-gray-200 pb-3">
+                <div className="flex items-center gap-3"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Cores e Miniaturas</h4></div>
+                <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Cor</Button>
               </div>
               <div className="grid gap-4">
                 {formData.variations.map((v, i) => (
-                  <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5 group">
+                  <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-gray-100 group">
                     <div 
-                      className="h-16 w-12 rounded-lg overflow-hidden bg-white flex-shrink-0 relative cursor-pointer shadow-sm hover:opacity-80 transition-opacity"
-                      onClick={() => {
-                        setActiveVariationIndex(i);
-                        variationInputRef.current?.click();
-                      }}
+                      className="h-16 w-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
                     >
-                      {v.image ? (
-                        <img src={v.image} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full flex flex-col items-center justify-center opacity-30">
-                          <Upload className="h-4 w-4" />
-                          <span className="text-[6px] font-bold">FOTO</span>
-                        </div>
-                      )}
-                      {uploading && activeVariationIndex === i && (
-                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                        </div>
-                      )}
+                      {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-30"><Upload className="h-4 w-4" /></div>}
+                      {uploading && activeVariationIndex === i && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>}
                     </div>
-                    <input 
-                      placeholder="Cor (ex: Branco)" 
-                      value={v.color} 
-                      onChange={e => handleVariationChange(i, 'color', e.target.value)} 
-                      className="h-12 text-xs bg-white border-none rounded-xl px-4 flex-1 outline-none shadow-sm" 
-                    />
-                    <input 
-                      placeholder="Link da imagem" 
-                      value={v.image} 
-                      onChange={e => handleVariationChange(i, 'image', e.target.value)} 
-                      className="h-12 text-xs bg-white border-none rounded-xl px-4 flex-[2] outline-none shadow-sm" 
-                    />
-                    <button onClick={() => handleRemoveVariation(i)} className="text-red-300 hover:text-red-500 transition-colors p-2">
-                      <X className="h-5 w-5" />
-                    </button>
+                    <Input placeholder="Cor (ex: Branco)" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 border-none bg-gray-50 rounded-xl" />
+                    <Input placeholder="URL da Foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-12 border-none bg-gray-50 rounded-xl flex-[2]" />
+                    <button onClick={() => handleRemoveVariation(i)} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
                   </div>
                 ))}
-                {formData.variations.length === 0 && (
-                  <div className="text-center py-6 border-2 border-dashed border-primary/5 rounded-2xl">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest italic">Nenhuma cor cadastrada ainda.</p>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* 3. FINANCEIRO */}
-            <section className="space-y-6">
-              <div className="flex items-center gap-3 text-accent">
-                <ShoppingBag className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Financeiro e Logística</h4>
-              </div>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <Label>Preço da Loja (R$)</Label>
-                  <input 
-                    value={formData.price}
-                    onChange={e => setFormData({...formData, price: e.target.value})}
-                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                    placeholder="129,90"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Preço Comparativo (R$)</Label>
-                  <input 
-                    value={formData.oldPrice}
-                    onChange={e => setFormData({...formData, oldPrice: e.target.value})}
-                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                    placeholder="169,90"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Estoque Total</Label>
-                  <input 
-                    type="number"
-                    value={formData.stock}
-                    onChange={e => setFormData({...formData, stock: e.target.value})}
-                    className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* 4. MÍDIA */}
-            <section className="space-y-6">
-              <div className="flex items-center gap-3 text-accent">
-                <ImageIcon className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Mídia Principal e Galeria</h4>
-              </div>
-              <div className="space-y-4">
-                <div className="grid md:grid-cols-[1fr_auto] gap-4">
-                  <div className="relative flex-1">
-                    <input 
-                      value={formData.image}
-                      onChange={e => setFormData({...formData, image: e.target.value})}
-                      className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none"
-                      placeholder="URL ou Upload da Capa"
-                    />
-                    {uploading && !activeVariationIndex && (
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>
-                    )}
-                  </div>
-                  <Button variant="outline" className="rounded-2xl h-14 border-primary/10" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                    <Upload className="h-4 w-4" />
-                  </Button>
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-                </div>
-                <Label>Galeria de Detalhes (uma URL por linha)</Label>
-                <textarea 
-                   value={formData.gallery}
-                   onChange={e => setFormData({...formData, gallery: e.target.value})}
-                   className="w-full rounded-2xl border-primary/5 bg-white shadow-sm min-h-[90px] px-4 py-3 outline-none"
-                   placeholder="https://imagem1.jpg&#10;https://imagem2.jpg"
-                />
-              </div>
-            </section>
-
-            {/* 5. PERSUASÃO */}
-            <section className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-accent">
-                  <Sparkles className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Conteúdo e Persuasão</h4>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleAIGenerate} disabled={generatingAI} className="rounded-full border-accent/20 text-accent">
-                  {generatingAI ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Sparkles className="h-3 w-3 mr-2" />} IA Editorial
-                </Button>
-              </div>
-              <div className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2"><Label>Tamanhos</Label><input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none" /></div>
-                  <div className="space-y-2"><Label>Cores Tags</Label><input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} className="w-full rounded-2xl h-14 border-primary/5 bg-white shadow-sm px-4 outline-none" /></div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Descrição Editorial</Label>
-                  <textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} className="w-full rounded-2xl border-primary/5 bg-white shadow-sm min-h-[160px] px-4 py-3 outline-none" />
-                </div>
               </div>
             </section>
           </div>
 
+          {/* SIDEBAR DO DIALOG - STATUS E PREVIEW */}
           <div className="space-y-8">
             <div className="sticky top-28 space-y-8">
-              <div className="rounded-[3rem] bg-white shadow-2xl overflow-hidden border border-primary/5">
-                <div className="aspect-[3/4] bg-muted relative">
-                  {displayImage ? (
-                    <img src={displayImage} className="w-full h-full object-cover" alt="Preview" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground/30"><ImageIcon className="h-12 w-12" /></div>
-                  )}
+              <Card className="rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-none">
+                <div className="aspect-[3/4] bg-gray-100 relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                  {formData.image ? <img src={formData.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30"><ImageIcon className="h-12 w-12" /><span className="text-[10px] font-bold mt-2">CAPA DO PRODUTO</span></div>}
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                  {uploading && !activeVariationIndex && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
                 </div>
-                <div className="p-8 text-center space-y-4">
-                  <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-accent">{formData.collection}</p>
-                  <h5 className="font-headline font-bold text-xl text-primary truncate">{formData.name || 'Nome da Peça'}</h5>
-                  <p className="text-3xl font-light text-primary">R$ {formData.price || '0,00'}</p>
+                <div className="p-8 text-center space-y-2">
+                  <h5 className="font-bold text-lg text-primary truncate">{formData.name || 'Nome da Peça'}</h5>
+                  <p className="text-2xl font-light text-primary">R$ {formData.price || '0,00'}</p>
                 </div>
-              </div>
+              </Card>
 
-              <div className="p-8 rounded-[2.5rem] bg-primary text-primary-foreground space-y-6">
-                <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent">Status da Peça</h6>
+              <Card className="p-8 rounded-[2rem] bg-primary text-white space-y-6 shadow-xl border-none">
+                <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent">Configurações</h6>
                 <div className="space-y-4">
-                   <div className="flex items-center justify-between"><Label className="text-white">Publicar</Label><Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} /></div>
-                   <div className="flex items-center justify-between"><Label className="text-white">Destaque</Label><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
-                   <div className="flex items-center justify-between"><Label className="text-white">Mais Vendido</Label><Checkbox checked={formData.bestseller} onCheckedChange={(c) => setFormData({...formData, bestseller: !!c})} className="border-white" /></div>
+                   <div className="flex items-center justify-between"><Label className="text-white text-xs">Publicado</Label><Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} /></div>
+                   <div className="flex items-center justify-between"><Label className="text-white text-xs">Destaque</Label><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
+                   <div className="flex items-center justify-between"><Label className="text-white text-xs">Mais Vendido</Label><Checkbox checked={formData.bestseller} onCheckedChange={v => setFormData({...formData, bestseller: !!v})} className="border-white" /></div>
                 </div>
-              </div>
+              </Card>
+              
+              <Button variant="outline" onClick={handleAIGenerate} disabled={generatingAI} className="w-full h-14 rounded-2xl border-accent/20 text-accent hover:bg-accent/5 font-bold uppercase text-[10px] tracking-widest">
+                {generatingAI ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                Gerar Editorial com IA
+              </Button>
             </div>
           </div>
         </div>

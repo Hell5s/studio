@@ -11,68 +11,30 @@
         "slug": { "type": "string" },
         "price": { "type": "number" },
         "oldPrice": { "type": "number" },
-        "cost": { "type": "number" },
-        "profit": { "type": "number" },
-        "margin": { "type": "number" },
+        "cost": { "type": "number", "description": "Admin only: Cost price from supplier" },
+        "supplierUrl": { "type": "string", "format": "uri", "description": "Admin only: Link to supplier product" },
+        "supplierName": { "type": "string" },
         "badge": { "type": "string" },
         "category": { "type": "string" },
-        "subcategory": { "type": "string" },
-        "brand": { "type": "string" },
-        "sku": { "type": "string" },
-        "collection": { "type": "string" },
         "image": { "type": "string", "format": "uri" },
         "images": { "type": "array", "items": { "type": "string" } },
         "description": { "type": "string" },
         "longDescription": { "type": "string" },
         "stock": { "type": "number" },
-        "weight": { "type": "number" },
-        "dimensions": {
-          "type": "object",
-          "properties": {
-            "height": { "type": "number" },
-            "width": { "type": "number" },
-            "length": { "type": "number" }
-          }
-        },
-        "shippingTime": { "type": "string" },
         "sizes": { "type": "array", "items": { "type": "string" } },
         "colors": { "type": "array", "items": { "type": "string" } },
         "variations": { "type": "array", "items": { "type": "object" } },
         "featured": { "type": "boolean" },
         "published": { "type": "boolean" },
         "status": { "type": "string", "enum": ["active", "inactive", "draft"] },
-        "bestseller": { "type": "boolean" },
-        "source": { "type": "string" },
-        "sourceUrl": { "type": "string", "format": "uri" },
-        "vendorName": { "type": "string" },
-        "originalPrice": { "type": "number" },
-        "seo": {
-          "type": "object",
-          "properties": {
-            "metaTitle": { "type": "string" },
-            "metaDescription": { "type": "string" },
-            "tags": { "type": "array", "items": { "type": "string" } }
-          }
-        },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "name", "price", "image", "createdAt"]
     },
-    "Category": {
-      "title": "Category",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "order": { "type": "number" }
-      },
-      "required": ["id", "name", "order"]
-    },
     "Order": {
       "title": "Order",
       "type": "object",
-      "description": "Registros de pedidos feitos pelos clientes.",
       "properties": {
         "orderNumber": { "type": "string" },
         "userId": { "type": "string" },
@@ -80,7 +42,7 @@
           "type": "object",
           "properties": {
             "name": { "type": "string" },
-            "email": { "type": "string", "format": "email" },
+            "email": { "type": "string" },
             "phone": { "type": "string" },
             "address": { "type": "string" },
             "city": { "type": "string" },
@@ -91,47 +53,46 @@
         "items": { "type": "array", "items": { "type": "object" } },
         "subtotal": { "type": "number" },
         "total": { "type": "number" },
-        "status": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "paid", "ordered", "shipped", "delivered", "canceled"] },
         "trackingCode": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["orderNumber", "userId", "items", "total", "status", "createdAt"]
-    },
-    "Review": {
-      "title": "Review",
-      "type": "object",
-      "description": "Avaliação de produto deixada por uma cliente.",
-      "properties": {
-        "user": { "type": "string" },
-        "rating": { "type": "number" },
-        "headline": { "type": "string" },
-        "comment": { "type": "string" },
-        "size": { "type": "string" },
-        "recommended": { "type": "boolean" },
+        "internalNotes": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["user", "rating", "comment", "createdAt"]
+      }
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "type": { "type": "string", "enum": ["percentage", "fixed"] },
+        "value": { "type": "number" },
+        "minOrderValue": { "type": "number" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "usageLimit": { "type": "number" },
+        "usedCount": { "type": "number" },
+        "active": { "type": "boolean" }
+      }
+    },
+    "StoreConfig": {
+      "title": "StoreConfig",
+      "type": "object",
+      "properties": {
+        "whatsapp": { "type": "string" },
+        "email": { "type": "string" },
+        "freeShippingThreshold": { "type": "number" },
+        "announcementBar": { "type": "string" },
+        "policies": { "type": "object" }
+      }
     }
   },
   "auth": {
     "providers": ["password", "google.com"]
   },
   "firestore": {
-    "/products/{productId}": {
-      "schema": { "$ref": "#/backend/entities/Product" },
-      "description": "Catálogo completo de produtos"
-    },
-    "/products/{productId}/reviews/{reviewId}": {
-      "schema": { "$ref": "#/backend/entities/Review" },
-      "description": "Avaliações das clientes para cada produto"
-    },
-    "/orders/{orderId}": {
-      "schema": { "$ref": "#/backend/entities/Order" },
-      "description": "Pedidos dos clientes"
-    },
-    "/roles_admin/{uid}": {
-      "description": "Permissões de administrador"
-    }
+    "/products/{productId}": { "schema": { "$ref": "#/backend/entities/Product" }, "description": "Catálogo de produtos" },
+    "/orders/{orderId}": { "schema": { "$ref": "#/backend/entities/Order" }, "description": "Pedidos da loja" },
+    "/coupons/{couponId}": { "schema": { "$ref": "#/backend/entities/Coupon" }, "description": "Cupons de desconto" },
+    "/store_config/settings": { "schema": { "$ref": "#/backend/entities/StoreConfig" }, "description": "Configurações globais" },
+    "/roles_admin/{uid}": { "description": "Controle de acesso administrativo" }
   }
 }
