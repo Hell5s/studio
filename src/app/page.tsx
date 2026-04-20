@@ -5,6 +5,7 @@ import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -271,32 +272,35 @@ function StorefrontContent() {
             
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-8">
               {categories && categories.length > 0 ? (
-                categories.map((col) => (
-                  <div 
-                    key={col.id} 
-                    onClick={() => handleSelectCategory(col.name)}
-                    className={cn(
-                      "group relative aspect-[4/5] rounded-[1.5rem] md:rounded-[3.5rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-700",
-                      selectedCategory === col.name 
-                        ? "border-accent ring-8 ring-accent/5 scale-[1.05] z-10" 
-                        : "border-transparent opacity-80 hover:opacity-100 hover:scale-[1.02]"
-                    )}
-                  >
-                    <img 
-                      src={col.image || 'https://picsum.photos/seed/placeholder/400/500'} 
-                      className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" 
-                      alt={col.name} 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/20 to-transparent" />
-                    <div className="absolute bottom-6 left-6 right-6 md:bottom-12 md:left-12 md:right-12">
-                      <h3 className="text-xl md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-2 md:mb-4">{col.name}</h3>
-                      <div className={cn(
-                        "h-1 bg-accent transition-all duration-700",
-                        selectedCategory === col.name ? "w-full" : "w-0 group-hover:w-full"
-                      )} />
-                    </div>
-                  </div>
-                ))
+                categories.map((col) => {
+                  const slug = col.name.toLowerCase().trim().replace(/\s+/g, '-');
+                  return (
+                    <Link 
+                      key={col.id} 
+                      href={`/categoria/${slug}`}
+                      className={cn(
+                        "group relative aspect-[4/5] rounded-[1.5rem] md:rounded-[3.5rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-700",
+                        selectedCategory === col.name 
+                          ? "border-accent ring-8 ring-accent/5 scale-[1.05] z-10" 
+                          : "border-transparent opacity-80 hover:opacity-100 hover:scale-[1.02]"
+                      )}
+                    >
+                      <img 
+                        src={col.image || 'https://picsum.photos/seed/placeholder/400/500'} 
+                        className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" 
+                        alt={col.name} 
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/20 to-transparent" />
+                      <div className="absolute bottom-6 left-6 right-6 md:bottom-12 md:left-12 md:right-12">
+                        <h3 className="text-xl md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-2 md:mb-4">{col.name}</h3>
+                        <div className={cn(
+                          "h-1 bg-accent transition-all duration-700",
+                          selectedCategory === col.name ? "w-full" : "w-0 group-hover:w-full"
+                        )} />
+                      </div>
+                    </Link>
+                  );
+                })
               ) : (
                 [1,2,3,4,5].map(i => (
                    <div key={i} className="aspect-[4/5] rounded-[3rem] bg-secondary animate-pulse" />
