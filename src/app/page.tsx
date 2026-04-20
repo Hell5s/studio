@@ -172,7 +172,7 @@ function StorefrontContent() {
         <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
 
         {/* Seção de Vitrine (Novidades ou Categoria Filtrada) */}
-        <section id="vitrine" className="container mx-auto px-4 md:px-6 py-8 md:py-16 overflow-hidden scroll-mt-24">
+        <section id="vitrine" className="container mx-auto px-4 md:px-6 pt-8 md:pt-16 pb-4 md:pb-8 overflow-hidden scroll-mt-24">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-4">
             <div className="space-y-2 md:space-y-4">
               <div className="flex items-center gap-3">
@@ -223,7 +223,7 @@ function StorefrontContent() {
         </section>
 
         {/* Grade de Coleções / Categorias - MOVIDO PARA BAIXO DO LANÇAMENTOS */}
-        <section id="colecoes" className="bg-secondary/10 py-8 md:py-16">
+        <section id="colecoes" className="bg-secondary/10 pt-4 md:pt-8 pb-8 md:pb-16">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-8 md:mb-20 space-y-2 md:space-y-4">
               <div className="flex items-center justify-center gap-3">
