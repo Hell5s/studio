@@ -2,30 +2,43 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { Layers, Plus, Trash2, Edit, Loader2, Upload, ImageIcon, X, Image as ImageIconLucide } from 'lucide-react';
+import { Layers, Plus, Trash2, Edit, Loader2, Upload, ImageIcon, X, Image as ImageIconLucide, Save } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, useFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export function AdminCategories() {
   const db = useFirestore();
   const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   
   const [newCat, setNewCat] = useState('');
   const [newCatImage, setNewCatImage] = useState('');
   const [uploading, setUploading] = useState(false);
+  
+  // Estado para Edição
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editName, setEditName] = useState('');
+  const [editImage, setEditImage] = useState('');
 
   const q = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('order', 'asc')), [db]);
   const { data: categories, isLoading } = useCollection(q);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -34,7 +47,13 @@ export function AdminCategories() {
       const storageRef = ref(storage!, `categories/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
-      setNewCatImage(url);
+      
+      if (isEdit) {
+        setEditImage(url);
+      } else {
+        setNewCatImage(url);
+      }
+      
       toast({ title: "Imagem carregada com sucesso!" });
     } catch (error) {
       toast({ title: "Erro ao carregar imagem", variant: "destructive" });
@@ -61,11 +80,30 @@ export function AdminCategories() {
     toast({ title: "Categoria criada!", description: `${newCat} agora faz parte do seu catálogo.` });
   };
 
+  const handleUpdate = () => {
+    if (!editingCategory || !editName) return;
+
+    updateDocumentNonBlocking(doc(db, 'categories', editingCategory.id), {
+      name: editName,
+      image: editImage,
+      updatedAt: new Date().toISOString()
+    });
+
+    toast({ title: "Categoria atualizada!" });
+    setEditingCategory(null);
+  };
+
   const handleDelete = (id: string) => {
-    if (confirm("Excluir esta categoria permanentemente?")) {
+    if (confirm("Excluir esta categoria permanentemente? Isso pode afetar a exibição de produtos vinculados.")) {
       deleteDocumentNonBlocking(doc(db, 'categories', id));
       toast({ title: "Categoria removida" });
     }
+  };
+
+  const openEdit = (cat: any) => {
+    setEditingCategory(cat);
+    setEditName(cat.name);
+    setEditImage(cat.image || '');
   };
 
   return (
@@ -75,6 +113,7 @@ export function AdminCategories() {
         <p className="text-sm text-muted-foreground italic font-light">Organize seu catálogo por estilos e coleções visuais.</p>
       </div>
 
+      {/* Novo Cadastro */}
       <Card className="p-10 border-none shadow-2xl bg-white rounded-[3rem] relative overflow-hidden">
         <div className="absolute top-0 right-0 p-10 opacity-[0.03]">
           <Layers className="h-40 w-40" />
@@ -82,7 +121,6 @@ export function AdminCategories() {
         
         <div className="relative z-10 space-y-8">
           <div className="grid md:grid-cols-[200px_1fr_auto] gap-8 items-end">
-            {/* Image Upload Area */}
             <div className="space-y-3">
               <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent ml-2">Imagem de Capa</label>
               <div 
@@ -94,7 +132,7 @@ export function AdminCategories() {
               >
                 {newCatImage ? (
                   <>
-                    <img src={newCatImage} className="w-full h-full object-cover" />
+                    <img src={newCatImage} className="w-full h-full object-cover" alt="Preview" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                        <Upload className="text-white h-6 w-6" />
                     </div>
@@ -105,11 +143,10 @@ export function AdminCategories() {
                     <span className="text-[8px] font-bold uppercase mt-2 block text-primary/40">Upload</span>
                   </div>
                 )}
-                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e)} />
               </div>
             </div>
 
-            {/* Name Input */}
             <div className="space-y-3">
               <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent ml-2">Nome da Categoria</label>
               <Input 
@@ -125,12 +162,13 @@ export function AdminCategories() {
               disabled={!newCat}
               className="h-16 rounded-full px-10 bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px]"
             >
-              <Plus className="mr-2 h-5 w-5" /> Adicionar Categoria
+              <Plus className="mr-2 h-5 w-5" /> Criar Categoria
             </Button>
           </div>
         </div>
       </Card>
 
+      {/* Listagem */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
         {isLoading ? (
           <div className="col-span-full py-32 text-center">
@@ -151,6 +189,12 @@ export function AdminCategories() {
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-60" />
                 
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <button 
+                    onClick={() => openEdit(cat)}
+                    className="h-10 w-10 rounded-full bg-white/90 text-primary flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all"
+                   >
+                     <Edit className="h-4 w-4" />
+                   </button>
                    <button 
                     onClick={() => handleDelete(cat.id)}
                     className="h-10 w-10 rounded-full bg-white/90 text-red-500 flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white transition-all"
@@ -176,6 +220,45 @@ export function AdminCategories() {
           </div>
         )}
       </div>
+
+      {/* Modal de Edição */}
+      <Dialog open={!!editingCategory} onOpenChange={(o) => !o && setEditingCategory(null)}>
+        <DialogContent className="rounded-[2.5rem] bg-[#FFF9F7] border-none shadow-2xl p-0 overflow-hidden">
+          <div className="bg-primary p-8 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-headline font-bold">Editar Categoria</DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="p-8 space-y-6">
+            <div className="flex gap-6 items-center">
+              <div 
+                className="h-24 w-24 rounded-2xl bg-secondary/50 border-2 border-dashed border-primary/10 flex items-center justify-center overflow-hidden cursor-pointer relative group"
+                onClick={() => editFileInputRef.current?.click()}
+              >
+                {editImage ? (
+                  <img src={editImage} className="h-full w-full object-cover" alt="Edit Preview" />
+                ) : (
+                  <ImageIcon className="h-8 w-8 text-primary/20" />
+                )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                   <Upload className="text-white h-5 w-5" />
+                </div>
+                <input type="file" ref={editFileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, true)} />
+              </div>
+              <div className="flex-1 space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-accent ml-1">Nome da Categoria</label>
+                <Input value={editName} onChange={e => setEditName(e.target.value)} className="rounded-xl h-12" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="p-8 bg-secondary/20 flex gap-3">
+            <Button variant="ghost" onClick={() => setEditingCategory(null)} className="rounded-full px-6 text-[10px] font-bold uppercase tracking-widest">Cancelar</Button>
+            <Button onClick={handleUpdate} className="rounded-full px-8 bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg">
+              <Save className="mr-2 h-4 w-4" /> Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

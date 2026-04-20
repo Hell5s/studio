@@ -2,14 +2,15 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Tag, Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react';
+import { Tag, Plus, Trash2, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export function AdminCoupons() {
   const db = useFirestore();
@@ -25,7 +26,10 @@ export function AdminCoupons() {
   const { data: coupons, isLoading } = useCollection(q);
 
   const handleAdd = () => {
-    if (!formData.code || !formData.value) return;
+    if (!formData.code || !formData.value) {
+      toast({ title: "Preencha os campos", variant: "destructive" });
+      return;
+    }
     addDocumentNonBlocking(collection(db, 'coupons'), {
       ...formData,
       value: parseFloat(formData.value),
@@ -37,51 +41,110 @@ export function AdminCoupons() {
     toast({ title: "Cupom gerado!" });
   };
 
+  const toggleStatus = (coupon: any) => {
+    updateDocumentNonBlocking(doc(db, 'coupons', coupon.id), {
+      active: !coupon.active
+    });
+    toast({ title: coupon.active ? "Cupom desativado" : "Cupom reativado" });
+  };
+
+  const handleDelete = (id: string, code: string) => {
+    if (confirm(`Excluir o cupom ${code} permanentemente?`)) {
+      deleteDocumentNonBlocking(doc(db, 'coupons', id));
+      toast({ title: "Cupom removido" });
+    }
+  };
+
   return (
-    <div className="space-y-8">
-      <Card className="p-8 border-none shadow-sm bg-white grid md:grid-cols-4 gap-6 items-end">
-        <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Código</label>
-          <Input placeholder="EX: BOUTIQUE10" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} />
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col gap-2">
+        <h4 className="text-3xl font-headline font-bold text-primary">Cupons de Desconto</h4>
+        <p className="text-sm text-muted-foreground italic font-light">Gerencie ofertas especiais para fidelizar suas clientes.</p>
+      </div>
+
+      <Card className="p-10 border-none shadow-2xl bg-white rounded-[3rem] grid md:grid-cols-4 gap-8 items-end relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-10 opacity-[0.03]"><Tag className="h-32 w-32" /></div>
+        <div className="space-y-3 relative z-10">
+          <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Código</label>
+          <Input 
+            placeholder="EX: BELA10" 
+            className="h-14 rounded-full px-6 bg-secondary/20 border-none uppercase font-bold"
+            value={formData.code} 
+            onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} 
+          />
         </div>
-        <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Valor</label>
-          <Input type="number" placeholder="10" value={formData.value} onChange={e => setFormData({...formData, value: e.target.value})} />
+        <div className="space-y-3 relative z-10">
+          <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Valor</label>
+          <Input 
+            type="number" 
+            placeholder="10" 
+            className="h-14 rounded-full px-6 bg-secondary/20 border-none"
+            value={formData.value} 
+            onChange={e => setFormData({...formData, value: e.target.value})} 
+          />
         </div>
-        <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Tipo</label>
+        <div className="space-y-3 relative z-10">
+          <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Tipo de Desconto</label>
           <select 
             value={formData.type} 
             onChange={e => setFormData({...formData, type: e.target.value})}
-            className="w-full h-10 rounded-md border border-input px-3 text-sm"
+            className="w-full h-14 rounded-full border-none bg-secondary/20 px-6 text-sm font-bold text-primary outline-none"
           >
             <option value="percentage">% Porcentagem</option>
             <option value="fixed">R$ Fixo</option>
           </select>
         </div>
-        <Button onClick={handleAdd} className="bg-primary text-white h-10">Criar Cupom</Button>
+        <Button 
+          onClick={handleAdd} 
+          className="h-14 rounded-full bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px]"
+        >
+          <Plus className="mr-2 h-5 w-5" /> Ativar Cupom
+        </Button>
       </Card>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {coupons?.map((c) => (
-          <Card key={c.id} className="p-6 border-none shadow-sm bg-white relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-6 opacity-[0.03] rotate-12"><Tag className="h-20 w-20" /></div>
-            <div className="flex justify-between items-start mb-4">
-              <Badge className="bg-accent text-primary border-none">{c.code}</Badge>
-              {c.active ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> : <XCircle className="h-5 w-5 text-red-300" />}
-            </div>
-            <div className="space-y-1">
-               <h4 className="text-2xl font-bold text-primary">{c.type === 'percentage' ? `${c.value}%` : `R$ ${c.value}`}</h4>
-               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">Usado {c.usedCount} vezes</p>
-            </div>
-            <button 
-              onClick={() => deleteDocumentNonBlocking(doc(db, 'coupons', c.id))}
-              className="mt-6 text-[10px] font-bold uppercase text-red-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-            >
-              Remover Cupom
-            </button>
-          </Card>
-        ))}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {isLoading ? (
+          <div className="col-span-full py-20 text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-accent mx-auto" />
+          </div>
+        ) : coupons && coupons.length > 0 ? (
+          coupons.map((c) => (
+            <Card key={c.id} className="p-8 border-none shadow-lg bg-white relative overflow-hidden group rounded-[2.5rem] hover:shadow-2xl transition-all duration-500">
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] rotate-12 group-hover:scale-110 transition-transform"><Tag className="h-24 w-24" /></div>
+              <div className="flex justify-between items-start mb-6">
+                <Badge className="bg-accent text-primary border-none px-4 py-1 rounded-full font-bold tracking-widest">{c.code}</Badge>
+                <button 
+                  onClick={() => toggleStatus(c)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
+                    c.active ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-red-50 text-red-400 border border-red-100"
+                  )}
+                >
+                  {c.active ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                  {c.active ? 'Ativo' : 'Pausado'}
+                </button>
+              </div>
+              <div className="space-y-2">
+                 <h4 className="text-4xl font-headline font-bold text-primary">{c.type === 'percentage' ? `${c.value}%` : `R$ ${c.value}`}</h4>
+                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Utilizado {c.usedCount || 0} vezes</p>
+              </div>
+              <div className="mt-8 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <p className="text-[9px] text-accent font-bold uppercase tracking-[0.2em] italic">Elegância com benefício</p>
+                <button 
+                  onClick={() => handleDelete(c.id, c.code)}
+                  className="text-[10px] font-bold uppercase text-red-300 hover:text-red-500 transition-colors flex items-center gap-2"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Remover
+                </button>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full py-24 text-center bg-white/40 rounded-[4rem] border-2 border-dashed border-primary/10">
+             <Tag className="h-10 w-10 text-primary/10 mx-auto mb-4" />
+             <p className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Sem Cupons Ativos</p>
+          </div>
+        )}
       </div>
     </div>
   );
