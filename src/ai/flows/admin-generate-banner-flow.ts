@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Um agente de IA para gerar imagens de banners publicitários de moda.
@@ -40,8 +39,9 @@ const generateBannerFlow = ai.defineFlow(
     Strictly no text, no watermarks, no logos in the image.`;
 
     try {
+      // Utilizando o Imagen 4 (modelo mais estável e recente para geração de imagens no Genkit)
       const { media } = await ai.generate({
-        model: 'googleai/imagen-3.0-generate-001',
+        model: 'googleai/imagen-4.0-fast-generate-001',
         prompt: refinedPrompt,
         config: {
           aspectRatio: input.aspectRatio,
