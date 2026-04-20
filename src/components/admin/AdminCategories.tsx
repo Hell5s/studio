@@ -115,6 +115,7 @@ export function AdminCategories() {
   const handleDelete = (id: string, name: string) => {
     if (!id) return;
     
+    // Removido confirm() para evitar bloqueios no Studio e garantir funcionalidade direta
     try {
       const categoryRef = doc(db, 'categories', id);
       deleteDocumentNonBlocking(categoryRef);

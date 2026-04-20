@@ -169,57 +169,7 @@ function StorefrontContent() {
       />
 
       <main>
-        <Hero onShopNow={() => document.getElementById('colecoes')?.scrollIntoView({ behavior: 'smooth' })} />
-
-        {/* Grade de Coleções / Categorias */}
-        <section id="colecoes" className="bg-secondary/10 py-12 md:py-32">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-8 md:mb-20 space-y-2 md:space-y-4">
-              <div className="flex items-center justify-center gap-3">
-                 <div className="h-px w-6 bg-accent/40" />
-                 <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Categorias</span>
-                 <div className="h-px w-6 bg-accent/40" />
-              </div>
-              <h2 className="text-3xl md:text-6xl font-headline font-bold text-primary">Navegue por Estilo</h2>
-              <p className="text-sm md:text-lg text-muted-foreground italic font-light max-w-xl mx-auto">
-                Selecione um estilo para visualizar as peças exclusivas da nossa curadoria.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6">
-              {categories && categories.length > 0 ? (
-                categories.map((col) => (
-                  <div 
-                    key={col.id} 
-                    onClick={() => handleSelectCategory(col.name)}
-                    className={cn(
-                      "group relative aspect-[4/5] rounded-[1.2rem] md:rounded-[2.5rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-500",
-                      selectedCategory === col.name ? "border-accent ring-4 ring-accent/10 scale-[1.02]" : "border-transparent"
-                    )}
-                  >
-                    <img 
-                      src={col.image || 'https://picsum.photos/seed/placeholder/400/500'} 
-                      className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" 
-                      alt={col.name} 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent" />
-                    <div className="absolute bottom-3 left-3 right-3 md:bottom-10 md:left-10 md:right-10">
-                      <h3 className="text-lg md:text-2xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-1 md:mb-2">{col.name}</h3>
-                      <div className={cn(
-                        "h-0.5 bg-accent transition-all duration-500",
-                        selectedCategory === col.name ? "w-full" : "w-0 group-hover:w-full"
-                      )} />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                [1,2,3,4,5].map(i => (
-                   <div key={i} className="aspect-[4/5] rounded-[2.5rem] bg-secondary animate-pulse" />
-                ))
-              )}
-            </div>
-          </div>
-        </section>
+        <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
 
         {/* Seção de Vitrine (Novidades ou Categoria Filtrada) */}
         <section id="vitrine" className="container mx-auto px-4 md:px-6 py-12 md:py-32 overflow-hidden scroll-mt-24">
@@ -270,6 +220,56 @@ function StorefrontContent() {
               )}
             </div>
           )}
+        </section>
+
+        {/* Grade de Coleções / Categorias - MOVIDO PARA BAIXO DO LANÇAMENTOS */}
+        <section id="colecoes" className="bg-secondary/10 py-12 md:py-32">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-8 md:mb-20 space-y-2 md:space-y-4">
+              <div className="flex items-center justify-center gap-3">
+                 <div className="h-px w-6 bg-accent/40" />
+                 <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Categorias</span>
+                 <div className="h-px w-6 bg-accent/40" />
+              </div>
+              <h2 className="text-3xl md:text-6xl font-headline font-bold text-primary">Navegue por Estilo</h2>
+              <p className="text-sm md:text-lg text-muted-foreground italic font-light max-w-xl mx-auto">
+                Selecione um estilo para visualizar as peças exclusivas da nossa curadoria.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6">
+              {categories && categories.length > 0 ? (
+                categories.map((col) => (
+                  <div 
+                    key={col.id} 
+                    onClick={() => handleSelectCategory(col.name)}
+                    className={cn(
+                      "group relative aspect-[4/5] rounded-[1.2rem] md:rounded-[2.5rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-500",
+                      selectedCategory === col.name ? "border-accent ring-4 ring-accent/10 scale-[1.02]" : "border-transparent"
+                    )}
+                  >
+                    <img 
+                      src={col.image || 'https://picsum.photos/seed/placeholder/400/500'} 
+                      className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" 
+                      alt={col.name} 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent" />
+                    <div className="absolute bottom-3 left-3 right-3 md:bottom-10 md:left-10 md:right-10">
+                      <h3 className="text-lg md:text-2xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-1 md:mb-2">{col.name}</h3>
+                      <div className={cn(
+                        "h-0.5 bg-accent transition-all duration-500",
+                        selectedCategory === col.name ? "w-full" : "w-0 group-hover:w-full"
+                      )} />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                [1,2,3,4,5].map(i => (
+                   <div key={i} className="aspect-[4/5] rounded-[2.5rem] bg-secondary animate-pulse" />
+                ))
+              )}
+            </div>
+          </div>
         </section>
 
         {/* Banner de Campanha Split */}
