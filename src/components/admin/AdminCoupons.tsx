@@ -49,6 +49,7 @@ export function AdminCoupons() {
   };
 
   const handleDelete = (id: string, code: string) => {
+    if (!id) return;
     if (confirm(`Excluir o cupom ${code} permanentemente?`)) {
       deleteDocumentNonBlocking(doc(db, 'coupons', id));
       toast({ title: "Cupom removido" });
@@ -128,7 +129,7 @@ export function AdminCoupons() {
                  <h4 className="text-4xl font-headline font-bold text-primary">{c.type === 'percentage' ? `${c.value}%` : `R$ ${c.value}`}</h4>
                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Utilizado {c.usedCount || 0} vezes</p>
               </div>
-              <div className="mt-8 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="mt-8 flex justify-between items-center md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <p className="text-[9px] text-accent font-bold uppercase tracking-[0.2em] italic">Elegância com benefício</p>
                 <button 
                   onClick={() => handleDelete(c.id, c.code)}

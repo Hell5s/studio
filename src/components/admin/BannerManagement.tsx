@@ -53,11 +53,11 @@ export function BannerManagement() {
     }
 
     setIsGenerating(true);
-    setPreviewImage(''); // Limpa a anterior
+    setPreviewImage('');
     try {
       const result = await generateBannerImage({ prompt, aspectRatio });
       setPreviewImage(result.imageUrl);
-      toast({ title: "Imagem gerada!", description: "Sua campanha está pronta para visualização." });
+      toast({ title: "Imagem gerada!" });
     } catch (error: any) {
       toast({ 
         title: "Erro na IA", 
@@ -83,7 +83,7 @@ export function BannerManagement() {
 
     setPreviewImage('');
     setPrompt('');
-    toast({ title: "Banner Ativado", description: "Sua vitrine foi atualizada com a nova campanha." });
+    toast({ title: "Banner Ativado" });
   };
 
   const toggleStatus = (banner: any) => {
@@ -93,8 +93,10 @@ export function BannerManagement() {
   };
 
   const handleDelete = (id: string) => {
+    if (!id) return;
     if (confirm('Remover este banner permanentemente?')) {
       deleteDocumentNonBlocking(doc(db, 'banners', id));
+      toast({ title: "Banner removido" });
     }
   };
 
@@ -112,7 +114,7 @@ export function BannerManagement() {
               <div className="space-y-4">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Conceito Visual (IA)</Label>
                 <Input 
-                  placeholder="Ex: Editorial de moda em um jardim luxuoso com luz de pôr do sol..." 
+                  placeholder="Ex: Editorial de moda em um jardim luxuoso..." 
                   className="rounded-full h-16 px-8 bg-secondary/20 border-none focus:ring-2 focus:ring-primary/10"
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
@@ -157,33 +159,9 @@ export function BannerManagement() {
                     <Type className="h-3 w-3" /> Títulos do Banner
                   </Label>
                   <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] font-bold uppercase text-muted-foreground ml-2">Título Principal</span>
-                      <Input 
-                        placeholder="Ex: Nova Coleção" 
-                        value={bannerData.title}
-                        onChange={e => setBannerData({...bannerData, title: e.target.value})}
-                        className="bg-white border-none h-12 rounded-xl"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] font-bold uppercase text-muted-foreground ml-2">Slogan / Descrição</span>
-                      <Input 
-                        placeholder="Ex: A essência da sofisticação" 
-                        value={bannerData.subtitle}
-                        onChange={e => setBannerData({...bannerData, subtitle: e.target.value})}
-                        className="bg-white border-none h-12 rounded-xl"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] font-bold uppercase text-muted-foreground ml-2">Texto do Botão</span>
-                      <Input 
-                        placeholder="Ex: Conferir Looks" 
-                        value={bannerData.ctaText}
-                        onChange={e => setBannerData({...bannerData, ctaText: e.target.value})}
-                        className="bg-white border-none h-12 rounded-xl"
-                      />
-                    </div>
+                    <Input placeholder="Título" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Descrição" value={bannerData.subtitle} onChange={e => setBannerData({...bannerData, subtitle: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Botão" value={bannerData.ctaText} onChange={e => setBannerData({...bannerData, ctaText: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
                   </div>
                   <Button onClick={handleSaveBanner} className="w-full rounded-full bg-primary text-white font-bold h-14 shadow-xl hover:bg-accent transition-colors text-[10px] uppercase tracking-widest">
                     <Save className="mr-2 h-5 w-5" /> Ativar na Vitrine
@@ -191,7 +169,7 @@ export function BannerManagement() {
                 </div>
                 <div className="space-y-4">
                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                     <ImageIcon className="h-3 w-3" /> Resultado da IA
+                     <ImageIcon className="h-3 w-3" /> Resultado
                    </Label>
                    <div className={cn(
                      "rounded-2xl overflow-hidden shadow-2xl border border-white relative bg-white",
@@ -206,16 +184,6 @@ export function BannerManagement() {
                 </div>
               </div>
             )}
-
-            {!previewImage && !isGenerating && (
-              <div className="aspect-[21/9] rounded-[2.5rem] bg-secondary/30 overflow-hidden relative group border-2 border-dashed border-primary/10 flex flex-col items-center justify-center text-primary/20 space-y-4">
-                <ImageIcon className="h-16 w-16" />
-                <div className="text-center">
-                  <p className="text-sm font-bold uppercase tracking-[0.2em]">Aguardando sua Curadoria</p>
-                  <p className="text-[10px] italic mt-1">Descreva o estilo e deixe a IA criar algo único.</p>
-                </div>
-              </div>
-            )}
           </Card>
         </div>
 
@@ -227,20 +195,14 @@ export function BannerManagement() {
           <div className="space-y-6 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
             {isLoading ? (
               <div className="py-20 text-center opacity-20"><Loader2 className="animate-spin h-8 w-8 mx-auto" /></div>
-            ) : banners?.length === 0 ? (
-              <div className="text-center py-10 opacity-30 space-y-2">
-                <Layout className="h-10 w-10 mx-auto" />
-                <p className="text-[10px] font-bold uppercase tracking-widest">Nenhuma campanha</p>
-              </div>
             ) : banners?.map(banner => (
               <div key={banner.id} className="p-4 rounded-3xl bg-white/10 border border-white/5 space-y-4 group hover:bg-white/15 transition-all">
                 <div className="aspect-video rounded-2xl overflow-hidden relative shadow-lg">
                   <img src={banner.imageUrl} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button 
                       onClick={() => handleDelete(banner.id)}
                       className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"
-                      title="Excluir Permanentemente"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

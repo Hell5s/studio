@@ -99,26 +99,21 @@ export function AdminCategories() {
     setEditingCategory(null);
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string, name: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleDelete = (id: string, name: string) => {
     if (!id) return;
     
     if (window.confirm(`Excluir permanentemente a categoria "${name}"?`)) {
       try {
         const categoryRef = doc(db, 'categories', id);
         deleteDocumentNonBlocking(categoryRef);
-        toast({ title: "Categoria removida com sucesso" });
+        toast({ title: "Categoria removida" });
       } catch (error: any) {
         toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
       }
     }
   };
 
-  const openEdit = (e: React.MouseEvent, cat: any) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const openEdit = (cat: any) => {
     setEditingCategory(cat);
     setEditName(cat.name);
     setEditImage(cat.image || '');
@@ -204,15 +199,25 @@ export function AdminCategories() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-60" />
                 
-                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                <div className="absolute top-4 right-4 flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
                    <button 
-                    onClick={(e) => openEdit(e, cat)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      openEdit(cat);
+                    }}
                     className="h-10 w-10 rounded-full bg-white/90 text-primary flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all"
                    >
                      <Edit className="h-4 w-4" />
                    </button>
                    <button 
-                    onClick={(e) => handleDelete(e, cat.id, cat.name)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDelete(cat.id, cat.name);
+                    }}
                     className="h-10 w-10 rounded-full bg-white/90 text-red-500 flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white transition-all"
                    >
                      <Trash2 className="h-4 w-4" />

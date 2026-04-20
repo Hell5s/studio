@@ -34,7 +34,7 @@ export function ProductManagement() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const productsQuery = useMemoFirebase(() => query(collection(db, 'products'), orderBy('createdAt', 'desc')), [db]);
-  const { data: products, isLoading } = useCollection(productsQuery);
+  const { data: products, isLoading } = useCollection(q);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -49,7 +49,6 @@ export function ProductManagement() {
       name: `${p.name} (Cópia)`, 
       createdAt: new Date().toISOString() 
     };
-    // Remover o ID original para o Firestore gerar um novo ou usar nossa lógica non-blocking
     addDocumentNonBlocking(collection(db, 'products'), newProduct);
     toast({ title: "Produto duplicado!" });
   };
@@ -120,7 +119,7 @@ export function ProductManagement() {
                     )}
                   </td>
                   <td className="px-8 py-6 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-end gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                       <button onClick={() => handleDuplicate(p)} className="p-2 text-muted-foreground hover:text-accent" title="Duplicar"><Copy className="h-4 w-4" /></button>
                       <button onClick={() => setEditingProduct(p)} className="p-2 text-muted-foreground hover:text-primary" title="Editar"><Edit className="h-4 w-4" /></button>
                       <button onClick={() => handleDelete(p.id, p.name)} className="p-2 text-red-200 hover:text-red-500" title="Excluir"><Trash2 className="h-4 w-4" /></button>
