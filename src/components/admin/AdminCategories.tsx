@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { Layers, Plus, Trash2, Edit, Loader2, Upload, ImageIcon, X, Image as ImageIconLucide, Save } from 'lucide-react';
+import { Layers, Plus, Trash2, Edit, Loader2, Upload, X, Image as ImageIcon, Save } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +39,12 @@ export function AdminCategories() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const file = e.target.files?.[0];
-    if (!file || !storage) return;
+    if (!file) return;
+    
+    if (!storage) {
+      toast({ title: "Serviço de imagens indisponível", variant: "destructive" });
+      return;
+    }
     
     setUploading(true);
     try {
@@ -58,7 +63,7 @@ export function AdminCategories() {
       console.error("Erro upload categoria:", error);
       toast({ 
         title: "Erro ao carregar imagem", 
-        description: error.message || "Tente novamente.",
+        description: error.message || "Verifique sua conexão e tente novamente.",
         variant: "destructive" 
       });
     } finally {
@@ -194,7 +199,7 @@ export function AdminCategories() {
                   <img src={cat.image} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={cat.name} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-primary/10">
-                    <ImageIconLucide className="h-12 w-12" />
+                    <ImageIcon className="h-12 w-12" />
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-60" />
