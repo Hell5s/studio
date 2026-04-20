@@ -6,7 +6,7 @@ import { Layers, Plus, Trash2, Edit, Loader2, Upload, X, Image as ImageIcon, Sav
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,7 @@ import {
 export function AdminCategories() {
   const db = useFirestore();
   const { storage } = useFirebase();
+  const { user } = useUser();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -41,8 +42,13 @@ export function AdminCategories() {
     const file = e.target.files?.[0];
     if (!file) return;
     
+    if (!user) {
+      toast({ title: "Acesso Negado", description: "Você precisa estar logada para enviar fotos.", variant: "destructive" });
+      return;
+    }
+
     if (!storage) {
-      toast({ title: "Serviço de imagens indisponível", variant: "destructive" });
+      toast({ title: "Serviço Indisponível", description: "O serviço de imagens não foi inicializado.", variant: "destructive" });
       return;
     }
     
@@ -62,8 +68,10 @@ export function AdminCategories() {
     } catch (error: any) {
       console.error("Erro upload categoria:", error);
       toast({ 
-        title: "Erro ao carregar imagem", 
-        description: error.message || "Verifique sua conexão e tente novamente.",
+        title: "Erro no upload", 
+        description: error.message?.includes('permission') 
+          ? "Sem permissão para salvar no servidor. Verifique se as regras de Storage foram aplicadas."
+          : "Verifique sua conexão e tente novamente.",
         variant: "destructive" 
       });
     } finally {
@@ -107,7 +115,6 @@ export function AdminCategories() {
   const handleDelete = (id: string, name: string) => {
     if (!id) return;
     
-    // Removido window.confirm() — não funciona de forma confiável em ambientes de Workstation/Studio
     try {
       const categoryRef = doc(db, 'categories', id);
       deleteDocumentNonBlocking(categoryRef);
@@ -178,7 +185,7 @@ export function AdminCategories() {
               disabled={!newCat || uploading}
               className="h-16 rounded-full px-10 bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <Plus className="h-5 w-5" /> Criar Categoria
+              {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />} Criar Categoria
             </button>
           </div>
         </div>
@@ -278,7 +285,7 @@ export function AdminCategories() {
           <DialogFooter className="p-8 bg-secondary/20 flex gap-3">
             <button onClick={() => setEditingCategory(null)} className="rounded-full px-6 h-12 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors">Cancelar</button>
             <Button onClick={handleUpdate} disabled={uploading} className="rounded-full px-8 bg-primary text-white h-12 text-[10px] font-bold uppercase tracking-widest shadow-lg">
-              <Save className="mr-2 h-4 w-4" /> Salvar Alterações
+              {uploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Alterações
             </Button>
           </DialogFooter>
         </DialogContent>
