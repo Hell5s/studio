@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -55,7 +54,6 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
 
   return (
     <div className="relative">
-      {/* Desktop: Grid 2 colunas estilo Kaisan */}
       <div className="hidden md:grid grid-cols-2 gap-2">
         {images.map((img, idx) => (
           <div
@@ -74,7 +72,6 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         ))}
       </div>
 
-      {/* Mobile: Empilhado verticalmente */}
       <div className="flex flex-col md:hidden gap-1">
         {images.map((img, idx) => (
           <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F5F5F5]">
@@ -90,17 +87,16 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         ))}
       </div>
 
-      {/* Botão Favorito flutuando - estilo Kaisan - Z-INDEX 20 */}
       <button
         onClick={handleToggleFavorite}
         className={cn(
-          "absolute top-4 right-4 h-12 w-12 rounded-full flex items-center justify-center transition-all z-20 shadow-lg border",
+          "absolute top-4 right-4 h-10 md:h-12 w-10 md:w-12 rounded-full flex items-center justify-center transition-all z-20 shadow-lg border",
           isFavorited
             ? "bg-primary text-white border-primary"
             : "bg-white/90 text-gray-400 border-gray-200 hover:border-primary hover:text-primary"
         )}
       >
-        <Heart className={cn("h-6 w-6", isFavorited && "fill-current")} />
+        <Heart className={cn("h-5 md:h-6 w-5 md:w-6", isFavorited && "fill-current")} />
       </button>
     </div>
   );
