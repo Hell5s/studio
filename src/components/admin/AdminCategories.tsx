@@ -107,7 +107,7 @@ export function AdminCategories() {
   const handleDelete = (id: string, name: string) => {
     if (!id) return;
     
-    if (window.confirm(`Excluir permanentemente a categoria "${name}"?`)) {
+    if (window.confirm(`Deseja remover permanentemente a categoria "${name}"?`)) {
       try {
         const categoryRef = doc(db, 'categories', id);
         deleteDocumentNonBlocking(categoryRef);
@@ -204,7 +204,7 @@ export function AdminCategories() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-60" />
                 
-                <div className="absolute top-4 right-4 flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
+                <div className="absolute top-4 right-4 flex gap-2 z-20">
                    <button 
                     type="button"
                     onClick={(e) => {
@@ -277,8 +277,8 @@ export function AdminCategories() {
             </div>
           </div>
           <DialogFooter className="p-8 bg-secondary/20 flex gap-3">
-            <Button variant="ghost" onClick={() => setEditingCategory(null)} className="rounded-full px-6 text-[10px] font-bold uppercase tracking-widest">Cancelar</Button>
-            <Button onClick={handleUpdate} disabled={uploading} className="rounded-full px-8 bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg">
+            <button onClick={() => setEditingCategory(null)} className="rounded-full px-6 h-12 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors">Cancelar</button>
+            <Button onClick={handleUpdate} disabled={uploading} className="rounded-full px-8 bg-primary text-white h-12 text-[10px] font-bold uppercase tracking-widest shadow-lg">
               <Save className="mr-2 h-4 w-4" /> Salvar Alterações
             </Button>
           </DialogFooter>
