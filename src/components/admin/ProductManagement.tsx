@@ -12,11 +12,7 @@ import {
   XCircle,
   Package,
   ArrowUpDown,
-  ExternalLink,
-  Star,
-  X,
-  Copy,
-  Plus
+  Copy
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
@@ -44,7 +40,10 @@ export function ProductManagement() {
     if (!products) return [];
     const s = searchTerm.toLowerCase().trim();
     if (!s) return products;
-    return products.filter(p => p.name?.toLowerCase().includes(s) || p.category?.toLowerCase().includes(s));
+    return products.filter(p => 
+      p.name?.toLowerCase().includes(s) || 
+      p.category?.toLowerCase().includes(s)
+    );
   }, [products, searchTerm]);
 
   const handleDuplicate = async (p: any) => {
@@ -60,9 +59,12 @@ export function ProductManagement() {
 
   const handleDelete = (id: string, name: string) => {
     if (!id) return;
-    if (window.confirm(`Deseja remover permanentemente "${name}" do catálogo?`)) {
+    // Removido window.confirm por instabilidade no Studio
+    try {
       deleteDocumentNonBlocking(doc(db, 'products', id));
       toast({ title: "Produto removido com sucesso" });
+    } catch (e: any) {
+      toast({ title: "Erro ao excluir", variant: "destructive" });
     }
   };
 

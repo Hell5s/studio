@@ -107,14 +107,13 @@ export function AdminCategories() {
   const handleDelete = (id: string, name: string) => {
     if (!id) return;
     
-    if (window.confirm(`Deseja remover permanentemente a categoria "${name}"?`)) {
-      try {
-        const categoryRef = doc(db, 'categories', id);
-        deleteDocumentNonBlocking(categoryRef);
-        toast({ title: "Categoria removida" });
-      } catch (error: any) {
-        toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
-      }
+    // Removido window.confirm() — não funciona de forma confiável em ambientes de Workstation/Studio
+    try {
+      const categoryRef = doc(db, 'categories', id);
+      deleteDocumentNonBlocking(categoryRef);
+      toast({ title: "Categoria removida com sucesso!" });
+    } catch (error: any) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
     }
   };
 
