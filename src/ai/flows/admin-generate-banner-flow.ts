@@ -45,7 +45,7 @@ const generateBannerFlow = ai.defineFlow(
         prompt: refinedPrompt,
         config: {
           aspectRatio: input.aspectRatio,
-          responseModalities: ['TEXT', 'IMAGE'],
+          responseModalities: ['IMAGE'],
           safetySettings: [
             { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
             { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -56,7 +56,7 @@ const generateBannerFlow = ai.defineFlow(
       });
 
       if (!media?.url) {
-        throw new Error('A IA não conseguiu gerar a imagem para este prompt.');
+        throw new Error('A IA não conseguiu gerar a imagem. Isso pode ocorrer se o prompt for considerado sensível ou se o modelo estiver instável.');
       }
 
       return {
@@ -64,6 +64,12 @@ const generateBannerFlow = ai.defineFlow(
       };
     } catch (error: any) {
       console.error('Erro na geração Imagen:', error);
+      
+      // Mensagem específica para erro de modelo não encontrado (comum em Genkit)
+      if (error.message?.includes('404') || error.message?.toLowerCase().includes('not found')) {
+        throw new Error('O modelo Imagen 3 não está disponível com sua chave atual ou nesta região.');
+      }
+
       throw new Error(`Falha na IA: ${error.message || 'Erro de conexão'}`);
     }
   }
