@@ -172,7 +172,7 @@ function StorefrontContent() {
         <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
 
         {/* Seção de Vitrine (Novidades ou Categoria Filtrada) */}
-        <section id="vitrine" className="container mx-auto px-4 md:px-6 py-12 md:py-32 overflow-hidden scroll-mt-24">
+        <section id="vitrine" className="container mx-auto px-4 md:px-6 py-8 md:py-16 overflow-hidden scroll-mt-24">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-4">
             <div className="space-y-2 md:space-y-4">
               <div className="flex items-center gap-3">
@@ -223,7 +223,7 @@ function StorefrontContent() {
         </section>
 
         {/* Grade de Coleções / Categorias - MOVIDO PARA BAIXO DO LANÇAMENTOS */}
-        <section id="colecoes" className="bg-secondary/10 py-12 md:py-32">
+        <section id="colecoes" className="bg-secondary/10 py-8 md:py-16">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-8 md:mb-20 space-y-2 md:space-y-4">
               <div className="flex items-center justify-center gap-3">
@@ -273,7 +273,7 @@ function StorefrontContent() {
         </section>
 
         {/* Banner de Campanha Split */}
-        <section className="py-12 md:py-40">
+        <section className="py-8 md:py-24">
           <div className="container mx-auto px-4 md:px-6">
             <div className="grid lg:grid-cols-2 gap-8 md:gap-20 items-center">
               <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[4rem] overflow-hidden shadow-premium group">
@@ -306,7 +306,7 @@ function StorefrontContent() {
         </section>
 
         {/* Grid Geral de Produtos */}
-        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-12 md:py-32 bg-secondary/5 rounded-[2rem] md:rounded-[4rem]">
+        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-8 md:py-16 bg-secondary/5 rounded-[2rem] md:rounded-[4rem]">
           <div className="text-center space-y-3 md:space-y-6 mb-8 md:mb-20">
             <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Seleção Premium</span>
             <h3 className="text-2xl md:text-6xl font-headline font-bold text-primary">Favoritos da Temporada</h3>
