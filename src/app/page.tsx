@@ -17,7 +17,7 @@ import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
-import { Loader2, Sparkles, X } from 'lucide-react';
+import { Loader2, Sparkles, X, ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function StorefrontContent() {
@@ -135,8 +135,22 @@ function StorefrontContent() {
       setSelectedCategory(null);
     } else {
       setSelectedCategory(catName);
-      const el = document.getElementById('vitrine');
-      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Rola para a "aba" de produtos
+      setTimeout(() => {
+        const el = document.getElementById('vitrine');
+        if (el) {
+          const offset = 100;
+          const bodyRect = document.body.getBoundingClientRect().top;
+          const elementRect = el.getBoundingClientRect().top;
+          const elementPosition = elementRect - bodyRect;
+          const offsetPosition = elementPosition - offset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
     }
   };
 
@@ -168,29 +182,40 @@ function StorefrontContent() {
       />
 
       <main>
-        <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
+        {!selectedCategory && <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />}
 
-        {/* Seção de Vitrine (Novidades ou Categoria Filtrada) */}
-        <section id="vitrine" className="container mx-auto px-4 md:px-6 pt-8 md:pt-16 pb-4 md:pb-8 overflow-hidden scroll-mt-24">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-4">
-            <div className="space-y-2 md:space-y-4">
+        {/* Seção de Vitrine (Novidades ou Categoria Filtrada - "ABA") */}
+        <section id="vitrine" className={cn(
+          "container mx-auto px-4 md:px-6 pb-8 md:pb-12 overflow-hidden scroll-mt-24 transition-all duration-700",
+          selectedCategory ? "pt-24 md:pt-32" : "pt-8 md:pt-16"
+        )}>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6">
+            <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-px w-6 md:w-8 bg-accent" />
+                <div className="h-px w-8 md:w-12 bg-accent" />
                 <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent">
-                  {selectedCategory ? 'Explorando' : 'Novidades'}
+                  {selectedCategory ? 'Explorando Coleção' : 'Edição Especial'}
                 </span>
               </div>
-              <h2 className="text-3xl md:text-7xl font-headline font-bold text-primary text-editorial">
+              <h2 className="text-4xl md:text-8xl font-headline font-bold text-primary text-editorial leading-[0.85]">
                 {selectedCategory || 'Lançamentos'}
               </h2>
+              {selectedCategory && (
+                <p className="text-sm md:text-lg text-muted-foreground italic font-light">
+                  {featuredProducts.length} {featuredProducts.length === 1 ? 'peça encontrada' : 'peças encontradas'} nesta aba.
+                </p>
+              )}
             </div>
             
             {selectedCategory && (
               <button 
                 onClick={() => setSelectedCategory(null)}
-                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-accent border border-accent/20 px-6 py-3 rounded-full hover:bg-accent hover:text-white transition-all shadow-sm"
+                className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-accent transition-all group"
               >
-                <X className="h-3.5 w-3.5" /> Ver Tudo
+                <div className="h-10 w-10 rounded-full border border-primary/10 flex items-center justify-center group-hover:border-accent group-hover:bg-accent group-hover:text-white transition-all">
+                  <ArrowLeft className="h-4 w-4" />
+                </div>
+                <span>Voltar para Início</span>
               </button>
             )}
           </div>
@@ -201,10 +226,17 @@ function StorefrontContent() {
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
           ) : (
-            <div className="flex gap-4 md:grid md:grid-cols-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
+            <div className={cn(
+              "transition-all duration-700",
+              selectedCategory 
+                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-12" 
+                : "flex gap-4 md:grid md:grid-cols-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory"
+            )}>
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
-                  <div key={product.id} className="min-w-[70%] md:min-w-0 flex-shrink-0 snap-start">
+                  <div key={product.id} className={cn(
+                    !selectedCategory && "min-w-[75%] md:min-w-0 flex-shrink-0 snap-start"
+                  )}>
                     <ProductCard 
                       {...product} 
                       onAddToCart={() => addToCart(product)}
@@ -212,9 +244,10 @@ function StorefrontContent() {
                   </div>
                 ))
               ) : (
-                <div className="col-span-full w-full py-20 text-center border-2 border-dashed border-primary/5 rounded-[2rem] md:rounded-[3rem]">
-                  <p className="text-muted-foreground italic font-light text-sm">Nenhuma peça encontrada para esta seleção.</p>
-                  <button onClick={() => setSelectedCategory(null)} className="mt-4 text-xs font-bold uppercase text-accent underline underline-offset-4">Limpar Filtros</button>
+                <div className="col-span-full w-full py-32 text-center border-2 border-dashed border-primary/5 rounded-[3rem]">
+                  <Sparkles className="h-10 w-10 text-accent/20 mx-auto mb-4" />
+                  <p className="text-muted-foreground italic font-light text-base">Nenhuma peça disponível no momento para esta aba.</p>
+                  <button onClick={() => setSelectedCategory(null)} className="mt-6 text-xs font-bold uppercase text-accent underline underline-offset-8">Explorar outras coleções</button>
                 </div>
               )}
             </div>
@@ -222,41 +255,43 @@ function StorefrontContent() {
         </section>
 
         {/* Grade de Coleções / Categorias */}
-        <section id="colecoes" className="bg-secondary/10 pt-4 md:pt-8 pb-8 md:pb-16">
+        <section id="colecoes" className="bg-secondary/10 pt-4 md:pt-8 pb-12 md:pb-20">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-8 md:mb-20 space-y-2 md:space-y-4">
+            <div className="text-center mb-10 md:mb-20 space-y-3 md:space-y-6">
               <div className="flex items-center justify-center gap-3">
                  <div className="h-px w-6 bg-accent/40" />
                  <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Categorias</span>
                  <div className="h-px w-6 bg-accent/40" />
               </div>
-              <h2 className="text-3xl md:text-6xl font-headline font-bold text-primary">Navegue por Estilo</h2>
-              <p className="text-sm md:text-lg text-muted-foreground italic font-light max-w-xl mx-auto">
-                Selecione um estilo para visualizar as peças exclusivas da nossa curadoria.
+              <h2 className="text-3xl md:text-7xl font-headline font-bold text-primary">Navegue por Estilo</h2>
+              <p className="text-sm md:text-xl text-muted-foreground italic font-light max-w-xl mx-auto">
+                Escolha uma aba para filtrar as peças que mais combinam com o seu momento.
               </p>
             </div>
             
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-8">
               {categories && categories.length > 0 ? (
                 categories.map((col) => (
                   <div 
                     key={col.id} 
                     onClick={() => handleSelectCategory(col.name)}
                     className={cn(
-                      "group relative aspect-[4/5] rounded-[1.2rem] md:rounded-[2.5rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-500",
-                      selectedCategory === col.name ? "border-accent ring-4 ring-accent/10 scale-[1.02]" : "border-transparent"
+                      "group relative aspect-[4/5] rounded-[1.5rem] md:rounded-[3.5rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-700",
+                      selectedCategory === col.name 
+                        ? "border-accent ring-8 ring-accent/5 scale-[1.05] z-10" 
+                        : "border-transparent opacity-80 hover:opacity-100 hover:scale-[1.02]"
                     )}
                   >
                     <img 
                       src={col.image || 'https://picsum.photos/seed/placeholder/400/500'} 
-                      className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" 
+                      className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" 
                       alt={col.name} 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent" />
-                    <div className="absolute bottom-3 left-3 right-3 md:bottom-10 md:left-10 md:right-10">
-                      <h3 className="text-lg md:text-2xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-1 md:mb-2">{col.name}</h3>
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/20 to-transparent" />
+                    <div className="absolute bottom-6 left-6 right-6 md:bottom-12 md:left-12 md:right-12">
+                      <h3 className="text-xl md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-2 md:mb-4">{col.name}</h3>
                       <div className={cn(
-                        "h-0.5 bg-accent transition-all duration-500",
+                        "h-1 bg-accent transition-all duration-700",
                         selectedCategory === col.name ? "w-full" : "w-0 group-hover:w-full"
                       )} />
                     </div>
@@ -264,7 +299,7 @@ function StorefrontContent() {
                 ))
               ) : (
                 [1,2,3,4,5].map(i => (
-                   <div key={i} className="aspect-[4/5] rounded-[2.5rem] bg-secondary animate-pulse" />
+                   <div key={i} className="aspect-[4/5] rounded-[3rem] bg-secondary animate-pulse" />
                 ))
               )}
             </div>
@@ -272,48 +307,50 @@ function StorefrontContent() {
         </section>
 
         {/* Banner de Campanha Split */}
-        <section className="py-8 md:py-24">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="grid lg:grid-cols-2 gap-8 md:gap-20 items-center">
-              <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[4rem] overflow-hidden shadow-premium group">
-                <img 
-                  src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80" 
-                  className="object-cover w-full h-full transition-transform duration-[2s] group-hover:scale-110" 
-                  alt="Essência Toda Bela" 
-                />
-                <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
-              </div>
-              <div className="space-y-4 md:space-y-10">
-                <div className="space-y-3 md:space-y-6">
-                  <span className="text-accent text-[9px] md:text-[11px] font-bold uppercase tracking-[0.5em]">Essência Toda Bela</span>
-                  <h3 className="text-3xl md:text-8xl font-headline font-bold text-primary leading-tight">
-                    Moda com <br /> <span className="italic font-light">Propósito</span>
-                  </h3>
-                  <p className="text-sm md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
-                    Cada peça em nossa boutique é selecionada para elevar sua confiança e refletir sua autenticidade.
-                  </p>
+        {!selectedCategory && (
+          <section className="py-12 md:py-24">
+            <div className="container mx-auto px-4 md:px-6">
+              <div className="grid lg:grid-cols-2 gap-12 md:gap-24 items-center">
+                <div className="relative aspect-[4/5] rounded-[2.5rem] md:rounded-[5rem] overflow-hidden shadow-premium group">
+                  <img 
+                    src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80" 
+                    className="object-cover w-full h-full transition-transform duration-[2.5s] group-hover:scale-110" 
+                    alt="Essência Toda Bela" 
+                  />
+                  <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
                 </div>
-                <button 
-                  onClick={() => document.getElementById('colecoes')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="w-full sm:w-auto rounded-full border-2 border-primary px-6 py-4 md:px-12 md:py-6 text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all shadow-xl"
-                >
-                  Conheça a Coleção
-                </button>
+                <div className="space-y-6 md:space-y-12">
+                  <div className="space-y-4 md:space-y-8">
+                    <span className="text-accent text-[10px] md:text-[12px] font-bold uppercase tracking-[0.6em]">Essência Toda Bela</span>
+                    <h3 className="text-4xl md:text-[7rem] font-headline font-bold text-primary leading-[0.9] tracking-tighter">
+                      Moda com <br /> <span className="italic font-light">Propósito</span>
+                    </h3>
+                    <p className="text-base md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
+                      Cada peça em nossa boutique é selecionada para elevar sua confiança e refletir sua autenticidade em cada movimento.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => document.getElementById('colecoes')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="w-full sm:w-auto rounded-full border-2 border-primary px-10 py-5 md:px-16 md:py-8 text-[11px] md:text-base font-bold uppercase tracking-[0.4em] hover:bg-primary hover:text-white transition-all shadow-2xl"
+                  >
+                    Conheça a Coleção
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Grid Geral de Produtos */}
-        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-8 md:py-16 bg-secondary/5 rounded-[2rem] md:rounded-[4rem]">
-          <div className="text-center space-y-3 md:space-y-6 mb-8 md:mb-20">
-            <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Seleção Premium</span>
-            <h3 className="text-2xl md:text-6xl font-headline font-bold text-primary">Favoritos da Temporada</h3>
-            <div className="h-0.5 w-12 md:w-20 bg-accent mx-auto" />
+        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-12 md:py-20 bg-secondary/5 rounded-[3rem] md:rounded-[5rem]">
+          <div className="text-center space-y-4 md:space-y-8 mb-12 md:mb-24">
+            <span className="text-[10px] md:text-[12px] font-bold uppercase tracking-[0.5em] text-accent">Seleção Premium</span>
+            <h3 className="text-3xl md:text-7xl font-headline font-bold text-primary">Favoritos da Temporada</h3>
+            <div className="h-0.5 w-16 md:w-24 bg-accent mx-auto" />
           </div>
-          <div className="flex gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
+          <div className="flex gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
             {latestProducts.map((product) => (
-              <div key={product.id} className="min-w-[45%] md:min-w-0 flex-shrink-0 snap-start">
+              <div key={product.id} className="min-w-[50%] md:min-w-0 flex-shrink-0 snap-start">
                 <ProductCard 
                   {...product} 
                   onAddToCart={() => addToCart(product)}
