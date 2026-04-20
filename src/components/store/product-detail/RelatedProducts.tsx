@@ -18,7 +18,7 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
           <div className="h-[1px] w-12 bg-accent/30" />
         </div>
         <h3 className="text-4xl md:text-6xl font-headline font-bold text-primary">Complete seu <span className="italic font-light">Universo</span></h3>
-        <p className="text-sm md:text-lg text-muted-foreground italic font-light max-w-xl">Peças selecionadas pela nossa curadoria para criar combinações irresistíveis com sua escolha atual.</p>
+        <p className="text-sm md:text-lg text-muted-foreground italic font-light max-w-xl">Peças selecionadas pelo nosso time para criar combinações irresistíveis com sua escolha atual.</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12">

@@ -34,7 +34,7 @@ const INFO_CONTENT: Record<string, { title: string; subtitle: string; content: R
     subtitle: 'O movimento por trás da marca',
     content: (
       <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
-        <p>A Toda Bela nasceu do desejo de celebrar a potência da mulher brasileira através da moda. Iniciamos nossa jornada como uma pequena curadoria e hoje somos um destino para mulheres que buscam expressar sua confiança com sofisticação.</p>
+        <p>A Toda Bela nasceu do desejo de celebrar a potência da mulher brasileira através da moda. Iniciamos nossa jornada como uma pequena marca e hoje somos um destino para mulheres que buscam expressar sua confiança com sofisticação.</p>
         <p>Nossa essência reside no equilíbrio entre o clássico e o contemporâneo, criando peças que não apenas vestem, mas acompanham momentos de conquista e celebração.</p>
       </div>
     )

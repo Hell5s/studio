@@ -99,7 +99,7 @@ export default function CategoryPage() {
               {categoryName || (slug as string).replace(/-/g, ' ')}
             </h1>
             <p className="text-base md:text-2xl text-muted-foreground font-light italic max-w-2xl leading-relaxed">
-              Curadoria exclusiva Toda Bela para elevar sua confiança com sofisticação.
+              Seleção exclusiva Toda Bela para elevar sua confiança com sofisticação.
             </p>
           </div>
         </section>
