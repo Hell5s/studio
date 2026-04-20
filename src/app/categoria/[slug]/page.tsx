@@ -8,7 +8,6 @@ import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
 import { ProductCard } from '@/components/store/ProductCard';
-import { Newsletter } from '@/components/store/Newsletter';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { FavoritesDialog } from '@/components/store/FavoritesDialog';
@@ -131,8 +130,6 @@ export default function CategoryPage() {
             </div>
           )}
         </section>
-
-        <Newsletter />
       </main>
 
       <Footer />

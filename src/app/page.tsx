@@ -9,7 +9,6 @@ import Link from 'next/link';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
-import { Newsletter } from '@/components/store/Newsletter';
 import { Footer } from '@/components/store/Footer';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { LoginDialog } from '@/components/auth/LoginDialog';
@@ -18,7 +17,7 @@ import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
-import { Loader2, Sparkles, X, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function StorefrontContent() {
@@ -131,30 +130,6 @@ function StorefrontContent() {
     }
   };
 
-  const handleSelectCategory = (catName: string) => {
-    if (selectedCategory === catName) {
-      setSelectedCategory(null);
-    } else {
-      setSelectedCategory(catName);
-      // Rola para a "aba" de produtos
-      setTimeout(() => {
-        const el = document.getElementById('vitrine');
-        if (el) {
-          const offset = 100;
-          const bodyRect = document.body.getBoundingClientRect().top;
-          const elementRect = el.getBoundingClientRect().top;
-          const elementPosition = elementRect - bodyRect;
-          const offsetPosition = elementPosition - offset;
-
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: 'smooth'
-          });
-        }
-      }, 100);
-    }
-  };
-
   // Se estiver no modo Admin, exibe o Dashboard completo
   if (isAdminView && isAdmin) {
     return (
@@ -185,7 +160,7 @@ function StorefrontContent() {
       <main>
         {!selectedCategory && <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />}
 
-        {/* Seção de Vitrine (Novidades ou Categoria Filtrada - "ABA") */}
+        {/* Seção de Vitrine */}
         <section id="vitrine" className={cn(
           "container mx-auto px-4 md:px-6 pb-8 md:pb-12 overflow-hidden scroll-mt-24 transition-all duration-700",
           selectedCategory ? "pt-24 md:pt-32" : "pt-8 md:pt-16"
@@ -201,11 +176,6 @@ function StorefrontContent() {
               <h2 className="text-4xl md:text-8xl font-headline font-bold text-primary text-editorial leading-[0.85]">
                 {selectedCategory || 'Lançamentos'}
               </h2>
-              {selectedCategory && (
-                <p className="text-sm md:text-lg text-muted-foreground italic font-light">
-                  {featuredProducts.length} {featuredProducts.length === 1 ? 'peça encontrada' : 'peças encontradas'} nesta aba.
-                </p>
-              )}
             </div>
             
             {selectedCategory && (
@@ -247,8 +217,8 @@ function StorefrontContent() {
               ) : (
                 <div className="col-span-full w-full py-32 text-center border-2 border-dashed border-primary/5 rounded-[3rem]">
                   <Sparkles className="h-10 w-10 text-accent/20 mx-auto mb-4" />
-                  <p className="text-muted-foreground italic font-light text-base">Nenhuma peça disponível no momento para esta aba.</p>
-                  <button onClick={() => setSelectedCategory(null)} className="mt-6 text-xs font-bold uppercase text-accent underline underline-offset-8">Explorar outras coleções</button>
+                  <p className="text-muted-foreground italic font-light text-base">Nenhuma peça disponível no momento.</p>
+                  <button onClick={() => setSelectedCategory(null)} className="mt-6 text-xs font-bold uppercase text-accent underline underline-offset-8">Explorar coleções</button>
                 </div>
               )}
             </div>
@@ -266,7 +236,7 @@ function StorefrontContent() {
               </div>
               <h2 className="text-3xl md:text-7xl font-headline font-bold text-primary">Navegue por Estilo</h2>
               <p className="text-sm md:text-xl text-muted-foreground italic font-light max-w-xl mx-auto">
-                Escolha uma aba para filtrar as peças que mais combinam com o seu momento.
+                Escolha uma seção para filtrar as peças que mais combinam com o seu momento.
               </p>
             </div>
             
@@ -363,8 +333,6 @@ function StorefrontContent() {
             ))}
           </div>
         </section>
-
-        <Newsletter />
       </main>
 
       <Footer />

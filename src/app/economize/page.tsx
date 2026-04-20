@@ -7,7 +7,6 @@ import { collection, query, orderBy } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
 import { ProductCard } from '@/components/store/ProductCard';
-import { Newsletter } from '@/components/store/Newsletter';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
 import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
@@ -44,7 +43,6 @@ export default function EconomizePage() {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-    // Removido o setIsCheckoutOpen(true) para não abrir o carrinho automaticamente
   };
 
   const updateQuantity = (id: string, delta: number) => {
@@ -114,8 +112,6 @@ export default function EconomizePage() {
             </div>
           )}
         </section>
-
-        <Newsletter />
       </main>
 
       <Footer />

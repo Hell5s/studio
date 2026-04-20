@@ -6,7 +6,6 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@
 import { collection, query, where, orderBy, limit, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
-import { Newsletter } from '@/components/store/Newsletter';
 import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, RefreshCw } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -269,8 +268,6 @@ export default function MeusPedidosPage() {
             </div>
           )}
         </section>
-
-        <Newsletter />
       </main>
 
       <Footer />
