@@ -114,7 +114,6 @@ function StorefrontContent() {
   }, [storeProducts, searchQuery, selectedCategory]);
 
   const featuredProducts = useMemo(() => {
-    // Se tiver categoria selecionada, mostramos os filtrados. Caso contrário, apenas os destaques originais.
     if (selectedCategory) return filteredProducts;
     return filteredProducts.filter(p => p.featured || p.badge === 'Destaque' || p.badge === 'Lançamento').slice(0, 8);
   }, [filteredProducts, selectedCategory]);
@@ -222,7 +221,7 @@ function StorefrontContent() {
           )}
         </section>
 
-        {/* Grade de Coleções / Categorias - MOVIDO PARA BAIXO DO LANÇAMENTOS */}
+        {/* Grade de Coleções / Categorias */}
         <section id="colecoes" className="bg-secondary/10 pt-4 md:pt-8 pb-8 md:pb-16">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-8 md:mb-20 space-y-2 md:space-y-4">
