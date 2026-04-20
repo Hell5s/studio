@@ -7,50 +7,48 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
-    }
-
-    // Produtos: Leitura pública, escrita apenas Admin
+    // Produtos: Leitura pública, escrita para usuários logados
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
       
       match /reviews/{reviewId} {
         allow read: if true;
-        allow create: if true; // Aberto para permitir avaliações de visitantes, conforme padrão Kaisan
-        allow delete: if isAdmin();
+        allow create: if true;
+        allow delete: if isSignedIn();
       }
     }
     
+    // Categorias: Leitura pública, escrita para usuários logados
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
-    // Pedidos: Dono ou Admin
+    // Pedidos: Leitura e escrita para usuários logados
     match /orders/{orderId} {
       allow create: if isSignedIn();
-      allow read, update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow read, update, delete: if isSignedIn();
     }
 
     // Papéis Administrativos
     match /roles_admin/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
-      allow list: if isAdmin();
+      allow list: if isSignedIn();
     }
     
     // Banners e Newsletter
     match /banners/{bannerId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if request.auth != null;
     }
     
     match /newsletter_subscribers/{s} {
       allow create: if true;
-      allow read, delete: if isAdmin();
+      allow read, delete: if isSignedIn();
     }
 
+    // Favoritos: Apenas o dono pode ler/escrever
     match /users/{userId}/favorites/{favId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }

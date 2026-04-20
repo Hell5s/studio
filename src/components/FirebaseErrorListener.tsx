@@ -1,22 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 export function FirebaseErrorListener() {
-  const [error, setError] = useState<FirestorePermissionError | null>(null);
-
   useEffect(() => {
     const handleError = (error: FirestorePermissionError) => {
-      // Ignora erros de leitura — acontecem normalmente durante o carregamento
-      const operation = error.request?.method;
-      if (operation === 'list' || operation === 'get') {
-        console.warn('[Firebase] Permissão negada (ignorado):', error.message);
-        return;
-      }
-
-      setError(error);
+      // Apenas loga no console, nunca derruba a página
+      console.warn('[Firebase] Permissão negada:', error.request?.method, error.request?.path);
     };
 
     errorEmitter.on('permission-error', handleError);
@@ -25,9 +17,6 @@ export function FirebaseErrorListener() {
     };
   }, []);
 
-  if (error) {
-    throw error;
-  }
-
+  // Nunca joga erro para a tela
   return null;
 }
