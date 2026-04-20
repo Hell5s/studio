@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -6,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -62,7 +63,7 @@ export function AdminCategories() {
       });
     } finally {
       setUploading(false);
-      e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -76,7 +77,8 @@ export function AdminCategories() {
       name: newCat,
       image: newCatImage,
       order: (categories?.length || 0) + 1,
-      createdAt: new Date().toISOString()
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
     
     setNewCat('');
@@ -90,23 +92,33 @@ export function AdminCategories() {
     updateDocumentNonBlocking(doc(db, 'categories', editingCategory.id), {
       name: editName,
       image: editImage,
-      updatedAt: new Date().toISOString()
+      updatedAt: serverTimestamp()
     });
 
     toast({ title: "Categoria atualizada!" });
     setEditingCategory(null);
   };
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = (e: React.MouseEvent, id: string, name: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!id) return;
+    
     if (window.confirm(`Excluir permanentemente a categoria "${name}"?`)) {
-      const categoryRef = doc(db, 'categories', id);
-      deleteDocumentNonBlocking(categoryRef);
-      toast({ title: "Categoria removida" });
+      try {
+        const categoryRef = doc(db, 'categories', id);
+        deleteDocumentNonBlocking(categoryRef);
+        toast({ title: "Categoria removida com sucesso" });
+      } catch (error: any) {
+        toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+      }
     }
   };
 
-  const openEdit = (cat: any) => {
+  const openEdit = (e: React.MouseEvent, cat: any) => {
+    e.preventDefault();
+    e.stopPropagation();
     setEditingCategory(cat);
     setEditName(cat.name);
     setEditImage(cat.image || '');
@@ -164,8 +176,8 @@ export function AdminCategories() {
 
             <button 
               onClick={handleAdd} 
-              disabled={!newCat}
-              className="h-16 rounded-full px-10 bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+              disabled={!newCat || uploading}
+              className="h-16 rounded-full px-10 bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <Plus className="h-5 w-5" /> Criar Categoria
             </button>
@@ -194,13 +206,13 @@ export function AdminCategories() {
                 
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                    <button 
-                    onClick={() => openEdit(cat)}
+                    onClick={(e) => openEdit(e, cat)}
                     className="h-10 w-10 rounded-full bg-white/90 text-primary flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all"
                    >
                      <Edit className="h-4 w-4" />
                    </button>
                    <button 
-                    onClick={() => handleDelete(cat.id, cat.name)}
+                    onClick={(e) => handleDelete(e, cat.id, cat.name)}
                     className="h-10 w-10 rounded-full bg-white/90 text-red-500 flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white transition-all"
                    >
                      <Trash2 className="h-4 w-4" />
@@ -244,7 +256,7 @@ export function AdminCategories() {
                   <ImageIcon className="h-8 w-8 text-primary/20" />
                 )}
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <Upload className="text-white h-5 w-5" />
+                   {uploading ? <Loader2 className="animate-spin text-white" /> : <Upload className="text-white h-5 w-5" />}
                 </div>
                 <input type="file" ref={editFileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, true)} />
               </div>
@@ -256,7 +268,7 @@ export function AdminCategories() {
           </div>
           <DialogFooter className="p-8 bg-secondary/20 flex gap-3">
             <Button variant="ghost" onClick={() => setEditingCategory(null)} className="rounded-full px-6 text-[10px] font-bold uppercase tracking-widest">Cancelar</Button>
-            <Button onClick={handleUpdate} className="rounded-full px-8 bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg">
+            <Button onClick={handleUpdate} disabled={uploading} className="rounded-full px-8 bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg">
               <Save className="mr-2 h-4 w-4" /> Salvar Alterações
             </Button>
           </DialogFooter>
