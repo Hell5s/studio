@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -30,7 +29,6 @@ export function AdminCategories() {
   const [newCatImage, setNewCatImage] = useState('');
   const [uploading, setUploading] = useState(false);
   
-  // Estado para Edição
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [editName, setEditName] = useState('');
   const [editImage, setEditImage] = useState('');
@@ -40,11 +38,11 @@ export function AdminCategories() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !storage) return;
     
     setUploading(true);
     try {
-      const storageRef = ref(storage!, `categories/${Date.now()}-${file.name}`);
+      const storageRef = ref(storage, `categories/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
       
@@ -55,16 +53,22 @@ export function AdminCategories() {
       }
       
       toast({ title: "Imagem carregada com sucesso!" });
-    } catch (error) {
-      toast({ title: "Erro ao carregar imagem", variant: "destructive" });
+    } catch (error: any) {
+      console.error("Erro upload categoria:", error);
+      toast({ 
+        title: "Erro ao carregar imagem", 
+        description: error.message || "Tente novamente.",
+        variant: "destructive" 
+      });
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 
   const handleAdd = () => {
     if (!newCat) {
-      toast({ title: "Nome obrigatório", description: "Dê um nome para a categoria.", variant: "destructive" });
+      toast({ title: "Nome obrigatório", variant: "destructive" });
       return;
     }
     
@@ -77,7 +81,7 @@ export function AdminCategories() {
     
     setNewCat('');
     setNewCatImage('');
-    toast({ title: "Categoria criada!", description: `${newCat} agora faz parte do seu catálogo.` });
+    toast({ title: "Categoria criada!" });
   };
 
   const handleUpdate = () => {
@@ -95,8 +99,9 @@ export function AdminCategories() {
 
   const handleDelete = (id: string, name: string) => {
     if (!id) return;
-    if (window.confirm(`Excluir a categoria "${name}" permanentemente? Isso pode afetar a exibição de produtos vinculados.`)) {
-      deleteDocumentNonBlocking(doc(db, 'categories', id));
+    if (window.confirm(`Excluir permanentemente a categoria "${name}"?`)) {
+      const categoryRef = doc(db, 'categories', id);
+      deleteDocumentNonBlocking(categoryRef);
       toast({ title: "Categoria removida" });
     }
   };
@@ -114,7 +119,6 @@ export function AdminCategories() {
         <p className="text-sm text-muted-foreground italic font-light">Organize seu catálogo por estilos e coleções visuais.</p>
       </div>
 
-      {/* Novo Cadastro */}
       <Card className="p-10 border-none shadow-2xl bg-white rounded-[3rem] relative overflow-hidden">
         <div className="absolute top-0 right-0 p-10 opacity-[0.03]">
           <Layers className="h-40 w-40" />
@@ -169,7 +173,6 @@ export function AdminCategories() {
         </div>
       </Card>
 
-      {/* Listagem */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
         {isLoading ? (
           <div className="col-span-full py-32 text-center">
@@ -189,7 +192,7 @@ export function AdminCategories() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-60" />
                 
-                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                    <button 
                     onClick={() => openEdit(cat)}
                     className="h-10 w-10 rounded-full bg-white/90 text-primary flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all"
@@ -222,7 +225,6 @@ export function AdminCategories() {
         )}
       </div>
 
-      {/* Modal de Edição */}
       <Dialog open={!!editingCategory} onOpenChange={(o) => !o && setEditingCategory(null)}>
         <DialogContent className="rounded-[2.5rem] bg-[#FFF9F7] border-none shadow-2xl p-0 overflow-hidden">
           <div className="bg-primary p-8 text-white">
