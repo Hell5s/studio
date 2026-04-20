@@ -19,7 +19,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, query, orderBy, doc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -44,10 +44,22 @@ export function ProductManagement() {
   }, [products, searchTerm]);
 
   const handleDuplicate = async (p: any) => {
-    const newProduct = { ...p, id: `prod-${Date.now()}`, name: `${p.name} (Cópia)`, createdAt: new Date().toISOString() };
-    delete newProduct.id; // Firestore auto-id se preferir, ou usar nossa lógica
-    await addDocumentNonBlocking(collection(db, 'products'), newProduct);
+    const newProduct = { 
+      ...p, 
+      name: `${p.name} (Cópia)`, 
+      createdAt: new Date().toISOString() 
+    };
+    // Remover o ID original para o Firestore gerar um novo ou usar nossa lógica non-blocking
+    addDocumentNonBlocking(collection(db, 'products'), newProduct);
     toast({ title: "Produto duplicado!" });
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    if (!id) return;
+    if (window.confirm(`Deseja remover permanentemente "${name}" do catálogo?`)) {
+      deleteDocumentNonBlocking(doc(db, 'products', id));
+      toast({ title: "Produto removido com sucesso" });
+    }
   };
 
   return (
@@ -110,8 +122,8 @@ export function ProductManagement() {
                   <td className="px-8 py-6 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={() => handleDuplicate(p)} className="p-2 text-muted-foreground hover:text-accent" title="Duplicar"><Copy className="h-4 w-4" /></button>
-                      <button onClick={() => setEditingProduct(p)} className="p-2 text-muted-foreground hover:text-primary"><Edit className="h-4 w-4" /></button>
-                      <button onClick={() => confirm(`Excluir ${p.name}?`) && deleteDocumentNonBlocking(doc(db, 'products', p.id))} className="p-2 text-red-200 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                      <button onClick={() => setEditingProduct(p)} className="p-2 text-muted-foreground hover:text-primary" title="Editar"><Edit className="h-4 w-4" /></button>
+                      <button onClick={() => handleDelete(p.id, p.name)} className="p-2 text-red-200 hover:text-red-500" title="Excluir"><Trash2 className="h-4 w-4" /></button>
                     </div>
                   </td>
                 </tr>

@@ -93,8 +93,9 @@ export function AdminCategories() {
     setEditingCategory(null);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Excluir esta categoria permanentemente? Isso pode afetar a exibição de produtos vinculados.")) {
+  const handleDelete = (id: string, name: string) => {
+    if (!id) return;
+    if (window.confirm(`Excluir a categoria "${name}" permanentemente? Isso pode afetar a exibição de produtos vinculados.`)) {
       deleteDocumentNonBlocking(doc(db, 'categories', id));
       toast({ title: "Categoria removida" });
     }
@@ -157,13 +158,13 @@ export function AdminCategories() {
               />
             </div>
 
-            <Button 
+            <button 
               onClick={handleAdd} 
               disabled={!newCat}
-              className="h-16 rounded-full px-10 bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px]"
+              className="h-16 rounded-full px-10 bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
             >
-              <Plus className="mr-2 h-5 w-5" /> Criar Categoria
-            </Button>
+              <Plus className="h-5 w-5" /> Criar Categoria
+            </button>
           </div>
         </div>
       </Card>
@@ -196,7 +197,7 @@ export function AdminCategories() {
                      <Edit className="h-4 w-4" />
                    </button>
                    <button 
-                    onClick={() => handleDelete(cat.id)}
+                    onClick={() => handleDelete(cat.id, cat.name)}
                     className="h-10 w-10 rounded-full bg-white/90 text-red-500 flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white transition-all"
                    >
                      <Trash2 className="h-4 w-4" />
