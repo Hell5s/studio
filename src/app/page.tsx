@@ -197,7 +197,7 @@ function StorefrontContent() {
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
                   <div key={product.id} className={cn(
-                    !selectedCategory && "min-w-[70%] sm:min-w-[45%] md:min-w-0 flex-shrink-0 snap-start"
+                    !selectedCategory && "min-w-[75%] sm:min-w-[45%] md:min-w-0 flex-shrink-0 snap-start"
                   )}>
                     <ProductCard 
                       {...product} 
@@ -209,7 +209,7 @@ function StorefrontContent() {
                 <div className="col-span-full w-full py-24 md:py-32 text-center border-2 border-dashed border-primary/5 rounded-[2rem] md:rounded-[3rem]">
                   <Sparkles className="h-10 w-10 text-accent/20 mx-auto mb-4" />
                   <p className="text-muted-foreground italic font-light text-base px-6">Nenhuma peça disponível no momento.</p>
-                  <button onClick={() => setSelectedCategory(null)} className="mt-6 text-xs font-bold uppercase text-accent underline underline-offset-8">Explorar coleções</button>
+                  <button onClick={() => setSelectedCategory(null)} className="mt-6 text-xs font-bold uppercase text-accent underline underline-offset-8">Explorar seleções</button>
                 </div>
               )}
             </div>
@@ -312,7 +312,7 @@ function StorefrontContent() {
           </div>
           <div className="flex gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
             {latestProducts.map((product) => (
-              <div key={product.id} className="min-w-[65%] sm:min-w-[40%] md:min-w-0 flex-shrink-0 snap-start">
+              <div key={product.id} className="min-w-[70%] sm:min-w-[40%] md:min-w-0 flex-shrink-0 snap-start">
                 <ProductCard 
                   {...product} 
                   onAddToCart={() => addToCart(product)}
