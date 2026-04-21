@@ -154,18 +154,18 @@ function StorefrontContent() {
         {!selectedCategory && <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />}
 
         <section id="vitrine" className={cn(
-          "container mx-auto px-4 md:px-6 pb-4 md:pb-12 overflow-hidden scroll-mt-24 transition-all duration-700",
+          "container mx-auto px-4 md:px-6 pb-4 md:pb-8 overflow-hidden scroll-mt-24 transition-all duration-700",
           selectedCategory ? "pt-24 md:pt-32" : "pt-8 md:pt-12"
         )}>
-          <div className="flex flex-row justify-between items-end mb-6 md:mb-12 gap-4">
+          <div className="flex flex-row justify-between items-end mb-6 md:mb-10 gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 md:gap-3">
                 <div className="h-px w-6 md:w-12 bg-accent" />
                 <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent">
-                  {selectedCategory ? 'Explorando Coleção' : 'Lançamento'}
+                  {selectedCategory ? 'Explorando Seleção' : 'Lançamento'}
                 </span>
               </div>
-              <h2 className="text-xl md:text-6xl font-headline font-bold text-primary uppercase tracking-tighter">
+              <h2 className="text-xl md:text-5xl font-headline font-bold text-primary uppercase tracking-tighter">
                 {selectedCategory || 'Lançamentos'}
               </h2>
             </div>
@@ -199,7 +199,7 @@ function StorefrontContent() {
               "transition-all duration-700",
               selectedCategory 
                 ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-12" 
-                : "flex flex-nowrap items-stretch gap-4 md:grid md:grid-cols-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory"
+                : "flex flex-nowrap items-stretch gap-4 md:grid md:grid-cols-4 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory"
             )}>
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
@@ -224,9 +224,9 @@ function StorefrontContent() {
           )}
         </section>
 
-        <section id="colecoes" className="bg-secondary/5 pt-4 md:pt-8 pb-12 md:pb-20">
+        <section id="colecoes" className="bg-secondary/5 pt-4 md:pt-6 pb-10 md:pb-16">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-8 md:mb-16 space-y-2 md:space-y-4">
+            <div className="text-center mb-8 md:mb-12 space-y-2 md:space-y-4">
               <div className="flex items-center justify-center gap-2">
                  <div className="h-px w-4 md:w-6 bg-accent/40" />
                  <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Compre por Estilo</span>
@@ -276,7 +276,7 @@ function StorefrontContent() {
         </section>
 
         {!selectedCategory && (
-          <section className="py-12 md:py-24">
+          <section className="py-12 md:py-20">
             <div className="container mx-auto px-4 md:px-6">
               <div className="grid lg:grid-cols-2 gap-10 md:gap-24 items-center">
                 <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[5rem] overflow-hidden shadow-premium group">
@@ -309,11 +309,11 @@ function StorefrontContent() {
           </section>
         )}
 
-        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-12 md:py-16 bg-secondary/5 rounded-[2rem] md:rounded-[4rem]">
-          <div className="flex flex-row justify-between items-end mb-8 md:mb-16 gap-4">
+        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-12 md:py-16 bg-secondary/5 rounded-[2rem] md:rounded-[4rem] mb-12">
+          <div className="flex flex-row justify-between items-end mb-8 md:mb-12 gap-4">
             <div className="space-y-1">
               <span className="text-[9px] md:text-[12px] font-bold uppercase tracking-[0.5em] text-accent">Favoritos</span>
-              <h3 className="text-xl md:text-6xl font-headline font-bold text-primary uppercase">Mais Vendidos</h3>
+              <h3 className="text-xl md:text-5xl font-headline font-bold text-primary uppercase">Mais Vendidos</h3>
             </div>
             <Link href="/economize" className="text-[10px] font-bold uppercase tracking-widest text-primary/60 underline underline-offset-4 hover:text-accent transition-colors">
               Ver tudo
