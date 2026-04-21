@@ -63,10 +63,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
       <nav className="bg-white border-b border-primary/5 shadow-sm">
-        <div className="container mx-auto px-4 md:px-6 h-20 md:h-28 flex items-center justify-between gap-4 md:gap-10">
+        <div className="container mx-auto px-4 md:px-6 h-20 md:h-28 flex items-center justify-between gap-2 md:gap-10">
           
-          <div className="flex items-center gap-4 lg:gap-10">
-            <Link href="/" className="flex-shrink-0 scale-75 sm:scale-100 origin-left">
+          <div className="flex items-center gap-2 lg:gap-10 min-w-0">
+            <Link href="/" className="flex-shrink-0 scale-75 sm:scale-100 origin-left max-w-[120px] sm:max-w-none">
               <LogoMark />
             </Link>
 
@@ -98,24 +98,23 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             </form>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-6">
-            <Link 
-              href="/meus-pedidos" 
-              className="hidden sm:flex items-center gap-3 group transition-all"
-            >
-              <Package className="h-5 w-5 text-primary/60 group-hover:text-primary" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 group-hover:text-primary">
-                Pedidos
-              </span>
-            </Link>
-            
-            <div className="h-6 w-px bg-primary/10 hidden sm:block" />
+          <div className="flex items-center gap-1 sm:gap-6 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <Link 
+                href="/meus-pedidos" 
+                className="p-2 text-primary/60 hover:text-primary transition-all flex items-center gap-2 shrink-0 min-h-[44px]"
+                title="Meus Pedidos"
+              >
+                <Package className="h-5 w-5" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] hidden md:inline">
+                  Pedidos
+                </span>
+              </Link>
 
-            <div className="flex items-center gap-1 sm:gap-2">
               {isAdmin && (
                 <button 
                   onClick={handleAdminClick}
-                  className="p-3 text-primary/60 hover:text-accent transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  className="p-2 text-primary/60 hover:text-accent transition-all min-h-[44px] shrink-0"
                   title="Painel Administrativo"
                 >
                   <LayoutDashboard className="h-5 w-5 stroke-[1.5]" />
@@ -124,7 +123,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
               <button 
                 onClick={onOpenLogin} 
-                className="p-3 text-primary/60 hover:text-primary transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 text-primary/60 hover:text-primary transition-all min-h-[44px] shrink-0"
                 title="Minha Conta"
               >
                 <User className="h-5 w-5 stroke-[1.5]" />
@@ -132,31 +131,31 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
               <button 
                 onClick={onOpenCart} 
-                className="relative p-3 text-primary/60 hover:text-primary transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="relative p-2 text-primary/60 hover:text-primary transition-all min-h-[44px] shrink-0"
                 title="Carrinho"
               >
                 <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
                 {cartCount > 0 && (
-                  <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white text-[9px] font-black">
+                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white text-[9px] font-black">
                     {cartCount}
                   </span>
                 )}
               </button>
 
               <button 
-                className="relative p-3 text-accent hover:text-primary transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="relative p-2 text-accent hover:text-primary transition-all min-h-[44px] shrink-0"
                 title="Favoritos"
                 onClick={onOpenFavorites}
               >
                 <Heart className="h-5 w-5 stroke-[1.5]" />
                 {favoritesCount > 0 && (
-                  <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white text-[9px] font-black animate-in zoom-in duration-300">
+                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white text-[9px] font-black animate-in zoom-in duration-300">
                     {favoritesCount}
                   </span>
                 )}
               </button>
 
-              <button className="lg:hidden text-primary p-3 min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <button className="lg:hidden text-primary p-2 min-h-[44px] shrink-0">
                 <Menu className="h-6 w-6" />
               </button>
             </div>
