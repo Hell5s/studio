@@ -80,8 +80,8 @@ export function ProductCard({
   };
 
   return (
-    <article className="group flex flex-col bg-white transition-all duration-700 relative overflow-hidden">
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#F3EFF0] shrink-0">
+    <article className="group flex flex-col bg-white transition-all duration-700 relative overflow-hidden h-full">
+      <div className="relative aspect-[3/4] overflow-hidden bg-[#F3EFF0] shrink-0 flex-grow-0">
         <Image
           src={image || 'https://picsum.photos/seed/placeholder/600/800'}
           alt={name}
@@ -118,12 +118,12 @@ export function ProductCard({
         </div>
       </div>
 
-      <div className="px-1.5 pb-4 pt-3 md:pt-6 text-center flex flex-col gap-2">
+      <div className="px-1.5 pb-4 pt-3 md:pt-6 text-center flex flex-col flex-1 gap-2">
         <h3 className="line-clamp-2 text-[10px] md:text-[13px] uppercase leading-tight tracking-tight text-primary/80 font-bold min-h-[2.5em] flex items-center justify-center">
           {name}
         </h3>
         
-        <div className="space-y-1">
+        <div className="mt-auto space-y-1">
           <p className="text-[16px] md:text-[24px] font-bold text-primary leading-none">
             {formatCurrency(price)}
           </p>

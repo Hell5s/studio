@@ -154,7 +154,7 @@ function StorefrontContent() {
         {!selectedCategory && <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />}
 
         <section id="vitrine" className={cn(
-          "container mx-auto px-4 md:px-6 pb-8 md:pb-12 overflow-hidden scroll-mt-24 transition-all duration-700",
+          "container mx-auto px-4 md:px-6 pb-4 md:pb-12 overflow-hidden scroll-mt-24 transition-all duration-700",
           selectedCategory ? "pt-24 md:pt-32" : "pt-8 md:pt-12"
         )}>
           <div className="flex flex-row justify-between items-end mb-6 md:mb-12 gap-4">
@@ -199,11 +199,12 @@ function StorefrontContent() {
               "transition-all duration-700",
               selectedCategory 
                 ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-12" 
-                : "flex flex-nowrap items-start gap-4 md:grid md:grid-cols-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory"
+                : "flex flex-nowrap items-stretch gap-4 md:grid md:grid-cols-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory"
             )}>
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
                   <div key={product.id} className={cn(
+                    "flex flex-col",
                     !selectedCategory && "min-w-[46%] sm:min-w-[45%] md:min-w-0 flex-shrink-0 snap-start"
                   )}>
                     <ProductCard 
@@ -275,7 +276,7 @@ function StorefrontContent() {
         </section>
 
         {!selectedCategory && (
-          <section className="py-12 md:py-20">
+          <section className="py-12 md:py-24">
             <div className="container mx-auto px-4 md:px-6">
               <div className="grid lg:grid-cols-2 gap-10 md:gap-24 items-center">
                 <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[5rem] overflow-hidden shadow-premium group">
@@ -318,9 +319,9 @@ function StorefrontContent() {
               Ver tudo
             </Link>
           </div>
-          <div className="flex flex-nowrap items-start gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
+          <div className="flex flex-nowrap items-stretch gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
             {latestProducts.map((product) => (
-              <div key={product.id} className="min-w-[46%] sm:min-w-[40%] md:min-w-0 flex-shrink-0 snap-start">
+              <div key={product.id} className="min-w-[46%] sm:min-w-[40%] md:min-w-0 flex-shrink-0 snap-start flex flex-col">
                 <ProductCard 
                   {...product} 
                   onAddToCart={() => addToCart(product)}
