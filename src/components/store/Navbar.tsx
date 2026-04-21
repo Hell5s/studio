@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -63,10 +62,11 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
       <nav className="bg-white border-b border-primary/5 shadow-sm">
-        <div className="container mx-auto px-4 md:px-6 h-20 md:h-28 flex items-center justify-between gap-2 md:gap-10">
+        <div className="w-full px-4 md:px-6 h-20 md:h-28 flex items-center justify-between">
           
-          <div className="flex items-center gap-2 lg:gap-10 min-w-0">
-            <Link href="/" className="flex-shrink-0 scale-75 sm:scale-100 origin-left max-w-[120px] sm:max-w-none">
+          {/* Logo e Links Desktop */}
+          <div className="flex items-center gap-10 flex-1">
+            <Link href="/" className="shrink-0 max-w-[130px] md:max-w-none">
               <LogoMark />
             </Link>
 
@@ -86,7 +86,8 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             </div>
           </div>
 
-          <div className="flex-1 flex justify-center max-w-md ml-auto hidden lg:flex">
+          {/* Busca Desktop */}
+          <div className="flex-1 flex justify-center max-w-md mx-4 hidden lg:flex">
             <form onSubmit={handleSearchSubmit} className="relative w-full group">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40 group-focus-within:text-primary transition-colors" />
               <input 
@@ -98,67 +99,66 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             </form>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-6 shrink-0">
-            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-              <Link 
-                href="/meus-pedidos" 
-                className="p-2 text-primary/60 hover:text-primary transition-all flex items-center gap-2 shrink-0 min-h-[44px]"
-                title="Meus Pedidos"
+          {/* Ações / Ícones */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link 
+              href="/meus-pedidos" 
+              className="p-1 text-primary/60 hover:text-primary transition-all flex items-center gap-2"
+              title="Meus Pedidos"
+            >
+              <Package className="h-5 w-5" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] hidden md:inline">
+                Pedidos
+              </span>
+            </Link>
+
+            {isAdmin && (
+              <button 
+                onClick={handleAdminClick}
+                className="p-1 text-primary/60 hover:text-accent transition-all"
+                title="Painel Administrativo"
               >
-                <Package className="h-5 w-5" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] hidden md:inline">
-                  Pedidos
+                <LayoutDashboard className="h-5 w-5 stroke-[1.5]" />
+              </button>
+            )}
+
+            <button 
+              onClick={onOpenLogin} 
+              className="p-1 text-primary/60 hover:text-primary transition-all"
+              title="Minha Conta"
+            >
+              <User className="h-5 w-5 stroke-[1.5]" />
+            </button>
+
+            <button 
+              onClick={onOpenCart} 
+              className="relative p-1 text-primary/60 hover:text-primary transition-all"
+              title="Carrinho"
+            >
+              <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white text-[9px] font-black">
+                  {cartCount}
                 </span>
-              </Link>
-
-              {isAdmin && (
-                <button 
-                  onClick={handleAdminClick}
-                  className="p-2 text-primary/60 hover:text-accent transition-all min-h-[44px] shrink-0"
-                  title="Painel Administrativo"
-                >
-                  <LayoutDashboard className="h-5 w-5 stroke-[1.5]" />
-                </button>
               )}
+            </button>
 
-              <button 
-                onClick={onOpenLogin} 
-                className="p-2 text-primary/60 hover:text-primary transition-all min-h-[44px] shrink-0"
-                title="Minha Conta"
-              >
-                <User className="h-5 w-5 stroke-[1.5]" />
-              </button>
+            <button 
+              className="relative p-1 text-accent hover:text-primary transition-all"
+              title="Favoritos"
+              onClick={onOpenFavorites}
+            >
+              <Heart className="h-5 w-5 stroke-[1.5]" />
+              {favoritesCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white text-[9px] font-black">
+                  {favoritesCount}
+                </span>
+              )}
+            </button>
 
-              <button 
-                onClick={onOpenCart} 
-                className="relative p-2 text-primary/60 hover:text-primary transition-all min-h-[44px] shrink-0"
-                title="Carrinho"
-              >
-                <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
-                {cartCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white text-[9px] font-black">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-
-              <button 
-                className="relative p-2 text-accent hover:text-primary transition-all min-h-[44px] shrink-0"
-                title="Favoritos"
-                onClick={onOpenFavorites}
-              >
-                <Heart className="h-5 w-5 stroke-[1.5]" />
-                {favoritesCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white text-[9px] font-black animate-in zoom-in duration-300">
-                    {favoritesCount}
-                  </span>
-                )}
-              </button>
-
-              <button className="lg:hidden text-primary p-2 min-h-[44px] shrink-0">
-                <Menu className="h-6 w-6" />
-              </button>
-            </div>
+            <button className="lg:hidden text-primary p-1 ml-1">
+              <Menu className="h-6 w-6" />
+            </button>
           </div>
         </div>
       </nav>
