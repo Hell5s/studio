@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -108,11 +109,11 @@ function StorefrontContent() {
 
   const featuredProducts = useMemo(() => {
     if (selectedCategory) return filteredProducts;
-    return filteredProducts.filter(p => p.featured || p.badge === 'Destaque' || p.badge === 'Lançamento').slice(0, 8);
+    return filteredProducts.filter(p => p.featured || p.badge === 'Destaque' || p.badge === 'Lançamento').slice(0, 12);
   }, [filteredProducts, selectedCategory]);
 
   const latestProducts = useMemo(() => 
-    filteredProducts.filter(p => p.published !== false).slice(0, 10), 
+    filteredProducts.filter(p => p.published !== false).slice(0, 12), 
   [filteredProducts]);
 
   const handleSearch = (val: string) => {
@@ -198,7 +199,7 @@ function StorefrontContent() {
               "transition-all duration-700",
               selectedCategory 
                 ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-12" 
-                : "flex gap-4 md:grid md:grid-cols-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory"
+                : "flex flex-nowrap gap-4 md:grid md:grid-cols-4 md:gap-8 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory"
             )}>
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
@@ -317,7 +318,7 @@ function StorefrontContent() {
               Ver tudo
             </Link>
           </div>
-          <div className="flex gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
+          <div className="flex flex-nowrap gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
             {latestProducts.map((product) => (
               <div key={product.id} className="min-w-[46%] sm:min-w-[40%] md:min-w-0 flex-shrink-0 snap-start">
                 <ProductCard 
