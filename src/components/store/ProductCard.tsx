@@ -80,7 +80,7 @@ export function ProductCard({
   };
 
   return (
-    <article className="group flex flex-col bg-white transition-all duration-700 relative overflow-hidden h-full border border-primary/5">
+    <article className="group flex flex-col bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
         <Image
           src={image || 'https://picsum.photos/seed/placeholder/600/800'}
@@ -118,27 +118,27 @@ export function ProductCard({
         </div>
       </div>
 
-      <div className="p-3 md:p-4 text-center flex flex-col flex-1 gap-2">
-        <h3 className="line-clamp-2 text-[11px] md:text-[13px] uppercase leading-tight tracking-tight text-primary/80 font-bold min-h-[2.6em] flex items-center justify-center">
+      <div className="p-3 md:p-4 text-center flex flex-col gap-2">
+        <h3 className="line-clamp-2 text-[10px] md:text-[13px] uppercase leading-tight tracking-tight text-primary/80 font-bold">
           {name}
         </h3>
         
-        <div className="mt-auto space-y-1">
-          <p className="text-[16px] md:text-[22px] font-bold text-primary leading-none">
+        <div className="space-y-1">
+          <p className="text-[14px] md:text-[22px] font-bold text-primary leading-none">
             {formatCurrency(price)}
           </p>
           {oldPrice && (
-            <p className="text-[10px] md:text-[11px] text-muted-foreground line-through font-light italic">
+            <p className="text-[9px] md:text-[11px] text-muted-foreground line-through font-light italic">
               {formatCurrency(oldPrice)}
             </p>
           )}
-          <p className="text-[10px] md:text-[12px] text-accent font-medium">
+          <p className="text-[9px] md:text-[12px] text-accent font-medium">
             10x de {formatCurrency(price / 10)}
           </p>
 
           <Link href={`/products/${id}`} className="block mt-2">
             <button
-              className="w-full rounded-full border border-primary/10 bg-transparent px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
+              className="w-full rounded-full border border-primary/10 bg-transparent px-2 md:px-4 py-2 md:py-3 text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
             >
               Comprar
             </button>

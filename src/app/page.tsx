@@ -199,7 +199,7 @@ function StorefrontContent() {
               "transition-all duration-700",
               selectedCategory 
                 ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-12" 
-                : "flex flex-nowrap items-stretch gap-4 md:grid md:grid-cols-4 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory"
+                : "flex flex-nowrap items-start gap-4 md:grid md:grid-cols-4 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory"
             )}>
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
@@ -319,7 +319,7 @@ function StorefrontContent() {
               Ver tudo
             </Link>
           </div>
-          <div className="flex flex-nowrap items-stretch gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
+          <div className="flex flex-nowrap items-start gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
             {latestProducts.map((product) => (
               <div key={product.id} className="min-w-[46%] sm:min-w-[40%] md:min-w-0 flex-shrink-0 snap-start flex flex-col">
                 <ProductCard 
