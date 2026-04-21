@@ -81,7 +81,7 @@ export function ProductCard({
 
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
-      {/* Container da Imagem com proporção fixa */}
+      {/* Container da Imagem com proporção fixa 3:4 */}
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
         <Image
           src={image || 'https://picsum.photos/seed/placeholder/600/800'}
@@ -119,29 +119,28 @@ export function ProductCard({
         </div>
       </div>
 
-      {/* Conteúdo do Card com flex-1 para garantir altura igual */}
-      <div className="p-3 md:p-4 text-center flex flex-col flex-1 gap-2">
-        <h3 className="line-clamp-2 text-[10px] md:text-[13px] uppercase leading-tight tracking-tight text-primary/80 font-bold min-h-[2.5em]">
+      {/* Conteúdo do Card */}
+      <div className="p-3 md:p-6 text-center flex flex-col flex-1 gap-2 md:gap-4">
+        <h3 className="line-clamp-2 text-[10px] md:text-sm uppercase leading-tight tracking-tight text-primary/80 font-bold min-h-[2.5em]">
           {name}
         </h3>
         
-        {/* Bloco de Preço e Botão fixado na base */}
-        <div className="mt-auto space-y-1">
-          <p className="text-[14px] md:text-[22px] font-bold text-primary leading-none">
+        <div className="mt-auto space-y-1 md:space-y-2">
+          <p className="text-base md:text-2xl font-bold text-primary leading-none">
             {formatCurrency(price)}
           </p>
           {oldPrice && (
-            <p className="text-[9px] md:text-[11px] text-muted-foreground line-through font-light italic">
+            <p className="text-[9px] md:text-sm text-muted-foreground line-through font-light italic">
               {formatCurrency(oldPrice)}
             </p>
           )}
-          <p className="text-[9px] md:text-[12px] text-accent font-medium">
+          <p className="text-[9px] md:text-xs text-accent font-medium uppercase tracking-widest">
             10x de {formatCurrency(price / 10)}
           </p>
 
-          <Link href={`/products/${id}`} className="block mt-2">
+          <Link href={`/products/${id}`} className="block mt-2 md:mt-4">
             <button
-              className="w-full rounded-full border border-primary/10 bg-transparent px-2 md:px-4 py-2 md:py-3 text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
+              className="w-full rounded-full border border-primary/10 bg-transparent px-3 py-2.5 md:py-4 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-primary transition-all hover:bg-primary hover:text-white active:scale-95"
             >
               Comprar
             </button>

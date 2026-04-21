@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -53,12 +54,13 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
   };
 
   return (
-    <div className="relative">
-      <div className="hidden md:grid grid-cols-2 gap-2">
+    <div className="relative space-y-4">
+      {/* Desktop Grid */}
+      <div className="hidden md:grid grid-cols-2 gap-4">
         {images.map((img, idx) => (
           <div
             key={idx}
-            className="relative aspect-[3/4] overflow-hidden bg-[#F5F5F5] group"
+            className="relative aspect-[3/4] overflow-hidden bg-[#F5F5F5] group rounded-sm"
           >
             <Image
               src={img}
@@ -72,9 +74,10 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         ))}
       </div>
 
-      <div className="flex flex-col md:hidden gap-1">
+      {/* Mobile Stack */}
+      <div className="flex flex-col md:hidden gap-2">
         {images.map((img, idx) => (
-          <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F5F5F5]">
+          <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F5F5F5] rounded-sm">
             <Image
               src={img}
               alt={`${name} - ${idx + 1}`}
@@ -90,13 +93,13 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       <button
         onClick={handleToggleFavorite}
         className={cn(
-          "absolute top-4 right-4 h-10 md:h-12 w-10 md:w-12 rounded-full flex items-center justify-center transition-all z-20 shadow-lg border",
+          "absolute top-4 right-4 h-12 md:h-14 w-12 md:w-14 rounded-full flex items-center justify-center transition-all z-20 shadow-xl border min-h-[44px] min-w-[44px]",
           isFavorited
             ? "bg-primary text-white border-primary"
-            : "bg-white/90 text-gray-400 border-gray-200 hover:border-primary hover:text-primary"
+            : "bg-white/95 text-gray-400 border-gray-200 hover:border-primary hover:text-primary"
         )}
       >
-        <Heart className={cn("h-5 md:h-6 w-5 md:w-6", isFavorited && "fill-current")} />
+        <Heart className={cn("h-6 w-6", isFavorited && "fill-current")} />
       </button>
     </div>
   );

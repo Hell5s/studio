@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -26,27 +27,27 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const defaultHero = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80";
 
   return (
-    <section className="relative w-full h-[70vh] md:h-[85vh] min-h-[500px] md:min-h-[600px] overflow-hidden bg-black">
+    <section className="relative w-full h-[80vh] md:h-[90vh] min-h-[500px] md:min-h-[700px] overflow-hidden bg-black">
       {isLoading ? (
         <div className="absolute inset-0 flex items-center justify-center">
-          <Loader2 className="h-10 w-10 animate-spin text-white/20" />
+          <Loader2 className="h-12 w-12 animate-spin text-white/20" />
         </div>
       ) : (
         <Image
           src={activeBanner?.imageUrl || defaultHero}
           alt={activeBanner?.title || "Boutique Toda Bela"}
           fill
-          className="object-cover opacity-90 transition-transform duration-[20s] hover:scale-110"
+          className="object-cover opacity-85 transition-transform duration-[20s] hover:scale-110"
           priority
         />
       )}
       
-      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/20 to-transparent md:from-black/80" />
       
-      <div className="container mx-auto h-full px-4 md:px-6 flex items-end pb-12 md:pb-24 relative z-10">
-        <div className="max-w-3xl space-y-6 md:space-y-8 animate-in fade-in slide-in-from-left-10 duration-1000">
-          <div className="space-y-2 md:space-y-4">
-            <h1 className="text-4xl sm:text-5xl md:text-[8rem] font-headline font-bold text-white uppercase tracking-tighter leading-[0.9]">
+      <div className="container mx-auto h-full px-6 md:px-12 flex items-end pb-16 md:pb-32 relative z-10">
+        <div className="max-w-4xl space-y-8 md:space-y-12 animate-in fade-in slide-in-from-left-10 duration-1000">
+          <div className="space-y-4 md:space-y-6">
+            <h1 className="text-4xl sm:text-6xl md:text-[9rem] font-headline font-bold text-white uppercase tracking-tighter leading-[0.85]">
               {activeBanner?.title ? (
                 <>
                    {activeBanner.title.split(' ')[0]} <br />
@@ -59,13 +60,13 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 </>
               )}
             </h1>
-            <p className="text-sm md:text-2xl text-white/90 font-light italic max-w-sm md:max-w-xl leading-relaxed">
-              {activeBanner?.subtitle || "Sua nova definição de sofisticação e movimento."}
+            <p className="text-base md:text-3xl text-white/90 font-light italic max-w-xs md:max-w-2xl leading-relaxed">
+              {activeBanner?.subtitle || "Sua nova definição de sofisticação, propósito e movimento."}
             </p>
           </div>
           <Button 
             onClick={onShopNow}
-            className="rounded-full bg-white text-primary px-8 md:px-12 py-6 md:py-8 text-sm md:text-xl font-bold uppercase tracking-widest shadow-2xl hover:scale-105 transition-all"
+            className="rounded-full bg-white text-primary px-10 md:px-20 py-7 md:py-10 text-xs md:text-2xl font-bold uppercase tracking-[0.3em] shadow-2xl hover:scale-105 transition-all min-h-[54px] md:min-h-[80px]"
           >
             {activeBanner?.ctaText || "Conferir Looks"}
           </Button>
@@ -73,10 +74,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
       </div>
       
       {activeBanner && (
-        <div className="absolute top-24 md:top-32 right-4 md:right-10 z-20">
-           <div className="px-3 md:px-4 py-1.5 md:py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-1.5 md:gap-2">
-              <Sparkles className="h-2.5 md:h-3 w-2.5 md:w-3 text-accent" />
-              <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-widest text-white/40">Visual IA</span>
+        <div className="absolute top-28 md:top-40 right-6 md:right-16 z-20">
+           <div className="px-4 md:px-6 py-2 md:py-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-2 md:gap-3">
+              <Sparkles className="h-3 w-3 md:h-4 md:w-4 text-accent" />
+              <span className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-white/40">Visual IA</span>
            </div>
         </div>
       )}

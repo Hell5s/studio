@@ -20,13 +20,13 @@ export function Newsletter() {
   const { data: products, isLoading } = useCollection(queryItems);
 
   return (
-    <section className="container mx-auto px-4 md:px-6 py-20 md:py-32 border-t border-gray-100 bg-white">
-      <div className="flex flex-col items-center text-center space-y-4 md:space-y-6 mb-16 md:mb-24">
-        <h2 className="text-3xl md:text-6xl font-bold uppercase tracking-tighter text-[#111] leading-none">
-          Você também <span className="italic font-light text-gray-400">vai gostar</span>
+    <section className="container mx-auto px-4 md:px-6 py-16 md:py-32 border-t border-gray-100 bg-white">
+      <div className="flex flex-col items-center text-center space-y-4 md:space-y-6 mb-12 md:mb-24">
+        <h2 className="text-3xl md:text-6xl font-headline font-bold text-primary uppercase tracking-tighter leading-none">
+          Inspirações <span className="italic font-light text-accent">Extraordinárias</span>
         </h2>
-        <p className="text-gray-400 font-light italic text-sm md:text-lg max-w-xl mx-auto">
-          Peças selecionadas para elevar sua presença e harmonizar com sua essência Toda Bela.
+        <p className="text-muted-foreground font-light italic text-base md:text-xl max-w-xl mx-auto">
+          Peças selecionadas pela nossa equipe para elevar sua presença e harmonizar com sua essência Toda Bela.
         </p>
       </div>
 
@@ -37,18 +37,19 @@ export function Newsletter() {
            ))}
         </div>
       ) : isLoading ? (
-        <div className="py-20 text-center text-gray-300 italic font-light animate-pulse">
-          Sincronizando tendências...
+        <div className="py-24 text-center text-gray-300 italic font-light animate-pulse flex flex-col items-center gap-4">
+          <div className="h-12 w-12 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+          <span className="text-[10px] font-bold uppercase tracking-widest">Buscando tendências...</span>
         </div>
       ) : (
-        <div className="py-20 text-center text-gray-300 italic font-light">
-          Explore nossa coleção completa na página inicial.
+        <div className="py-24 text-center text-gray-300 italic font-light">
+          Explore nossa coleção completa para encontrar o look perfeito.
         </div>
       )}
 
-      <div className="mt-16 md:mt-24 text-center">
+      <div className="mt-12 md:mt-24 text-center">
         <Link href="/">
-           <Button variant="outline" className="rounded-full px-12 h-14 md:h-16 uppercase text-[10px] md:text-[11px] font-bold tracking-[0.3em] border-black/10 hover:bg-black hover:text-white transition-all duration-700 hover:scale-105 shadow-sm">
+           <Button variant="outline" className="rounded-full px-12 md:px-20 h-14 md:h-20 uppercase text-[10px] md:text-sm font-bold tracking-[0.4em] border-primary text-primary hover:bg-primary hover:text-white transition-all duration-700 shadow-xl min-h-[54px]">
               Ver Coleção Completa
            </Button>
         </Link>

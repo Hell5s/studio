@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -83,16 +84,16 @@ export default function ProductDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-12 w-12 animate-spin text-primary/40" />
+        <Loader2 className="h-12 w-12 animate-spin text-accent" />
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-white p-6 text-center">
-        <h1 className="text-2xl md:text-3xl font-headline font-bold text-primary">Peça não encontrada</h1>
-        <Button onClick={() => router.push('/')} variant="outline" className="rounded-full px-12 h-14">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-white p-6 text-center">
+        <h1 className="text-3xl font-headline font-bold text-primary uppercase">Peça não encontrada</h1>
+        <Button onClick={() => router.push('/')} className="rounded-full px-16 h-16 bg-primary text-white font-bold uppercase tracking-widest text-xs">
           Voltar para a Boutique
         </Button>
       </div>
@@ -108,20 +109,20 @@ export default function ProductDetailPage() {
         cartCount={cartCount}
       />
       
-      <main className="pt-24 md:pt-32 pb-20">
+      <main className="pt-24 md:pt-40 pb-20">
         <div className="container mx-auto px-4 lg:px-6 max-w-[1300px]">
           {/* Breadcrumb - Kaisan Pattern */}
-          <nav className="mb-8 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+          <nav className="mb-10 md:mb-16 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
             <Link href="/" className="hover:text-black transition-colors">Início</Link>
             <ChevronRight className="h-3 w-3" />
-            <Link href={`/#${product.category?.toLowerCase()}`} className="hover:text-black transition-colors">{product.category}</Link>
+            <Link href={`/categoria/${product.category?.toLowerCase().trim().replace(/\s+/g, '-')}`} className="hover:text-black transition-colors">{product.category}</Link>
             <ChevronRight className="h-3 w-3" />
             <span className="text-black truncate">{product.name}</span>
             <span className="ml-2 text-gray-200">| REF: {product.sku || product.id.slice(-6).toUpperCase()}</span>
           </nav>
 
-          <div className="grid lg:grid-cols-12 gap-10 items-start">
-            {/* Left: Editorial Gallery (65% width) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+            {/* Left: Editorial Gallery */}
             <div className="lg:col-span-8">
               <ProductGallery 
                 images={product.images || [product.image]} 
@@ -130,8 +131,8 @@ export default function ProductDetailPage() {
               />
             </div>
 
-            {/* Right: Technical Purchase Column (35% width) */}
-            <div className="lg:col-span-4 lg:sticky lg:top-28">
+            {/* Right: Technical Purchase Column */}
+            <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-12">
               <ProductInfo 
                 product={product} 
                 onAddToCart={addToCart} 
@@ -141,13 +142,16 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Full Width Professional Reviews Section */}
-          <div className="mt-24 pt-20">
+          <div className="mt-24 md:mt-40">
              <ProductReviews productId={product.id} />
+          </div>
+
+          <div className="mt-24 md:mt-40">
+            <Newsletter />
           </div>
         </div>
       </main>
 
-      <Newsletter />
       <Footer />
       
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />

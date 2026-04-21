@@ -170,14 +170,16 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onRemoveItem, to
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full max-w-[420px] p-0 flex flex-col items-center justify-center bg-white">
-          <div className="text-center space-y-4 px-8">
-            <div className="h-16 w-16 bg-black rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-8 w-8 text-white" />
+          <div className="text-center space-y-6 px-10">
+            <div className="h-24 w-24 bg-black rounded-full flex items-center justify-center mx-auto shadow-2xl">
+              <CheckCircle2 className="h-12 w-12 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-black uppercase tracking-wider">Reserva Confirmada!</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Sua seleção foi processada com sucesso. Em instantes você poderá acompanhar o status em sua conta.
-            </p>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-headline font-bold text-primary uppercase tracking-widest">Reserva Confirmada!</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed italic font-light">
+                Sua seleção extraordinária foi processada com sucesso. Em instantes você poderá acompanhar o status em sua conta.
+              </p>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -190,214 +192,226 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onRemoveItem, to
         side="right"
         className="w-full max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100 overflow-hidden"
       >
-        {/* Header - estilo Kaisan */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 shrink-0">
           {step === 'checkout' ? (
             <button
               onClick={() => setStep('cart')}
-              className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-gray-500 hover:text-black transition-colors"
+              className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 hover:text-primary transition-colors min-h-[44px]"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> Voltar
+              <ArrowLeft className="h-4 w-4" /> Voltar
             </button>
           ) : (
             <SheetHeader className="p-0 space-y-0">
-              <SheetTitle className="text-[13px] font-bold text-black uppercase tracking-wider">
-                {step === 'cart' ? 'Meus Produtos' : 'Finalizar Pedido'}
+              <SheetTitle className="text-xs font-bold text-primary uppercase tracking-[0.3em]">
+                {step === 'cart' ? 'MINHA SELEÇÃO' : 'FINALIZAR PEDIDO'}
               </SheetTitle>
             </SheetHeader>
           )}
+          <button onClick={() => onOpenChange(false)} className="text-primary/20 hover:text-primary transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        {/* Conteúdo com scroll */}
+        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
           {cartItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full py-20 px-8 text-center space-y-4">
-              <ShoppingBag className="h-10 w-10 text-gray-200" />
-              <h3 className="text-[13px] font-bold uppercase tracking-wider text-black">Carrinho vazio</h3>
-              <p className="text-[12px] text-gray-400">Explore nossa coleção e escolha suas peças.</p>
+            <div className="flex flex-col items-center justify-center h-full py-32 px-10 text-center space-y-6">
+              <div className="h-20 w-20 bg-secondary/30 rounded-full flex items-center justify-center text-primary/10">
+                <ShoppingBag className="h-10 w-10" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Sua bolsa está vazia</h3>
+                <p className="text-[12px] text-muted-foreground italic font-light">Inicie sua jornada editorial escolhendo peças exclusivas.</p>
+              </div>
               <button
                 onClick={() => onOpenChange(false)}
-                className="mt-2 text-[10px] font-bold uppercase tracking-widest underline underline-offset-4 text-black"
+                className="mt-4 text-[10px] font-bold uppercase tracking-[0.3em] underline underline-offset-8 text-accent min-h-[44px]"
               >
-                Continuar comprando
+                Explorar Boutique
               </button>
             </div>
           ) : step === 'cart' ? (
-            <div className="p-5 space-y-0">
-              {/* Lista de itens */}
-              {cartItems.map((item, idx) => (
-                <div key={item.id}>
-                  <div className="flex gap-4 py-4">
-                    <div className="h-20 w-16 bg-gray-100 overflow-hidden shrink-0">
-                      <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-[12px] font-semibold text-black leading-tight line-clamp-2">{item.name}</p>
-                      <p className="text-[10px] text-gray-400">Sku: {item.sku || item.id?.slice(-6).toUpperCase()}</p>
-                      <div className="flex flex-wrap gap-2 text-[10px] text-gray-500 font-medium">
-                        {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
-                        {item.selectedColor && <span>COR: {item.selectedColor}</span>}
+            <div className="p-6 space-y-8">
+              {/* Item List */}
+              <div className="space-y-0">
+                {cartItems.map((item, idx) => (
+                  <div key={item.id}>
+                    <div className="flex gap-6 py-6 group">
+                      <div className="h-24 w-18 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm">
+                        <img src={item.image} className="h-full w-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700" alt={item.name} />
                       </div>
-                      <p className="text-[10px] text-gray-400">Quantidade: {item.quantity}</p>
-                      <p className="text-[13px] font-bold text-black">{formatCurrency(item.price * item.quantity)}</p>
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <p className="text-[11px] font-bold text-primary leading-tight uppercase tracking-tight line-clamp-2">{item.name}</p>
+                        <div className="flex flex-wrap gap-4 text-[9px] text-muted-foreground font-black uppercase tracking-widest">
+                          {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
+                          {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
+                        </div>
+                        <div className="flex items-center justify-between pt-2">
+                          <p className="text-[10px] text-muted-foreground uppercase font-medium">Qtd: {item.quantity}</p>
+                          <p className="text-sm font-bold text-primary">{formatCurrency(item.price * item.quantity)}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => onRemoveItem(item.id)}
+                        className="text-primary/10 hover:text-destructive transition-colors self-start min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => onRemoveItem(item.id)}
-                      className="text-gray-300 hover:text-red-400 transition-colors self-start pt-0.5"
-                    >
-                      <X className="h-3.5 w-3.5" />
+                    {idx < cartItems.length - 1 && <div className="h-px bg-primary/5" />}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calculated Totals */}
+              <div className="pt-8 border-t border-primary/5 space-y-6">
+                <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-primary/40">
+                  <span>SUBTOTAL</span>
+                  <span className="text-sm text-primary">{formatCurrency(total)}</span>
+                </div>
+
+                <div className="space-y-4">
+                   <div className="flex gap-3">
+                    <Input
+                      placeholder="CUPOM EDITORIAL"
+                      value={coupon}
+                      onChange={e => setCoupon(e.target.value.toUpperCase())}
+                      className="h-14 text-[10px] rounded-none border-primary/10 flex-1 uppercase tracking-widest font-bold placeholder:font-light"
+                    />
+                    <button className="px-8 h-14 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] shrink-0 hover:bg-accent transition-all min-h-[44px]">
+                      APLICAR
                     </button>
                   </div>
-                  {idx < cartItems.length - 1 && <div className="h-px bg-gray-100" />}
+
+                  <div className="flex gap-3">
+                    <Input
+                      placeholder="CONSULTAR CEP"
+                      value={zipCode}
+                      onChange={e => setZipCode(e.target.value)}
+                      maxLength={9}
+                      className="h-14 text-[10px] rounded-none border-primary/10 flex-1 tracking-widest font-bold placeholder:font-light"
+                    />
+                    <button 
+                      onClick={handleCalculateShipping}
+                      disabled={isCalculating}
+                      className="px-8 h-14 bg-secondary text-primary text-[10px] font-bold uppercase tracking-[0.2em] shrink-0 hover:bg-primary hover:text-white transition-all min-h-[44px] flex items-center justify-center min-w-[120px]"
+                    >
+                      {isCalculating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'CALCULAR'}
+                    </button>
+                  </div>
                 </div>
-              ))}
 
-              {/* Subtotal */}
-              <div className="pt-4 border-t border-gray-100">
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-[12px] font-semibold text-black">Subtotal:</span>
-                  <span className="text-[14px] font-bold text-black">{formatCurrency(total)}</span>
+                <div className="pt-6 border-t border-primary/10 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-black uppercase tracking-[0.3em] text-primary">VALOR FINAL</span>
+                    <span className="text-2xl font-bold text-primary">{formatCurrency(finalTotal)}</span>
+                  </div>
+                  <p className="text-[10px] text-accent font-bold uppercase tracking-widest text-right italic">
+                    Parcele em 10x de {formatCurrency(finalTotal / 10)}
+                  </p>
                 </div>
-              </div>
-
-              {/* Cupom de desconto */}
-              <div className="flex gap-2 pt-2">
-                <Input
-                  placeholder="Cupom de desconto"
-                  value={coupon}
-                  onChange={e => setCoupon(e.target.value)}
-                  className="h-10 text-[12px] rounded-none border-gray-200 flex-1"
-                />
-                <button className="px-4 h-10 bg-black text-white text-[10px] font-bold uppercase tracking-wider shrink-0 hover:bg-gray-900 transition-colors">
-                  Utilizar
-                </button>
-              </div>
-
-              {/* Calcular frete */}
-              <div className="flex gap-2 pt-2">
-                <Input
-                  placeholder="Consultar Frete"
-                  value={zipCode}
-                  onChange={e => setZipCode(e.target.value)}
-                  maxLength={9}
-                  className="h-10 text-[12px] rounded-none border-gray-200 flex-1"
-                />
-                <button 
-                  onClick={handleCalculateShipping}
-                  disabled={isCalculating}
-                  className="px-4 h-10 bg-black text-white text-[10px] font-bold uppercase tracking-wider shrink-0 hover:bg-gray-900 transition-colors flex items-center justify-center min-w-[100px]"
-                >
-                  {isCalculating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Calcular'}
-                </button>
-              </div>
-
-              {/* Valor final */}
-              <div className="pt-4 border-t border-gray-100 space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] font-semibold text-black">Valor final:</span>
-                  <span className="text-[16px] font-bold text-black">{formatCurrency(finalTotal)}</span>
-                </div>
-                <p className="text-[10px] text-gray-400 text-right">
-                  Parcele em até 10x de {formatCurrency(finalTotal / 10)} sem juros
-                </p>
               </div>
             </div>
           ) : (
-            /* Formulário de checkout */
-            <div className="p-5 space-y-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Dados de Entrega</p>
-              <div className="space-y-3">
-                <Input
-                  placeholder="Nome Completo"
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="h-11 text-[12px] rounded-none border-gray-200"
-                />
-                <Input
-                  placeholder="WhatsApp para contato"
-                  value={formData.phone}
-                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                  className="h-11 text-[12px] rounded-none border-gray-200"
-                />
-                <Input
-                  placeholder="CEP"
-                  value={formData.zipCode}
-                  onChange={e => setFormData({ ...formData, zipCode: e.target.value })}
-                  className="h-11 text-[12px] rounded-none border-gray-200"
-                />
-                <Input
-                  placeholder="Endereço, Número e Complemento"
-                  value={formData.address}
-                  onChange={e => setFormData({ ...formData, address: e.target.value })}
-                  className="h-11 text-[12px] rounded-none border-gray-200"
-                />
-                <div className="grid grid-cols-2 gap-3">
+            /* Checkout Form */
+            <div className="p-6 space-y-10">
+              <div className="space-y-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">DADOS DE DESTINO</p>
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Nome Completo para Identificação"
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
+                  />
+                  <Input
+                    placeholder="WhatsApp VIP (Acompanhamento)"
+                    value={formData.phone}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      placeholder="CEP"
+                      value={formData.zipCode}
+                      onChange={e => setFormData({ ...formData, zipCode: e.target.value })}
+                      className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
+                    />
+                    <Input
+                      placeholder="Estado (Ex: SP)"
+                      value={formData.state}
+                      onChange={e => setFormData({ ...formData, state: e.target.value })}
+                      className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
+                    />
+                  </div>
+                  <Input
+                    placeholder="Endereço, Número e Complemento"
+                    value={formData.address}
+                    onChange={e => setFormData({ ...formData, address: e.target.value })}
+                    className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
+                  />
                   <Input
                     placeholder="Cidade"
                     value={formData.city}
                     onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    className="h-11 text-[12px] rounded-none border-gray-200"
-                  />
-                  <Input
-                    placeholder="Estado (Ex: SP)"
-                    value={formData.state}
-                    onChange={e => setFormData({ ...formData, state: e.target.value })}
-                    className="h-11 text-[12px] rounded-none border-gray-200"
+                    className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
                   />
                 </div>
               </div>
 
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 pt-2">Método de Envio</p>
-              <div className="space-y-2">
-                {shippingMethods.map((method) => (
-                  <button
-                    key={method.id}
-                    onClick={() => setSelectedShipping(method)}
-                    className={cn(
-                      "w-full flex items-center justify-between p-4 border transition-all text-left",
-                      selectedShipping.id === method.id
-                        ? "border-black bg-black text-white"
-                        : "border-gray-200 text-black hover:border-gray-400"
-                    )}
-                  >
-                    <div>
-                      <p className="text-[12px] font-semibold">{method.name}</p>
-                      <p className={cn("text-[10px]", selectedShipping.id === method.id ? "text-gray-300" : "text-gray-400")}>{method.time}</p>
-                    </div>
-                    <p className="text-[12px] font-bold">{method.price === 0 ? 'GRÁTIS' : formatCurrency(method.price)}</p>
-                  </button>
-                ))}
+              <div className="space-y-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">MÉTODO DE ENVIO</p>
+                <div className="space-y-4">
+                  {shippingMethods.map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => setSelectedShipping(method)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-6 border transition-all duration-500 text-left min-h-[80px]",
+                        selectedShipping.id === method.id
+                          ? "border-primary bg-primary text-white shadow-xl"
+                          : "border-primary/10 text-primary hover:border-accent"
+                      )}
+                    >
+                      <div className="space-y-1">
+                        <p className="text-[11px] font-black uppercase tracking-widest">{method.name}</p>
+                        <p className={cn("text-[10px] italic font-light", selectedShipping.id === method.id ? "text-white/60" : "text-muted-foreground")}>{method.time}</p>
+                      </div>
+                      <p className="text-sm font-bold">{method.price === 0 ? 'GRÁTIS' : formatCurrency(method.price)}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Resumo */}
-              <div className="pt-4 border-t border-gray-100 space-y-2">
-                <div className="flex justify-between text-[11px] text-gray-500">
-                  <span>Subtotal</span>
+              {/* Checkout Summary */}
+              <div className="pt-10 border-t border-primary/10 space-y-4">
+                <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest text-primary/40">
+                  <span>SUBTOTAL</span>
                   <span>{formatCurrency(total)}</span>
                 </div>
-                <div className="flex justify-between text-[11px] text-gray-500">
-                  <span>Envio</span>
-                  <span>{selectedShipping.price === 0 ? 'Grátis' : formatCurrency(selectedShipping.price)}</span>
+                <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest text-primary/40">
+                  <span>TAXA DE ENVIO</span>
+                  <span className="text-accent">{selectedShipping.price === 0 ? 'GRÁTIS' : formatCurrency(selectedShipping.price)}</span>
                 </div>
-                <div className="flex justify-between items-center pt-1">
-                  <span className="text-[12px] font-bold text-black">Valor final:</span>
-                  <span className="text-[16px] font-bold text-black">{formatCurrency(finalTotal)}</span>
+                <div className="flex justify-between items-center pt-4">
+                  <span className="text-xs font-black uppercase tracking-[0.4em] text-primary">VALOR FINAL</span>
+                  <span className="text-2xl font-bold text-primary">{formatCurrency(finalTotal)}</span>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Botão fixo na base - estilo Kaisan */}
+        {/* Sticky Action Button */}
         {cartItems.length > 0 && (
-          <div className="shrink-0 border-t border-gray-100">
+          <div className="shrink-0 border-t border-primary/5 bg-white p-4">
             <button
               onClick={step === 'cart' ? () => setStep('checkout') : handlePlaceOrder}
               disabled={loading}
-              className="w-full h-14 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full h-16 bg-primary text-white text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-accent transition-all duration-700 disabled:opacity-50 flex items-center justify-center gap-4 shadow-2xl min-h-[54px]"
             >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {step === 'cart' ? 'FINALIZAR PEDIDO' : 'CONFIRMAR RESERVA'}
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : step === 'cart' ? 'FINALIZAR SELEÇÃO' : 'CONFIRMAR RESERVA'}
             </button>
           </div>
         )}
