@@ -80,8 +80,8 @@ export function ProductCard({
   };
 
   return (
-    <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden">
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#F3EFF0]">
+    <article className="group flex flex-col bg-white transition-all duration-700 relative overflow-hidden">
+      <div className="relative aspect-[3/4] overflow-hidden bg-[#F3EFF0] shrink-0">
         <Image
           src={image || 'https://picsum.photos/seed/placeholder/600/800'}
           alt={name}
@@ -118,27 +118,27 @@ export function ProductCard({
         </div>
       </div>
 
-      <div className="px-1.5 pb-4 pt-3 md:pt-6 text-center flex flex-col flex-1">
-        <h3 className="line-clamp-2 text-[9px] md:text-[13px] uppercase leading-tight tracking-tight text-primary/80 font-bold mb-1.5 h-6 md:h-auto overflow-hidden">
+      <div className="px-1.5 pb-4 pt-3 md:pt-6 text-center flex flex-col gap-2">
+        <h3 className="line-clamp-2 text-[10px] md:text-[13px] uppercase leading-tight tracking-tight text-primary/80 font-bold min-h-[2.5em] flex items-center justify-center">
           {name}
         </h3>
         
-        <div className="mt-auto space-y-0.5">
-          <p className="text-[14px] md:text-[24px] font-bold text-primary leading-none">
+        <div className="space-y-1">
+          <p className="text-[16px] md:text-[24px] font-bold text-primary leading-none">
             {formatCurrency(price)}
           </p>
           {oldPrice && (
-            <p className="text-[8px] md:text-[11px] text-muted-foreground line-through font-light italic">
+            <p className="text-[9px] md:text-[11px] text-muted-foreground line-through font-light italic">
               {formatCurrency(oldPrice)}
             </p>
           )}
-          <p className="text-[8px] md:text-[13px] text-accent font-medium">
+          <p className="text-[9px] md:text-[13px] text-accent font-medium">
             ou 10x de {formatCurrency(price / 10)}
           </p>
 
           <Link href={`/products/${id}`} className="block mt-2 md:mt-4">
             <button
-              className="w-full rounded-full border border-primary/10 bg-transparent px-2 md:px-6 py-1.5 md:py-3 text-[7px] md:text-[10px] font-bold uppercase tracking-widest text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
+              className="w-full rounded-full border border-primary/10 bg-transparent px-2 md:px-6 py-1.5 md:py-3 text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-primary transition-all hover:bg-secondary hover:border-primary active:scale-95"
             >
               Comprar Agora
             </button>
