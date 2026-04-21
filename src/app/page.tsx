@@ -154,36 +154,42 @@ function StorefrontContent() {
 
         <section id="vitrine" className={cn(
           "container mx-auto px-4 md:px-6 pb-8 md:pb-12 overflow-hidden scroll-mt-24 transition-all duration-700",
-          selectedCategory ? "pt-24 md:pt-32" : "pt-8 md:pt-16"
+          selectedCategory ? "pt-24 md:pt-32" : "pt-8 md:pt-12"
         )}>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="h-px w-8 md:w-12 bg-accent" />
-                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent">
-                  {selectedCategory ? 'Explorando Coleção' : 'Edição Especial'}
+          <div className="flex flex-row justify-between items-end mb-6 md:mb-12 gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="h-px w-6 md:w-12 bg-accent" />
+                <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.4em] text-accent">
+                  {selectedCategory ? 'Explorando Coleção' : 'Lançamento'}
                 </span>
               </div>
-              <h2 className="text-3xl md:text-8xl font-headline font-bold text-primary text-editorial leading-[0.85]">
+              <h2 className="text-xl md:text-6xl font-headline font-bold text-primary uppercase tracking-tighter">
                 {selectedCategory || 'Lançamentos'}
               </h2>
             </div>
             
-            {selectedCategory && (
-              <button 
-                onClick={() => setSelectedCategory(null)}
-                className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-accent transition-all group"
-              >
-                <div className="h-10 w-10 rounded-full border border-primary/10 flex items-center justify-center group-hover:border-accent group-hover:bg-accent group-hover:text-white transition-all">
-                  <ArrowLeft className="h-4 w-4" />
-                </div>
-                <span>Voltar para Início</span>
-              </button>
-            )}
+            <div className="flex items-center gap-4">
+               {!selectedCategory ? (
+                 <Link href="/economize" className="text-[10px] font-bold uppercase tracking-widest text-primary/60 underline underline-offset-4 hover:text-accent transition-colors">
+                    Ver tudo
+                 </Link>
+               ) : (
+                 <button 
+                  onClick={() => setSelectedCategory(null)}
+                  className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-primary hover:text-accent transition-all group"
+                >
+                  <div className="h-8 w-8 rounded-full border border-primary/10 flex items-center justify-center group-hover:border-accent group-hover:bg-accent group-hover:text-white transition-all">
+                    <ArrowLeft className="h-3 w-3" />
+                  </div>
+                  <span className="hidden sm:inline">Voltar</span>
+                </button>
+               )}
+            </div>
           </div>
 
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 md:py-40 space-y-4">
+            <div className="flex flex-col items-center justify-center py-20 md:py-40 space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
@@ -197,7 +203,7 @@ function StorefrontContent() {
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
                   <div key={product.id} className={cn(
-                    !selectedCategory && "min-w-[75%] sm:min-w-[45%] md:min-w-0 flex-shrink-0 snap-start"
+                    !selectedCategory && "min-w-[46%] sm:min-w-[45%] md:min-w-0 flex-shrink-0 snap-start"
                   )}>
                     <ProductCard 
                       {...product} 
@@ -216,18 +222,15 @@ function StorefrontContent() {
           )}
         </section>
 
-        <section id="colecoes" className="bg-secondary/10 pt-4 md:pt-8 pb-12 md:pb-20">
+        <section id="colecoes" className="bg-secondary/5 pt-4 md:pt-8 pb-12 md:pb-20">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-10 md:mb-20 space-y-3 md:space-y-6">
-              <div className="flex items-center justify-center gap-3">
-                 <div className="h-px w-6 bg-accent/40" />
-                 <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Categorias</span>
-                 <div className="h-px w-6 bg-accent/40" />
+            <div className="text-center mb-8 md:mb-16 space-y-2 md:space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                 <div className="h-px w-4 md:w-6 bg-accent/40" />
+                 <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.5em] text-accent">Compre por Estilo</span>
+                 <div className="h-px w-4 md:w-6 bg-accent/40" />
               </div>
-              <h2 className="text-3xl md:text-7xl font-headline font-bold text-primary">Navegue por Estilo</h2>
-              <p className="text-sm md:text-xl text-muted-foreground italic font-light max-w-xl mx-auto px-4">
-                Escolha uma seção para filtrar as peças que mais combinam com o seu momento.
-              </p>
+              <h2 className="text-2xl md:text-5xl font-headline font-bold text-primary uppercase">Categorias</h2>
             </div>
             
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-8">
@@ -239,7 +242,7 @@ function StorefrontContent() {
                       key={col.id} 
                       href={`/categoria/${slug}`}
                       className={cn(
-                        "group relative aspect-[4/5] rounded-[1.25rem] md:rounded-[3.5rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-700",
+                        "group relative aspect-[4/5] rounded-[1rem] md:rounded-[3rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-700",
                         selectedCategory === col.name 
                           ? "border-accent ring-4 md:ring-8 ring-accent/5 scale-[1.05] z-10" 
                           : "border-transparent opacity-90 hover:opacity-100 hover:scale-[1.02]"
@@ -252,7 +255,7 @@ function StorefrontContent() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/20 to-transparent" />
                       <div className="absolute bottom-4 left-4 right-4 md:bottom-12 md:left-12 md:right-12">
-                        <h3 className="text-lg md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-1 md:mb-4">{col.name}</h3>
+                        <h3 className="text-sm md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-1 md:mb-4">{col.name}</h3>
                         <div className={cn(
                           "h-0.5 md:h-1 bg-accent transition-all duration-700",
                           selectedCategory === col.name ? "w-full" : "w-0 group-hover:w-full"
@@ -263,7 +266,7 @@ function StorefrontContent() {
                 })
               ) : (
                 [1,2,3,4,5].map(i => (
-                   <div key={i} className="aspect-[4/5] rounded-[1.5rem] md:rounded-[3rem] bg-secondary animate-pulse" />
+                   <div key={i} className="aspect-[4/5] rounded-[1rem] md:rounded-[3rem] bg-secondary animate-pulse" />
                 ))
               )}
             </div>
@@ -271,7 +274,7 @@ function StorefrontContent() {
         </section>
 
         {!selectedCategory && (
-          <section className="py-12 md:py-24">
+          <section className="py-12 md:py-20">
             <div className="container mx-auto px-4 md:px-6">
               <div className="grid lg:grid-cols-2 gap-10 md:gap-24 items-center">
                 <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[5rem] overflow-hidden shadow-premium group">
@@ -282,19 +285,19 @@ function StorefrontContent() {
                   />
                   <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
                 </div>
-                <div className="space-y-6 md:space-y-12 px-2">
-                  <div className="space-y-4 md:space-y-8">
-                    <span className="text-accent text-[10px] md:text-[12px] font-bold uppercase tracking-[0.6em]">Essência Toda Bela</span>
-                    <h3 className="text-4xl md:text-[7rem] font-headline font-bold text-primary leading-[0.9] tracking-tighter">
+                <div className="space-y-6 md:space-y-10 px-2">
+                  <div className="space-y-3 md:space-y-6">
+                    <span className="text-accent text-[9px] md:text-[12px] font-bold uppercase tracking-[0.6em]">Essência Toda Bela</span>
+                    <h3 className="text-3xl md:text-[6rem] font-headline font-bold text-primary leading-[0.9] tracking-tighter">
                       Moda com <br className="hidden md:block" /> <span className="italic font-light">Propósito</span>
                     </h3>
-                    <p className="text-sm md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
+                    <p className="text-sm md:text-xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
                       Cada peça em nossa boutique é selecionada para elevar sua confiança e refletir sua autenticidade em cada movimento.
                     </p>
                   </div>
                   <button 
                     onClick={() => document.getElementById('colecoes')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="w-full sm:w-auto rounded-full border-2 border-primary px-8 md:px-16 py-4 md:py-8 text-[10px] md:text-base font-bold uppercase tracking-[0.4em] hover:bg-primary hover:text-white transition-all shadow-xl"
+                    className="w-full sm:w-auto rounded-full border-2 border-primary px-8 md:px-12 py-4 md:py-6 text-[9px] md:text-sm font-bold uppercase tracking-[0.4em] hover:bg-primary hover:text-white transition-all shadow-xl"
                   >
                     Conheça a Coleção
                   </button>
@@ -304,15 +307,19 @@ function StorefrontContent() {
           </section>
         )}
 
-        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-12 md:py-20 bg-secondary/5 rounded-[2rem] md:rounded-[5rem]">
-          <div className="text-center space-y-4 md:space-y-8 mb-10 md:mb-24">
-            <span className="text-[10px] md:text-[12px] font-bold uppercase tracking-[0.5em] text-accent">Seleção Premium</span>
-            <h3 className="text-3xl md:text-7xl font-headline font-bold text-primary">Favoritos da Temporada</h3>
-            <div className="h-0.5 w-12 md:w-24 bg-accent mx-auto" />
+        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-12 md:py-16 bg-secondary/5 rounded-[2rem] md:rounded-[4rem]">
+          <div className="flex flex-row justify-between items-end mb-8 md:mb-16 gap-4">
+            <div className="space-y-1">
+              <span className="text-[9px] md:text-[12px] font-bold uppercase tracking-[0.5em] text-accent">Favoritos</span>
+              <h3 className="text-xl md:text-6xl font-headline font-bold text-primary uppercase">Mais Vendidos</h3>
+            </div>
+            <Link href="/economize" className="text-[10px] font-bold uppercase tracking-widest text-primary/60 underline underline-offset-4 hover:text-accent transition-colors">
+              Ver tudo
+            </Link>
           </div>
           <div className="flex gap-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-10 overflow-x-auto md:overflow-visible pb-8 no-scrollbar snap-x snap-mandatory">
             {latestProducts.map((product) => (
-              <div key={product.id} className="min-w-[70%] sm:min-w-[40%] md:min-w-0 flex-shrink-0 snap-start">
+              <div key={product.id} className="min-w-[46%] sm:min-w-[40%] md:min-w-0 flex-shrink-0 snap-start">
                 <ProductCard 
                   {...product} 
                   onAddToCart={() => addToCart(product)}
