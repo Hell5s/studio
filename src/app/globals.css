@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -30,6 +29,9 @@
     --accent: 31 43% 63%;
     --accent-foreground: 31 10% 15%;
     
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
     --border: 347 20% 92%;
     --input: 347 20% 92%;
     --ring: 347 29% 34%;
@@ -42,6 +44,8 @@
     --foreground: 20 10% 98%;
     --primary: 347 29% 34%;
     --primary-foreground: 20 10% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
   }
 }
 
