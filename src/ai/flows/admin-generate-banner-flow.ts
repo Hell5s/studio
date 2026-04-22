@@ -39,19 +39,12 @@ const generateBannerFlow = ai.defineFlow(
     Strictly no text, no watermarks, no logos in the image.`;
 
     try {
-      // Configuração necessária para geração de imagens (Imagen 3)
+      // Configuração necessária para geração de imagens (Gemini 2.0 Flash)
       const { media } = await ai.generate({
-        model: 'googleai/imagen-3.0-generate-001',
+        model: 'googleai/gemini-2.0-flash-exp',
         prompt: refinedPrompt,
         config: {
-          aspectRatio: input.aspectRatio,
-          responseModalities: ['IMAGE'],
-          safetySettings: [
-            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-          ]
+          responseModalities: ['IMAGE', 'TEXT'],
         }
       });
 
@@ -63,11 +56,11 @@ const generateBannerFlow = ai.defineFlow(
         imageUrl: media.url,
       };
     } catch (error: any) {
-      console.error('Erro na geração Imagen:', error);
+      console.error('Erro na geração Gemini:', error);
       
       // Mensagem específica para erro de modelo não encontrado (comum em Genkit)
       if (error.message?.includes('404') || error.message?.toLowerCase().includes('not found')) {
-        throw new Error('O modelo Imagen 3 não está disponível com sua chave atual ou nesta região.');
+        throw new Error('O modelo Gemini 2.0 Flash não está disponível com sua chave atual ou nesta região.');
       }
 
       throw new Error(`Falha na IA: ${error.message || 'Erro de conexão'}`);
