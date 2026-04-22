@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Sparkles, 
   Loader2, 
@@ -12,7 +12,7 @@ import {
   XCircle, 
   Save, 
   Type, 
-  Layout,
+  Upload,
   Layers
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
@@ -21,14 +21,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 
 export function BannerManagement() {
   const db = useFirestore();
+  const { storage } = useFirebase();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '1:1' | '4:3'>('16:9');
   const [previewImage, setPreviewImage] = useState('');
@@ -69,6 +74,30 @@ export function BannerManagement() {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setPreviewImage('');
+    try {
+      const storageRef = ref(storage!, `banners/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      setPreviewImage(url);
+      toast({ title: "Imagem carregada com sucesso!" });
+    } catch (error: any) {
+      toast({ 
+        title: "Erro no upload", 
+        description: "Não foi possível carregar a imagem.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
   const handleSaveBanner = () => {
     if (!previewImage) return;
 
@@ -94,17 +123,16 @@ export function BannerManagement() {
 
   const handleDelete = (id: string) => {
     if (!id) return;
-    if (confirm('Remover este banner permanentemente?')) {
-      deleteDocumentNonBlocking(doc(db, 'banners', id));
-      toast({ title: "Banner removido" });
-    }
+    // Removido confirm() para estabilidade no Firebase Studio
+    deleteDocumentNonBlocking(doc(db, 'banners', id));
+    toast({ title: "Banner removido" });
   };
 
   return (
     <div className="space-y-12 animate-in fade-in duration-1000">
       <div className="flex flex-col gap-2">
-        <h4 className="text-3xl font-headline font-bold text-primary">Estúdio Criativo IA</h4>
-        <p className="text-sm text-muted-foreground italic font-light">Crie e ative campanhas visuais exclusivas para sua página inicial.</p>
+        <h4 className="text-3xl font-headline font-bold text-primary">Estúdio Criativo</h4>
+        <p className="text-sm text-muted-foreground italic font-light">Crie por IA ou faça upload manual de campanhas para sua vitrine.</p>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-10">
@@ -112,7 +140,7 @@ export function BannerManagement() {
           <Card className="p-10 border-none bg-white shadow-2xl rounded-[3rem] space-y-8">
             <div className="grid md:grid-cols-[1fr_200px] gap-6">
               <div className="space-y-4">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Conceito Visual (IA)</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Conceito Visual (Opcional p/ IA)</Label>
                 <Input 
                   placeholder="Ex: Editorial de moda em um jardim luxuoso..." 
                   className="rounded-full h-16 px-8 bg-secondary/20 border-none focus:ring-2 focus:ring-primary/10"
@@ -134,29 +162,51 @@ export function BannerManagement() {
               </div>
             </div>
 
-            <Button 
-              onClick={handleGenerate} 
-              disabled={isGenerating}
-              className="w-full rounded-full h-16 bg-primary shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white font-bold uppercase tracking-widest text-[11px]"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="animate-spin h-5 w-5 mr-3" />
-                  Gerando Obra de Arte...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-5 w-5 mr-3" />
-                  Gerar Banner com IA
-                </>
-              )}
-            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button 
+                onClick={handleGenerate} 
+                disabled={isGenerating || isUploading}
+                className="rounded-full h-16 bg-primary shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white font-bold uppercase tracking-widest text-[11px]"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="animate-spin h-5 w-5 mr-3" />
+                    Gerando Obra...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-5 w-5 mr-3" />
+                    Gerar Banner com IA
+                  </>
+                )}
+              </Button>
+
+              <Button 
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isGenerating || isUploading}
+                className="rounded-full h-16 border-accent text-accent shadow-xl hover:scale-[1.02] active:scale-95 transition-all font-bold uppercase tracking-widest text-[11px]"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="animate-spin h-5 w-5 mr-3" />
+                    Enviando Arquivo...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-5 w-5 mr-3" />
+                    Fazer Upload de Imagem
+                  </>
+                )}
+              </Button>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+            </div>
 
             {previewImage && (
               <div className="grid md:grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500 bg-[#FFF9F7] p-8 rounded-[2rem] border border-primary/5">
                 <div className="space-y-6">
                   <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                    <Type className="h-3 w-3" /> Títulos do Banner
+                    <Type className="h-3 w-3" /> Personalização
                   </Label>
                   <div className="space-y-4">
                     <Input placeholder="Título" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
@@ -169,13 +219,13 @@ export function BannerManagement() {
                 </div>
                 <div className="space-y-4">
                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                     <ImageIcon className="h-3 w-3" /> Resultado
+                     <ImageIcon className="h-3 w-3" /> Pré-visualização
                    </Label>
                    <div className={cn(
                      "rounded-2xl overflow-hidden shadow-2xl border border-white relative bg-white",
                      aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square'
                    )}>
-                      <img src={previewImage} className="w-full h-full object-cover" alt="IA Result" />
+                      <img src={previewImage} className="w-full h-full object-cover" alt="Banner Result" />
                       <div className="absolute inset-0 bg-black/20 flex flex-col justify-end p-6 text-white pointer-events-none">
                          <h3 className="text-xl font-bold uppercase tracking-tighter leading-none">{bannerData.title}</h3>
                          <p className="text-[10px] italic opacity-80 mt-1">{bannerData.subtitle}</p>
