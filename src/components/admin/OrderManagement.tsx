@@ -38,6 +38,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
@@ -166,6 +167,12 @@ export function OrderManagement() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
           {selectedOrder && (
             <>
+              {/* Accessibility Title (Required by Radix) */}
+              <div className="sr-only">
+                <DialogTitle>Pedido #{selectedOrder.orderNumber}</DialogTitle>
+                <DialogDescription>Detalhes completos do pedido, itens selecionados e endereço de entrega.</DialogDescription>
+              </div>
+
               <div className="bg-[#2A1F22] p-8 text-white flex justify-between items-center sticky top-0 z-20">
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center text-primary"><ShoppingBag className="h-5 w-5" /></div>

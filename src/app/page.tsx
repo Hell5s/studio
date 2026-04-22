@@ -198,7 +198,7 @@ function StorefrontContent() {
             <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 items-stretch -mx-4 md:mx-0">
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
-                  <div key={product.id} className="w-[calc(50%-6px)] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
+                  <div key={product.id} className="w-[calc(50%-6px)] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none flex items-stretch">
                     <ProductCard 
                       {...product} 
                       onAddToCart={() => addToCart(product)}
@@ -308,7 +308,7 @@ function StorefrontContent() {
           </div>
           <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-12 md:px-0 md:pb-0 items-stretch -mx-4 md:mx-0">
             {latestProducts.map((product) => (
-              <div key={product.id} className="w-[calc(50%-6px)] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
+              <div key={product.id} className="w-[calc(50%-6px)] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none flex items-stretch">
                 <ProductCard 
                   {...product} 
                   onAddToCart={() => addToCart(product)}
