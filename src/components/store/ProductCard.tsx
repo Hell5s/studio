@@ -81,7 +81,7 @@ export function ProductCard({
 
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
-      {/* Container da Imagem com proporção fixa 3:4 */}
+      {/* Container da Imagem com proporção fixa 3:4 - flex-shrink-0 para não amassar no desktop */}
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
         <Image
           src={image || 'https://picsum.photos/seed/placeholder/600/800'}
@@ -119,12 +119,13 @@ export function ProductCard({
         </div>
       </div>
 
-      {/* Conteúdo do Card */}
+      {/* Conteúdo do Card - flex-1 flex flex-col para garantir alinhamento da base */}
       <div className="p-3 md:p-6 text-center flex flex-col flex-1 gap-2 md:gap-4">
         <h3 className="line-clamp-2 text-[10px] md:text-sm uppercase leading-tight tracking-tight text-primary/80 font-bold min-h-[2.5em]">
           {name}
         </h3>
         
+        {/* Preços e Botões empurrados para o final do card com mt-auto */}
         <div className="mt-auto space-y-1 md:space-y-2">
           <p className="text-base md:text-2xl font-bold text-primary leading-none">
             {formatCurrency(price)}
