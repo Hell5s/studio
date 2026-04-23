@@ -27,7 +27,7 @@ export async function generateBannerTexts(input: GenerateBannerTextInput): Promi
 
 const prompt = ai.definePrompt({
   name: 'generateBannerTextPrompt',
-  model: 'googleai/gemini-2.0-flash-exp', // Modelo robusto para análise visual e texto
+  model: 'googleai/gemini-2.5-flash', // Modelo estável e robusto para análise visual e texto
   input: { schema: GenerateBannerTextInputSchema },
   output: { schema: GenerateBannerTextOutputSchema },
   prompt: `Você é um redator de moda sênior da boutique 'Toda Bela'. 

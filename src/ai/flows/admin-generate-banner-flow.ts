@@ -39,9 +39,9 @@ const generateBannerFlow = ai.defineFlow(
     Strictly no text, no watermarks, no logos in the image.`;
 
     try {
-      // Configuração necessária para geração de imagens (Gemini 2.0 Flash)
+      // Configuração necessária para geração de imagens (Gemini 2.5 Flash)
       const { media } = await ai.generate({
-        model: 'googleai/gemini-2.0-flash-exp',
+        model: 'googleai/gemini-2.5-flash',
         prompt: refinedPrompt,
         config: {
           responseModalities: ['IMAGE', 'TEXT'],
@@ -60,7 +60,7 @@ const generateBannerFlow = ai.defineFlow(
       
       // Mensagem específica para erro de modelo não encontrado (comum em Genkit)
       if (error.message?.includes('404') || error.message?.toLowerCase().includes('not found')) {
-        throw new Error('O modelo Gemini 2.0 Flash não está disponível com sua chave atual ou nesta região.');
+        throw new Error('O modelo Gemini 2.5 Flash não está disponível com sua chave atual ou nesta região.');
       }
 
       throw new Error(`Falha na IA: ${error.message || 'Erro de conexão'}`);
