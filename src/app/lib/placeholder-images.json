@@ -1,15 +1,16 @@
+
 {
   "placeholderImages": [
     {
       "id": "hero-editorial-1",
-      "description": "High fashion editorial model in wine dress",
-      "imageUrl": "https://images.unsplash.com/photo-1539109132314-34a773ad0214?auto=format&fit=crop&w=1200&q=1600",
+      "description": "High fashion editorial model in sophisticated dress",
+      "imageUrl": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=1600",
       "imageHint": "fashion editorial"
     },
     {
       "id": "hero-editorial-2",
       "description": "Minimalist sophisticated model in cream outfit",
-      "imageUrl": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=1600",
+      "imageUrl": "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=1600",
       "imageHint": "fashion minimal"
     },
     {
