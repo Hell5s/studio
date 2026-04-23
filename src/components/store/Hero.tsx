@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -6,7 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
-import { Loader2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import { cn } from '@/lib/utils';
@@ -109,15 +108,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   </Button>
                 </div>
               </div>
-              
-              {banner.imageUrl && (
-                <div className="absolute top-24 md:top-36 right-6 md:right-16 z-20">
-                   <div className="px-3 md:px-5 py-1.5 md:py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-2">
-                      <Sparkles className="h-3 w-3 text-accent" />
-                      <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-white/40">Visual IA</span>
-                   </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
