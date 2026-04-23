@@ -69,27 +69,30 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
       className="relative w-full overflow-hidden bg-black group"
       style={{ width: '100%', aspectRatio: '16/9' }}
     >
-      <div className="h-full overflow-hidden" ref={emblaRef}>
-        <div className="flex h-full">
+      <div className="h-full w-full overflow-hidden" ref={emblaRef}>
+        <div className="flex h-full w-full">
           {displayBanners.map((banner, idx) => (
-            <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full">
+            <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full">
+              {/* Image Container with Contain logic - Ensures no cropping */}
               <div 
                 style={{
                   position: 'absolute',
                   inset: 0,
                   backgroundImage: `url(${banner.imageUrl})`,
                   backgroundSize: 'contain',
-                  backgroundPosition: 'center',
+                  backgroundPosition: 'center center',
                   backgroundRepeat: 'no-repeat',
                   backgroundColor: '#000',
                 }} 
+                aria-label={banner.title || "Banner Toda Bela"}
               />
               
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+              {/* Soft Gradient Overlay - Adjusted to prevent "fake" cropping look */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
               
-              <div className="container mx-auto h-full px-6 md:px-12 flex items-end pb-16 md:pb-24 relative z-10">
+              <div className="container mx-auto h-full px-6 md:px-12 flex items-end pb-16 md:pb-24 relative z-10 pointer-events-none">
                 <div className={cn(
-                  "max-w-2xl space-y-6 md:space-y-8 transition-all duration-1000",
+                  "max-w-2xl space-y-6 md:space-y-8 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
                   <div className="space-y-3 md:space-y-4">
@@ -100,12 +103,14 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                       {banner.subtitle || ''}
                     </p>
                   </div>
-                  <Button 
-                    onClick={onShopNow}
-                    className="rounded-full bg-white text-primary px-8 md:px-12 h-12 md:h-16 text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] shadow-xl hover:bg-accent hover:text-white transition-all"
-                  >
-                    {banner.ctaText || "Conferir"}
-                  </Button>
+                  {banner.ctaText && (
+                    <Button 
+                      onClick={onShopNow}
+                      className="rounded-full bg-white text-primary px-8 md:px-12 h-12 md:h-16 text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] shadow-xl hover:bg-accent hover:text-white transition-all"
+                    >
+                      {banner.ctaText}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -113,7 +118,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         </div>
       </div>
 
-      {/* Controles de Navegação */}
+      {/* Navigation Controls */}
       {displayBanners.length > 1 && (
         <>
           <button 
@@ -129,7 +134,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
             <ChevronRight className="h-6 w-6" />
           </button>
 
-          {/* Indicadores de Paginação */}
+          {/* Pagination Indicators */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-30">
             {displayBanners.map((_, i) => (
               <button
