@@ -74,6 +74,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 fill
                 quality={100}
                 unoptimized={true}
+                sizes="100vw"
                 className="object-cover opacity-90 transition-transform duration-[20s] hover:scale-105"
                 style={{ objectPosition: 'center top' }}
                 priority={idx === 0}

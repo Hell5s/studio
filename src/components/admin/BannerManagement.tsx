@@ -78,7 +78,6 @@ export function BannerManagement() {
   };
 
   const handleGenerateTexts = async () => {
-    // Agora permite gerar texto apenas com a imagem se o prompt estiver vazio
     if (!prompt && !previewImage) {
       toast({ title: "Falta informação", description: "Envie uma imagem ou escreva um tema para a IA se inspirar.", variant: "destructive" });
       return;
@@ -111,7 +110,11 @@ export function BannerManagement() {
     setPreviewImage('');
     try {
       const storageRef = ref(storage!, `banners/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
+      // Adicionando metadados para preservar qualidade e cache
+      const snapshot = await uploadBytes(storageRef, file, {
+        contentType: file.type,
+        cacheControl: 'public, max-age=31536000',
+      });
       const url = await getDownloadURL(snapshot.ref);
       setPreviewImage(url);
       toast({ title: "Imagem carregada com sucesso!" });
@@ -169,7 +172,7 @@ export function BannerManagement() {
           <Card className="p-10 border-none bg-white shadow-2xl rounded-[3rem] space-y-8">
             <div className="grid md:grid-cols-[1fr_200px] gap-6">
               <div className="space-y-4">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tema ou Inspiração (Opcional se enviar imagem)</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tema da Campanha (Opcional)</Label>
                 <Input 
                   placeholder="Ex: Coleção de Inverno, Promoção 20%, Vibe Tropical..." 
                   className="rounded-full h-16 px-8 bg-secondary/20 border-none focus:ring-2 focus:ring-primary/10"
