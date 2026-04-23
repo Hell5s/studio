@@ -73,38 +73,16 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         <div className="flex h-full">
           {displayBanners.map((banner, idx) => (
             <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full">
-              <div className="absolute inset-0 w-full h-full">
-                {/* Fundo desfocado */}
-                <img
-                  src={banner.imageUrl}
-                  alt=""
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    objectPosition: 'center',
-                    filter: 'blur(20px)',
-                    transform: 'scale(1.1)',
-                    opacity: 0.6,
-                  }}
-                />
-                {/* Imagem principal centralizada */}
-                <img
-                  src={banner.imageUrl}
-                  alt={banner.title || "Boutique Toda Bela"}
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    objectPosition: 'top center',
-                    opacity: 1,
-                  }}
-                />
-              </div>
+              <div 
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundImage: `url(${banner.imageUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center top',
+                  backgroundRepeat: 'no-repeat',
+                }} 
+              />
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
               
