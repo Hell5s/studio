@@ -47,23 +47,23 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
   const defaultHero = {
     imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80",
-    title: "Energy Potência",
-    subtitle: "Sua nova definição de sofisticação, propósito e movimento.",
-    ctaText: "Conferir Looks"
+    title: "",
+    subtitle: "",
+    ctaText: "Conferir"
   };
 
   const displayBanners = banners && banners.length > 0 ? banners : [defaultHero];
 
   if (isLoading) {
     return (
-      <section className="relative w-full h-[60vh] md:h-[90vh] min-h-[500px] md:min-h-[700px] overflow-hidden bg-black flex items-center justify-center">
+      <section className="relative w-full h-[70vh] md:h-screen min-h-[500px] overflow-hidden bg-black flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-white/20" />
       </section>
     );
   }
 
   return (
-    <section className="relative w-full h-[60vh] md:h-[90vh] min-h-[500px] md:min-h-[700px] overflow-hidden bg-black group">
+    <section className="relative w-full h-[70vh] md:h-screen min-h-[500px] overflow-hidden bg-black group">
       <div className="h-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full">
           {displayBanners.map((banner, idx) => (
@@ -74,7 +74,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 fill
                 quality={100}
                 unoptimized={true}
-                className="object-cover opacity-80 transition-transform duration-[20s] hover:scale-110"
+                className="object-contain md:object-cover opacity-80 transition-transform duration-[20s] hover:scale-110"
                 priority={idx === 0}
               />
               
@@ -87,27 +87,17 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 )}>
                   <div className="space-y-3 md:space-y-4">
                     <h1 className="text-3xl md:text-7xl font-headline font-bold text-white uppercase tracking-tighter leading-tight">
-                      {banner.title ? (
-                        <>
-                           {banner.title.split(' ')[0]} <br className="hidden md:block" />
-                           <span className="italic font-light text-accent">{banner.title.split(' ').slice(1).join(' ')}</span>
-                        </>
-                      ) : (
-                        <>
-                          Energy <br className="hidden md:block" />
-                          <span className="italic font-light text-accent">Potência</span>
-                        </>
-                      )}
+                      {banner.title || ''}
                     </h1>
                     <p className="text-sm md:text-xl text-white/80 font-light italic max-w-xs md:max-w-lg leading-relaxed">
-                      {banner.subtitle || "Sua nova definição de sofisticação, propósito e movimento."}
+                      {banner.subtitle || ''}
                     </p>
                   </div>
                   <Button 
                     onClick={onShopNow}
                     className="rounded-full bg-white text-primary px-8 md:px-12 h-12 md:h-16 text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] shadow-xl hover:bg-accent hover:text-white transition-all"
                   >
-                    {banner.ctaText || "Conferir Looks"}
+                    {banner.ctaText || "Conferir"}
                   </Button>
                 </div>
               </div>
