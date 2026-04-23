@@ -45,7 +45,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   const defaultHero = {
-    imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=max&w=1600&q=80",
     title: "",
     subtitle: "",
     ctaText: "Conferir"
@@ -79,7 +79,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   inset: 0,
                   backgroundImage: `url(${banner.imageUrl})`,
                   backgroundSize: 'contain',
-                  backgroundPosition: 'center center',
+                  backgroundPosition: 'center',
                   backgroundRepeat: 'no-repeat',
                   backgroundColor: '#000',
                 }} 
