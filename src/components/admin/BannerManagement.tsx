@@ -14,7 +14,8 @@ import {
   Type, 
   Upload,
   Layers,
-  MessageSquareText
+  MessageSquareText,
+  Link as LinkIcon
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -38,6 +39,7 @@ export function BannerManagement() {
   const [isGeneratingTexts, setIsGeneratingTexts] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [prompt, setPrompt] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '1:1' | '4:3'>('16:9');
   const [previewImage, setPreviewImage] = useState('');
   
@@ -53,6 +55,17 @@ export function BannerManagement() {
   }, [db]);
   
   const { data: banners, isLoading } = useCollection(bannersQuery);
+
+  const handleUseUrl = () => {
+    if (!imageUrl) return;
+    if (!imageUrl.startsWith('http')) {
+      toast({ title: "URL Inválida", description: "O link deve começar com http:// ou https://", variant: "destructive" });
+      return;
+    }
+    setPreviewImage(imageUrl);
+    setImageUrl('');
+    toast({ title: "Link da imagem carregado!" });
+  };
 
   const handleGenerate = async () => {
     if (!prompt) {
@@ -110,7 +123,6 @@ export function BannerManagement() {
     setPreviewImage('');
     try {
       const storageRef = ref(storage!, `banners/${Date.now()}-${file.name}`);
-      // Adicionando metadados para preservar qualidade e cache
       const snapshot = await uploadBytes(storageRef, file, {
         contentType: file.type,
         cacheControl: 'public, max-age=31536000',
@@ -164,7 +176,7 @@ export function BannerManagement() {
     <div className="space-y-12 animate-in fade-in duration-1000">
       <div className="flex flex-col gap-2">
         <h4 className="text-3xl font-headline font-bold text-primary">Estúdio Criativo</h4>
-        <p className="text-sm text-muted-foreground italic font-light">Crie por IA ou faça upload manual de campanhas para sua vitrine.</p>
+        <p className="text-sm text-muted-foreground italic font-light">Crie por IA, URL direta ou upload manual de campanhas para sua vitrine.</p>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-10">
@@ -194,44 +206,73 @@ export function BannerManagement() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button 
-                onClick={handleGenerate} 
-                disabled={isGenerating || isUploading}
-                className="rounded-full h-16 bg-primary shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white font-bold uppercase tracking-widest text-[11px]"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="animate-spin h-5 w-5 mr-3" />
-                    Gerando Obra...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-5 w-5 mr-3" />
-                    Gerar Foto com IA
-                  </>
-                )}
-              </Button>
+            <div className="space-y-6">
+              {/* Opção de URL Direta */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <LinkIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40" />
+                  <Input 
+                    placeholder="Colar URL da imagem (ex: https://...)" 
+                    className="rounded-full h-16 pl-14 pr-6 bg-secondary/10 border-none focus:ring-1 focus:ring-accent/20"
+                    value={imageUrl}
+                    onChange={e => setImageUrl(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  onClick={handleUseUrl}
+                  disabled={!imageUrl}
+                  className="rounded-full h-16 px-8 bg-accent text-primary font-bold uppercase tracking-widest text-[10px] hover:brightness-110 shadow-lg"
+                >
+                  Usar esta URL
+                </Button>
+              </div>
 
-              <Button 
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isGenerating || isUploading}
-                className="rounded-full h-16 border-accent text-accent shadow-xl hover:scale-[1.02] active:scale-95 transition-all font-bold uppercase tracking-widest text-[11px]"
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="animate-spin h-5 w-5 mr-3" />
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-5 w-5 mr-3" />
-                    Enviar Minha Foto
-                  </>
-                )}
-              </Button>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+              {/* Divisor Visual */}
+              <div className="relative flex items-center py-2">
+                <div className="flex-grow border-t border-primary/5"></div>
+                <span className="flex-shrink mx-4 text-[9px] font-black text-primary/10 uppercase tracking-[0.3em]">OU</span>
+                <div className="flex-grow border-t border-primary/5"></div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  onClick={handleGenerate} 
+                  disabled={isGenerating || isUploading}
+                  className="rounded-full h-16 bg-primary shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white font-bold uppercase tracking-widest text-[11px]"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="animate-spin h-5 w-5 mr-3" />
+                      Gerando Obra...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-5 w-5 mr-3" />
+                      Gerar Foto com IA
+                    </>
+                  )}
+                </Button>
+
+                <Button 
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isGenerating || isUploading}
+                  className="rounded-full h-16 border-accent text-accent shadow-xl hover:scale-[1.02] active:scale-95 transition-all font-bold uppercase tracking-widest text-[11px]"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="animate-spin h-5 w-5 mr-3" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-5 w-5 mr-3" />
+                      Enviar Minha Foto
+                    </>
+                  )}
+                </Button>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+              </div>
             </div>
 
             {previewImage && (
