@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -71,6 +72,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 src={banner.imageUrl}
                 alt={banner.title || "Boutique Toda Bela"}
                 fill
+                quality={100}
+                unoptimized={true}
                 className="object-cover opacity-80 transition-transform duration-[20s] hover:scale-110"
                 priority={idx === 0}
               />
