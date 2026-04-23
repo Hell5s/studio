@@ -56,7 +56,7 @@ export function BannerManagement() {
 
   const handleGenerate = async () => {
     if (!prompt) {
-      toast({ title: "Prompt necessário", description: "Descreva o conceito do banner.", variant: "destructive" });
+      toast({ title: "Inspiração necessária", description: "Diga à IA o que você imagina para o banner (ex: Verão em Paris).", variant: "destructive" });
       return;
     }
 
@@ -78,14 +78,18 @@ export function BannerManagement() {
   };
 
   const handleGenerateTexts = async () => {
-    if (!prompt) {
-      toast({ title: "Conceito necessário", description: "Escreva algo no campo 'Conceito Visual' para a IA se inspirar.", variant: "destructive" });
+    // Agora permite gerar texto apenas com a imagem se o prompt estiver vazio
+    if (!prompt && !previewImage) {
+      toast({ title: "Falta informação", description: "Envie uma imagem ou escreva um tema para a IA se inspirar.", variant: "destructive" });
       return;
     }
 
     setIsGeneratingTexts(true);
     try {
-      const result = await generateBannerTexts({ concept: prompt });
+      const result = await generateBannerTexts({ 
+        concept: prompt,
+        imageUrl: previewImage 
+      });
       setBannerData({
         title: result.title,
         subtitle: result.subtitle,
@@ -165,9 +169,9 @@ export function BannerManagement() {
           <Card className="p-10 border-none bg-white shadow-2xl rounded-[3rem] space-y-8">
             <div className="grid md:grid-cols-[1fr_200px] gap-6">
               <div className="space-y-4">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Conceito Visual (Inspiração p/ IA)</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tema ou Inspiração (Opcional se enviar imagem)</Label>
                 <Input 
-                  placeholder="Ex: Editorial de moda em um jardim luxuoso..." 
+                  placeholder="Ex: Coleção de Inverno, Promoção 20%, Vibe Tropical..." 
                   className="rounded-full h-16 px-8 bg-secondary/20 border-none focus:ring-2 focus:ring-primary/10"
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
@@ -201,7 +205,7 @@ export function BannerManagement() {
                 ) : (
                   <>
                     <Sparkles className="h-5 w-5 mr-3" />
-                    Gerar Imagem com IA
+                    Gerar Foto com IA
                   </>
                 )}
               </Button>
@@ -215,12 +219,12 @@ export function BannerManagement() {
                 {isUploading ? (
                   <>
                     <Loader2 className="animate-spin h-5 w-5 mr-3" />
-                    Enviando Arquivo...
+                    Enviando...
                   </>
                 ) : (
                   <>
                     <Upload className="h-5 w-5 mr-3" />
-                    Fazer Upload de Imagem
+                    Enviar Minha Foto
                   </>
                 )}
               </Button>
@@ -232,7 +236,7 @@ export function BannerManagement() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                      <Type className="h-3 w-3" /> Personalização
+                      <Type className="h-3 w-3" /> Textos do Banner
                     </Label>
                     <button 
                       onClick={handleGenerateTexts}
@@ -240,12 +244,12 @@ export function BannerManagement() {
                       className="text-[9px] font-black uppercase text-primary/60 hover:text-accent flex items-center gap-1.5 transition-colors disabled:opacity-30"
                     >
                       {isGeneratingTexts ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <MessageSquareText className="h-2.5 w-2.5" />}
-                      Gerar Textos com IA
+                      IA: Criar Ideias de Texto
                     </button>
                   </div>
                   <div className="space-y-4">
-                    <Input placeholder="Título do Banner" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
-                    <Input placeholder="Subtítulo Descritivo" value={bannerData.subtitle} onChange={e => setBannerData({...bannerData, subtitle: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Título (ex: Elegância Pura)" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Subtítulo (ex: Descubra o novo)" value={bannerData.subtitle} onChange={e => setBannerData({...bannerData, subtitle: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
                     <Input placeholder="Texto do Botão" value={bannerData.ctaText} onChange={e => setBannerData({...bannerData, ctaText: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
                   </div>
                   <Button onClick={handleSaveBanner} className="w-full rounded-full bg-primary text-white font-bold h-14 shadow-xl hover:bg-accent transition-colors text-[10px] uppercase tracking-widest">
@@ -254,7 +258,7 @@ export function BannerManagement() {
                 </div>
                 <div className="space-y-4">
                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                     <ImageIcon className="h-3 w-3" /> Pré-visualização
+                     <ImageIcon className="h-3 w-3" /> Visualização
                    </Label>
                    <div className={cn(
                      "rounded-2xl overflow-hidden shadow-2xl border border-white relative bg-white",
