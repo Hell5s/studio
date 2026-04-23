@@ -31,12 +31,13 @@ const generateBannerFlow = ai.defineFlow(
   },
   async (input) => {
     // Prompt refinado para estética Toda Bela - Focado em Moda Premium
-    const refinedPrompt = `High-end fashion editorial photography for a boutique called 'Toda Bela'. 
-    Theme: ${input.prompt}. 
-    Aesthetic: Sophisticated, minimal, elegant, soft warm lighting, cinematic, 8k resolution. 
-    Composition: Wide shot suitable for a website banner, clean background, high fashion model.
-    Colors: Deep wine red, soft gold, cream, and champagne. 
-    Strictly no text, no watermarks, no logos in the image.`;
+    const refinedPrompt = `Wide panoramic fashion editorial photography, aspect ratio 16:9 horizontal landscape format. 
+Theme: ${input.prompt}. 
+IMPORTANT: The model must be shown from waist up only, centered in frame, with wide background on both sides.
+Style: Sophisticated, cinematic, 8k, soft warm lighting.
+Colors: Deep wine red, soft gold, cream, champagne.
+Format: WIDE LANDSCAPE, NOT portrait, NOT vertical. Horizontal banner format only.
+No text, no watermarks, no logos.`;
 
     try {
       // Configuração necessária para geração de imagens (Gemini 2.5 Flash Image)
