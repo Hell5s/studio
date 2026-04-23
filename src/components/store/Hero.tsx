@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -48,7 +47,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=max&w=1600&q=80",
     title: "",
     subtitle: "",
-    ctaText: "Conferir"
+    ctaText: "Conferir",
+    imagePosition: { x: 50, y: 20 }
   };
 
   const displayBanners = banners && banners.length > 0 ? banners : [defaultHero];
@@ -79,13 +79,14 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   inset: 0,
                   backgroundImage: `url(${banner.imageUrl})`,
                   backgroundSize: 'cover',
-                  backgroundPosition: 'center 20%',
+                  backgroundPosition: banner.imagePosition 
+                    ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
+                    : 'center 20%',
                   backgroundRepeat: 'no-repeat',
                 }} 
                 aria-label={banner.title || "Banner Toda Bela"}
               />
               
-              {/* Soft Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               
               <div className="container mx-auto h-full px-6 md:px-12 flex items-end pb-16 md:pb-24 relative z-10 pointer-events-none">
@@ -116,7 +117,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         </div>
       </div>
 
-      {/* Navigation Controls */}
       {displayBanners.length > 1 && (
         <>
           <button 
@@ -132,7 +132,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
             <ChevronRight className="h-6 w-6" />
           </button>
 
-          {/* Pagination Indicators */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-30">
             {displayBanners.map((_, i) => (
               <button

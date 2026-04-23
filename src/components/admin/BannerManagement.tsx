@@ -14,7 +14,8 @@ import {
   Upload,
   Layers,
   MessageSquareText,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Move
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -42,6 +43,11 @@ export function BannerManagement() {
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '1:1' | '4:3'>('16:9');
   const [previewImage, setPreviewImage] = useState('');
   
+  // Novo estado para posicionamento da imagem
+  const [imagePosition, setImagePosition] = useState({ x: 50, y: 20 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
   const [bannerData, setBannerData] = useState({
     title: '',
     subtitle: '',
@@ -55,6 +61,25 @@ export function BannerManagement() {
   
   const { data: banners, isLoading } = useCollection(bannersQuery);
 
+  // Lógica de arraste para posicionamento
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const dx = ((e.clientX - dragStart.x) / 300) * -10;
+    const dy = ((e.clientY - dragStart.y) / 200) * -10;
+    setImagePosition(prev => ({
+      x: Math.min(100, Math.max(0, prev.x + dx)),
+      y: Math.min(100, Math.max(0, prev.y + dy))
+    }));
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
   const handleUseUrl = () => {
     if (!imageUrl) return;
     if (!imageUrl.startsWith('http')) {
@@ -63,6 +88,7 @@ export function BannerManagement() {
     }
     setPreviewImage(imageUrl);
     setImageUrl('');
+    setImagePosition({ x: 50, y: 20 });
     toast({ title: "Link da imagem carregado!" });
   };
 
@@ -77,6 +103,7 @@ export function BannerManagement() {
     try {
       const result = await generateBannerImage({ prompt, aspectRatio });
       setPreviewImage(result.imageUrl);
+      setImagePosition({ x: 50, y: 20 });
       toast({ title: "Imagem gerada!" });
     } catch (error: any) {
       toast({ 
@@ -97,7 +124,6 @@ export function BannerManagement() {
 
     setIsGeneratingTexts(true);
     try {
-      // Detecta se a imagem é externa (não começa com firebase nem é data uri local)
       const isSafeImage = previewImage && (previewImage.startsWith('https://firebasestorage') || previewImage.startsWith('data:'));
       
       const result = await generateBannerTexts({ 
@@ -136,6 +162,7 @@ export function BannerManagement() {
       });
       const url = await getDownloadURL(snapshot.ref);
       setPreviewImage(url);
+      setImagePosition({ x: 50, y: 20 });
       toast({ title: "Imagem carregada com sucesso!" });
     } catch (error: any) {
       toast({ 
@@ -154,7 +181,6 @@ export function BannerManagement() {
     try {
       let finalUrl = previewImage;
 
-      // Se for base64 (gerada por IA), faz upload para o Storage primeiro
       if (previewImage.startsWith('data:')) {
         const { ref, uploadString, getDownloadURL } = await import('firebase/storage');
         const storageRef = ref(storage!, `banners/${Date.now()}-ai-banner.jpg`);
@@ -166,6 +192,7 @@ export function BannerManagement() {
       await addDoc(collection(db, 'banners'), {
         ...bannerData,
         imageUrl: finalUrl,
+        imagePosition: imagePosition,
         aspectRatio,
         active: true,
         order: (banners?.length || 0) + 1,
@@ -175,6 +202,7 @@ export function BannerManagement() {
       setPreviewImage('');
       setPrompt('');
       setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks' });
+      setImagePosition({ x: 50, y: 20 });
       toast({ title: "Banner Ativado na Vitrine!" });
     } catch (error: any) {
       toast({ title: "Erro ao salvar banner", description: error.message, variant: "destructive" });
@@ -228,7 +256,6 @@ export function BannerManagement() {
             </div>
 
             <div className="space-y-6">
-              {/* Opção de URL Direta */}
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                   <LinkIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40" />
@@ -248,7 +275,6 @@ export function BannerManagement() {
                 </Button>
               </div>
 
-              {/* Divisor Visual */}
               <div className="relative flex items-center py-2">
                 <div className="flex-grow border-t border-primary/5"></div>
                 <span className="flex-shrink mx-4 text-[9px] font-black text-primary/10 uppercase tracking-[0.3em]">OU</span>
@@ -323,13 +349,30 @@ export function BannerManagement() {
                 </div>
                 <div className="space-y-4">
                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                     <ImageIcon className="h-3 w-3" /> Pré-visualização
+                     <ImageIcon className="h-3 w-3" /> Enquadramento (Arraste p/ ajustar)
                    </Label>
-                   <div className={cn(
-                     "rounded-2xl overflow-hidden shadow-2xl border border-white relative bg-white",
-                     aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square'
-                   )}>
-                      <img src={previewImage} className="w-full h-full object-cover" alt="Banner Result" />
+                   <div 
+                    className={cn(
+                      "rounded-2xl overflow-hidden shadow-2xl border-4 border-white relative bg-black select-none group/preview",
+                      aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square'
+                    )}
+                    style={{
+                      backgroundImage: `url(${previewImage})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: `${imagePosition.x}% ${imagePosition.y}%`,
+                      cursor: isDragging ? 'grabbing' : 'grab',
+                    }}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                   >
+                      <div className="absolute inset-0 bg-black/10 group-hover/preview:bg-transparent transition-colors flex items-center justify-center pointer-events-none">
+                         <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-lg opacity-0 group-hover/preview:opacity-100 transition-opacity">
+                            <Move className="h-3 w-3 text-primary" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Arraste para ajustar</span>
+                         </div>
+                      </div>
                       <div className="absolute inset-0 bg-black/20 flex flex-col justify-end p-6 text-white pointer-events-none">
                          <h3 className="text-xl font-bold uppercase tracking-tighter leading-none">{bannerData.title}</h3>
                          <p className="text-[10px] italic opacity-80 mt-1">{bannerData.subtitle}</p>
@@ -352,7 +395,7 @@ export function BannerManagement() {
             ) : banners?.map(banner => (
               <div key={banner.id} className="p-4 rounded-3xl bg-white/10 border border-white/5 space-y-4 group hover:bg-white/15 transition-all">
                 <div className="aspect-video rounded-2xl overflow-hidden relative shadow-lg">
-                  <img src={banner.imageUrl} className="w-full h-full object-cover" />
+                  <img src={banner.imageUrl} className="w-full h-full object-cover" style={{ objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center' }} />
                   <div className="absolute inset-0 bg-black/40 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button 
                       onClick={() => handleDelete(banner.id)}
