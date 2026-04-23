@@ -57,7 +57,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return (
       <section 
         className="relative w-full overflow-hidden bg-black flex items-center justify-center"
-        style={{ height: 'calc(100vh - 70px)' }}
+        style={{ height: '56.25vw', maxHeight: '90vh', minHeight: '400px' }}
       >
         <Loader2 className="h-12 w-12 animate-spin text-white/20" />
       </section>
@@ -67,7 +67,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   return (
     <section 
       className="relative w-full overflow-hidden bg-black group"
-      style={{ height: 'calc(100vh - 70px)' }}
+      style={{ height: '56.25vw', maxHeight: '90vh', minHeight: '400px' }}
     >
       <div className="h-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full">
@@ -79,7 +79,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   inset: 0,
                   backgroundImage: `url(${banner.imageUrl})`,
                   backgroundSize: 'cover',
-                  backgroundPosition: 'center top',
+                  backgroundPosition: 'center center',
                   backgroundRepeat: 'no-repeat',
                 }} 
               />
