@@ -57,7 +57,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return (
       <section 
         className="relative w-full overflow-hidden bg-black flex items-center justify-center"
-        style={{ width: '100%', height: '75vh' }}
+        style={{ height: '100vh' }}
       >
         <Loader2 className="h-12 w-12 animate-spin text-white/20" />
       </section>
@@ -67,28 +67,26 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   return (
     <section 
       className="relative w-full overflow-hidden bg-black group"
-      style={{ width: '100%', height: '75vh' }}
+      style={{ height: '100vh' }}
     >
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full w-full">
           {displayBanners.map((banner, idx) => (
             <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full">
-              {/* Image Container with Contain logic - Ensures no cropping */}
               <div 
                 style={{
                   position: 'absolute',
                   inset: 0,
                   backgroundImage: `url(${banner.imageUrl})`,
-                  backgroundSize: 'contain',
-                  backgroundPosition: 'center top',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center 20%',
                   backgroundRepeat: 'no-repeat',
-                  backgroundColor: '#000',
                 }} 
                 aria-label={banner.title || "Banner Toda Bela"}
               />
               
-              {/* Soft Gradient Overlay - Adjusted to prevent "fake" cropping look */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+              {/* Soft Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               
               <div className="container mx-auto h-full px-6 md:px-12 flex items-end pb-16 md:pb-24 relative z-10 pointer-events-none">
                 <div className={cn(
