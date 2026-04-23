@@ -148,15 +148,26 @@ export function BannerManagement() {
   const handleSaveBanner = async () => {
     if (!previewImage) return;
     try {
+      let finalUrl = previewImage;
+
+      // Se for base64 (gerada por IA), faz upload para o Storage primeiro
+      if (previewImage.startsWith('data:')) {
+        const { ref, uploadString, getDownloadURL } = await import('firebase/storage');
+        const storageRef = ref(storage!, `banners/${Date.now()}-ai-banner.jpg`);
+        const snapshot = await uploadString(storageRef, previewImage, 'data_url');
+        finalUrl = await getDownloadURL(snapshot.ref);
+      }
+
       const { addDoc } = await import('firebase/firestore');
       await addDoc(collection(db, 'banners'), {
         ...bannerData,
-        imageUrl: previewImage,
+        imageUrl: finalUrl,
         aspectRatio,
         active: true,
         order: (banners?.length || 0) + 1,
         createdAt: serverTimestamp()
       });
+
       setPreviewImage('');
       setPrompt('');
       setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks' });
