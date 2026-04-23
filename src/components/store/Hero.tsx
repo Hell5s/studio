@@ -26,7 +26,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const defaultHero = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80";
 
   return (
-    <section className="relative w-full h-[50vh] md:h-[65vh] min-h-[400px] md:min-h-[500px] overflow-hidden bg-black">
+    <section className="relative w-full h-[60vh] md:h-[90vh] min-h-[500px] md:min-h-[700px] overflow-hidden bg-black">
       {isLoading ? (
         <div className="absolute inset-0 flex items-center justify-center">
           <Loader2 className="h-12 w-12 animate-spin text-white/20" />
