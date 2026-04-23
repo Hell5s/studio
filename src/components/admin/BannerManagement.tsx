@@ -13,9 +13,11 @@ import {
   Save, 
   Type, 
   Upload,
-  Layers
+  Layers,
+  MessageSquareText
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
+import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,14 +35,15 @@ export function BannerManagement() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingTexts, setIsGeneratingTexts] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '1:1' | '4:3'>('16:9');
   const [previewImage, setPreviewImage] = useState('');
   
   const [bannerData, setBannerData] = useState({
-    title: 'Nova Coleção',
-    subtitle: 'A essência da sofisticação para seus dias.',
+    title: '',
+    subtitle: '',
     ctaText: 'Conferir Looks'
   });
 
@@ -71,6 +74,28 @@ export function BannerManagement() {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateTexts = async () => {
+    if (!prompt) {
+      toast({ title: "Conceito necessário", description: "Escreva algo no campo 'Conceito Visual' para a IA se inspirar.", variant: "destructive" });
+      return;
+    }
+
+    setIsGeneratingTexts(true);
+    try {
+      const result = await generateBannerTexts({ concept: prompt });
+      setBannerData({
+        title: result.title,
+        subtitle: result.subtitle,
+        ctaText: result.ctaText
+      });
+      toast({ title: "Textos criados!" });
+    } catch (error: any) {
+      toast({ title: "Falha na redação", description: "Não conseguimos gerar os textos agora.", variant: "destructive" });
+    } finally {
+      setIsGeneratingTexts(false);
     }
   };
 
@@ -112,6 +137,7 @@ export function BannerManagement() {
 
     setPreviewImage('');
     setPrompt('');
+    setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks' });
     toast({ title: "Banner Ativado" });
   };
 
@@ -123,7 +149,6 @@ export function BannerManagement() {
 
   const handleDelete = (id: string) => {
     if (!id) return;
-    // Removido confirm() para estabilidade no Firebase Studio
     deleteDocumentNonBlocking(doc(db, 'banners', id));
     toast({ title: "Banner removido" });
   };
@@ -140,7 +165,7 @@ export function BannerManagement() {
           <Card className="p-10 border-none bg-white shadow-2xl rounded-[3rem] space-y-8">
             <div className="grid md:grid-cols-[1fr_200px] gap-6">
               <div className="space-y-4">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Conceito Visual (Opcional p/ IA)</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Conceito Visual (Inspiração p/ IA)</Label>
                 <Input 
                   placeholder="Ex: Editorial de moda em um jardim luxuoso..." 
                   className="rounded-full h-16 px-8 bg-secondary/20 border-none focus:ring-2 focus:ring-primary/10"
@@ -176,7 +201,7 @@ export function BannerManagement() {
                 ) : (
                   <>
                     <Sparkles className="h-5 w-5 mr-3" />
-                    Gerar Banner com IA
+                    Gerar Imagem com IA
                   </>
                 )}
               </Button>
@@ -205,13 +230,23 @@ export function BannerManagement() {
             {previewImage && (
               <div className="grid md:grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500 bg-[#FFF9F7] p-8 rounded-[2rem] border border-primary/5">
                 <div className="space-y-6">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                    <Type className="h-3 w-3" /> Personalização
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
+                      <Type className="h-3 w-3" /> Personalização
+                    </Label>
+                    <button 
+                      onClick={handleGenerateTexts}
+                      disabled={isGeneratingTexts}
+                      className="text-[9px] font-black uppercase text-primary/60 hover:text-accent flex items-center gap-1.5 transition-colors disabled:opacity-30"
+                    >
+                      {isGeneratingTexts ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <MessageSquareText className="h-2.5 w-2.5" />}
+                      Gerar Textos com IA
+                    </button>
+                  </div>
                   <div className="space-y-4">
-                    <Input placeholder="Título" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
-                    <Input placeholder="Descrição" value={bannerData.subtitle} onChange={e => setBannerData({...bannerData, subtitle: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
-                    <Input placeholder="Botão" value={bannerData.ctaText} onChange={e => setBannerData({...bannerData, ctaText: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Título do Banner" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Subtítulo Descritivo" value={bannerData.subtitle} onChange={e => setBannerData({...bannerData, subtitle: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Texto do Botão" value={bannerData.ctaText} onChange={e => setBannerData({...bannerData, ctaText: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
                   </div>
                   <Button onClick={handleSaveBanner} className="w-full rounded-full bg-primary text-white font-bold h-14 shadow-xl hover:bg-accent transition-colors text-[10px] uppercase tracking-widest">
                     <Save className="mr-2 h-5 w-5" /> Ativar na Vitrine
