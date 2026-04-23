@@ -80,7 +80,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   inset: 0,
                   backgroundImage: `url(${banner.imageUrl})`,
                   backgroundSize: 'contain',
-                  backgroundPosition: 'center center',
+                  backgroundPosition: 'center 15%',
                   backgroundRepeat: 'no-repeat',
                   backgroundColor: '#000',
                 }} 
