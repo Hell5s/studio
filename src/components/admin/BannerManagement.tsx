@@ -97,10 +97,14 @@ export function BannerManagement() {
 
     setIsGeneratingTexts(true);
     try {
+      // Detecta se a imagem é externa (não começa com firebase nem é data uri local)
+      const isSafeImage = previewImage && (previewImage.startsWith('https://firebasestorage') || previewImage.startsWith('data:'));
+      
       const result = await generateBannerTexts({ 
         concept: prompt,
-        imageUrl: previewImage 
+        imageUrl: isSafeImage ? previewImage : undefined 
       });
+      
       setBannerData({
         title: result.title,
         subtitle: result.subtitle,

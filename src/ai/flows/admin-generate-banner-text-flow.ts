@@ -27,7 +27,7 @@ export async function generateBannerTexts(input: GenerateBannerTextInput): Promi
 
 const prompt = ai.definePrompt({
   name: 'generateBannerTextPrompt',
-  model: 'googleai/gemini-2.5-flash', // Modelo estável e robusto para análise visual e texto
+  model: 'googleai/gemini-2.5-flash',
   input: { schema: GenerateBannerTextInputSchema },
   output: { schema: GenerateBannerTextOutputSchema },
   prompt: `Você é um redator de moda sênior da boutique 'Toda Bela'. 
@@ -63,11 +63,17 @@ const generateBannerTextFlow = ai.defineFlow(
   },
   async (input) => {
     try {
+      // Tenta gerar com imagem se fornecida
       const { output } = await prompt(input);
       if (!output) throw new Error('A IA não retornou um formato de texto válido.');
       return output;
     } catch (error: any) {
-      console.error('Erro no fluxo de texto IA:', error);
+      console.warn('Erro ao processar imagem no fluxo de texto, tentando apenas texto:', error);
+      // Se falhar (ex: erro de download de imagem externa), tenta apenas com o conceito em texto
+      if (input.imageUrl) {
+        const { output } = await prompt({ concept: input.concept });
+        if (output) return output;
+      }
       throw new Error(`Falha na IA: ${error.message || 'Erro de processamento'}`);
     }
   }
