@@ -50,7 +50,7 @@ export function BannerManagement() {
 
   const bannersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'banners'), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'banners'));
   }, [db]);
   
   const { data: banners, isLoading } = useCollection(bannersQuery);
@@ -145,22 +145,25 @@ export function BannerManagement() {
     }
   };
 
-  const handleSaveBanner = () => {
+  const handleSaveBanner = async () => {
     if (!previewImage) return;
-
-    addDocumentNonBlocking(collection(db, 'banners'), {
-      ...bannerData,
-      imageUrl: previewImage,
-      aspectRatio,
-      active: true,
-      order: (banners?.length || 0) + 1,
-      createdAt: serverTimestamp()
-    });
-
-    setPreviewImage('');
-    setPrompt('');
-    setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks' });
-    toast({ title: "Banner Ativado" });
+    try {
+      const { addDoc } = await import('firebase/firestore');
+      await addDoc(collection(db, 'banners'), {
+        ...bannerData,
+        imageUrl: previewImage,
+        aspectRatio,
+        active: true,
+        order: (banners?.length || 0) + 1,
+        createdAt: serverTimestamp()
+      });
+      setPreviewImage('');
+      setPrompt('');
+      setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks' });
+      toast({ title: "Banner Ativado na Vitrine!" });
+    } catch (error: any) {
+      toast({ title: "Erro ao salvar banner", description: error.message, variant: "destructive" });
+    }
   };
 
   const toggleStatus = (banner: any) => {
