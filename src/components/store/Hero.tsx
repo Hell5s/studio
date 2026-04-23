@@ -46,7 +46,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   const defaultHero = {
-    imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=80",
     title: "",
     subtitle: "",
     ctaText: "Conferir"
@@ -56,14 +56,14 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
   if (isLoading) {
     return (
-      <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-black flex items-center justify-center">
+      <section className="relative w-full h-[75vh] md:h-[85vh] min-h-[500px] md:min-h-[650px] overflow-hidden bg-black flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-white/20" />
       </section>
     );
   }
 
   return (
-    <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-black group">
+    <section className="relative w-full h-[75vh] md:h-[85vh] min-h-[500px] md:min-h-[650px] overflow-hidden bg-black group">
       <div className="h-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full">
           {displayBanners.map((banner, idx) => (
@@ -76,7 +76,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 unoptimized={true}
                 sizes="100vw"
                 className="object-cover opacity-90 transition-transform duration-[20s] hover:scale-105"
-                style={{ objectPosition: 'center top' }}
+                style={{ objectPosition: 'center center' }}
                 priority={idx === 0}
               />
               
