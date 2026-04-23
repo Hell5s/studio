@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
@@ -56,27 +55,36 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
   if (isLoading) {
     return (
-      <section className="relative w-full h-[55vh] md:h-[80vh] min-h-[450px] md:min-h-[600px] overflow-hidden bg-black flex items-center justify-center">
+      <section 
+        className="relative w-full overflow-hidden bg-black flex items-center justify-center"
+        style={{ height: 'calc(100vh - 80px)' }}
+      >
         <Loader2 className="h-12 w-12 animate-spin text-white/20" />
       </section>
     );
   }
 
   return (
-    <section className="relative w-full h-[55vh] md:h-[80vh] min-h-[450px] md:min-h-[600px] overflow-hidden bg-black group">
+    <section 
+      className="relative w-full overflow-hidden bg-black group"
+      style={{ height: 'calc(100vh - 80px)' }}
+    >
       <div className="h-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full">
           {displayBanners.map((banner, idx) => (
             <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full">
-              <Image
+              <img
                 src={banner.imageUrl}
                 alt={banner.title || "Boutique Toda Bela"}
-                fill
-                quality={100}
-                unoptimized={true}
-                sizes="100vw"
-                className="object-cover object-top opacity-90 transition-transform duration-[20s] hover:scale-105"
-                priority={idx === 0}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center top',
+                  opacity: 0.9,
+                }}
               />
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
