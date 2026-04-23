@@ -56,14 +56,14 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
   if (isLoading) {
     return (
-      <section className="relative w-full h-[70vh] md:h-screen min-h-[500px] overflow-hidden bg-black flex items-center justify-center">
+      <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-black flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-white/20" />
       </section>
     );
   }
 
   return (
-    <section className="relative w-full h-[70vh] md:h-screen min-h-[500px] overflow-hidden bg-black group">
+    <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-black group">
       <div className="h-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full">
           {displayBanners.map((banner, idx) => (
@@ -74,7 +74,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 fill
                 quality={100}
                 unoptimized={true}
-                className="object-contain md:object-cover opacity-80 transition-transform duration-[20s] hover:scale-110"
+                className="object-cover opacity-90 transition-transform duration-[20s] hover:scale-105"
                 priority={idx === 0}
               />
               
