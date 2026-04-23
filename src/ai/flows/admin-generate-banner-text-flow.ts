@@ -9,7 +9,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateBannerTextInputSchema = z.object({
-  concept: z.string().optional().describe('O conceito ou prompt da campanha de moda.'),
+  concept: z.string().optional().describe('O tema ou inspiração da campanha (opcional).'),
   imageUrl: z.string().optional().describe('URL da imagem do banner para análise visual.'),
 });
 export type GenerateBannerTextInput = z.infer<typeof GenerateBannerTextInputSchema>;
@@ -27,6 +27,7 @@ export async function generateBannerTexts(input: GenerateBannerTextInput): Promi
 
 const prompt = ai.definePrompt({
   name: 'generateBannerTextPrompt',
+  model: 'googleai/gemini-2.0-flash-exp', // Modelo robusto para análise visual e texto
   input: { schema: GenerateBannerTextInputSchema },
   output: { schema: GenerateBannerTextOutputSchema },
   prompt: `Você é um redator de moda sênior da boutique 'Toda Bela'. 
@@ -34,23 +35,24 @@ Sua marca é conhecida pela sofisticação, confiança feminina e elegância min
 
 {{#if imageUrl}}
 Analise visualmente esta imagem da nossa coleção: {{media url=imageUrl}}
-Crie textos que harmonizem com o estilo, as cores e a vibe desta fotografia.
+Crie textos que harmonizem perfeitamente com o estilo, as cores e a vibração desta fotografia.
+Se não houver um tema definido abaixo, baseie-se inteiramente no que você vê na imagem (estilo da roupa, cenário, iluminação).
 {{/if}}
 
 {{#if concept}}
 O tema solicitado para esta campanha é: "{{{concept}}}".
 {{else}}
-Como não foi fornecido um tema específico, use sua criatividade para criar algo luxuoso e aspiracional que combine com a marca Toda Bela.
+Crie algo luxuoso, aspiracional e confiante que combine com a estética premium da Toda Bela.
 {{/if}}
 
-Gere textos persuasivos e luxuosos para um banner de site.
+Gere textos persuasivos e sofisticados para um banner de site de moda feminina de luxo.
 
 Regras:
-- O título deve ser curto (máximo 4 palavras).
-- O subtítulo deve evocar emoção, desejo e sofisticação.
+- O título deve ser curto e potente (máximo 4 palavras).
+- O subtítulo deve evocar desejo, elegância e exclusividade.
 - O CTA deve ser direto e refinado.
 - Idioma: Português do Brasil.
-- Evite clichês de promoções baratas; foque em exclusividade e estilo de vida premium.`,
+- Evite clichês de promoções genéricas; foque em estilo de vida e autoconfiança.`,
 });
 
 const generateBannerTextFlow = ai.defineFlow(
@@ -60,7 +62,13 @@ const generateBannerTextFlow = ai.defineFlow(
     outputSchema: GenerateBannerTextOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+    try {
+      const { output } = await prompt(input);
+      if (!output) throw new Error('A IA não retornou um formato de texto válido.');
+      return output;
+    } catch (error: any) {
+      console.error('Erro no fluxo de texto IA:', error);
+      throw new Error(`Falha na IA: ${error.message || 'Erro de processamento'}`);
+    }
   }
 );

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -91,8 +90,8 @@ export function BannerManagement() {
   };
 
   const handleGenerateTexts = async () => {
-    if (!prompt && !previewImage) {
-      toast({ title: "Falta informação", description: "Envie uma imagem ou escreva um tema para a IA se inspirar.", variant: "destructive" });
+    if (!previewImage && !prompt) {
+      toast({ title: "Falta informação", description: "Adicione uma imagem ou digite um tema para a IA se inspirar.", variant: "destructive" });
       return;
     }
 
@@ -109,7 +108,11 @@ export function BannerManagement() {
       });
       toast({ title: "Textos criados!" });
     } catch (error: any) {
-      toast({ title: "Falha na redação", description: "Não conseguimos gerar os textos agora.", variant: "destructive" });
+      toast({ 
+        title: "Falha na redação", 
+        description: error.message || "Tente novamente ou digite algo no campo de inspiração.", 
+        variant: "destructive" 
+      });
     } finally {
       setIsGeneratingTexts(false);
     }
@@ -184,9 +187,9 @@ export function BannerManagement() {
           <Card className="p-10 border-none bg-white shadow-2xl rounded-[3rem] space-y-8">
             <div className="grid md:grid-cols-[1fr_200px] gap-6">
               <div className="space-y-4">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tema da Campanha (Opcional)</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Inspiração / Tema da Campanha (Opcional)</Label>
                 <Input 
-                  placeholder="Ex: Coleção de Inverno, Promoção 20%, Vibe Tropical..." 
+                  placeholder="Ex: Verão Tropical, Minimalismo Chic, Elegância de Inverno..." 
                   className="rounded-full h-16 px-8 bg-secondary/20 border-none focus:ring-2 focus:ring-primary/10"
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
@@ -280,7 +283,7 @@ export function BannerManagement() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                      <Type className="h-3 w-3" /> Textos do Banner
+                      <Type className="h-3 w-3" /> Personalização de Textos
                     </Label>
                     <button 
                       onClick={handleGenerateTexts}
@@ -288,7 +291,7 @@ export function BannerManagement() {
                       className="text-[9px] font-black uppercase text-primary/60 hover:text-accent flex items-center gap-1.5 transition-colors disabled:opacity-30"
                     >
                       {isGeneratingTexts ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <MessageSquareText className="h-2.5 w-2.5" />}
-                      IA: Criar Ideias de Texto
+                      IA: Gerar Ideias de Texto
                     </button>
                   </div>
                   <div className="space-y-4">
@@ -302,7 +305,7 @@ export function BannerManagement() {
                 </div>
                 <div className="space-y-4">
                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                     <ImageIcon className="h-3 w-3" /> Visualização
+                     <ImageIcon className="h-3 w-3" /> Pré-visualização
                    </Label>
                    <div className={cn(
                      "rounded-2xl overflow-hidden shadow-2xl border border-white relative bg-white",
