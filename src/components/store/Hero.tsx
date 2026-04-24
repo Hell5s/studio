@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -13,6 +14,14 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const db = useFirestore();
   const [selectedIndex, setSelectedIndex] = useState(0);
   
+  // Cache do último banner para carregamento instantâneo
+  const [cachedBannerUrl, setCachedBannerUrl] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('lastBannerUrl');
+    }
+    return null;
+  });
+
   const bannersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
@@ -23,6 +32,14 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   }, [db]);
 
   const { data: banners, isLoading } = useCollection(bannersQuery);
+
+  // Salva o banner no cache quando carregar do Firestore
+  useEffect(() => {
+    if (banners && banners.length > 0 && banners[0].imageUrl) {
+      localStorage.setItem('lastBannerUrl', banners[0].imageUrl);
+      setCachedBannerUrl(banners[0].imageUrl);
+    }
+  }, [banners]);
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
     Autoplay({ delay: 6000, stopOnInteraction: false })
@@ -51,23 +68,12 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     imagePosition: { x: 50, y: 20 }
   };
 
-  const displayBanners = banners && banners.length > 0 ? banners : [defaultHero];
-
-  if (isLoading) {
-    return (
-      <section 
-        className="relative w-full overflow-hidden bg-[#1a0a0e]"
-        style={{ height: '56.25vw', maxHeight: '90vh', minHeight: '400px' }}
-      >
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-          <div className="h-px w-24 bg-accent/40 animate-pulse" />
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/20 animate-pulse">
-            Sincronizando Editorial
-          </p>
-        </div>
-      </section>
-    );
-  }
+  // Prioriza Banners reais > Banner em Cache > Banner Default
+  const displayBanners = banners && banners.length > 0 
+    ? banners 
+    : cachedBannerUrl 
+      ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: 'Conferir', imagePosition: { x: 50, y: 20 } }]
+      : [defaultHero];
 
   return (
     <section 
@@ -76,7 +82,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     >
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full w-full">
-          {displayBanners.map((banner, idx) => (
+          {displayBanners.map((banner: any, idx: number) => (
             <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full">
               <div 
                 style={{
