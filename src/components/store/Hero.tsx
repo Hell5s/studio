@@ -56,10 +56,15 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   if (isLoading) {
     return (
       <section 
-        className="relative w-full overflow-hidden bg-black flex items-center justify-center"
-        style={{ height: '100vh' }}
+        className="relative w-full overflow-hidden bg-[#1a0a0e]"
+        style={{ height: '56.25vw', maxHeight: '90vh', minHeight: '400px' }}
       >
-        <Loader2 className="h-12 w-12 animate-spin text-white/20" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+          <div className="h-px w-24 bg-accent/40 animate-pulse" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/20 animate-pulse">
+            Sincronizando Editorial
+          </p>
+        </div>
       </section>
     );
   }
