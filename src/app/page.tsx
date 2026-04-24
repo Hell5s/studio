@@ -1,9 +1,8 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { collection, query, doc } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/store/Navbar';
@@ -12,8 +11,6 @@ import { ProductCard } from '@/components/store/ProductCard';
 import { Footer } from '@/components/store/Footer';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { LoginDialog } from '@/components/auth/LoginDialog';
-import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
-import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
@@ -27,8 +24,6 @@ function StorefrontContent() {
   
   const [isAdminView, setIsAdminView] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isTrackOpen, setIsTrackOpen] = useState(false);
-  const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -77,13 +72,13 @@ function StorefrontContent() {
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'products'));
   }, [db]);
   const { data: storeProducts, isLoading } = useCollection(productsQuery);
 
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'categories'), orderBy('order', 'asc'));
+    return query(collection(db, 'categories'));
   }, [db]);
   const { data: categories } = useCollection(categoriesQuery);
 
@@ -322,8 +317,6 @@ function StorefrontContent() {
       <Footer />
 
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
-      <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
-      <MyOrdersDialog open={isMyOrdersOpen} onOpenChange={setIsMyOrdersOpen} />
       <FavoritesDialog open={isFavoritesOpen} onOpenChange={setIsFavoritesOpen} />
       <CheckoutDialog 
         open={isCheckoutOpen} 
