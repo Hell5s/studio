@@ -40,8 +40,7 @@ export default function CategoryPage() {
     if (!db || !categoryName) return null;
     return query(
       collection(db, 'products'), 
-      where('category', '==', categoryName),
-      orderBy('createdAt', 'desc')
+      where('category', '==', categoryName)
     );
   }, [db, categoryName]);
 
