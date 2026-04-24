@@ -21,6 +21,7 @@ interface NavbarProps {
 
 export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, onSearch, onOpenAdmin }: NavbarProps) {
   const [searchValue, setSearchValue] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user } = useUser();
   const db = useFirestore();
   const router = useRouter();
@@ -42,6 +43,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch?.(searchValue);
+    setIsMenuOpen(false);
   };
 
   const handleAdminClick = () => {
@@ -155,11 +157,41 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             )}
           </button>
 
-          <button className="lg:hidden p-2 text-primary ml-1">
+          <button 
+            className="lg:hidden p-2 text-primary ml-1"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
             <Menu className="h-6 w-6" />
           </button>
         </div>
       </nav>
+
+      {isMenuOpen && (
+        <div className="lg:hidden bg-white border-t border-primary/5 px-6 py-6 space-y-4 shadow-lg">
+          {navLinks.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              onClick={() => setIsMenuOpen(false)}
+              className={cn(
+                "block text-[11px] font-bold tracking-[0.3em] py-3 border-b border-primary/5 transition-all hover:text-accent",
+                link.highlight ? "text-accent" : "text-primary/70"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <form onSubmit={handleSearchSubmit} className="relative mt-4">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40" />
+            <input
+              placeholder="PROCURAR..."
+              className="w-full h-12 bg-secondary/20 rounded-full pl-12 pr-6 text-[10px] font-bold tracking-widest outline-none uppercase"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+          </form>
+        </div>
+      )}
     </header>
   );
 }
