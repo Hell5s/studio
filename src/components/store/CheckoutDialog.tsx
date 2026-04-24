@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -30,7 +29,7 @@ const shippingMethods = [
   { id: 'express', name: 'Entrega Expressa VIP', time: '10-15 dias', price: 19.90 },
 ];
 
-export function CheckoutDialog({ open, onOpenChange, cartItems, onRemoveItem, total, onSuccess }: CheckoutDialogProps) {
+export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity, onRemoveItem, total, onSuccess }: CheckoutDialogProps) {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
@@ -247,9 +246,26 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onRemoveItem, to
                           {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
                           {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
                         </div>
-                        <div className="flex items-center justify-between pt-2">
+                        <div className="flex flex-col pt-2">
                           <p className="text-[10px] text-muted-foreground uppercase font-medium">Qtd: {item.quantity}</p>
-                          <p className="text-sm font-bold text-primary">{formatCurrency(item.price * item.quantity)}</p>
+                          <div className="flex items-center gap-3 pt-1">
+                            <button
+                              onClick={() => onUpdateQuantity(item.id, -1)}
+                              className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs"
+                            >
+                              −
+                            </button>
+                            <span className="text-[11px] font-bold w-4 text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => onUpdateQuantity(item.id, 1)}
+                              className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between pt-2">
+                            <p className="text-sm font-bold text-primary">{formatCurrency(item.price * item.quantity)}</p>
+                          </div>
                         </div>
                       </div>
                       <button
