@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -12,8 +11,6 @@ import { ProductGallery } from '@/components/store/product-detail/ProductGallery
 import { ProductInfo } from '@/components/store/product-detail/ProductInfo';
 import { ProductReviews } from '@/components/store/product-detail/ProductReviews';
 import { LoginDialog } from '@/components/auth/LoginDialog';
-import { OrderTrackingDialog } from '@/components/store/OrderTrackingDialog';
-import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { Loader2, ChevronRight } from 'lucide-react';
@@ -25,8 +22,6 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const db = useFirestore();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isTrackOpen, setIsTrackOpen] = useState(false);
-  const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   
@@ -155,8 +150,6 @@ export default function ProductDetailPage() {
       <Footer />
       
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
-      <OrderTrackingDialog open={isTrackOpen} onOpenChange={setIsTrackOpen} />
-      <MyOrdersDialog open={isMyOrdersOpen} onOpenChange={setIsMyOrdersOpen} />
       <FavoritesDialog open={isFavoritesOpen} onOpenChange={setIsFavoritesOpen} />
       <CheckoutDialog 
         open={isCheckoutOpen} 
