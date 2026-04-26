@@ -9,6 +9,7 @@ import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Footer } from '@/components/store/Footer';
+import { LoginDialog } from '@/components/auth/LoginDialog';
 import { Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
