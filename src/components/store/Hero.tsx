@@ -6,14 +6,12 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
 import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
 import { cn } from '@/lib/utils';
 
 export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const db = useFirestore();
   const [selectedIndex, setSelectedIndex] = useState(0);
   
-  // Cache do último banner para carregamento instantâneo
   const [cachedBannerUrl, setCachedBannerUrl] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('lastBannerUrl');
@@ -32,7 +30,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
   const { data: banners } = useCollection(bannersQuery);
 
-  // Salva o banner no cache quando carregar do Firestore
   useEffect(() => {
     if (banners && banners.length > 0 && banners[0].imageUrl) {
       localStorage.setItem('lastBannerUrl', banners[0].imageUrl);
@@ -40,9 +37,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     }
   }, [banners]);
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
-    Autoplay({ delay: 6000, stopOnInteraction: false })
-  ]);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -65,15 +60,34 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     subtitle: "",
     ctaText: "Conferir",
     imagePosition: { x: 50, y: 20 },
-    mediaType: 'image'
+    mediaType: 'image',
+    duration: 6
   };
 
-  // Prioriza Banners reais > Banner em Cache > Banner Default
-  const displayBanners = banners && banners.length > 0 
-    ? banners 
-    : cachedBannerUrl 
-      ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: 'Conferir', imagePosition: { x: 50, y: 20 }, mediaType: 'image' }]
-      : [defaultHero];
+  const displayBanners = React.useMemo(() => {
+    let list = banners && banners.length > 0 
+      ? banners 
+      : cachedBannerUrl 
+        ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: 'Conferir', imagePosition: { x: 50, y: 20 }, mediaType: 'image', duration: 6 }]
+        : [defaultHero];
+    
+    // Ordenar client-side pela prioridade
+    return [...list].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [banners, cachedBannerUrl]);
+
+  // Efeito de Autoplay Dinâmico baseado no duration de cada slide
+  useEffect(() => {
+    if (!emblaApi || !displayBanners.length) return;
+    
+    const currentBanner = displayBanners[selectedIndex];
+    const delay = (currentBanner?.duration || 6) * 1000;
+    
+    const timer = setTimeout(() => {
+      emblaApi.scrollNext();
+    }, delay);
+    
+    return () => clearTimeout(timer);
+  }, [emblaApi, selectedIndex, displayBanners]);
 
   return (
     <section 

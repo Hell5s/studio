@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { 
   Sparkles, 
   Loader2, 
@@ -16,7 +16,9 @@ import {
   MessageSquareText,
   Link as LinkIcon,
   Move,
-  Film
+  Film,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -44,8 +46,8 @@ export function BannerManagement() {
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '1:1' | '4:3'>('16:9');
   const [previewImage, setPreviewImage] = useState('');
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
+  const [duration, setDuration] = useState(6);
   
-  // Novo estado para posicionamento da imagem
   const [imagePosition, setImagePosition] = useState({ x: 50, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -63,7 +65,12 @@ export function BannerManagement() {
   
   const { data: banners, isLoading } = useCollection(bannersQuery);
 
-  // Lógica de arraste para posicionamento
+  // Ordenação client-side para refletir as setas sem depender de índices complexos
+  const sortedBanners = useMemo(() => {
+    if (!banners) return [];
+    return [...banners].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [banners]);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (mediaType === 'video') return;
     setIsDragging(true);
@@ -97,7 +104,7 @@ export function BannerManagement() {
 
   const handleGenerate = async () => {
     if (!prompt) {
-      toast({ title: "Inspiração necessária", description: "Diga à IA o que você imagina para o banner (ex: Verão em Paris).", variant: "destructive" });
+      toast({ title: "Inspiração necessária", description: "Diga à IA o que você imagina para o banner.", variant: "destructive" });
       return;
     }
 
@@ -110,11 +117,7 @@ export function BannerManagement() {
       setImagePosition({ x: 50, y: 20 });
       toast({ title: "Imagem gerada!" });
     } catch (error: any) {
-      toast({ 
-        title: "Erro na IA", 
-        description: error.message || "Não foi possível gerar a imagem agora.", 
-        variant: "destructive" 
-      });
+      toast({ title: "Erro na IA", description: error.message || "Não foi possível gerar a imagem.", variant: "destructive" });
     } finally {
       setIsGenerating(false);
     }
@@ -122,31 +125,20 @@ export function BannerManagement() {
 
   const handleGenerateTexts = async () => {
     if (!previewImage && !prompt) {
-      toast({ title: "Falta informação", description: "Adicione uma imagem ou digite um tema para a IA se inspirar.", variant: "destructive" });
+      toast({ title: "Falta informação", description: "Adicione uma imagem ou digite um tema.", variant: "destructive" });
       return;
     }
 
     setIsGeneratingTexts(true);
     try {
-      const isSafeImage = previewImage && (previewImage.startsWith('https://firebasestorage') || previewImage.startsWith('data:'));
-      
       const result = await generateBannerTexts({ 
         concept: prompt,
-        imageUrl: isSafeImage ? previewImage : undefined 
+        imageUrl: previewImage.startsWith('data:') || previewImage.startsWith('https://firebasestorage') ? previewImage : undefined 
       });
-      
-      setBannerData({
-        title: result.title,
-        subtitle: result.subtitle,
-        ctaText: result.ctaText
-      });
+      setBannerData({ title: result.title, subtitle: result.subtitle, ctaText: result.ctaText });
       toast({ title: "Textos criados!" });
     } catch (error: any) {
-      toast({ 
-        title: "Falha na redação", 
-        description: error.message || "Tente novamente ou digite algo no campo de inspiração.", 
-        variant: "destructive" 
-      });
+      toast({ title: "Falha na redação", description: "Tente novamente mais tarde.", variant: "destructive" });
     } finally {
       setIsGeneratingTexts(false);
     }
@@ -160,23 +152,15 @@ export function BannerManagement() {
     setPreviewImage('');
     try {
       const storageRef = ref(storage!, `banners/${mediaType === 'video' ? 'videos' : 'images'}/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file, {
-        contentType: file.type,
-        cacheControl: 'public, max-age=31536000',
-      });
+      const snapshot = await uploadBytes(storageRef, file, { contentType: file.type });
       const url = await getDownloadURL(snapshot.ref);
       setPreviewImage(url);
       setImagePosition({ x: 50, y: 20 });
-      toast({ title: `${mediaType === 'video' ? 'Vídeo' : 'Imagem'} carregado com sucesso!` });
+      toast({ title: "Arquivo carregado!" });
     } catch (error: any) {
-      toast({ 
-        title: "Erro no upload", 
-        description: "Não foi possível carregar o arquivo.", 
-        variant: "destructive" 
-      });
+      toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
       setIsUploading(false);
-      if (e.target) e.target.value = '';
     }
   };
 
@@ -199,6 +183,7 @@ export function BannerManagement() {
         imagePosition: imagePosition,
         mediaType: mediaType,
         aspectRatio,
+        duration,
         active: true,
         order: (banners?.length || 0) + 1,
         createdAt: serverTimestamp()
@@ -208,16 +193,14 @@ export function BannerManagement() {
       setPrompt('');
       setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks' });
       setImagePosition({ x: 50, y: 20 });
-      toast({ title: "Banner Ativado na Vitrine!" });
+      toast({ title: "Banner Ativado!" });
     } catch (error: any) {
-      toast({ title: "Erro ao salvar banner", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao salvar", variant: "destructive" });
     }
   };
 
   const toggleStatus = (banner: any) => {
-    updateDocumentNonBlocking(doc(db, 'banners', banner.id), {
-      active: !banner.active
-    });
+    updateDocumentNonBlocking(doc(db, 'banners', banner.id), { active: !banner.active });
   };
 
   const handleDelete = (id: string) => {
@@ -230,7 +213,7 @@ export function BannerManagement() {
     <div className="space-y-12 animate-in fade-in duration-1000">
       <div className="flex flex-col gap-2">
         <h4 className="text-3xl font-headline font-bold text-primary">Estúdio Criativo</h4>
-        <p className="text-sm text-muted-foreground italic font-light">Crie por IA, URL direta ou upload manual de campanhas para sua vitrine.</p>
+        <p className="text-sm text-muted-foreground italic font-light">Gerencie campanhas com ordem e tempo de exibição personalizados.</p>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-10">
@@ -238,9 +221,9 @@ export function BannerManagement() {
           <Card className="p-10 border-none bg-white shadow-2xl rounded-[3rem] space-y-8">
             <div className="grid md:grid-cols-[1fr_200px] gap-6">
               <div className="space-y-4">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Inspiração / Tema da Campanha (Opcional)</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Inspiração (Opcional)</Label>
                 <Input 
-                  placeholder="Ex: Verão Tropical, Minimalismo Chic, Elegância de Inverno..." 
+                  placeholder="Ex: Verão Tropical..." 
                   className="rounded-full h-16 px-8 bg-secondary/20 border-none focus:ring-2 focus:ring-primary/10"
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
@@ -253,166 +236,84 @@ export function BannerManagement() {
                   onChange={(e) => setAspectRatio(e.target.value as any)}
                   className="w-full h-16 rounded-full px-6 bg-secondary/20 border-none text-sm font-bold text-primary outline-none"
                 >
-                  <option value="16:9">Horizontal (16:9)</option>
-                  <option value="1:1">Quadrado (1:1)</option>
-                  <option value="4:3">Clássico (4:3)</option>
+                  <option value="16:9">16:9</option><option value="1:1">1:1</option><option value="4:3">4:3</option>
                 </select>
               </div>
             </div>
 
             <div className="space-y-6">
-              <div className="space-y-4">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tipo de Mídia</Label>
-                <div className="flex gap-4">
-                  <button
-                    onClick={() => { setMediaType('image'); setPreviewImage(''); }}
-                    className={cn("flex-1 h-12 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-2",
-                      mediaType === 'image' ? "bg-primary text-white border-primary" : "border-primary/20 text-primary hover:bg-secondary/30"
-                    )}
-                  >
-                    <ImageIcon className="h-4 w-4" /> Imagem
-                  </button>
-                  <button
-                    onClick={() => { setMediaType('video'); setPreviewImage(''); }}
-                    className={cn("flex-1 h-12 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-2",
-                      mediaType === 'video' ? "bg-primary text-white border-primary" : "border-primary/20 text-primary hover:bg-secondary/30"
-                    )}
-                  >
-                    <Film className="h-4 w-4" /> Vídeo
-                  </button>
-                </div>
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Mídia</Label>
+              <div className="flex gap-4">
+                <button onClick={() => setMediaType('image')} className={cn("flex-1 h-12 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-2", mediaType === 'image' ? "bg-primary text-white" : "text-primary hover:bg-secondary/30")}>
+                  <ImageIcon className="h-4 w-4" /> Imagem
+                </button>
+                <button onClick={() => setMediaType('video')} className={cn("flex-1 h-12 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-2", mediaType === 'video' ? "bg-primary text-white" : "text-primary hover:bg-secondary/30")}>
+                  <Film className="h-4 w-4" /> Vídeo
+                </button>
               </div>
 
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                   <LinkIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40" />
-                  <Input 
-                    placeholder={`Colar URL da ${mediaType === 'video' ? 'mídia' : 'imagem'} (ex: https://...)`}
-                    className="rounded-full h-16 pl-14 pr-6 bg-secondary/10 border-none focus:ring-1 focus:ring-accent/20"
-                    value={imageUrl}
-                    onChange={e => setImageUrl(e.target.value)}
-                  />
+                  <Input placeholder={`Colar URL (https://...)`} className="rounded-full h-16 pl-14 bg-secondary/10 border-none" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
                 </div>
-                <Button 
-                  onClick={handleUseUrl}
-                  disabled={!imageUrl}
-                  className="rounded-full h-16 px-8 bg-accent text-primary font-bold uppercase tracking-widest text-[10px] hover:brightness-110 shadow-lg"
-                >
-                  Usar esta URL
-                </Button>
+                <Button onClick={handleUseUrl} disabled={!imageUrl} className="rounded-full h-16 px-8 bg-accent text-primary font-bold uppercase tracking-widest text-[10px]">Usar URL</Button>
               </div>
 
-              <div className="relative flex items-center py-2">
-                <div className="flex-grow border-t border-primary/5"></div>
-                <span className="flex-shrink mx-4 text-[9px] font-black text-primary/10 uppercase tracking-[0.3em]">OU</span>
-                <div className="flex-grow border-t border-primary/5"></div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button 
-                  onClick={handleGenerate} 
-                  disabled={isGenerating || isUploading || mediaType === 'video'}
-                  className="rounded-full h-16 bg-primary shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white font-bold uppercase tracking-widest text-[11px] disabled:opacity-30"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="animate-spin h-5 w-5 mr-3" />
-                      Gerando Obra...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-5 w-5 mr-3" />
-                      Gerar Foto com IA
-                    </>
-                  )}
+              <div className="grid grid-cols-2 gap-4">
+                <Button onClick={handleGenerate} disabled={isGenerating || mediaType === 'video'} className="rounded-full h-16 bg-primary shadow-xl text-white font-bold uppercase tracking-widest text-[11px]">
+                  {isGenerating ? <Loader2 className="animate-spin h-5 w-5 mr-3" /> : <Sparkles className="h-5 w-5 mr-3" />} Gerar com IA
                 </Button>
-
-                <Button 
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isGenerating || isUploading}
-                  className="rounded-full h-16 border-accent text-accent shadow-xl hover:scale-[1.02] active:scale-95 transition-all font-bold uppercase tracking-widest text-[11px]"
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="animate-spin h-5 w-5 mr-3" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-5 w-5 mr-3" />
-                      Enviar {mediaType === 'video' ? 'Meu Vídeo' : 'Minha Foto'}
-                    </>
-                  )}
+                <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="rounded-full h-16 border-accent text-accent shadow-xl font-bold uppercase tracking-widest text-[11px]">
+                  {isUploading ? <Loader2 className="animate-spin h-5 w-5 mr-3" /> : <Upload className="h-5 w-5 mr-3" />} Upload {mediaType === 'video' ? 'Vídeo' : 'Foto'}
                 </Button>
                 <input type="file" ref={fileInputRef} className="hidden" accept={mediaType === 'video' ? 'video/*' : 'image/*'} onChange={handleFileUpload} />
               </div>
             </div>
 
             {previewImage && (
-              <div className="grid md:grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500 bg-[#FFF9F7] p-8 rounded-[2rem] border border-primary/5">
+              <div className="grid md:grid-cols-2 gap-8 animate-in slide-in-from-top-4 bg-[#FFF9F7] p-8 rounded-[2rem] border border-primary/5">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                      <Type className="h-3 w-3" /> Personalização de Textos
-                    </Label>
-                    <button 
-                      onClick={handleGenerateTexts}
-                      disabled={isGeneratingTexts}
-                      className="text-[9px] font-black uppercase text-primary/60 hover:text-accent flex items-center gap-1.5 transition-colors disabled:opacity-30"
-                    >
-                      {isGeneratingTexts ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <MessageSquareText className="h-2.5 w-2.5" />}
-                      IA: Gerar Ideias de Texto
-                    </button>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Textos</Label>
+                    <button onClick={handleGenerateTexts} disabled={isGeneratingTexts} className="text-[9px] font-black uppercase text-primary/60 hover:text-accent flex items-center gap-1.5"><MessageSquareText className="h-2.5 w-2.5" /> IA Textos</button>
                   </div>
                   <div className="space-y-4">
-                    <Input placeholder="Título (ex: Elegância Pura)" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
-                    <Input placeholder="Subtítulo (ex: Descubra o novo)" value={bannerData.subtitle} onChange={e => setBannerData({...bannerData, subtitle: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
-                    <Input placeholder="Texto do Botão" value={bannerData.ctaText} onChange={e => setBannerData({...bannerData, ctaText: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Título" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Subtítulo" value={bannerData.subtitle} onChange={e => setBannerData({...bannerData, subtitle: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="CTA" value={bannerData.ctaText} onChange={e => setBannerData({...bannerData, ctaText: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
                   </div>
-                  <Button onClick={handleSaveBanner} className="w-full rounded-full bg-primary text-white font-bold h-14 shadow-xl hover:bg-accent transition-colors text-[10px] uppercase tracking-widest">
-                    <Save className="mr-2 h-5 w-5" /> Ativar na Vitrine
-                  </Button>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tempo de Exibição</Label>
+                    <select
+                      value={duration}
+                      onChange={e => setDuration(Number(e.target.value))}
+                      className="w-full h-12 rounded-xl bg-white border-none px-4 text-sm font-bold text-primary outline-none"
+                    >
+                      <option value={3}>3 segundos</option>
+                      <option value={5}>5 segundos</option>
+                      <option value={6}>6 segundos (padrão)</option>
+                      <option value={8}>8 segundos</option>
+                      <option value={10}>10 segundos</option>
+                      <option value={15}>15 segundos</option>
+                    </select>
+                  </div>
+
+                  <Button onClick={handleSaveBanner} className="w-full rounded-full bg-primary text-white font-bold h-14 shadow-xl text-[10px] uppercase tracking-widest"><Save className="mr-2 h-5 w-5" /> Ativar na Vitrine</Button>
                 </div>
                 <div className="space-y-4">
                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
                      {mediaType === 'video' ? <Film className="h-3 w-3" /> : <ImageIcon className="h-3 w-3" />} 
-                     Enquadramento {mediaType === 'image' && '(Arraste p/ ajustar)'}
+                     Enquadramento {mediaType === 'image' && '(Arraste)'}
                    </Label>
                    <div 
-                    className={cn(
-                      "rounded-2xl overflow-hidden shadow-2xl border-4 border-white relative bg-black select-none group/preview",
-                      aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square'
-                    )}
-                    style={mediaType === 'image' ? {
-                      backgroundImage: `url(${previewImage})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: `${imagePosition.x}% ${imagePosition.y}%`,
-                      cursor: isDragging ? 'grabbing' : 'grab',
-                    } : {}}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
+                    className={cn("rounded-2xl overflow-hidden shadow-2xl border-4 border-white relative bg-black group/preview", aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square')}
+                    style={mediaType === 'image' ? { backgroundImage: `url(${previewImage})`, backgroundSize: 'cover', backgroundPosition: `${imagePosition.x}% ${imagePosition.y}%`, cursor: isDragging ? 'grabbing' : 'grab' } : {}}
+                    onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
                    >
-                      {mediaType === 'video' && (
-                        <video key={previewImage} autoPlay muted loop playsInline className="w-full h-full object-cover">
-                          <source src={previewImage} type="video/mp4" />
-                        </video>
-                      )}
-                      
-                      <div className="absolute inset-0 bg-black/10 group-hover/preview:bg-transparent transition-colors flex items-center justify-center pointer-events-none">
-                         {mediaType === 'image' && (
-                            <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-lg opacity-0 group-hover/preview:opacity-100 transition-opacity">
-                               <Move className="h-3 w-3 text-primary" />
-                               <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Arraste para ajustar</span>
-                            </div>
-                         )}
-                      </div>
-                      <div className="absolute inset-0 bg-black/20 flex flex-col justify-end p-6 text-white pointer-events-none">
-                         <h3 className="text-xl font-bold uppercase tracking-tighter leading-none">{bannerData.title}</h3>
-                         <p className="text-[10px] italic opacity-80 mt-1">{bannerData.subtitle}</p>
-                      </div>
+                      {mediaType === 'video' && <video key={previewImage} autoPlay muted loop playsInline className="w-full h-full object-cover"><source src={previewImage} type="video/mp4" /></video>}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">{mediaType === 'image' && <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-lg opacity-0 group-hover/preview:opacity-100 transition-opacity"><Move className="h-3 w-3 text-primary" /><span className="text-[9px] font-bold uppercase tracking-widest text-primary">Arraste para ajustar</span></div>}</div>
                    </div>
                 </div>
               </div>
@@ -428,46 +329,42 @@ export function BannerManagement() {
           <div className="space-y-6 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
             {isLoading ? (
               <div className="py-20 text-center opacity-20"><Loader2 className="animate-spin h-8 w-8 mx-auto" /></div>
-            ) : banners?.map(banner => (
+            ) : sortedBanners.map(banner => (
               <div key={banner.id} className="p-4 rounded-3xl bg-white/10 border border-white/5 space-y-4 group hover:bg-white/15 transition-all">
-                <div className="aspect-video rounded-2xl overflow-hidden relative shadow-lg bg-black">
+                <div className="aspect-video rounded-2xl overflow-hidden relative bg-black">
                   {banner.mediaType === 'video' ? (
                     <video key={banner.imageUrl} src={banner.imageUrl} muted loop playsInline className="w-full h-full object-cover" onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => e.currentTarget.pause()} />
                   ) : (
                     <img src={banner.imageUrl} className="w-full h-full object-cover" style={{ objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center' }} />
                   )}
-                  
                   <div className="absolute inset-0 bg-black/40 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button 
-                      onClick={() => handleDelete(banner.id)}
-                      className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <button onClick={() => handleDelete(banner.id)} className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform"><Trash2 className="h-4 w-4" /></button>
                   </div>
-                  {banner.mediaType === 'video' && (
-                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md p-1 rounded-md">
-                      <Film className="h-3 w-3 text-accent" />
-                    </div>
-                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold uppercase truncate tracking-tight">{banner.title || 'Sem Título'}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className={cn("h-1.5 w-1.5 rounded-full", banner.active ? "bg-green-400" : "bg-white/20")} />
-                      <p className="text-[8px] opacity-50 uppercase font-black">{banner.active ? 'No Ar' : 'Pausado'}</p>
-                    </div>
+                    <p className="text-[8px] opacity-50 uppercase font-black">{banner.duration || 6}s • {banner.active ? 'No Ar' : 'Pausado'}</p>
                   </div>
-                  <button 
-                    onClick={() => toggleStatus(banner)}
-                    className={cn(
-                      "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
-                      banner.active ? "bg-accent text-primary" : "bg-white/10 text-white/40"
-                    )}
-                  >
-                    {banner.active ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => updateDocumentNonBlocking(doc(db, 'banners', banner.id), { order: (banner.order || 0) - 1 })}
+                        className="h-5 w-5 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => updateDocumentNonBlocking(doc(db, 'banners', banner.id), { order: (banner.order || 0) + 1 })}
+                        className="h-5 w-5 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <button onClick={() => toggleStatus(banner)} className={cn("h-10 w-10 rounded-xl flex items-center justify-center transition-all", banner.active ? "bg-accent text-primary" : "bg-white/10 text-white/40")}>
+                      {banner.active ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
