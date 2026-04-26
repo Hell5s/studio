@@ -396,7 +396,9 @@ export function BannerManagement() {
                     onMouseLeave={handleMouseUp}
                    >
                       {mediaType === 'video' && (
-                        <video src={previewImage} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+                        <video key={previewImage} autoPlay muted loop playsInline className="w-full h-full object-cover">
+                          <source src={previewImage} type="video/mp4" />
+                        </video>
                       )}
                       
                       <div className="absolute inset-0 bg-black/10 group-hover/preview:bg-transparent transition-colors flex items-center justify-center pointer-events-none">
@@ -430,7 +432,7 @@ export function BannerManagement() {
               <div key={banner.id} className="p-4 rounded-3xl bg-white/10 border border-white/5 space-y-4 group hover:bg-white/15 transition-all">
                 <div className="aspect-video rounded-2xl overflow-hidden relative shadow-lg bg-black">
                   {banner.mediaType === 'video' ? (
-                    <video src={banner.imageUrl} muted loop playsInline className="w-full h-full object-cover" onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => e.currentTarget.pause()} />
+                    <video key={banner.imageUrl} src={banner.imageUrl} muted loop playsInline className="w-full h-full object-cover" onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => e.currentTarget.pause()} />
                   ) : (
                     <img src={banner.imageUrl} className="w-full h-full object-cover" style={{ objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center' }} />
                   )}
