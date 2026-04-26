@@ -63,7 +63,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     let list = banners && banners.length > 0 
       ? banners 
       : cachedBannerUrl 
-        ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: settings?.heroCta || 'Conferir', mediaType: 'image', duration: 6, imagePosition: { x: 50, y: 20 } }]
+        ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: settings?.heroCta || 'Conferir', mediaType: 'image', duration: 6, imagePosition: { x: 50, y: 15 } }]
         : [];
     
     return [...list].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -86,7 +86,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return (
       <section
         className="relative w-full overflow-hidden flex items-center justify-center"
-        style={{ height: 'min(56.25vw, 90vh)', minHeight: '280px', background: 'linear-gradient(135deg, #1a0a0e 0%, #2d1219 50%, #1a0a0e 100%)' }}
+        style={{ height: '70vh', minHeight: '500px', maxHeight: '800px', background: 'linear-gradient(135deg, #1a0a0e 0%, #2d1219 50%, #1a0a0e 100%)' }}
       >
         <div className="text-center space-y-4 animate-pulse">
           <div className="h-px w-32 bg-accent/30 mx-auto" />
@@ -106,8 +106,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     <section 
       className="relative w-full overflow-hidden bg-black group"
       style={{ 
-        height: 'min(56.25vw, 90vh)',
-        minHeight: '280px'
+        height: '70vh',
+        minHeight: '500px',
+        maxHeight: '800px'
       }}
     >
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
@@ -122,14 +123,14 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   loop
                   playsInline
                   preload="auto"
-                  fetchpriority={idx === 0 ? "high" : "low"}
+                  fetchPriority={idx === 0 ? "high" : "low"}
                   style={{
                     position: 'absolute',
                     inset: 0,
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    objectPosition: 'center center',
+                    objectPosition: 'center 15%',
                   }}
                 >
                   <source src={banner.imageUrl} type="video/mp4" />
@@ -143,23 +144,23 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     backgroundSize: 'cover',
                     backgroundPosition: banner.imagePosition 
                       ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
-                      : 'center 20%',
+                      : 'center 15%',
                     backgroundRepeat: 'no-repeat',
                   }} 
-                  fetchpriority={idx === 0 ? "high" : "low"}
+                  fetchPriority={idx === 0 ? "high" : "low"}
                   aria-label={banner.title || "Banner Toda Bela"}
                 />
               )}
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               
-              <div className="container mx-auto h-full px-6 md:px-12 flex items-end pb-16 md:pb-24 relative z-10 pointer-events-none">
+              <div className="container mx-auto h-full px-6 md:px-12 flex items-end pb-8 md:pb-24 relative z-10 pointer-events-none">
                 <div className={cn(
                   "max-w-2xl space-y-6 md:space-y-8 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
                   <div className="space-y-3 md:space-y-4">
-                    <h1 className="text-3xl md:text-7xl font-headline font-bold text-white uppercase tracking-tighter leading-tight">
+                    <h1 className="text-xl md:text-5xl font-headline font-bold text-white uppercase tracking-tighter leading-tight">
                       {banner.title || ''}
                     </h1>
                     <p className="text-sm md:text-xl text-white/80 font-light italic max-w-xs md:max-w-lg leading-relaxed">
