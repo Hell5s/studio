@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
@@ -80,7 +79,7 @@ function StorefrontContent() {
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'products'), limit(24));
+    return query(collection(db, 'products'), limit(12));
   }, [db]);
   const { data: storeProducts, isLoading } = useCollection(productsQuery);
 
@@ -200,10 +199,10 @@ function StorefrontContent() {
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
           ) : (
-            <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 md:items-stretch -mx-4 md:mx-0">
+            <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 -mx-4 md:mx-0 items-start">
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
-                  <div key={product.id} className="w-[calc(50%-6px)] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none flex md:block">
+                  <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
                     <ProductCard 
                       {...product} 
                       onAddToCart={() => addToCart(product)}
@@ -311,9 +310,9 @@ function StorefrontContent() {
               Explorar Ofertas
             </Link>
           </div>
-          <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-12 md:px-0 md:pb-0 md:items-stretch -mx-4 md:mx-0">
+          <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-12 md:px-0 md:pb-0 -mx-4 md:mx-0 items-start">
             {latestProducts.map((product) => (
-              <div key={product.id} className="w-[calc(50%-6px)] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none flex md:block">
+              <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
                 <ProductCard 
                   {...product} 
                   onAddToCart={() => addToCart(product)}

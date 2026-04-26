@@ -131,7 +131,7 @@ export const ProductCard = React.memo(function ProductCard({
             {formatCurrency(price)}
           </p>
           {oldPrice && (
-            <p className="text-[9px] md:text-sm text-muted-foreground line-through font-light italic">
+            <p className="text-[9px] md:sm text-muted-foreground line-through font-light italic">
               {formatCurrency(oldPrice)}
             </p>
           )}
