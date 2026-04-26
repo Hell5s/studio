@@ -1,9 +1,10 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, limit, doc } from 'firebase/firestore';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
@@ -12,6 +13,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const db = useFirestore();
   const [selectedIndex, setSelectedIndex] = useState(0);
   
+  // Configurações Globais
+  const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
+  const { data: settings } = useDoc(settingsRef);
+
   const [cachedBannerUrl, setCachedBannerUrl] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('lastBannerUrl');
@@ -58,11 +63,11 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     let list = banners && banners.length > 0 
       ? banners 
       : cachedBannerUrl 
-        ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: 'Conferir', mediaType: 'image', duration: 6, imagePosition: { x: 50, y: 20 } }]
+        ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: settings?.heroCta || 'Conferir', mediaType: 'image', duration: 6, imagePosition: { x: 50, y: 20 } }]
         : [];
     
     return [...list].sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [banners, cachedBannerUrl]);
+  }, [banners, cachedBannerUrl, settings]);
 
   useEffect(() => {
     if (!emblaApi || !displayBanners.length) return;
@@ -86,10 +91,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         <div className="text-center space-y-4 animate-pulse">
           <div className="h-px w-32 bg-accent/30 mx-auto" />
           <p className="text-[10px] font-bold uppercase tracking-[0.6em] text-white/20">
-            Toda Bela
+            {settings?.storeName || 'Toda Bela'}
           </p>
           <p className="text-[8px] font-bold uppercase tracking-[0.4em] text-accent/30">
-            Moda Feminina
+            {settings?.tagline || 'Moda Feminina'}
           </p>
           <div className="h-px w-32 bg-accent/30 mx-auto" />
         </div>
@@ -158,12 +163,12 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                       {banner.subtitle || ''}
                     </p>
                   </div>
-                  {banner.ctaText && (
+                  {(banner.ctaText || settings?.heroCta) && (
                     <Button 
                       onClick={onShopNow}
                       className="rounded-full bg-white text-primary px-8 md:px-12 h-12 md:h-16 text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] shadow-xl hover:bg-accent hover:text-white transition-all"
                     >
-                      {banner.ctaText}
+                      {banner.ctaText || settings?.heroCta || 'Conferir'}
                     </Button>
                   )}
                 </div>

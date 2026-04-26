@@ -1,110 +1,164 @@
 
 "use client";
 
-import React, { useState } from 'react';
-import { Settings, Save, Smartphone, Mail, Truck, ShieldCheck, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Save, Smartphone, Mail, Truck, Layout, Info, Instagram, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, updateDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export function AdminSettings() {
   const db = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  const [settings, setSettings] = useState({
+  const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
+  const { data: storeSettings, isLoading } = useDoc(settingsRef);
+
+  const [formData, setFormData] = useState({
+    storeName: 'Toda Bela',
+    tagline: 'Moda Feminina Moderna',
+    contactEmail: 'contato@todabela.com.br',
     whatsapp: '(11) 99999-9999',
-    email: 'contato@todobela.com.br',
-    freeShipping: '249',
-    deliveryTime: '15-20 dias',
-    announcement: '🌟 NOVA COLEÇÃO DISPONÍVEL • FRETE GRÁTIS ACIMA DE R$ 249'
+    instagram: '@todabela',
+    featuredTitle: 'Novas Peças',
+    featuredSubtitle: 'Editorial de Estilo',
+    heroCta: 'Conferir Looks',
+    purposeTitle: 'Moda com Propósito',
+    purposeText: 'Cada peça em nossa boutique é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.',
+    freeShippingMin: '249',
+    freeShippingOthers: '499'
   });
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (storeSettings) {
+      setFormData(prev => ({ ...prev, ...storeSettings }));
+    }
+  }, [storeSettings]);
+
+  const handleSave = async () => {
     setLoading(true);
-    // Simulação de salvamento em config global
-    setTimeout(() => {
-      toast({ title: "Configurações atualizadas!" });
+    try {
+      await setDoc(settingsRef, formData, { merge: true });
+      toast({ title: "Configurações atualizadas!", description: "Sua boutique já está com as novas informações." });
+    } catch (error) {
+      toast({ title: "Erro ao salvar", variant: "destructive" });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-40">
+        <Loader2 className="h-10 w-10 animate-spin text-accent" />
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl space-y-10">
-      <div className="flex justify-between items-center">
-         <h4 className="text-2xl font-bold text-primary flex items-center gap-3">
-           <Settings className="h-6 w-6 text-accent" /> Configurações da Boutique
-         </h4>
-         <Button onClick={handleSave} disabled={loading} className="bg-primary text-white rounded-full px-10">
-           {loading ? 'Salvando...' : 'Salvar Alterações'}
+    <div className="max-w-5xl mx-auto space-y-10 pb-20">
+      <div className="flex justify-between items-center bg-white p-8 rounded-[2.5rem] shadow-sm border border-primary/5 sticky top-0 z-30">
+         <div>
+            <h4 className="text-2xl font-headline font-bold text-primary flex items-center gap-3">
+              <Settings className="h-6 w-6 text-accent" /> Configurações da Boutique
+            </h4>
+            <p className="text-xs text-muted-foreground italic">Gerencie a identidade visual e operacional da Toda Bela.</p>
+         </div>
+         <Button 
+          onClick={handleSave} 
+          disabled={loading} 
+          className="bg-primary text-white rounded-full px-12 h-14 font-bold uppercase tracking-widest text-[10px] shadow-xl hover:scale-105 transition-all"
+         >
+           {loading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+           Salvar Alterações
          </Button>
       </div>
 
-      <div className="grid gap-8">
-        <Card className="p-8 border-none shadow-sm space-y-8 bg-white">
-          <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-4">
-             <Smartphone className="h-5 w-5" />
-             <h5 className="text-[11px] font-bold uppercase tracking-widest">Atendimento e Contato</h5>
+      <div className="grid gap-10">
+        {/* 1. INFORMAÇÕES DA LOJA */}
+        <Card className="p-10 border-none shadow-premium bg-white space-y-10 rounded-[3rem]">
+          <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
+             <Info className="h-5 w-5" />
+             <h5 className="text-[11px] font-bold uppercase tracking-[0.4em]">Informações da Boutique</h5>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <Label>WhatsApp VIP</Label>
-              <Input value={settings.whatsapp} onChange={e => setSettings({...settings, whatsapp: e.target.value})} />
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Nome da Loja</Label>
+              <Input value={formData.storeName} onChange={e => setFormData({...formData, storeName: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none" />
             </div>
             <div className="space-y-2">
-              <Label>E-mail Suporte</Label>
-              <Input value={settings.email} onChange={e => setSettings({...settings, email: e.target.value})} />
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Slogan / Tagline</Label>
+              <Input value={formData.tagline} onChange={e => setFormData({...formData, tagline: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none" />
+            </div>
+            <div className="space-y-2">
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">E-mail de Contato</Label>
+              <Input value={formData.contactEmail} onChange={e => setFormData({...formData, contactEmail: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none" />
+            </div>
+            <div className="space-y-2">
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">WhatsApp VIP</Label>
+              <Input value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none" />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Instagram (Link ou @)</Label>
+              <div className="relative">
+                <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-accent" />
+                <Input value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="h-14 pl-12 rounded-2xl bg-secondary/10 border-none" />
+              </div>
             </div>
           </div>
         </Card>
 
-        <Card className="p-8 border-none shadow-sm space-y-8 bg-white">
-          <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-4">
+        {/* 2. TEXTOS DA HOME */}
+        <Card className="p-10 border-none shadow-premium bg-white space-y-10 rounded-[3rem]">
+          <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
+             <Layout className="h-5 w-5" />
+             <h5 className="text-[11px] font-bold uppercase tracking-[0.4em]">Experiência Editorial (Textos da Home)</h5>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-2">
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Título Seção "Novas Peças"</Label>
+              <Input value={formData.featuredTitle} onChange={e => setFormData({...formData, featuredTitle: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none" />
+            </div>
+            <div className="space-y-2">
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Subtítulo Seção</Label>
+              <Input value={formData.featuredSubtitle} onChange={e => setFormData({...formData, featuredSubtitle: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none" />
+            </div>
+            <div className="space-y-2">
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Texto Botão Hero (Padrão)</Label>
+              <Input value={formData.heroCta} onChange={e => setFormData({...formData, heroCta: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none" />
+            </div>
+            <div className="space-y-2">
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Título "Moda com Propósito"</Label>
+              <Input value={formData.purposeTitle} onChange={e => setFormData({...formData, purposeTitle: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none" />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Texto manifesto (Seção Propósito)</Label>
+              <Textarea value={formData.purposeText} onChange={e => setFormData({...formData, purposeText: e.target.value})} className="rounded-[2rem] bg-secondary/10 border-none p-6 italic min-h-[120px]" />
+            </div>
+          </div>
+        </Card>
+
+        {/* 3. CONFIGURAÇÕES DE FRETE */}
+        <Card className="p-10 border-none shadow-premium bg-white space-y-10 rounded-[3rem]">
+          <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
              <Truck className="h-5 w-5" />
-             <h5 className="text-[11px] font-bold uppercase tracking-widest">Logística e Frete</h5>
+             <h5 className="text-[11px] font-bold uppercase tracking-[0.4em]">Logística e Frete</h5>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <Label>Frete Grátis acima de (R$)</Label>
-              <Input value={settings.freeShipping} onChange={e => setSettings({...settings, freeShipping: e.target.value})} />
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Frete Grátis Sul/Sudeste (Min R$)</Label>
+              <Input type="number" value={formData.freeShippingMin} onChange={e => setFormData({...formData, freeShippingMin: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none px-6" />
             </div>
             <div className="space-y-2">
-              <Label>Prazo de Entrega Estimado</Label>
-              <Input value={settings.deliveryTime} onChange={e => setSettings({...settings, deliveryTime: e.target.value})} />
+              <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Frete Grátis Demais Regiões (Min R$)</Label>
+              <Input type="number" value={formData.freeShippingOthers} onChange={e => setFormData({...formData, freeShippingOthers: e.target.value})} className="h-14 rounded-2xl bg-secondary/10 border-none px-6" />
             </div>
-          </div>
-        </Card>
-
-        <Card className="p-8 border-none shadow-sm space-y-8 bg-white">
-          <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-4">
-             <Smartphone className="h-5 w-5" />
-             <h5 className="text-[11px] font-bold uppercase tracking-widest">Anúncios de Topo</h5>
-          </div>
-          <div className="space-y-2">
-            <Label>Frase Promocional (Aviso de Topo)</Label>
-            <Input value={settings.announcement} onChange={e => setSettings({...settings, announcement: e.target.value})} />
-          </div>
-        </Card>
-
-        <Card className="p-8 border-none shadow-sm space-y-8 bg-white">
-          <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-4">
-             <ShieldCheck className="h-5 w-5" />
-             <h5 className="text-[11px] font-bold uppercase tracking-widest">Políticas Legais</h5>
-          </div>
-          <div className="space-y-6">
-             <div className="space-y-2">
-               <Label>Termos de Uso</Label>
-               <Textarea className="min-h-[150px]" placeholder="Cole aqui os termos da sua boutique..." />
-             </div>
-             <div className="space-y-2">
-               <Label>Política de Trocas</Label>
-               <Textarea className="min-h-[150px]" placeholder="Descreva o processo de devolução..." />
-             </div>
           </div>
         </Card>
       </div>

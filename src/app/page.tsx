@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
@@ -37,6 +38,10 @@ function StorefrontContent() {
   }, [db, user]);
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
+
+  // Configurações Globais
+  const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
+  const { data: settings } = useDoc(settingsRef);
 
   useEffect(() => {
     if (searchParams.get('admin') === 'true' && isAdmin) {
@@ -162,11 +167,11 @@ function StorefrontContent() {
               <div className="flex items-center gap-3">
                 <div className="h-px w-12 bg-accent" />
                 <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.6em] text-accent">
-                  {selectedCategory ? 'Explorando Seleção' : 'Editorial de Estilo'}
+                  {selectedCategory ? 'Explorando Seleção' : (settings?.featuredSubtitle || 'Editorial de Estilo')}
                 </span>
               </div>
               <h2 className="text-3xl md:text-6xl font-headline font-bold text-primary uppercase tracking-tighter leading-none">
-                {selectedCategory || 'Novas Peças'}
+                {selectedCategory || (settings?.featuredTitle || 'Novas Peças')}
               </h2>
             </div>
             
@@ -278,10 +283,10 @@ function StorefrontContent() {
                   <div className="space-y-4 md:space-y-8">
                     <span className="text-accent text-[10px] md:text-sm font-bold uppercase tracking-[0.8em]">Movimento Toda Bela</span>
                     <h3 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-[0.9] tracking-tighter">
-                      Moda com <br /> <span className="italic font-light">Propósito</span>
+                      {settings?.purposeTitle || 'Moda com Propósito'}
                     </h3>
                     <p className="text-base md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
-                      Cada peça em nossa boutique é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.
+                      {settings?.purposeText || 'Cada peça em nossa boutique é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.'}
                     </p>
                   </div>
                   <button 

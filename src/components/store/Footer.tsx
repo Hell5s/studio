@@ -27,6 +27,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { OrderTrackingDialog } from './OrderTrackingDialog';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 const INFO_CONTENT: Record<string, { title: string; subtitle: string; content: React.ReactNode }> = {
   'nossa-historia': {
@@ -93,12 +95,20 @@ const INFO_CONTENT: Record<string, { title: string; subtitle: string; content: R
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const db = useFirestore();
   const [activeInfo, setActiveInfo] = useState<string | null>(null);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
 
+  // Configurações Globais
+  const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
+  const { data: settings } = useDoc(settingsRef);
+
   const handleOpenInfo = (id: string) => setActiveInfo(id);
-  const handleOpenWhatsApp = () => window.open('https://wa.me/5511999999999', '_blank');
-  const handleOpenMail = () => window.location.href = 'mailto:contato@todobela.com.br';
+  const handleOpenWhatsApp = () => {
+    const phone = (settings?.whatsapp || '5511999999999').replace(/\D/g, '');
+    window.open(`https://wa.me/${phone}`, '_blank');
+  };
+  const handleOpenMail = () => window.location.href = `mailto:${settings?.contactEmail || 'contato@todobela.com.br'}`;
 
   return (
     <footer className="bg-primary text-white pt-20 md:pt-40 pb-10 md:pb-16 overflow-hidden relative">
@@ -109,11 +119,11 @@ export function Footer() {
             <LogoMark className="invert brightness-200 scale-100 md:scale-125 origin-left" />
             <div className="space-y-8">
               <p className="text-white/60 font-light italic text-base md:text-lg leading-relaxed max-w-sm">
-                Inspirando presença, propósito e estilo. Na Toda Bela, acreditamos que cada peça é uma extensão da sua essência e um movimento em direção à sua melhor versão.
+                {settings?.tagline || 'Inspirando presença, propósito e estilo. Na Toda Bela, acreditamos que cada peça é uma extensão da sua essência e um movimento em direção à sua melhor versão.'}
               </p>
               <div className="flex gap-5">
                 {[
-                  { icon: <Instagram className="h-6 w-6" />, label: "Instagram", url: 'https://instagram.com/todabela' },
+                  { icon: <Instagram className="h-6 w-6" />, label: "Instagram", url: settings?.instagram?.startsWith('http') ? settings.instagram : `https://instagram.com/${settings?.instagram?.replace('@', '') || 'todabela'}` },
                   { icon: <Facebook className="h-6 w-6" />, label: "Facebook", url: 'https://facebook.com/todabela' },
                   { icon: <Youtube className="h-6 w-6" />, label: "YouTube", url: 'https://youtube.com/todabela' }
                 ].map((social) => (
@@ -160,7 +170,7 @@ export function Footer() {
                  </div>
                  <div className="space-y-1">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">WhatsApp VIP</p>
-                    <p className="text-sm md:text-base font-medium">(11) 99999-9999</p>
+                    <p className="text-sm md:text-base font-medium">{settings?.whatsapp || '(11) 99999-9999'}</p>
                  </div>
               </button>
               <button onClick={handleOpenMail} className="flex items-start gap-5 group text-left w-full min-h-[44px]">
@@ -169,7 +179,7 @@ export function Footer() {
                  </div>
                  <div className="space-y-1">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">E-mail Editorial</p>
-                    <p className="text-sm md:text-base font-medium">contato@todobela.com.br</p>
+                    <p className="text-sm md:text-base font-medium">{settings?.contactEmail || 'contato@todobela.com.br'}</p>
                  </div>
               </button>
             </div>
@@ -198,7 +208,7 @@ export function Footer() {
         <div className="pt-10 flex flex-col lg:flex-row justify-between items-center gap-12">
           <div className="space-y-4 text-center lg:text-left">
             <p className="text-[10px] uppercase tracking-[0.5em] text-white/30 font-bold">
-              © {currentYear} Toda Bela Boutique • São Paulo, Brasil
+              © {currentYear} {settings?.storeName || 'Toda Bela'} Boutique • São Paulo, Brasil
             </p>
             <div className="flex flex-wrap justify-center lg:justify-start gap-8 text-[9px] font-bold uppercase tracking-[0.3em] text-white/20">
               <span className="hover:text-accent cursor-pointer transition-colors" onClick={() => handleOpenInfo('termos')}>Termos</span>
