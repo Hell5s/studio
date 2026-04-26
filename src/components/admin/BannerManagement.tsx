@@ -18,7 +18,8 @@ import {
   Move,
   Film,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Pencil
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -26,6 +27,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
@@ -52,6 +59,9 @@ export function BannerManagement() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  const [editingBanner, setEditingBanner] = useState<any>(null);
+  const [editData, setEditData] = useState({ title: '', subtitle: '', ctaText: '', duration: 6 });
+
   const [bannerData, setBannerData] = useState({
     title: '',
     subtitle: '',
@@ -65,7 +75,6 @@ export function BannerManagement() {
   
   const { data: banners, isLoading } = useCollection(bannersQuery);
 
-  // Ordenação client-side para refletir as setas sem depender de índices complexos
   const sortedBanners = useMemo(() => {
     if (!banners) return [];
     return [...banners].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -312,7 +321,11 @@ export function BannerManagement() {
                     style={mediaType === 'image' ? { backgroundImage: `url(${previewImage})`, backgroundSize: 'cover', backgroundPosition: `${imagePosition.x}% ${imagePosition.y}%`, cursor: isDragging ? 'grabbing' : 'grab' } : {}}
                     onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
                    >
-                      {mediaType === 'video' && <video key={previewImage} autoPlay muted loop playsInline className="w-full h-full object-cover"><source src={previewImage} type="video/mp4" /></video>}
+                      {mediaType === 'video' && (
+                        <video key={previewImage} autoPlay muted loop playsInline className="w-full h-full object-cover">
+                          <source src={previewImage} type="video/mp4" />
+                        </video>
+                      )}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">{mediaType === 'image' && <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-lg opacity-0 group-hover/preview:opacity-100 transition-opacity"><Move className="h-3 w-3 text-primary" /><span className="text-[9px] font-bold uppercase tracking-widest text-primary">Arraste para ajustar</span></div>}</div>
                    </div>
                 </div>
@@ -337,8 +350,22 @@ export function BannerManagement() {
                   ) : (
                     <img src={banner.imageUrl} className="w-full h-full object-cover" style={{ objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center' }} />
                   )}
-                  <div className="absolute inset-0 bg-black/40 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button onClick={() => handleDelete(banner.id)} className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform"><Trash2 className="h-4 w-4" /></button>
+                  <div className="absolute inset-0 bg-black/40 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingBanner(banner)
+                        setEditData({
+                          title: banner.title || '',
+                          subtitle: banner.subtitle || '',
+                          ctaText: banner.ctaText || 'Conferir Looks',
+                          duration: banner.duration || 6
+                        })
+                      }}
+                      className="p-3 bg-blue-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => handleDelete(banner.id)} className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
@@ -371,6 +398,78 @@ export function BannerManagement() {
           </div>
         </Card>
       </div>
+
+      <Dialog open={!!editingBanner} onOpenChange={(o) => !o && setEditingBanner(null)}>
+        <DialogContent className="rounded-[2rem] bg-white border-none shadow-2xl p-0 overflow-hidden max-w-md">
+          <div className="bg-primary p-6 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-headline font-bold">Editar Banner</DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="p-8 space-y-4">
+            {editingBanner?.mediaType === 'video' ? (
+              <video key={editingBanner?.imageUrl} muted loop playsInline className="w-full aspect-video object-cover rounded-xl">
+                <source src={editingBanner?.imageUrl} type="video/mp4" />
+              </video>
+            ) : (
+              <img src={editingBanner?.imageUrl} className="w-full aspect-video object-cover rounded-xl" />
+            )}
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Título</Label>
+                <Input placeholder="Título" value={editData.title} onChange={e => setEditData({...editData, title: e.target.value})} className="h-12 rounded-xl border-primary/10" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Subtítulo</Label>
+                <Input placeholder="Subtítulo" value={editData.subtitle} onChange={e => setEditData({...editData, subtitle: e.target.value})} className="h-12 rounded-xl border-primary/10" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Texto do Botão</Label>
+                <Input placeholder="Texto do Botão" value={editData.ctaText} onChange={e => setEditData({...editData, ctaText: e.target.value})} className="h-12 rounded-xl border-primary/10" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Tempo de Exibição</Label>
+                <select
+                  value={editData.duration}
+                  onChange={e => setEditData({...editData, duration: Number(e.target.value)})}
+                  className="w-full h-12 rounded-xl border border-primary/10 px-4 text-sm font-bold text-primary outline-none"
+                >
+                  <option value={3}>3 segundos</option>
+                  <option value={5}>5 segundos</option>
+                  <option value={6}>6 segundos (padrão)</option>
+                  <option value={8}>8 segundos</option>
+                  <option value={10}>10 segundos</option>
+                  <option value={15}>15 segundos</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="px-8 pb-8 flex gap-3">
+            <button
+              onClick={() => setEditingBanner(null)}
+              className="flex-1 h-12 rounded-full border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-secondary/20 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                if (!editingBanner) return
+                updateDocumentNonBlocking(doc(db, 'banners', editingBanner.id), {
+                  title: editData.title,
+                  subtitle: editData.subtitle,
+                  ctaText: editData.ctaText,
+                  duration: editData.duration
+                })
+                toast({ title: "Banner atualizado!" })
+                setEditingBanner(null)
+              }}
+              className="flex-1 h-12 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-colors"
+            >
+              Salvar
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
