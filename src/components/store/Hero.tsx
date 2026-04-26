@@ -54,22 +54,12 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
-  const defaultHero = {
-    imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=max&w=1600&q=80",
-    title: "",
-    subtitle: "",
-    ctaText: "Conferir",
-    imagePosition: { x: 50, y: 20 },
-    mediaType: 'image',
-    duration: 6
-  };
-
   const displayBanners = useMemo(() => {
     let list = banners && banners.length > 0 
       ? banners 
       : cachedBannerUrl 
-        ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: 'Conferir', imagePosition: { x: 50, y: 20 }, mediaType: 'image', duration: 6 }]
-        : [defaultHero];
+        ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: 'Conferir', mediaType: 'image', duration: 6, imagePosition: { x: 50, y: 20 } }]
+        : [];
     
     return [...list].sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [banners, cachedBannerUrl]);
@@ -86,6 +76,26 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     
     return () => clearTimeout(timer);
   }, [emblaApi, selectedIndex, displayBanners]);
+
+  if (!displayBanners.length) {
+    return (
+      <section
+        className="relative w-full overflow-hidden flex items-center justify-center"
+        style={{ height: '56.25vw', maxHeight: '90vh', minHeight: '400px', background: 'linear-gradient(135deg, #1a0a0e 0%, #2d1219 50%, #1a0a0e 100%)' }}
+      >
+        <div className="text-center space-y-4 animate-pulse">
+          <div className="h-px w-32 bg-accent/30 mx-auto" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.6em] text-white/20">
+            Toda Bela
+          </p>
+          <p className="text-[8px] font-bold uppercase tracking-[0.4em] text-accent/30">
+            Moda Feminina
+          </p>
+          <div className="h-px w-32 bg-accent/30 mx-auto" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section 
