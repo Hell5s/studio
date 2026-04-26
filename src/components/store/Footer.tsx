@@ -111,12 +111,14 @@ export function Footer() {
   const handleOpenMail = () => window.location.href = `mailto:${settings?.contactEmail || 'contato@todobela.com.br'}`;
 
   return (
-    <footer className="bg-primary text-white pt-20 md:pt-40 pb-10 md:pb-16 overflow-hidden relative">
+    <footer className="bg-primary text-white pt-16 md:pt-24 pb-10 md:pb-16 overflow-hidden relative">
       <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-32 mb-20 md:mb-40">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-16 mb-12 md:mb-16">
           
-          <div className="lg:col-span-4 space-y-10">
-            <LogoMark className="invert brightness-200 scale-100 md:scale-125 origin-left" />
+          <div className="lg:col-span-4 space-y-10 pb-10 md:pb-0 border-b md:border-b-0 border-white/5">
+            <div className="brightness-0 invert scale-100 md:scale-125 origin-left">
+              <LogoMark />
+            </div>
             <div className="space-y-8">
               <p className="text-white/60 font-light italic text-base md:text-lg leading-relaxed max-w-sm">
                 {settings?.tagline || 'Inspirando presença, propósito e estilo. Na Toda Bela, acreditamos que cada peça é uma extensão da sua essência e um movimento em direção à sua melhor versão.'}
@@ -139,7 +141,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-12 md:gap-20">
+          <div className="lg:col-span-5 grid grid-cols-2 gap-12 md:gap-20">
             <div className="space-y-8">
               <h5 className="font-headline text-xl md:text-2xl font-bold text-accent tracking-tight">Institucional</h5>
               <ul className="space-y-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
