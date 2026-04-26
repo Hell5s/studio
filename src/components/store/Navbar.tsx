@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -25,6 +26,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const { user } = useUser();
   const db = useFirestore();
   const router = useRouter();
+
+  // Configurações Globais para Links Dinâmicos
+  const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
+  const { data: settings } = useDoc(settingsRef);
 
   const adminDocRef = useMemoFirebase(() => {
     return user ? doc(db, 'roles_admin', user.uid) : null;
@@ -54,7 +59,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     }
   };
 
-  const navLinks = [
+  const navLinks = settings?.navLinks || [
     { label: 'COLEÇÕES', href: '/#colecoes' },
     { label: 'PRODUTOS', href: '/#vitrine' },
     { label: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
@@ -75,7 +80,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         {/* Centro: Links e Busca (Apenas Desktop) */}
         <div className="hidden lg:flex flex-1 items-center justify-center gap-10 mx-6">
           <div className="hidden xl:flex items-center gap-8">
-            {navLinks.map((link) => (
+            {navLinks.map((link: any) => (
               <Link 
                 key={link.label} 
                 href={link.href}
@@ -168,7 +173,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
       {isMenuOpen && (
         <div className="lg:hidden bg-white border-t border-primary/5 px-6 py-6 space-y-4 shadow-lg">
-          {navLinks.map((link) => (
+          {navLinks.map((link: any) => (
             <Link
               key={link.label}
               href={link.href}

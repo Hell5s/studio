@@ -2,12 +2,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, Smartphone, Mail, Truck, Layout, Info, Instagram, Loader2 } from 'lucide-react';
+import { Settings, Save, Smartphone, Mail, Truck, Layout, Info, Instagram, Loader2, Plus, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
@@ -32,12 +33,22 @@ export function AdminSettings() {
     purposeTitle: 'Moda com Propósito',
     purposeText: 'Cada peça em nossa boutique é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.',
     freeShippingMin: '249',
-    freeShippingOthers: '499'
+    freeShippingOthers: '499',
+    navLinks: [
+      { label: 'COLEÇÕES', href: '/#colecoes', highlight: false },
+      { label: 'PRODUTOS', href: '/#vitrine', highlight: false },
+      { label: 'MAIS VENDIDOS', href: '/#mais-vendidos', highlight: false },
+      { label: 'ECONOMIZE', href: '/economize', highlight: true },
+    ]
   });
 
   useEffect(() => {
     if (storeSettings) {
-      setFormData(prev => ({ ...prev, ...storeSettings }));
+      setFormData(prev => ({ 
+        ...prev, 
+        ...storeSettings,
+        navLinks: storeSettings.navLinks || prev.navLinks
+      }));
     }
   }, [storeSettings]);
 
@@ -144,7 +155,80 @@ export function AdminSettings() {
           </div>
         </Card>
 
-        {/* 3. CONFIGURAÇÕES DE FRETE */}
+        {/* 3. GESTÃO DO MENU (NAVBAR) */}
+        <Card className="p-10 border-none shadow-premium bg-white space-y-10 rounded-[3rem]">
+          <div className="flex items-center justify-between border-b border-primary/5 pb-4">
+             <div className="flex items-center gap-3 text-accent">
+                <Layout className="h-5 w-5" />
+                <h5 className="text-[11px] font-bold uppercase tracking-[0.4em]">Menu de Navegação (Navbar)</h5>
+             </div>
+             <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setFormData({...formData, navLinks: [...formData.navLinks, { label: '', href: '', highlight: false }]})}
+                className="h-8 text-accent text-[9px] font-bold uppercase border border-accent/20 px-4 rounded-full"
+             >
+                <Plus className="h-3 w-3 mr-1" /> Novo Link
+             </Button>
+          </div>
+          
+          <div className="space-y-4">
+            {formData.navLinks.map((link, idx) => (
+              <div key={idx} className="flex flex-col md:flex-row gap-4 p-6 bg-secondary/10 rounded-2xl items-end md:items-center">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Rótulo (Ex: COLEÇÕES)</Label>
+                    <Input 
+                      value={link.label} 
+                      onChange={e => {
+                        const newLinks = [...formData.navLinks];
+                        newLinks[idx].label = e.target.value.toUpperCase();
+                        setFormData({...formData, navLinks: newLinks});
+                      }} 
+                      className="bg-white border-none h-11"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Link (Ex: /#colecoes)</Label>
+                    <Input 
+                      value={link.href} 
+                      onChange={e => {
+                        const newLinks = [...formData.navLinks];
+                        newLinks[idx].href = e.target.value;
+                        setFormData({...formData, navLinks: newLinks});
+                      }} 
+                      className="bg-white border-none h-11"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-6 pl-4">
+                   <div className="flex items-center gap-2">
+                     <Label className="text-[9px] font-bold uppercase text-primary/40">Destaque</Label>
+                     <Switch 
+                        checked={link.highlight} 
+                        onCheckedChange={v => {
+                          const newLinks = [...formData.navLinks];
+                          newLinks[idx].highlight = v;
+                          setFormData({...formData, navLinks: newLinks});
+                        }} 
+                      />
+                   </div>
+                   <button 
+                    onClick={() => {
+                      const newLinks = formData.navLinks.filter((_, i) => i !== idx);
+                      setFormData({...formData, navLinks: newLinks});
+                    }}
+                    className="text-red-300 hover:text-red-500 transition-colors p-2"
+                   >
+                     <Trash2 className="h-5 w-5" />
+                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* 4. CONFIGURAÇÕES DE FRETE */}
         <Card className="p-10 border-none shadow-premium bg-white space-y-10 rounded-[3rem]">
           <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
              <Truck className="h-5 w-5" />
