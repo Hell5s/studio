@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -31,7 +30,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     );
   }, [db]);
 
-  const { data: banners, isLoading } = useCollection(bannersQuery);
+  const { data: banners } = useCollection(bannersQuery);
 
   // Salva o banner no cache quando carregar do Firestore
   useEffect(() => {
@@ -65,14 +64,15 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     title: "",
     subtitle: "",
     ctaText: "Conferir",
-    imagePosition: { x: 50, y: 20 }
+    imagePosition: { x: 50, y: 20 },
+    mediaType: 'image'
   };
 
   // Prioriza Banners reais > Banner em Cache > Banner Default
   const displayBanners = banners && banners.length > 0 
     ? banners 
     : cachedBannerUrl 
-      ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: 'Conferir', imagePosition: { x: 50, y: 20 } }]
+      ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: 'Conferir', imagePosition: { x: 50, y: 20 }, mediaType: 'image' }]
       : [defaultHero];
 
   return (
@@ -84,19 +84,36 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         <div className="flex h-full w-full">
           {displayBanners.map((banner: any, idx: number) => (
             <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full">
-              <div 
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  backgroundImage: `url(${banner.imageUrl})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: banner.imagePosition 
-                    ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
-                    : 'center 20%',
-                  backgroundRepeat: 'no-repeat',
-                }} 
-                aria-label={banner.title || "Banner Toda Bela"}
-              />
+              {banner.mediaType === 'video' ? (
+                <video
+                  src={banner.imageUrl}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: `url(${banner.imageUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: banner.imagePosition 
+                      ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
+                      : 'center 20%',
+                    backgroundRepeat: 'no-repeat',
+                  }} 
+                  aria-label={banner.title || "Banner Toda Bela"}
+                />
+              )}
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               

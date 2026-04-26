@@ -15,7 +15,8 @@ import {
   Layers,
   MessageSquareText,
   Link as LinkIcon,
-  Move
+  Move,
+  Film
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -42,6 +43,7 @@ export function BannerManagement() {
   const [imageUrl, setImageUrl] = useState('');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '1:1' | '4:3'>('16:9');
   const [previewImage, setPreviewImage] = useState('');
+  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   
   // Novo estado para posicionamento da imagem
   const [imagePosition, setImagePosition] = useState({ x: 50, y: 20 });
@@ -56,19 +58,20 @@ export function BannerManagement() {
 
   const bannersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'banners'));
+    return query(collection(db, 'banners'), orderBy('createdAt', 'desc'));
   }, [db]);
   
   const { data: banners, isLoading } = useCollection(bannersQuery);
 
   // Lógica de arraste para posicionamento
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (mediaType === 'video') return;
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || mediaType === 'video') return;
     const dx = ((e.clientX - dragStart.x) / 300) * -10;
     const dy = ((e.clientY - dragStart.y) / 200) * -10;
     setImagePosition(prev => ({
@@ -89,7 +92,7 @@ export function BannerManagement() {
     setPreviewImage(imageUrl);
     setImageUrl('');
     setImagePosition({ x: 50, y: 20 });
-    toast({ title: "Link da imagem carregado!" });
+    toast({ title: "Link da mídia carregado!" });
   };
 
   const handleGenerate = async () => {
@@ -100,6 +103,7 @@ export function BannerManagement() {
 
     setIsGenerating(true);
     setPreviewImage('');
+    setMediaType('image');
     try {
       const result = await generateBannerImage({ prompt, aspectRatio });
       setPreviewImage(result.imageUrl);
@@ -155,7 +159,7 @@ export function BannerManagement() {
     setIsUploading(true);
     setPreviewImage('');
     try {
-      const storageRef = ref(storage!, `banners/${Date.now()}-${file.name}`);
+      const storageRef = ref(storage!, `banners/${mediaType === 'video' ? 'videos' : 'images'}/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file, {
         contentType: file.type,
         cacheControl: 'public, max-age=31536000',
@@ -163,11 +167,11 @@ export function BannerManagement() {
       const url = await getDownloadURL(snapshot.ref);
       setPreviewImage(url);
       setImagePosition({ x: 50, y: 20 });
-      toast({ title: "Imagem carregada com sucesso!" });
+      toast({ title: `${mediaType === 'video' ? 'Vídeo' : 'Imagem'} carregado com sucesso!` });
     } catch (error: any) {
       toast({ 
         title: "Erro no upload", 
-        description: "Não foi possível carregar a imagem.", 
+        description: "Não foi possível carregar o arquivo.", 
         variant: "destructive" 
       });
     } finally {
@@ -193,6 +197,7 @@ export function BannerManagement() {
         ...bannerData,
         imageUrl: finalUrl,
         imagePosition: imagePosition,
+        mediaType: mediaType,
         aspectRatio,
         active: true,
         order: (banners?.length || 0) + 1,
@@ -256,11 +261,33 @@ export function BannerManagement() {
             </div>
 
             <div className="space-y-6">
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tipo de Mídia</Label>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => { setMediaType('image'); setPreviewImage(''); }}
+                    className={cn("flex-1 h-12 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-2",
+                      mediaType === 'image' ? "bg-primary text-white border-primary" : "border-primary/20 text-primary hover:bg-secondary/30"
+                    )}
+                  >
+                    <ImageIcon className="h-4 w-4" /> Imagem
+                  </button>
+                  <button
+                    onClick={() => { setMediaType('video'); setPreviewImage(''); }}
+                    className={cn("flex-1 h-12 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-2",
+                      mediaType === 'video' ? "bg-primary text-white border-primary" : "border-primary/20 text-primary hover:bg-secondary/30"
+                    )}
+                  >
+                    <Film className="h-4 w-4" /> Vídeo
+                  </button>
+                </div>
+              </div>
+
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                   <LinkIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40" />
                   <Input 
-                    placeholder="Colar URL da imagem (ex: https://...)" 
+                    placeholder={`Colar URL da ${mediaType === 'video' ? 'mídia' : 'imagem'} (ex: https://...)`}
                     className="rounded-full h-16 pl-14 pr-6 bg-secondary/10 border-none focus:ring-1 focus:ring-accent/20"
                     value={imageUrl}
                     onChange={e => setImageUrl(e.target.value)}
@@ -284,8 +311,8 @@ export function BannerManagement() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button 
                   onClick={handleGenerate} 
-                  disabled={isGenerating || isUploading}
-                  className="rounded-full h-16 bg-primary shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white font-bold uppercase tracking-widest text-[11px]"
+                  disabled={isGenerating || isUploading || mediaType === 'video'}
+                  className="rounded-full h-16 bg-primary shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white font-bold uppercase tracking-widest text-[11px] disabled:opacity-30"
                 >
                   {isGenerating ? (
                     <>
@@ -314,11 +341,11 @@ export function BannerManagement() {
                   ) : (
                     <>
                       <Upload className="h-5 w-5 mr-3" />
-                      Enviar Minha Foto
+                      Enviar {mediaType === 'video' ? 'Meu Vídeo' : 'Minha Foto'}
                     </>
                   )}
                 </Button>
-                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                <input type="file" ref={fileInputRef} className="hidden" accept={mediaType === 'video' ? 'video/*' : 'image/*'} onChange={handleFileUpload} />
               </div>
             </div>
 
@@ -349,29 +376,36 @@ export function BannerManagement() {
                 </div>
                 <div className="space-y-4">
                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                     <ImageIcon className="h-3 w-3" /> Enquadramento (Arraste p/ ajustar)
+                     {mediaType === 'video' ? <Film className="h-3 w-3" /> : <ImageIcon className="h-3 w-3" />} 
+                     Enquadramento {mediaType === 'image' && '(Arraste p/ ajustar)'}
                    </Label>
                    <div 
                     className={cn(
                       "rounded-2xl overflow-hidden shadow-2xl border-4 border-white relative bg-black select-none group/preview",
                       aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square'
                     )}
-                    style={{
+                    style={mediaType === 'image' ? {
                       backgroundImage: `url(${previewImage})`,
                       backgroundSize: 'cover',
                       backgroundPosition: `${imagePosition.x}% ${imagePosition.y}%`,
                       cursor: isDragging ? 'grabbing' : 'grab',
-                    }}
+                    } : {}}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
                    >
+                      {mediaType === 'video' && (
+                        <video src={previewImage} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+                      )}
+                      
                       <div className="absolute inset-0 bg-black/10 group-hover/preview:bg-transparent transition-colors flex items-center justify-center pointer-events-none">
-                         <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-lg opacity-0 group-hover/preview:opacity-100 transition-opacity">
-                            <Move className="h-3 w-3 text-primary" />
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Arraste para ajustar</span>
-                         </div>
+                         {mediaType === 'image' && (
+                            <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-lg opacity-0 group-hover/preview:opacity-100 transition-opacity">
+                               <Move className="h-3 w-3 text-primary" />
+                               <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Arraste para ajustar</span>
+                            </div>
+                         )}
                       </div>
                       <div className="absolute inset-0 bg-black/20 flex flex-col justify-end p-6 text-white pointer-events-none">
                          <h3 className="text-xl font-bold uppercase tracking-tighter leading-none">{bannerData.title}</h3>
@@ -394,8 +428,13 @@ export function BannerManagement() {
               <div className="py-20 text-center opacity-20"><Loader2 className="animate-spin h-8 w-8 mx-auto" /></div>
             ) : banners?.map(banner => (
               <div key={banner.id} className="p-4 rounded-3xl bg-white/10 border border-white/5 space-y-4 group hover:bg-white/15 transition-all">
-                <div className="aspect-video rounded-2xl overflow-hidden relative shadow-lg">
-                  <img src={banner.imageUrl} className="w-full h-full object-cover" style={{ objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center' }} />
+                <div className="aspect-video rounded-2xl overflow-hidden relative shadow-lg bg-black">
+                  {banner.mediaType === 'video' ? (
+                    <video src={banner.imageUrl} muted loop playsInline className="w-full h-full object-cover" onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => e.currentTarget.pause()} />
+                  ) : (
+                    <img src={banner.imageUrl} className="w-full h-full object-cover" style={{ objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center' }} />
+                  )}
+                  
                   <div className="absolute inset-0 bg-black/40 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button 
                       onClick={() => handleDelete(banner.id)}
@@ -404,6 +443,11 @@ export function BannerManagement() {
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+                  {banner.mediaType === 'video' && (
+                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md p-1 rounded-md">
+                      <Film className="h-3 w-3 text-accent" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
