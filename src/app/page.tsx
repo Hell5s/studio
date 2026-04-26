@@ -1,21 +1,22 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, doc } from 'firebase/firestore';
+import { collection, query, doc, limit } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Footer } from '@/components/store/Footer';
-import { AdminDashboard } from '@/components/admin/AdminDashboard';
-import { LoginDialog } from '@/components/auth/LoginDialog';
-import { CheckoutDialog } from '@/components/store/CheckoutDialog';
-import { FavoritesDialog } from '@/components/store/FavoritesDialog';
-import { AIProductGenerator } from '@/components/admin/AIProductGenerator';
 import { Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// Lazy loading de componentes pesados e dialogs
+const AdminDashboard = React.lazy(() => import('@/components/admin/AdminDashboard').then(mod => ({ default: mod.AdminDashboard })));
+const AIProductGenerator = React.lazy(() => import('@/components/admin/AIProductGenerator').then(mod => ({ default: mod.AIProductGenerator })));
+const CheckoutDialog = React.lazy(() => import('@/components/store/CheckoutDialog').then(mod => ({ default: mod.CheckoutDialog })));
+const FavoritesDialog = React.lazy(() => import('@/components/store/FavoritesDialog').then(mod => ({ default: mod.FavoritesDialog })));
 
 function StorefrontContent() {
   const db = useFirestore();
@@ -46,7 +47,8 @@ function StorefrontContent() {
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
   const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
-  const addToCart = (product: any) => {
+  // Memoizando funções de carrinho
+  const addToCart = useCallback((product: any) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -54,9 +56,9 @@ function StorefrontContent() {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-  };
+  }, []);
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = useCallback((id: string, delta: number) => {
     setCart(prev => prev.map(item => {
       if (item.id === id) {
         const newQty = Math.max(1, (item.quantity || 1) + delta);
@@ -64,21 +66,21 @@ function StorefrontContent() {
       }
       return item;
     }));
-  };
+  }, []);
 
-  const removeFromCart = (id: string) => {
+  const removeFromCart = useCallback((id: string) => {
     setCart(prev => prev.filter(item => item.id !== id));
-  };
+  }, []);
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'products'));
+    return query(collection(db, 'products'), limit(24));
   }, [db]);
   const { data: storeProducts, isLoading } = useCollection(productsQuery);
 
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'categories'));
+    return query(collection(db, 'categories'), limit(10));
   }, [db]);
   const { data: categories } = useCollection(categoriesQuery);
 
@@ -111,24 +113,26 @@ function StorefrontContent() {
     filteredProducts.filter(p => p.published !== false).slice(0, 12), 
   [filteredProducts]);
 
-  const handleSearch = (val: string) => {
+  const handleSearch = useCallback((val: string) => {
     setSearchValue(val);
     if (val) {
       const el = document.getElementById('vitrine');
       el?.scrollIntoView({ behavior: 'smooth' });
     }
-  };
+  }, []);
 
   if (isAdminView && isAdmin) {
     return (
       <div className="h-screen bg-background">
-        <AdminDashboard 
-          productsCount={storeProducts?.length || 0}
-          categoriesCount={categories?.length || 0}
-          onOpenAI={() => setIsAIOpen(true)}
-          onExit={() => setIsAdminView(false)}
-        />
-        <AIProductGenerator open={isAIOpen} onOpenChange={setIsAIOpen} />
+        <Suspense fallback={<div className="h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-accent" /></div>}>
+          <AdminDashboard 
+            productsCount={storeProducts?.length || 0}
+            categoriesCount={categories?.length || 0}
+            onOpenAI={() => setIsAIOpen(true)}
+            onExit={() => setIsAdminView(false)}
+          />
+          <AIProductGenerator open={isAIOpen} onOpenChange={setIsAIOpen} />
+        </Suspense>
       </div>
     );
   }
@@ -317,16 +321,21 @@ function StorefrontContent() {
       <Footer />
 
       <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
-      <FavoritesDialog open={isFavoritesOpen} onOpenChange={setIsFavoritesOpen} />
-      <CheckoutDialog 
-        open={isCheckoutOpen} 
-        onOpenChange={setIsCheckoutOpen} 
-        cartItems={cart}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeFromCart}
-        total={cartTotal}
-        onSuccess={() => setCart([])}
-      />
+      
+      <Suspense fallback={null}>
+        {isFavoritesOpen && <FavoritesDialog open={isFavoritesOpen} onOpenChange={setIsFavoritesOpen} />}
+        {isCheckoutOpen && (
+          <CheckoutDialog 
+            open={isCheckoutOpen} 
+            onOpenChange={setIsCheckoutOpen} 
+            cartItems={cart}
+            onUpdateQuantity={updateQuantity}
+            onRemoveItem={removeFromCart}
+            total={cartTotal}
+            onSuccess={() => setCart([])}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

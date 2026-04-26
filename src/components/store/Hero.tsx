@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
-import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 
@@ -64,18 +64,16 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     duration: 6
   };
 
-  const displayBanners = React.useMemo(() => {
+  const displayBanners = useMemo(() => {
     let list = banners && banners.length > 0 
       ? banners 
       : cachedBannerUrl 
         ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: 'Conferir', imagePosition: { x: 50, y: 20 }, mediaType: 'image', duration: 6 }]
         : [defaultHero];
     
-    // Ordenar client-side pela prioridade
     return [...list].sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [banners, cachedBannerUrl]);
 
-  // Efeito de Autoplay Dinâmico baseado no duration de cada slide
   useEffect(() => {
     if (!emblaApi || !displayBanners.length) return;
     
@@ -106,6 +104,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   loop
                   playsInline
                   preload="auto"
+                  fetchpriority={idx === 0 ? "high" : "low"}
                   style={{
                     position: 'absolute',
                     inset: 0,
@@ -129,6 +128,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                       : 'center 20%',
                     backgroundRepeat: 'no-repeat',
                   }} 
+                  fetchpriority={idx === 0 ? "high" : "low"}
                   aria-label={banner.title || "Banner Toda Bela"}
                 />
               )}
