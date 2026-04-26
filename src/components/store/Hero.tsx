@@ -86,19 +86,23 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
             <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full">
               {banner.mediaType === 'video' ? (
                 <video
-                  src={banner.imageUrl}
+                  key={banner.imageUrl}
                   autoPlay
                   muted
                   loop
                   playsInline
+                  preload="auto"
                   style={{
                     position: 'absolute',
                     inset: 0,
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
+                    backgroundColor: '#000',
                   }}
-                />
+                >
+                  <source src={banner.imageUrl} type="video/mp4" />
+                </video>
               ) : (
                 <div
                   style={{
