@@ -86,7 +86,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return (
       <section
         className="relative w-full overflow-hidden flex items-center justify-center"
-        style={{ height: '56.25vw', maxHeight: '90vh', minHeight: '400px', background: 'linear-gradient(135deg, #1a0a0e 0%, #2d1219 50%, #1a0a0e 100%)' }}
+        style={{ height: 'min(56.25vw, 90vh)', minHeight: '280px', background: 'linear-gradient(135deg, #1a0a0e 0%, #2d1219 50%, #1a0a0e 100%)' }}
       >
         <div className="text-center space-y-4 animate-pulse">
           <div className="h-px w-32 bg-accent/30 mx-auto" />
@@ -105,7 +105,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   return (
     <section 
       className="relative w-full overflow-hidden bg-black group"
-      style={{ height: '100vh' }}
+      style={{ 
+        height: 'min(56.25vw, 90vh)',
+        minHeight: '280px'
+      }}
     >
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full w-full">
@@ -126,7 +129,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    backgroundColor: '#000',
+                    objectPosition: 'center center',
                   }}
                 >
                   <source src={banner.imageUrl} type="video/mp4" />
