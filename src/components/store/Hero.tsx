@@ -122,8 +122,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   muted
                   loop
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   fetchPriority={idx === 0 ? "high" : "low"}
+                  disablePictureInPicture
+                  disableRemotePlayback
                   style={{
                     position: 'absolute',
                     inset: 0,
@@ -131,6 +133,11 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     height: '100%',
                     objectFit: 'cover',
                     objectPosition: 'center 15%',
+                    imageRendering: 'auto',
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
                   }}
                 >
                   <source src={banner.imageUrl} type="video/mp4" />
