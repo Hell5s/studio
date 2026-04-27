@@ -63,7 +63,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     let list = banners && banners.length > 0 
       ? banners 
       : cachedBannerUrl 
-        ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: settings?.heroCta || 'Conferir', mediaType: 'image', duration: 6, imagePosition: { x: 50, y: 15 } }]
+        ? [{ imageUrl: cachedBannerUrl, title: '', subtitle: '', ctaText: settings?.heroCta || 'Conferir', mediaType: 'image', duration: 6, imagePosition: { x: 50, y: 50 } }]
         : [];
     
     return [...list].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -86,7 +86,13 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return (
       <section
         className="relative w-full overflow-hidden flex items-center justify-center"
-        style={{ height: 'clamp(500px, 85vh, 950px)', minHeight: '500px', maxHeight: '950px', background: 'linear-gradient(135deg, #1a0a0e 0%, #2d1219 50%, #1a0a0e 100%)' }}
+        style={{ 
+          width: '100%',
+          aspectRatio: '16/9',
+          maxHeight: '95vh',
+          minHeight: '400px',
+          background: 'linear-gradient(135deg, #1a0a0e 0%, #2d1219 50%, #1a0a0e 100%)' 
+        }}
       >
         <div className="text-center space-y-4 animate-pulse">
           <div className="h-px w-32 bg-accent/30 mx-auto" />
@@ -106,9 +112,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     <section 
       className="relative w-full overflow-hidden bg-black group"
       style={{ 
-        height: 'clamp(500px, 85vh, 950px)',
-        minHeight: '500px',
-        maxHeight: '950px'
+        width: '100%',
+        aspectRatio: '16/9',
+        maxHeight: '95vh',
+        minHeight: '400px'
       }}
     >
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
@@ -132,7 +139,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    objectPosition: 'center 15%',
+                    objectPosition: 'center center',
                     imageRendering: 'auto',
                     willChange: 'transform',
                     transform: 'translateZ(0)',
@@ -151,7 +158,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     backgroundSize: 'cover',
                     backgroundPosition: banner.imagePosition 
                       ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
-                      : 'center 15%',
+                      : 'center center',
                     backgroundRepeat: 'no-repeat',
                   }} 
                   fetchPriority={idx === 0 ? "high" : "low"}
