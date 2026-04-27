@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
@@ -13,7 +14,7 @@ import { LoginDialog } from '@/components/auth/LoginDialog';
 import { Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Lazy loading de componentes pesados e dialogs
+// Lazy loading de componentes pesados e dialogs para performance
 const AdminDashboard = React.lazy(() => import('@/components/admin/AdminDashboard').then(mod => ({ default: mod.AdminDashboard })));
 const AIProductGenerator = React.lazy(() => import('@/components/admin/AIProductGenerator').then(mod => ({ default: mod.AIProductGenerator })));
 const CheckoutDialog = React.lazy(() => import('@/components/store/CheckoutDialog').then(mod => ({ default: mod.CheckoutDialog })));
@@ -52,7 +53,7 @@ function StorefrontContent() {
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
   const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
-  // Memoizando funções de carrinho
+  // Memoizando funções de carrinho para evitar re-renders
   const addToCart = useCallback((product: any) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
@@ -85,7 +86,7 @@ function StorefrontContent() {
 
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'categories'), limit(10));
+    return query(collection(db, 'categories'), limit(8));
   }, [db]);
   const { data: categories } = useCollection(categoriesQuery);
 
@@ -231,7 +232,7 @@ function StorefrontContent() {
               <h2 className="text-3xl md:text-7xl font-headline font-bold text-primary uppercase">Categorias</h2>
             </div>
             
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-10">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10">
               {categories && categories.length > 0 ? (
                 categories.map((col) => {
                   const slug = col.name.toLowerCase().trim().replace(/\s+/g, '-');
@@ -258,7 +259,7 @@ function StorefrontContent() {
                   );
                 })
               ) : (
-                [1,2,3,4,5].map(i => (
+                [1,2,3,4].map(i => (
                    <div key={i} className="aspect-[4/5] rounded-[1.5rem] md:rounded-[4rem] bg-secondary animate-pulse" />
                 ))
               )}
@@ -303,7 +304,7 @@ function StorefrontContent() {
         <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-16 md:py-32 bg-secondary/5 rounded-[2rem] md:rounded-[5rem] mb-12 md:mb-24">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-24 gap-6">
             <div className="space-y-3">
-              <span className="text-[10px] md:text-sm font-bold uppercase tracking-[0.6em] text-accent">Destaques Absolutos</span>
+              <span className="text-[10px] md:sm font-bold uppercase tracking-[0.6em] text-accent">Destaques Absolutos</span>
               <h3 className="text-3xl md:text-7xl font-headline font-bold text-primary uppercase">Mais Vendidos</h3>
             </div>
             <Link href="/economize" className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary/60 underline underline-offset-8 hover:text-accent transition-colors">

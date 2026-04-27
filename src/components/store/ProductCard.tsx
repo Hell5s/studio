@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo } from 'react';
@@ -21,7 +22,7 @@ interface ProductCardProps {
   onAddToCart?: () => void;
 }
 
-// Memoização para evitar re-renders desnecessários na vitrine
+// Memoização para evitar re-renders desnecessários na vitrine e carrosséis
 export const ProductCard = React.memo(function ProductCard({
   id,
   name,
@@ -89,7 +90,7 @@ export const ProductCard = React.memo(function ProductCard({
           fill
           loading="lazy"
           className="object-cover transition-transform duration-[1.5s] group-hover:scale-105"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          sizes="(max-width: 640px) 45vw, (max-width: 1024px) 33vw, 25vw"
           data-ai-hint="fashion clothes"
         />
         

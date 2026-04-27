@@ -4,7 +4,7 @@
 import React, { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, limit } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -35,12 +35,13 @@ export default function CategoryPage() {
 
   const categoryName = category?.name || '';
 
-  // 2. Busca produtos filtrados pela categoria encontrada
+  // 2. Busca produtos filtrados pela categoria encontrada com limite de performance
   const productsQuery = useMemoFirebase(() => {
     if (!db || !categoryName) return null;
     return query(
       collection(db, 'products'), 
-      where('category', '==', categoryName)
+      where('category', '==', categoryName),
+      limit(20)
     );
   }, [db, categoryName]);
 

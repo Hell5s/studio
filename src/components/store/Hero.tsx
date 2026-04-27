@@ -148,6 +148,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     backgroundRepeat: 'no-repeat',
                   }} 
                   fetchPriority={idx === 0 ? "high" : "low"}
+                  loading={idx === 0 ? undefined : "lazy"}
                   aria-label={banner.title || "Banner Toda Bela"}
                 />
               )}
