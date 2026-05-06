@@ -62,6 +62,11 @@ export function BannerManagement() {
   const [editingBanner, setEditingBanner] = useState<any>(null);
   const [editData, setEditData] = useState({ title: '', subtitle: '', ctaText: '', duration: 6 });
 
+  // IA Textos States
+  const [showAiTextPanel, setShowAiTextPanel] = useState(false);
+  const [aiTextContext, setAiTextContext] = useState('');
+  const textSuggestions = ["Plus Size", "Dia das Mães", "Inverno", "Festa & Glamour", "Moda Praia", "Estilo Executivo"];
+
   const [bannerData, setBannerData] = useState({
     title: '',
     subtitle: '',
@@ -133,19 +138,22 @@ export function BannerManagement() {
   };
 
   const handleGenerateTexts = async () => {
-    if (!previewImage && !prompt) {
-      toast({ title: "Falta informação", description: "Adicione uma imagem ou digite um tema.", variant: "destructive" });
+    const combinedConcept = [prompt, aiTextContext].filter(Boolean).join(' - ');
+
+    if (!previewImage && !combinedConcept) {
+      toast({ title: "Falta informação", description: "Adicione uma imagem ou especifique um tema/contexto.", variant: "destructive" });
       return;
     }
 
     setIsGeneratingTexts(true);
     try {
       const result = await generateBannerTexts({ 
-        concept: prompt,
+        concept: combinedConcept,
         imageUrl: previewImage.startsWith('data:') || previewImage.startsWith('https://firebasestorage') ? previewImage : undefined 
       });
       setBannerData({ title: result.title, subtitle: result.subtitle, ctaText: result.ctaText });
       toast({ title: "Textos criados!" });
+      setShowAiTextPanel(false);
     } catch (error: any) {
       toast({ title: "Falha na redação", description: "Tente novamente mais tarde.", variant: "destructive" });
     } finally {
@@ -285,8 +293,54 @@ export function BannerManagement() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Textos</Label>
-                    <button onClick={handleGenerateTexts} disabled={isGeneratingTexts} className="text-[9px] font-black uppercase text-primary/60 hover:text-accent flex items-center gap-1.5"><MessageSquareText className="h-2.5 w-2.5" /> IA Textos</button>
+                    <button 
+                      onClick={() => setShowAiTextPanel(!showAiTextPanel)} 
+                      className={cn(
+                        "text-[9px] font-black uppercase flex items-center gap-1.5 transition-colors",
+                        showAiTextPanel ? "text-accent" : "text-primary/60 hover:text-accent"
+                      )}
+                    >
+                      <MessageSquareText className="h-2.5 w-2.5" /> IA Textos
+                    </button>
                   </div>
+
+                  {showAiTextPanel && (
+                    <div className="p-5 bg-white border border-accent/10 rounded-2xl space-y-4 animate-in slide-in-from-top-2 duration-300">
+                      <div className="space-y-2">
+                        <Label className="text-[8px] font-bold uppercase text-primary/40 ml-1">Contexto da Campanha</Label>
+                        <Input 
+                          placeholder="Ex: Campanha Verão 2024..." 
+                          value={aiTextContext}
+                          onChange={e => setAiTextContext(e.target.value)}
+                          className="h-10 text-xs border-none bg-secondary/10 rounded-lg px-4"
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {textSuggestions.map(s => (
+                          <button 
+                            key={s} 
+                            onClick={() => setAiTextContext(s)}
+                            className={cn(
+                              "px-2.5 py-1 text-[8px] font-bold uppercase tracking-tight rounded-md transition-all",
+                              aiTextContext === s ? "bg-accent text-primary" : "bg-secondary/20 text-primary/60 hover:bg-accent/10"
+                            )}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                      <Button 
+                        onClick={handleGenerateTexts} 
+                        disabled={isGeneratingTexts} 
+                        size="sm" 
+                        className="w-full h-10 text-[9px] font-bold uppercase bg-primary text-white hover:bg-accent"
+                      >
+                        {isGeneratingTexts ? <Loader2 className="animate-spin h-3 w-3 mr-2" /> : <Sparkles className="h-3 w-3 mr-2" />}
+                        Gerar com IA
+                      </Button>
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                     <Input placeholder="Título" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
                     <Input placeholder="Subtítulo" value={bannerData.subtitle} onChange={e => setBannerData({...bannerData, subtitle: e.target.value})} className="bg-white border-none h-12 rounded-xl" />

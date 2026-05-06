@@ -27,7 +27,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return query(
       collection(db, 'banners'), 
       where('active', '==', true), 
-      limit(5)
+      limit(50)
     );
   }, [db]);
 
