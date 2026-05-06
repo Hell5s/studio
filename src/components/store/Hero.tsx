@@ -166,24 +166,24 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               
               <div className="container mx-auto h-full px-6 md:px-12 relative z-10 pointer-events-none">
                 <div className={cn(
-                  "absolute bottom-[40px] left-[20px] text-left max-w-[60%] space-y-6 transition-all duration-1000 pointer-events-auto",
+                  "absolute bottom-[60px] left-[20px] text-left max-w-[60%] space-y-6 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
                   {/* Decorative Line */}
                   <div className="w-10 border-t border-white/40 pt-[10px]" />
                   
                   <div className="space-y-3">
-                    <h1 className="text-[1rem] font-semibold text-white uppercase tracking-[0.15em] leading-[1.2]">
+                    <h1 className="text-[1.6rem] font-extrabold text-white tracking-[0.02em] leading-[1.2]">
                       {banner.title || ''}
                     </h1>
-                    <p className="text-[0.72rem] text-white font-light tracking-[0.05em] opacity-85 whitespace-nowrap leading-relaxed italic">
+                    <p className="text-[0.85rem] text-white/90 font-normal tracking-[0.02em] whitespace-nowrap leading-relaxed italic">
                       {banner.subtitle || ''}
                     </p>
                   </div>
                   {(banner.ctaText || settings?.heroCta) && (
                     <Button 
                       onClick={onShopNow}
-                      className="rounded-full bg-transparent border border-white text-white px-[20px] py-[8px] text-[0.68rem] font-bold uppercase tracking-[0.15em] shadow-xl hover:bg-white hover:text-[#222] transition-all w-fit h-auto"
+                      className="rounded-full bg-white text-[#111] px-[24px] py-[10px] text-[0.75rem] font-semibold shadow-xl border-none transition-all w-fit h-auto hover:bg-white/90"
                     >
                       {banner.ctaText || settings?.heroCta || 'Conferir'}
                     </Button>
