@@ -167,14 +167,15 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               
               <div className="container mx-auto h-full px-6 md:px-12 relative z-10 pointer-events-none">
                 <div className={cn(
-                  "absolute bottom-[40px] left-[24px] text-left max-w-2xl space-y-6 md:space-y-8 transition-all duration-1000 pointer-events-auto",
+                  "absolute bottom-[40px] left-[24px] text-left max-w-2xl space-y-6 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
-                  <div className="space-y-3 md:space-y-4">
-                    <h1 className="text-xl md:text-5xl font-headline font-bold text-white uppercase tracking-tighter leading-tight">
+                  <div className="w-10 border-t border-white/40 pt-[10px]" />
+                  <div className="space-y-3">
+                    <h1 className="text-[1.4rem] font-bold text-white uppercase tracking-[0.05em] leading-[1.2]">
                       {banner.title || ''}
                     </h1>
-                    <p className="text-sm md:text-xl text-white/80 font-light italic max-w-xs md:max-w-lg leading-relaxed">
+                    <p className="text-[0.82rem] text-white font-light tracking-[0.03em] opacity-90 italic max-w-xs md:max-w-lg leading-relaxed">
                       {banner.subtitle || ''}
                     </p>
                   </div>
