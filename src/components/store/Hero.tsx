@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -167,17 +166,17 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               
               <div className="container mx-auto h-full px-6 md:px-12 relative z-10 pointer-events-none">
                 <div className={cn(
-                  "absolute bottom-[40px] left-[24px] text-left max-w-2xl space-y-6 transition-all duration-1000 pointer-events-auto",
+                  "absolute bottom-[40px] left-[20px] text-left max-w-[60%] space-y-6 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
                   {/* Decorative Line */}
                   <div className="w-10 border-t border-white/40 pt-[10px]" />
                   
                   <div className="space-y-3">
-                    <h1 className="text-[1.4rem] font-bold text-white uppercase tracking-[0.05em] leading-[1.2]">
+                    <h1 className="text-[1.1rem] font-bold text-white uppercase tracking-[0.04em] leading-[1.2]">
                       {banner.title || ''}
                     </h1>
-                    <p className="text-[0.82rem] text-white font-light tracking-[0.03em] opacity-90 italic max-w-xs md:max-w-lg leading-relaxed">
+                    <p className="text-[0.75rem] text-white font-light tracking-[0.03em] opacity-90 italic leading-relaxed">
                       {banner.subtitle || ''}
                     </p>
                   </div>
