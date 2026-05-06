@@ -173,17 +173,17 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   <div className="w-10 border-t border-white/40 pt-[10px]" />
                   
                   <div className="space-y-3">
-                    <h1 className="text-[1.1rem] font-bold text-white uppercase tracking-[0.04em] leading-[1.2]">
+                    <h1 className="text-[1rem] font-semibold text-white uppercase tracking-[0.15em] leading-[1.2]">
                       {banner.title || ''}
                     </h1>
-                    <p className="text-[0.75rem] text-white font-light tracking-[0.03em] opacity-90 italic leading-relaxed">
+                    <p className="text-[0.72rem] text-white font-light tracking-[0.05em] opacity-85 whitespace-nowrap leading-relaxed italic">
                       {banner.subtitle || ''}
                     </p>
                   </div>
                   {(banner.ctaText || settings?.heroCta) && (
                     <Button 
                       onClick={onShopNow}
-                      className="rounded-full bg-transparent border-[1.5px] border-white text-white backdrop-blur-sm px-[22px] py-[10px] text-[0.72rem] font-bold uppercase tracking-[0.12em] shadow-xl hover:bg-white hover:text-[#222] transition-all w-fit h-auto"
+                      className="rounded-full bg-transparent border border-white text-white px-[20px] py-[8px] text-[0.68rem] font-bold uppercase tracking-[0.15em] shadow-xl hover:bg-white hover:text-[#222] transition-all w-fit h-auto"
                     >
                       {banner.ctaText || settings?.heroCta || 'Conferir'}
                     </Button>
