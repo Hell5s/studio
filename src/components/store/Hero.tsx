@@ -170,7 +170,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   "absolute bottom-[40px] left-[24px] text-left max-w-2xl space-y-6 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
+                  {/* Decorative Line */}
                   <div className="w-10 border-t border-white/40 pt-[10px]" />
+                  
                   <div className="space-y-3">
                     <h1 className="text-[1.4rem] font-bold text-white uppercase tracking-[0.05em] leading-[1.2]">
                       {banner.title || ''}
