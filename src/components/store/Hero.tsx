@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -13,7 +12,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const db = useFirestore();
   const [selectedIndex, setSelectedIndex] = useState(0);
   
-  // Configurações Globais
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings } = useDoc(settingsRef);
 
@@ -130,7 +128,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   loop
                   playsInline
                   preload="metadata"
-                  fetchPriority={idx === 0 ? "high" : "low"}
                   disablePictureInPicture
                   disableRemotePlayback
                   style={{
@@ -144,7 +141,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     willChange: 'transform',
                     transform: 'translateZ(0)',
                     backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
                   }}
                 >
                   <source src={banner.imageUrl} type="video/mp4" />
@@ -161,8 +157,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                       : 'center center',
                     backgroundRepeat: 'no-repeat',
                   }} 
-                  fetchPriority={idx === 0 ? "high" : "low"}
-                  loading={idx === 0 ? undefined : "lazy"}
+                  role="img"
                   aria-label={banner.title || "Banner Toda Bela"}
                 />
               )}

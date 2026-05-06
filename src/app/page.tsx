@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
@@ -39,7 +38,6 @@ function StorefrontContent() {
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
-  // Configurações Globais
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings } = useDoc(settingsRef);
 
@@ -53,7 +51,6 @@ function StorefrontContent() {
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
   const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
-  // Memoizando funções de carrinho para evitar re-renders
   const addToCart = useCallback((product: any) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
