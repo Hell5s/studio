@@ -19,7 +19,11 @@ import {
   Film,
   ChevronUp,
   ChevronDown,
-  Pencil
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Minus,
+  Maximize2
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -33,6 +37,7 @@ import {
   DialogHeader, 
   DialogTitle 
 } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
@@ -56,8 +61,7 @@ export function BannerManagement() {
   const [duration, setDuration] = useState(6);
   
   const [imagePosition, setImagePosition] = useState({ x: 50, y: 20 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(100);
 
   const [editingBanner, setEditingBanner] = useState<any>(null);
   const [editData, setEditData] = useState({ title: '', subtitle: '', ctaText: '', duration: 6 });
@@ -85,24 +89,18 @@ export function BannerManagement() {
     return [...banners].sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [banners]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (mediaType === 'video') return;
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
+  const handleMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+    setImagePosition(prev => {
+      const step = 5;
+      switch (direction) {
+        case 'up': return { ...prev, y: Math.max(0, prev.y - step) };
+        case 'down': return { ...prev, y: Math.min(100, prev.y + step) };
+        case 'left': return { ...prev, x: Math.max(0, prev.x - step) };
+        case 'right': return { ...prev, x: Math.min(100, prev.x + step) };
+        default: return prev;
+      }
+    });
   };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || mediaType === 'video') return;
-    const dx = ((e.clientX - dragStart.x) / 300) * -10;
-    const dy = ((e.clientY - dragStart.y) / 200) * -10;
-    setImagePosition(prev => ({
-      x: Math.min(100, Math.max(0, prev.x + dx)),
-      y: Math.min(100, Math.max(0, prev.y + dy))
-    }));
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleMouseUp = () => setIsDragging(false);
 
   const handleUseUrl = () => {
     if (!imageUrl) return;
@@ -113,6 +111,7 @@ export function BannerManagement() {
     setPreviewImage(imageUrl);
     setImageUrl('');
     setImagePosition({ x: 50, y: 20 });
+    setZoom(100);
     toast({ title: "Link da mídia carregado!" });
   };
 
@@ -129,6 +128,7 @@ export function BannerManagement() {
       const result = await generateBannerImage({ prompt, aspectRatio });
       setPreviewImage(result.imageUrl);
       setImagePosition({ x: 50, y: 20 });
+      setZoom(100);
       toast({ title: "Imagem gerada!" });
     } catch (error: any) {
       toast({ title: "Erro na IA", description: error.message || "Não foi possível gerar a imagem.", variant: "destructive" });
@@ -138,9 +138,9 @@ export function BannerManagement() {
   };
 
   const handleGenerateTexts = async () => {
-    const combinedConcept = [prompt, aiTextContext].filter(Boolean).join(' - ');
+    const combinedContext = [prompt, aiTextContext].filter(Boolean).join(' - ');
 
-    if (!previewImage && !combinedConcept) {
+    if (!previewImage && !combinedContext) {
       toast({ title: "Falta informação", description: "Adicione uma imagem ou especifique um tema/contexto.", variant: "destructive" });
       return;
     }
@@ -148,7 +148,7 @@ export function BannerManagement() {
     setIsGeneratingTexts(true);
     try {
       const result = await generateBannerTexts({ 
-        concept: combinedConcept,
+        concept: combinedContext,
         imageUrl: previewImage.startsWith('data:') || previewImage.startsWith('https://firebasestorage') ? previewImage : undefined 
       });
       setBannerData({ title: result.title, subtitle: result.subtitle, ctaText: result.ctaText });
@@ -173,6 +173,7 @@ export function BannerManagement() {
       const url = await getDownloadURL(snapshot.ref);
       setPreviewImage(url);
       setImagePosition({ x: 50, y: 20 });
+      setZoom(100);
       toast({ title: "Arquivo carregado!" });
     } catch (error: any) {
       toast({ title: "Erro no upload", variant: "destructive" });
@@ -198,6 +199,7 @@ export function BannerManagement() {
         ...bannerData,
         imageUrl: finalUrl,
         imagePosition: imagePosition,
+        zoom: zoom,
         mediaType: mediaType,
         aspectRatio,
         duration,
@@ -210,6 +212,7 @@ export function BannerManagement() {
       setPrompt('');
       setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks' });
       setImagePosition({ x: 50, y: 20 });
+      setZoom(100);
       toast({ title: "Banner Ativado!" });
     } catch (error: any) {
       toast({ title: "Erro ao salvar", variant: "destructive" });
@@ -365,23 +368,60 @@ export function BannerManagement() {
 
                   <Button onClick={handleSaveBanner} className="w-full rounded-full bg-primary text-white font-bold h-14 shadow-xl text-[10px] uppercase tracking-widest"><Save className="mr-2 h-5 w-5" /> Ativar na Vitrine</Button>
                 </div>
-                <div className="space-y-4">
+
+                <div className="space-y-6">
                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
                      {mediaType === 'video' ? <Film className="h-3 w-3" /> : <ImageIcon className="h-3 w-3" />} 
-                     Enquadramento {mediaType === 'image' && '(Arraste)'}
+                     Enquadramento Profissional
                    </Label>
+                   
                    <div 
-                    className={cn("rounded-2xl overflow-hidden shadow-2xl border-4 border-white relative bg-black group/preview", aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square')}
-                    style={mediaType === 'image' ? { backgroundImage: `url(${previewImage})`, backgroundSize: 'cover', backgroundPosition: `${imagePosition.x}% ${imagePosition.y}%`, cursor: isDragging ? 'grabbing' : 'grab' } : {}}
-                    onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
+                    className={cn("rounded-2xl overflow-hidden shadow-2xl border-4 border-white relative bg-black", aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square')}
+                    style={mediaType === 'image' ? { 
+                      backgroundImage: `url(${previewImage})`, 
+                      backgroundSize: zoom === 100 ? 'cover' : `${zoom}%`, 
+                      backgroundPosition: `${imagePosition.x}% ${imagePosition.y}%` 
+                    } : {}}
                    >
                       {mediaType === 'video' && (
                         <video key={previewImage} autoPlay muted loop playsInline className="w-full h-full object-cover">
                           <source src={previewImage} type="video/mp4" />
                         </video>
                       )}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">{mediaType === 'image' && <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-lg opacity-0 group-hover/preview:opacity-100 transition-opacity"><Move className="h-3 w-3 text-primary" /><span className="text-[9px] font-bold uppercase tracking-widest text-primary">Arraste para ajustar</span></div>}</div>
                    </div>
+
+                   {mediaType === 'image' && (
+                     <div className="p-6 bg-white rounded-3xl border border-primary/5 space-y-8 shadow-sm">
+                        <div className="grid grid-cols-3 gap-2 w-32 mx-auto">
+                           <div />
+                           <Button size="icon" variant="secondary" onClick={() => handleMove('up')} className="h-10 w-10 rounded-xl"><ChevronUp className="h-4 w-4" /></Button>
+                           <div />
+                           <Button size="icon" variant="secondary" onClick={() => handleMove('left')} className="h-10 w-10 rounded-xl"><ChevronLeft className="h-4 w-4" /></Button>
+                           <Button size="icon" variant="secondary" onClick={() => handleMove('down')} className="h-10 w-10 rounded-xl"><ChevronDown className="h-4 w-4" /></Button>
+                           <Button size="icon" variant="secondary" onClick={() => handleMove('right')} className="h-10 w-10 rounded-xl"><ChevronRight className="h-4 w-4" /></Button>
+                        </div>
+
+                        <div className="space-y-6">
+                           <div className="space-y-3">
+                              <div className="flex justify-between items-center"><Label className="text-[9px] font-bold uppercase text-primary/40">Posição Horizontal (X)</Label><span className="text-[9px] font-mono font-bold text-accent">{imagePosition.x}%</span></div>
+                              <Slider value={[imagePosition.x]} min={0} max={100} step={1} onValueChange={([v]) => setImagePosition(p => ({...p, x: v}))} />
+                           </div>
+                           <div className="space-y-3">
+                              <div className="flex justify-between items-center"><Label className="text-[9px] font-bold uppercase text-primary/40">Posição Vertical (Y)</Label><span className="text-[9px] font-mono font-bold text-accent">{imagePosition.y}%</span></div>
+                              <Slider value={[imagePosition.y]} min={0} max={100} step={1} onValueChange={([v]) => setImagePosition(p => ({...p, y: v}))} />
+                           </div>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-primary/5 pt-6">
+                           <Label className="text-[9px] font-bold uppercase text-primary/40">Escala de Zoom</Label>
+                           <div className="flex items-center gap-3">
+                              <Button size="icon" variant="outline" onClick={() => setZoom(z => Math.max(100, z - 10))} className="h-9 w-9 rounded-full border-primary/10"><Minus className="h-3 w-3" /></Button>
+                              <span className="text-[10px] font-black w-10 text-center text-primary">{zoom}%</span>
+                              <Button size="icon" variant="outline" onClick={() => setZoom(z => z + 10)} className="h-9 w-9 rounded-full border-primary/10"><Plus className="h-3 w-3" /></Button>
+                           </div>
+                        </div>
+                     </div>
+                   )}
                 </div>
               </div>
             )}
@@ -402,7 +442,14 @@ export function BannerManagement() {
                   {banner.mediaType === 'video' ? (
                     <video key={banner.imageUrl} src={banner.imageUrl} muted loop playsInline className="w-full h-full object-cover" onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => e.currentTarget.pause()} />
                   ) : (
-                    <img src={banner.imageUrl} className="w-full h-full object-cover" style={{ objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center' }} />
+                    <img 
+                      src={banner.imageUrl} 
+                      className="w-full h-full object-cover" 
+                      style={{ 
+                        objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center',
+                        transform: banner.zoom && banner.zoom > 100 ? `scale(${banner.zoom / 100})` : 'none'
+                      }} 
+                    />
                   )}
                   <div className="absolute inset-0 bg-black/40 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <button
