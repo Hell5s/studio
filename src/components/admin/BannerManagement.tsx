@@ -138,7 +138,9 @@ export function BannerManagement() {
   };
 
   const handleGenerateTexts = async () => {
-    const combinedContext = [prompt, aiTextContext].filter(Boolean).join(' - ');
+    const combinedContext = aiTextContext 
+      ? (prompt ? `${aiTextContext}. ${prompt}` : aiTextContext)
+      : prompt;
 
     if (!previewImage && !combinedContext) {
       toast({ title: "Falta informação", description: "Adicione uma imagem ou especifique um tema/contexto.", variant: "destructive" });
