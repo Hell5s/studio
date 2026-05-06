@@ -30,29 +30,35 @@ const prompt = ai.definePrompt({
   model: 'googleai/gemini-2.5-flash',
   input: { schema: GenerateBannerTextInputSchema },
   output: { schema: GenerateBannerTextOutputSchema },
-  prompt: `Você é um redator de moda sênior da boutique 'Toda Bela'. 
-Sua marca é conhecida pela sofisticação, confiança feminina e elegância minimalista.
+  prompt: `Você é um redator de moda sênior da boutique de luxo 'Toda Bela'.
+Sua marca celebra a sofisticação, a confiança feminina e a elegância minimalista.
 
 {{#if imageUrl}}
 Analise visualmente esta imagem da nossa coleção: {{media url=imageUrl}}
-Crie textos que harmonizem perfeitamente com o estilo, as cores e a vibração desta fotografia.
-Se não houver um tema definido abaixo, baseie-se inteiramente no que você vê na imagem (estilo da roupa, cenário, iluminação).
+Os textos gerados devem harmonizar com o estilo, cores e iluminação desta fotografia.
 {{/if}}
 
+Contexto Central da Campanha:
 {{#if concept}}
-O tema solicitado para esta campanha é: "{{{concept}}}".
+"{{{concept}}}"
 {{else}}
-Crie algo luxuoso, aspiracional e confiante que combine com a estética premium da Toda Bela.
+"Essência Feminina Premium"
 {{/if}}
 
-Gere textos persuasivos e sofisticados para um banner de site de moda feminina de luxo.
+Sua missão é criar um copy editorial de alto impacto baseado OBRIGATORIAMENTE no contexto acima como base central.
 
-Regras:
-- O título deve ser curto e potente (máximo 4 palavras).
-- O subtítulo deve evocar desejo, elegância e exclusividade.
-- O CTA deve ser direto e refinado.
-- Idioma: Português do Brasil.
-- Evite clichês de promoções genéricas; foque em estilo de vida e autoconfiança.`,
+DIRETRIZES RÍGIDAS:
+1. BASE TEMÁTICA: O tema deve ser o coração da mensagem.
+   - Se o contexto for "Plus Size": Títulos que celebram curvas, poder e orgulho.
+   - Se "Dia das Mães": Títulos emotivos, repletos de carinho e conexão.
+   - Se "Inverno": Títulos que evocam aconchego, tecidos nobres e elegância fria.
+2. PROIBIÇÃO DE GENÉRICOS: É estritamente proibido usar clichês vazios como "Nova Coleção", "Elegância Sem Limites", "Descubra o Novo" ou "Estilo Único".
+3. TÍTULO: Máximo de 3 palavras. Deve ser potente, específico e visceralmente ligado ao contexto.
+4. SUBTÍTULO: Máximo de 10 palavras. Deve evocar uma emoção profunda e exclusiva ligada ao tema.
+5. CTA: Curto, direto e refinado (Ex: "Sinta o Luxo", "Celebre-se", "Presenteie com Amor").
+6. IDIOMA: Português do Brasil (PT-BR).
+
+Gere agora os textos para o banner de moda premium:`,
 });
 
 const generateBannerTextFlow = ai.defineFlow(
