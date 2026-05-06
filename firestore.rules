@@ -7,56 +7,69 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Configurações Globais: Leitura pública, escrita para admins
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if isSignedIn();
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    // Produtos: Leitura pública, escrita para usuários logados
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
     match /products/{productId} {
       allow read: if true;
-      allow write: if isSignedIn();
-      
+      allow write: if isAdmin();
+
       match /reviews/{reviewId} {
         allow read: if true;
-        allow create: if true;
-        allow delete: if isSignedIn();
+        allow create: if isSignedIn();
+        allow delete: if isAdmin();
       }
     }
-    
-    // Categorias: Leitura pública, escrita para usuários logados
+
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if isAdmin();
     }
 
-    // Pedidos: Leitura e escrita para usuários logados
-    match /orders/{orderId} {
-      allow create: if isSignedIn();
-      allow read, update, delete: if isSignedIn();
+    match /collections/{collectionId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // Papéis Administrativos
-    match /roles_admin/{uid} {
-      allow read: if isSignedIn() && request.auth.uid == uid;
-      allow list: if isSignedIn();
-    }
-    
-    // Banners e Newsletter
     match /banners/{bannerId} {
       allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /newsletter_subscribers/{s} {
-      allow create: if true;
-      allow read, delete: if isSignedIn();
+      allow write: if isAdmin();
     }
 
-    // Favoritos: Apenas o dono pode ler/escrever
-    match /users/{userId}/favorites/{favId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow create: if isSignedIn();
+      allow read: if isAdmin() || isOwner(resource.data.userId);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /roles_admin/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if false;
+    }
+
+    match /newsletter_subscribers/{s} {
+      allow create: if true;
+      allow read, delete: if isAdmin();
+    }
+
+    match /users/{userId}/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /coupons/{couponId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     match /{document=**} {

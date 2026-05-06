@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, limit, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -25,8 +26,15 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 export default function MeusPedidosPage() {
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
+  const router = useRouter();
   const { toast } = useToast();
   const [isMigrating, setIsMigrating] = useState(false);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/');
+    }
+  }, [user, isUserLoading, router]);
 
   // Verificação de Admin para a Navbar
   const adminDocRef = useMemoFirebase(() => {
@@ -86,6 +94,10 @@ export default function MeusPedidosPage() {
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
   };
 
+  if (isUserLoading) {
+    return <div className="h-screen flex items-center justify-center bg-[#FFF9F7]"><Loader2 className="animate-spin text-accent" /></div>;
+  }
+
   return (
     <div className="min-h-screen bg-[#FFF9F7] selection:bg-accent/30 selection:text-primary overflow-x-hidden">
       <Navbar 
@@ -129,18 +141,13 @@ export default function MeusPedidosPage() {
         </header>
 
         <section className="container mx-auto px-6">
-          {isUserLoading || isOrdersLoading ? (
+          {isOrdersLoading ? (
             <div className="py-40 flex flex-col items-center justify-center space-y-6">
               <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
           ) : !user ? (
-            <div className="py-32 text-center bg-white rounded-[4rem] border-2 border-dashed border-primary/5 shadow-editorial max-w-4xl mx-auto">
-              <ShoppingBag className="h-12 w-12 text-accent/20 mx-auto mb-6" />
-              <h3 className="text-2xl font-headline font-bold text-primary mb-4">Acesso Necessário</h3>
-              <p className="text-muted-foreground italic font-light max-w-xs mx-auto mb-8">Realize o login para gerenciar seu carrinho e acompanhar envios.</p>
-              <Button className="rounded-full px-12 h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px]" onClick={() => window.location.href = '/'}>Acessar Boutique</Button>
-            </div>
+            null // useEffect handles redirect
           ) : orders && orders.length > 0 ? (
             <div className="grid gap-12 max-w-5xl mx-auto">
               {orders.map((order: any) => {

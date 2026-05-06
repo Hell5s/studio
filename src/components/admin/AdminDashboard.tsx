@@ -17,10 +17,13 @@ import {
   Tag,
   BarChart3,
   LogOut,
-  Palette
+  Palette,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { ProductManagement } from './ProductManagement';
 import { OrderManagement } from './OrderManagement';
 import { BannerManagement } from './BannerManagement';
@@ -42,8 +45,24 @@ interface AdminDashboardProps {
 type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings';
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
+  const db = useFirestore();
+  const { user, isUserLoading } = useUser();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+
+  const adminDocRef = useMemoFirebase(() => {
+    return user ? doc(db, 'roles_admin', user.uid) : null;
+  }, [db, user]);
+  const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
+  const isAdmin = !!adminRole;
+
+  if (isUserLoading || isAdminLoading) {
+    return <div className="h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-accent" /></div>;
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   const menuItems = [
     { id: 'overview', label: 'Início', icon: <LayoutDashboard className="h-4 w-4" /> },

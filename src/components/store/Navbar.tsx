@@ -94,7 +94,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             ))}
           </div>
 
-          <form onSubmit={handleSearchSubmit} className="relative w-full max-w-sm group">
+          <form onSubmit={handleSearchSubmit} className="relative w-full max-sm group">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40 group-focus-within:text-primary transition-colors" />
             <input 
               placeholder="PROCURAR..." 
@@ -122,7 +122,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             <button 
               onClick={handleAdminClick}
               className="p-2 text-primary/60 hover:text-accent transition-all"
-              title="Admin"
+              title="Painel Administrativo"
             >
               <LayoutDashboard className="h-5 w-5 md:h-6 md:w-6" />
             </button>

@@ -1,9 +1,10 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, doc, limit } from 'firebase/firestore';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
@@ -23,6 +24,7 @@ function StorefrontContent() {
   const db = useFirestore();
   const { user } = useUser();
   const searchParams = useSearchParams();
+  const router = useRouter();
   
   const [isAdminView, setIsAdminView] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -42,10 +44,14 @@ function StorefrontContent() {
   const { data: settings } = useDoc(settingsRef);
 
   useEffect(() => {
-    if (searchParams.get('admin') === 'true' && isAdmin) {
-      setIsAdminView(true);
+    if (searchParams.get('admin') === 'true') {
+      if (isAdmin) {
+        setIsAdminView(true);
+      } else {
+        router.replace('/');
+      }
     }
-  }, [searchParams, isAdmin]);
+  }, [searchParams, isAdmin, router]);
 
   const [cart, setCart] = useState<any[]>([]);
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
