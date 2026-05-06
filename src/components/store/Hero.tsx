@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -180,7 +181,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   {(banner.ctaText || settings?.heroCta) && (
                     <Button 
                       onClick={onShopNow}
-                      className="rounded-none bg-white text-primary px-5 py-[10px] text-[0.7rem] font-bold uppercase tracking-[0.08em] shadow-xl hover:bg-accent hover:text-white transition-all w-fit h-auto"
+                      className="rounded-full bg-transparent border-[1.5px] border-white text-white backdrop-blur-sm px-[22px] py-[10px] text-[0.72rem] font-bold uppercase tracking-[0.12em] shadow-xl hover:bg-white hover:text-[#222] transition-all w-fit h-auto"
                     >
                       {banner.ctaText || settings?.heroCta || 'Conferir'}
                     </Button>
