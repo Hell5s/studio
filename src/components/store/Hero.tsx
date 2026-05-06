@@ -164,9 +164,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               
-              <div className="container mx-auto h-full px-6 md:px-12 flex items-end pb-8 md:pb-24 relative z-10 pointer-events-none">
+              <div className="container mx-auto h-full px-6 md:px-12 relative z-10 pointer-events-none">
                 <div className={cn(
-                  "max-w-2xl space-y-6 md:space-y-8 transition-all duration-1000 pointer-events-auto",
+                  "absolute bottom-[40px] left-[24px] text-left max-w-2xl space-y-6 md:space-y-8 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
                   <div className="space-y-3 md:space-y-4">
