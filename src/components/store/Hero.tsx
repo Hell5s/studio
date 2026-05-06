@@ -180,7 +180,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   {(banner.ctaText || settings?.heroCta) && (
                     <Button 
                       onClick={onShopNow}
-                      className="rounded-full bg-white text-primary px-6 py-[10px] text-xs font-bold uppercase tracking-[0.4em] shadow-xl hover:bg-accent hover:text-white transition-all w-auto h-auto"
+                      className="rounded-none bg-white text-primary px-5 py-[10px] text-[0.7rem] font-bold uppercase tracking-[0.08em] shadow-xl hover:bg-accent hover:text-white transition-all w-fit h-auto"
                     >
                       {banner.ctaText || settings?.heroCta || 'Conferir'}
                     </Button>
