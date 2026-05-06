@@ -30,54 +30,50 @@ const generateBannerFlow = ai.defineFlow(
     outputSchema: GenerateBannerOutputSchema,
   },
   async (input) => {
-    // Prompt refinado para estética Toda Bela - Focado em Moda Premium
-    const refinedPrompt = `Wide panoramic fashion editorial photography, aspect ratio ${input.aspectRatio}. 
-Theme: ${input.prompt}. 
-IMPORTANT: The model must be shown from waist up only, centered in frame, with wide background on both sides.
-Style: Sophisticated, cinematic, 8k, soft warm lighting.
-Colors: Deep wine red, soft gold, cream, champagne.
-Format: LANDSCAPE.
-No text, no watermarks, no logos.`;
+    // Prompt otimizado para a estética Toda Bela
+    const refinedPrompt = `Fashion editorial photography for a boutique website banner.
+Theme: ${input.prompt}.
+Style: Sophisticated, luxury, minimalist, cinematic lighting.
+Composition: Centered model, waist up, wide background for banner usage.
+Colors: Deep wine red, gold, cream.
+Format: ${input.aspectRatio}.
+IMPORTANT: Generate a high-quality professional image. No text, no logos.`;
 
     try {
-      // Usando Imagen 4 para geração de imagem a partir de texto (mais estável para banners)
+      // Tentativa prioritária com Gemini 2.5 Flash Image (mais versátil e menos restrito que o Imagen puro)
       const { media } = await ai.generate({
+        model: 'googleai/gemini-2.5-flash-image',
+        prompt: refinedPrompt,
+        config: {
+          responseModalities: ['TEXT', 'IMAGE'],
+        }
+      });
+
+      if (media?.url) {
+        return { imageUrl: media.url };
+      }
+
+      // Tenta Imagen 4 apenas se o Gemini não retornar imagem
+      const imagenResponse = await ai.generate({
         model: 'googleai/imagen-4.0-fast-generate-001',
         prompt: refinedPrompt,
       });
 
-      if (!media?.url) {
-        throw new Error('A IA não retornou uma imagem válida. Verifique se o prompt cumpre as diretrizes de segurança.');
+      if (imagenResponse.media?.url) {
+        return { imageUrl: imagenResponse.media.url };
       }
 
-      return {
-        imageUrl: media.url,
-      };
+      throw new Error('A IA não conseguiu gerar a imagem. Tente um prompt mais simples.');
     } catch (error: any) {
-      console.error('Erro na geração de banner com Imagen 4:', error);
+      console.error('Erro na geração de imagem:', error);
       
-      // Tentativa de fallback para o modelo multimodal se o Imagen falhar
-      if (error.message?.includes('404') || error.message?.toLowerCase().includes('not found')) {
-        try {
-          const { media } = await ai.generate({
-            model: 'googleai/gemini-2.5-flash-image',
-            prompt: refinedPrompt,
-            config: {
-              responseModalities: ['IMAGE', 'TEXT'],
-            }
-          });
-          if (media?.url) return { imageUrl: media.url };
-        } catch (fallbackError) {
-          console.error('Erro no fallback multimodal:', fallbackError);
-        }
+      const isPermissionError = error.message?.includes('403') || error.message?.includes('disallowed');
+      
+      if (isPermissionError) {
+        throw new Error('Geração negada: Verifique se a API "Vertex AI" e o faturamento estão ativos no Console do Google Cloud para este projeto.');
       }
 
-      // Se chegar aqui, o erro é mais profundo (como projeto desativado ou falta de permissão)
-      const errorMessage = error.message?.includes('decommissioned') 
-        ? 'Seu projeto de IA parece estar com restrições de acesso. Verifique as APIs ativadas no console do Google Cloud.' 
-        : (error.message || 'O modelo de IA está indisponível no momento.');
-
-      throw new Error(`Erro na Geração: ${errorMessage}`);
+      throw new Error(`Erro na IA: ${error.message || 'O serviço de imagem está instável no momento.'}`);
     }
   }
 );
