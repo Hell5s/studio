@@ -174,7 +174,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     <h1 className="text-[1.1rem] md:text-[2rem] font-bold text-white tracking-[0.01em] leading-[1.2] uppercase whitespace-nowrap">
                       {banner.title || ''}
                     </h1>
-                    <p className="text-[0.72rem] md:text-[0.9rem] text-white/85 font-light whitespace-nowrap overflow-hidden text-ellipsis max-w-[90%]">
+                    <p className="text-[0.72rem] md:text-[0.9rem] text-white/85 font-light whitespace-normal max-w-[280px] md:max-w-[420px]">
                       {banner.subtitle || ''}
                     </p>
                   </div>
