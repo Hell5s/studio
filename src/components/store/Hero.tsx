@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -171,17 +170,24 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
                   <div className="space-y-3">
-                    <h1 className="text-[1.1rem] md:text-[2rem] font-bold text-white tracking-[0.01em] leading-[1.2] uppercase whitespace-nowrap">
+                    <h1 
+                      className="text-[1.1rem] md:text-[2rem] text-white tracking-[0.01em] leading-[1.2] uppercase whitespace-nowrap"
+                      style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}
+                    >
                       {banner.title || ''}
                     </h1>
-                    <p className="text-[0.72rem] md:text-[0.9rem] text-white/85 font-light whitespace-normal max-w-[280px] md:max-w-[420px]">
+                    <p 
+                      className="text-[0.72rem] md:text-[0.9rem] text-white/85 whitespace-normal max-w-[280px] md:max-w-[420px]"
+                      style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}
+                    >
                       {banner.subtitle || ''}
                     </p>
                   </div>
                   {(banner.ctaText || settings?.heroCta) && (
                     <Button 
                       onClick={onShopNow}
-                      className="rounded-full bg-transparent border-[1.5px] border-white text-white px-[20px] py-[9px] md:px-[32px] md:py-[12px] text-[0.68rem] md:text-[0.78rem] font-medium tracking-[0.12em] uppercase w-fit h-auto hover:bg-white hover:text-black transition-all shadow-none"
+                      className="rounded-full bg-transparent border-[1.5px] border-white text-white px-[20px] py-[9px] md:px-[32px] md:py-[12px] text-[0.68rem] md:text-[0.78rem] tracking-[0.12em] uppercase w-fit h-auto hover:bg-white hover:text-black transition-all shadow-none"
+                      style={{ fontFamily: "'Jost', sans-serif", fontWeight: 400 }}
                     >
                       {banner.ctaText || settings?.heroCta || 'Conferir'}
                     </Button>
