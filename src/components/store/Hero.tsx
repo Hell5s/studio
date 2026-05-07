@@ -169,21 +169,18 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   "absolute bottom-[60px] left-[20px] text-left max-w-[60%] space-y-6 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
-                  {/* Decorative Line */}
-                  <div className="w-10 border-t border-white/40 pt-[10px]" />
-                  
                   <div className="space-y-3">
-                    <h1 className="text-[1.6rem] font-extrabold text-white tracking-[0.02em] leading-[1.2]">
+                    <h1 className="text-[1.3rem] font-bold text-white tracking-[0.01em] leading-[1.2] uppercase whitespace-nowrap">
                       {banner.title || ''}
                     </h1>
-                    <p className="text-[0.85rem] text-white/90 font-normal tracking-[0.02em] whitespace-nowrap leading-relaxed italic">
+                    <p className="text-[0.72rem] text-white/85 font-light whitespace-nowrap overflow-hidden text-ellipsis max-w-[90%]">
                       {banner.subtitle || ''}
                     </p>
                   </div>
                   {(banner.ctaText || settings?.heroCta) && (
                     <Button 
                       onClick={onShopNow}
-                      className="rounded-full bg-white text-[#111] px-[24px] py-[10px] text-[0.75rem] font-semibold shadow-xl border-none transition-all w-fit h-auto hover:bg-white/90"
+                      className="rounded-[4px] bg-transparent border-[1.5px] border-white/70 text-white px-[22px] py-[9px] text-[0.7rem] font-medium tracking-[0.12em] uppercase backdrop-blur-[6px] w-fit h-auto hover:bg-white hover:text-black transition-all shadow-none"
                     >
                       {banner.ctaText || settings?.heroCta || 'Conferir'}
                     </Button>
