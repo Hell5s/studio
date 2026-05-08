@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -165,20 +164,20 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               
-              <div className="container mx-auto h-full px-6 md:px-12 relative z-10 pointer-events-none">
+              <div className="container mx-auto h-full px-5 md:px-12 flex items-end pb-6 md:pb-24 relative z-10 pointer-events-none">
                 <div className={cn(
-                  "absolute bottom-[60px] left-[20px] md:bottom-[80px] md:left-[48px] text-left max-w-[60%] space-y-6 transition-all duration-1000 pointer-events-auto",
+                  "max-w-2xl space-y-2 md:space-y-8 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
                 )}>
-                  <div className="space-y-3">
+                  <div className="space-y-1 md:space-y-3">
                     <h1 
-                      className="text-[1.1rem] md:text-[2rem] text-white tracking-[0.04em] leading-[1.2] uppercase whitespace-nowrap"
+                      className="text-base md:text-5xl font-headline font-bold text-white uppercase tracking-tight leading-snug"
                       style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}
                     >
                       {banner.title || ''}
                     </h1>
                     <p 
-                      className="text-[0.72rem] md:text-[0.9rem] text-white/85 whitespace-normal max-w-[280px] md:max-w-[420px]"
+                      className="text-[10px] md:text-lg text-white/80 font-light italic max-w-[200px] md:max-w-lg leading-relaxed"
                       style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}
                     >
                       {banner.subtitle || ''}
