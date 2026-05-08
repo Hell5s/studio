@@ -68,9 +68,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   };
 
   const navLinks = settings?.navLinks || [
-    { label: 'Coleções', href: '/#colecoes' },
-    { label: 'Produtos', href: '/#vitrine' },
-    { label: 'Mais Vendidos', href: '/#mais-vendidos' },
+    { label: 'COLEÇÕES', href: '/#colecoes' },
+    { label: 'PRODUTOS', href: '/#vitrine' },
+    { label: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
     { label: 'SALE', href: '/economize', highlight: true },
   ];
 
@@ -135,7 +135,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             {/* Logo — centro absoluto */}
             <div className="absolute left-1/2 -translate-x-1/2 z-10">
               <Link href="/">
-                <div className={cn("transition-all duration-500", !scrolled && "brightness-0 invert")}>
+                <div className={cn(
+                  "transition-opacity duration-500 ease-in-out",
+                  scrolled ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                )}>
                   <LogoMark />
                 </div>
               </Link>
