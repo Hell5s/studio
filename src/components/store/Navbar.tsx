@@ -77,10 +77,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+        "fixed left-0 right-0 z-50 transition-all duration-500",
         scrolled
-          ? "bg-white shadow-[0_1px_12px_rgba(0,0,0,0.06)]"
-          : "bg-transparent"
+          ? "bg-white shadow-sm top-8"
+          : "bg-transparent top-8"
       )}>
 
         {/* Barra superior — frete grátis */}
@@ -118,10 +118,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   key={link.label}
                   href={link.href}
                   className={cn(
-                    "text-[10px] font-semibold tracking-[0.25em] uppercase transition-all duration-200 relative group pb-0.5",
+                    "text-[10px] font-semibold tracking-[0.25em] uppercase transition-all duration-300 relative group pb-0.5",
                     scrolled
                       ? link.highlight ? "text-accent" : "text-primary/60 hover:text-primary"
-                      : link.highlight ? "text-accent" : "text-white/80 hover:text-white"
+                      : link.highlight ? "text-accent" : "text-white hover:text-white/70"
                   )}
                 >
                   {link.label}
@@ -169,7 +169,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                     onClick={() => setIsSearchOpen(true)}
                     className={cn(
                       "p-2 transition-colors",
-                      scrolled ? "text-primary/40 hover:text-primary" : "text-white/80 hover:text-white"
+                      scrolled ? "text-primary/40 hover:text-primary" : "text-white/90 hover:text-white"
                     )}
                   >
                     <Search className="h-[18px] w-[18px]" />
@@ -181,7 +181,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 href="/meus-pedidos"
                 className={cn(
                   "p-2 transition-colors hidden md:flex items-center gap-1.5 group",
-                  scrolled ? "text-primary/40 hover:text-primary" : "text-white/80 hover:text-white"
+                  scrolled ? "text-primary/40 hover:text-primary" : "text-white/90 hover:text-white"
                 )}
               >
                 <Package className="h-[18px] w-[18px]" />
@@ -195,7 +195,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   onClick={handleAdminClick}
                   className={cn(
                     "p-2 transition-colors hidden md:flex",
-                    scrolled ? "text-primary/40 hover:text-accent" : "text-white/80 hover:text-accent"
+                    scrolled ? "text-primary/40 hover:text-accent" : "text-white/90 hover:text-accent"
                   )}
                   title="Painel Admin"
                 >
@@ -207,7 +207,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 onClick={onOpenLogin}
                 className={cn(
                   "p-2 transition-colors",
-                  scrolled ? "text-primary/40 hover:text-primary" : "text-white/80 hover:text-white"
+                  scrolled ? "text-primary/40 hover:text-primary" : "text-white/90 hover:text-white"
                 )}
               >
                 <User className="h-[18px] w-[18px]" />
@@ -217,7 +217,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 onClick={onOpenCart}
                 className={cn(
                   "relative p-2 transition-colors",
-                  scrolled ? "text-primary/40 hover:text-primary" : "text-white/80 hover:text-white"
+                  scrolled ? "text-primary/40 hover:text-primary" : "text-white/90 hover:text-white"
                 )}
               >
                 <ShoppingBag className="h-[18px] w-[18px]" />
@@ -232,7 +232,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 onClick={onOpenFavorites}
                 className={cn(
                   "relative p-2 transition-colors",
-                  scrolled ? "text-primary/40 hover:text-accent" : "text-accent hover:text-white"
+                  scrolled ? "text-primary/40 hover:text-accent" : "text-white/90 hover:text-accent"
                 )}
               >
                 <Heart className="h-[18px] w-[18px]" />
