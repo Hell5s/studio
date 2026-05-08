@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -38,7 +37,7 @@ export function AdminSettings() {
       { label: 'COLEÇÕES', href: '/#colecoes', highlight: false },
       { label: 'PRODUTOS', href: '/#vitrine', highlight: false },
       { label: 'MAIS VENDIDOS', href: '/#mais-vendidos', highlight: false },
-      { label: 'ECONOMIZE', href: '/economize', highlight: true },
+      { label: 'SALE', href: '/economize', highlight: true },
     ]
   });
 
