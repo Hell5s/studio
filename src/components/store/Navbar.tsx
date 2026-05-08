@@ -95,18 +95,20 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
         {/* Navbar principal */}
         <div className="w-full">
-          <nav className="max-w-[1400px] mx-auto px-6 md:px-12 h-16 md:h-[72px] flex items-center justify-between">
+          <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
 
             {/* Hamburger mobile */}
-            <button
-              className={cn(
-                "lg:hidden p-1 transition-colors",
-                scrolled ? "text-primary/60 hover:text-primary" : "text-white/80 hover:text-white"
-              )}
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+            <div className="flex-1 flex items-center lg:hidden">
+              <button
+                className={cn(
+                  "p-1 transition-colors",
+                  scrolled ? "text-primary/60 hover:text-primary" : "text-white/80 hover:text-white"
+                )}
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
 
             {/* Links — esquerda no desktop */}
             <div className="hidden lg:flex items-center gap-10 flex-1">
@@ -131,7 +133,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             </div>
 
             {/* Logo — centro absoluto */}
-            <div className="absolute left-1/2 -translate-x-1/2">
+            <div className="absolute left-1/2 -translate-x-1/2 z-10">
               <Link href="/">
                 <div className={cn("transition-all duration-500", !scrolled && "brightness-0 invert")}>
                   <LogoMark />
@@ -150,7 +152,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                       autoFocus
                       placeholder="Buscar..."
                       className={cn(
-                        "w-48 md:w-64 h-8 border-b text-[11px] tracking-wider outline-none px-1 transition-all",
+                        "w-32 md:w-64 h-8 border-b text-[11px] tracking-wider outline-none px-1 transition-all",
                         scrolled 
                           ? "border-primary/20 focus:border-primary text-primary" 
                           : "border-white/20 focus:border-white text-white placeholder:text-white/50 bg-transparent"
@@ -204,7 +206,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               <button
                 onClick={onOpenLogin}
                 className={cn(
-                  "p-2.5 transition-colors",
+                  "p-2.5 transition-colors hidden sm:block",
                   scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
                 )}
               >
@@ -261,11 +263,11 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
           <div className="absolute top-0 left-0 h-full w-72 bg-white shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <LogoMark />
-              <button onClick={() => setIsMenuOpen(false)}>
+              <button onClick={() => setIsMenuOpen(false)} className="p-2">
                 <X className="h-5 w-5 text-primary/40" />
               </button>
             </div>
-            <nav className="flex-1 px-6 py-8 space-y-1">
+            <nav className="flex-1 px-6 py-8 space-y-1 overflow-y-auto">
               {navLinks.map((link: any) => (
                 <Link
                   key={link.label}
@@ -286,6 +288,15 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               >
                 <Package className="h-4 w-4" /> Meus Pedidos
               </Link>
+              <button
+                onClick={() => {
+                  onOpenLogin();
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-3 py-4 border-b border-gray-50 text-[12px] font-semibold tracking-widest text-primary/70 hover:text-accent transition-colors w-full text-left"
+              >
+                <User className="h-4 w-4" /> Minha Conta
+              </button>
             </nav>
             <div className="p-6 border-t border-gray-100">
               <form onSubmit={handleSearchSubmit} className="relative">
@@ -302,8 +313,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         </div>
       )}
 
-      {/* Spacer removido (h-0) para que o banner suba, 
-          conforme solicitado nas diretrizes de transparência Animale */}
+      {/* Spacer removido para que o banner suba conforme o efeito Animale */}
       <div className="h-0" />
     </>
   );
