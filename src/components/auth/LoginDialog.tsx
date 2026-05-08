@@ -23,6 +23,7 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 interface LoginDialogProps {
   open: boolean;
@@ -44,6 +45,7 @@ export function LoginDialog({
   const auth = useAuth();
   const { user } = useUser();
   const { toast } = useToast();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
@@ -91,12 +93,21 @@ export function LoginDialog({
     { label: 'Wishlist', icon: <Heart className="h-4 w-4" />, onClick: onOpenFavorites },
   ];
 
+  const handleMenuClick = (opt: any) => {
+    if (opt.onClick) {
+      opt.onClick();
+    } else if (opt.href && opt.href !== '#') {
+      router.push(opt.href);
+    }
+    onOpenChange(false);
+  };
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "p-2.5 transition-colors flex items-center gap-0.5",
+            "p-2.5 transition-colors flex items-center gap-0.5 focus:outline-none",
             isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
           )}
         >
@@ -122,10 +133,7 @@ export function LoginDialog({
               {menuOptions.map((opt, i) => (
                 <button
                   key={i}
-                  onClick={() => {
-                    if (opt.onClick) opt.onClick();
-                    onOpenChange(false);
-                  }}
+                  onClick={() => handleMenuClick(opt)}
                   className="w-full flex items-center justify-between py-3.5 group transition-colors text-primary/80 hover:text-accent"
                 >
                   <div className="flex items-center gap-3">
@@ -202,10 +210,7 @@ export function LoginDialog({
               {menuOptions.map((opt, i) => (
                 <button
                   key={i}
-                  onClick={() => {
-                    if (opt.onClick) opt.onClick();
-                    onOpenChange(false);
-                  }}
+                  onClick={() => handleMenuClick(opt)}
                   className="w-full flex items-center justify-between py-3.5 group transition-colors text-primary/80 hover:text-accent"
                 >
                   <div className="flex items-center gap-3">
