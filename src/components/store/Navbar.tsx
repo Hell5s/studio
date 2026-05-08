@@ -68,9 +68,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   };
 
   const navLinks = settings?.navLinks || [
-    { label: 'COLEÇÕES', href: '/#colecoes' },
-    { label: 'PRODUTOS', href: '/#vitrine' },
-    { label: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
+    { label: 'Coleções', href: '/#colecoes' },
+    { label: 'Produtos', href: '/#vitrine' },
+    { label: 'Mais Vendidos', href: '/#mais-vendidos' },
     { label: 'SALE', href: '/economize', highlight: true },
   ];
 
@@ -123,7 +123,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                       : link.highlight ? "text-accent" : "text-white/90 hover:text-white"
                   )}
                 >
-                  {link.label === 'ECONOMIZE' ? 'SALE' : link.label}
+                  {link.label}
                   <span className={cn(
                     "absolute bottom-0 left-0 h-px transition-all duration-300 group-hover:w-full w-0",
                     link.highlight ? "bg-accent" : (scrolled ? "bg-primary" : "bg-white")
@@ -136,8 +136,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             <div className="absolute left-1/2 -translate-x-1/2 z-10">
               <Link href="/">
                 <div className={cn(
-                  "transition-opacity duration-500 ease-in-out",
-                  scrolled ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                  "transition-all duration-500",
+                  !scrolled 
+                    ? "brightness-0 invert [&_#logo-ball]:opacity-0 [&_#logo-ball]:pointer-events-none [&_#logo-ball]:w-0 [&_#logo-ball]:overflow-hidden" 
+                    : "[&_#logo-ball]:opacity-100 [&_#logo-ball]:w-auto"
                 )}>
                   <LogoMark />
                 </div>
@@ -188,7 +190,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 )}
               >
                 <Package className="h-[18px] w-[18px]" />
-                <span className="text-[9px] font-semibold uppercase tracking-widest hidden xl:block">
+                <span className="text-[9px] font-semibold uppercase tracking-widest group-hover:text-primary transition-colors hidden xl:block">
                   Pedidos
                 </span>
               </Link>
@@ -281,7 +283,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                     link.highlight ? "text-accent" : "text-primary/70"
                   )}
                 >
-                  {link.label === 'ECONOMIZE' ? 'SALE' : link.label}
+                  {link.label}
                 </Link>
               ))}
               <Link
