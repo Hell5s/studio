@@ -88,7 +88,7 @@ export function LoginDialog({
   };
 
   const menuOptions = [
-    { label: 'Dados Pessoais', icon: <User className="h-4 w-4" />, href: '#' },
+    { label: 'Dados Pessoais', icon: <User className="h-4 w-4" />, href: '/dados-pessoais' },
     { label: 'Meus Pedidos', icon: <Package className="h-4 w-4" />, href: '/meus-pedidos' },
     { label: 'Wishlist', icon: <Heart className="h-4 w-4" />, onClick: onOpenFavorites },
   ];
