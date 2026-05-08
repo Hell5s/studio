@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -171,7 +172,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 )}>
                   <div className="space-y-3">
                     <h1 
-                      className="text-[1.1rem] md:text-[2rem] text-white tracking-[0.01em] leading-[1.2] uppercase whitespace-nowrap"
+                      className="text-[1.1rem] md:text-[2rem] text-white tracking-[0.04em] leading-[1.2] uppercase whitespace-nowrap"
                       style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}
                     >
                       {banner.title || ''}
@@ -186,7 +187,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   {(banner.ctaText || settings?.heroCta) && (
                     <Button 
                       onClick={onShopNow}
-                      className="rounded-full bg-transparent border-[1.5px] border-white text-white px-[20px] py-[9px] md:px-[32px] md:py-[12px] text-[0.68rem] md:text-[0.78rem] tracking-[0.12em] uppercase w-fit h-auto hover:bg-white hover:text-black transition-all shadow-none"
+                      className="rounded-full bg-transparent border-[1.5px] border-white text-white px-[20px] py-[9px] md:px-[32px] md:py-[12px] text-[0.68rem] md:text-[0.78rem] tracking-[0.12em] uppercase w-fit h-auto hover:bg-white hover:text-black transition-all shadow-none backdrop-blur-[4px]"
                       style={{ fontFamily: "'Jost', sans-serif", fontWeight: 400 }}
                     >
                       {banner.ctaText || settings?.heroCta || 'Conferir'}
@@ -213,19 +214,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
           >
             <ChevronRight className="h-6 w-6" />
           </button>
-
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-30">
-            {displayBanners.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => emblaApi?.scrollTo(i)}
-                className={cn(
-                  "h-1 transition-all duration-500 rounded-full",
-                  selectedIndex === i ? "w-10 bg-accent" : "w-4 bg-white/30"
-                )}
-              />
-            ))}
-          </div>
         </>
       )}
     </section>
