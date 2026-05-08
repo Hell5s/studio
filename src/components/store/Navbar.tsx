@@ -68,9 +68,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   };
 
   const navLinks = settings?.navLinks || [
-    { label: 'Coleções', href: '/#colecoes' },
-    { label: 'Produtos', href: '/#vitrine' },
-    { label: 'Mais Vendidos', href: '/#mais-vendidos' },
+    { label: 'COLEÇÕES', href: '/#colecoes' },
+    { label: 'PRODUTOS', href: '/#vitrine' },
+    { label: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
     { label: 'SALE', href: '/economize', highlight: true },
   ];
 
