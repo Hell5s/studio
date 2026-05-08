@@ -68,9 +68,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   };
 
   const navLinks = settings?.navLinks || [
-    { label: 'Coleções', href: '/#colecoes' },
-    { label: 'Produtos', href: '/#vitrine' },
-    { label: 'Mais Vendidos', href: '/#mais-vendidos' },
+    { label: 'COLEÇÕES', href: '/#colecoes' },
+    { label: 'PRODUTOS', href: '/#vitrine' },
+    { label: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
     { label: 'SALE', href: '/economize', highlight: true },
   ];
 
@@ -119,8 +119,8 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   className={cn(
                     "text-[11px] font-semibold tracking-[0.15em] transition-all duration-200 relative group pb-0.5",
                     scrolled
-                      ? link.highlight ? "text-accent" : "text-primary/70 hover:text-primary"
-                      : link.highlight ? "text-accent" : "text-white/90 hover:text-white"
+                      ? link.highlight ? "text-accent hover:text-accent/70" : "text-primary/70 hover:text-primary"
+                      : link.highlight ? "text-accent hover:text-accent/70" : "text-white/90 hover:text-white"
                   )}
                 >
                   {link.label}
