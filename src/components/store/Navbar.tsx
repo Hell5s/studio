@@ -161,9 +161,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
                     />
-                    <button type="button" onClick={() => setIsSearchOpen(false)}>
-                      <X className={cn("h-4 w-4 transition-colors", scrolled ? "text-primary/40 hover:text-primary" : "text-white/40 hover:text-white")} />
-                    </button>
                   </form>
                 ) : (
                   <button
