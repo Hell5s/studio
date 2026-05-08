@@ -93,17 +93,20 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
         {/* Navbar principal */}
         <div className="w-full">
-          <nav className="max-w-[1400px] mx-auto px-6 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
+          <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
 
-            {/* Hamburger mobile */}
-            <button
-              className={cn("lg:hidden p-1 transition-colors", scrolled ? "text-primary/60" : "text-white/80")}
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            {/* Hamburger mobile — Lado Esquerdo */}
+            <div className="flex-1 lg:hidden">
+              <button
+                className={cn("p-2 -ml-2 transition-colors focus:outline-none", scrolled ? "text-primary/60" : "text-white/80")}
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label="Abrir Menu"
+              >
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
 
-            {/* Links — esquerda no desktop */}
+            {/* Links Desktop — Lado Esquerdo */}
             <div className="hidden lg:flex items-center gap-10 flex-1">
               {navLinks.map((link: any) => (
                 <Link
@@ -125,11 +128,11 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               ))}
             </div>
 
-            {/* Logo — centro absoluto */}
-            <div className="absolute left-1/2 -translate-x-1/2">
+            {/* Logo — Centro Absoluto */}
+            <div className="absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
               <Link href="/">
                 <div className={cn(
-                  "transition-all duration-500",
+                  "transition-all duration-500 scale-90 md:scale-100",
                   !scrolled 
                     ? "brightness-0 invert [&_#logo-ball]:opacity-0 [&_#logo-ball]:pointer-events-none [&_#logo-ball]:w-0 [&_#logo-ball]:overflow-hidden" 
                     : "[&_#logo-ball]:opacity-100 [&_#logo-ball]:w-auto"
@@ -139,11 +142,11 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               </Link>
             </div>
 
-            {/* Ícones — direita */}
+            {/* Ícones — Lado Direito */}
             <div className="flex items-center gap-0.5 flex-1 justify-end">
 
-              {/* Busca expansível */}
-              <div className="flex items-center">
+              {/* Busca Desktop */}
+              <div className="hidden lg:flex items-center">
                 {isSearchOpen ? (
                   <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300 mr-2">
                     <input
@@ -175,6 +178,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 )}
               </div>
 
+              {/* Pedidos — Onipresente */}
               <Link
                 href="/meus-pedidos"
                 className={cn(
@@ -186,11 +190,12 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Pedidos</span>
               </Link>
 
+              {/* Admin — Desktop/Tablet */}
               {isAdmin && (
                 <button
                   onClick={handleAdminClick}
                   className={cn(
-                    "p-2.5 transition-colors flex items-center gap-0.5",
+                    "p-2.5 transition-colors flex items-center gap-0.5 hidden sm:flex",
                     scrolled ? "text-primary/50 hover:text-accent" : "text-white/80 hover:text-accent"
                   )}
                   title="Painel Admin"
@@ -200,10 +205,11 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 </button>
               )}
 
+              {/* Conta — Desktop/Tablet */}
               <button
                 onClick={onOpenLogin}
                 className={cn(
-                  "p-2.5 transition-colors flex items-center gap-0.5",
+                  "p-2.5 transition-colors flex items-center gap-0.5 hidden sm:flex",
                   scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
                 )}
               >
@@ -211,6 +217,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Conta</span>
               </button>
 
+              {/* Sacola — Onipresente */}
               <button
                 onClick={onOpenCart}
                 className={cn(
@@ -232,10 +239,11 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Bolsa</span>
               </button>
 
+              {/* Favoritos — Somente se houver espaço */}
               <button
                 onClick={onOpenFavorites}
                 className={cn(
-                  "relative p-2.5 transition-colors flex items-center gap-0.5",
+                  "relative p-2.5 transition-colors flex items-center gap-0.5 hidden xs:flex",
                   scrolled ? "text-primary/50 hover:text-accent" : "text-white/80 hover:text-accent"
                 )}
               >
@@ -261,24 +269,24 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
       {isMenuOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden">
           <div
-            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-md"
             onClick={() => setIsMenuOpen(false)}
           />
-          <div className="absolute top-0 left-0 h-full w-72 bg-white shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
+          <div className="absolute top-0 left-0 h-full w-[80vw] max-w-[320px] bg-white shadow-2xl animate-in slide-in-from-left duration-500 flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <LogoMark />
-              <button onClick={() => setIsMenuOpen(false)} className="p-2">
-                <X className="h-5 w-5 text-primary/40" />
+              <button onClick={() => setIsMenuOpen(false)} className="p-2 focus:outline-none" aria-label="Fechar Menu">
+                <X className="h-6 w-6 text-primary/40" />
               </button>
             </div>
-            <nav className="flex-1 px-6 py-8 space-y-1 overflow-y-auto">
+            <nav className="flex-1 px-8 py-10 space-y-1 overflow-y-auto">
               {navLinks.map((link: any) => (
                 <Link
                   key={link.label}
                   href={link.href}
                   onClick={() => setIsMenuOpen(false)}
                   className={cn(
-                    "flex items-center py-4 border-b border-gray-50 text-[12px] font-semibold tracking-widest transition-colors hover:text-accent",
+                    "flex items-center py-5 border-b border-gray-50 text-[13px] font-bold uppercase tracking-[0.2em] transition-colors hover:text-accent",
                     link.highlight ? "text-accent" : "text-primary/70"
                   )}
                 >
@@ -288,7 +296,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               <Link
                 href="/meus-pedidos"
                 onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 py-4 border-b border-gray-50 text-[12px] font-semibold tracking-widest text-primary/70 hover:text-accent transition-colors"
+                className="flex items-center gap-4 py-5 border-b border-gray-50 text-[13px] font-bold uppercase tracking-[0.2em] text-primary/70 hover:text-accent transition-colors"
               >
                 <Package className="h-4 w-4" /> Meus Pedidos
               </Link>
@@ -297,17 +305,17 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   onOpenLogin();
                   setIsMenuOpen(false);
                 }}
-                className="flex items-center gap-3 py-4 border-b border-gray-50 text-[12px] font-semibold tracking-widest text-primary/70 hover:text-accent transition-colors w-full text-left"
+                className="flex items-center gap-4 py-5 border-b border-gray-50 text-[13px] font-bold uppercase tracking-[0.2em] text-primary/70 hover:text-accent transition-colors w-full text-left"
               >
                 <User className="h-4 w-4" /> Minha Conta
               </button>
             </nav>
-            <div className="p-6 border-t border-gray-100">
+            <div className="p-8 border-t border-gray-100 bg-secondary/10">
               <form onSubmit={handleSearchSubmit} className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
                 <input
-                  placeholder="Buscar..."
-                  className="w-full h-11 bg-gray-50 rounded-full pl-11 pr-4 text-[11px] tracking-wider outline-none border border-gray-100 focus:border-primary/20 transition-all"
+                  placeholder="Buscar na Boutique..."
+                  className="w-full h-12 bg-white rounded-full pl-11 pr-4 text-[11px] tracking-widest outline-none border border-primary/5 focus:border-accent/40 transition-all placeholder:italic placeholder:font-light"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
                 />
@@ -317,7 +325,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         </div>
       )}
 
-      {/* Spacer para garantir que o Hero fique no topo */}
+      {/* Spacer zero para garantir colagem no topo */}
       <div className="h-0" />
     </>
   );
