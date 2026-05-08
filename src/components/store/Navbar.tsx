@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -77,7 +78,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     <>
       <header className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-700",
-        scrolled ? "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)]" : "bg-white"
+        scrolled 
+          ? "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.08)] border-b border-black/5" 
+          : "bg-transparent border-none"
       )}>
 
         {/* Barra superior — frete grátis */}
@@ -91,12 +94,15 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         </div>
 
         {/* Navbar principal */}
-        <div className="w-full border-b border-gray-100">
+        <div className="w-full">
           <nav className="max-w-[1400px] mx-auto px-6 md:px-12 h-16 md:h-[72px] flex items-center justify-between">
 
             {/* Hamburger mobile */}
             <button
-              className="lg:hidden p-1 text-primary/60 hover:text-primary transition-colors"
+              className={cn(
+                "lg:hidden p-1 transition-colors",
+                scrolled ? "text-primary/60 hover:text-primary" : "text-white/80 hover:text-white"
+              )}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -110,15 +116,15 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   href={link.href}
                   className={cn(
                     "text-[11px] font-semibold tracking-[0.15em] transition-all duration-200 relative group pb-0.5",
-                    link.highlight
-                      ? "text-accent hover:text-accent/70"
-                      : "text-primary/70 hover:text-primary"
+                    scrolled
+                      ? link.highlight ? "text-accent" : "text-primary/70 hover:text-primary"
+                      : link.highlight ? "text-accent" : "text-white/90 hover:text-white"
                   )}
                 >
-                  {link.label}
+                  {link.label === 'ECONOMIZE' ? 'SALE' : link.label}
                   <span className={cn(
                     "absolute bottom-0 left-0 h-px transition-all duration-300 group-hover:w-full w-0",
-                    link.highlight ? "bg-accent" : "bg-primary"
+                    link.highlight ? "bg-accent" : (scrolled ? "bg-primary" : "bg-white")
                   )} />
                 </Link>
               ))}
@@ -127,7 +133,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             {/* Logo — centro absoluto */}
             <div className="absolute left-1/2 -translate-x-1/2">
               <Link href="/">
-                <LogoMark />
+                <div className={cn("transition-all duration-500", !scrolled && "brightness-0 invert")}>
+                  <LogoMark />
+                </div>
               </Link>
             </div>
 
@@ -141,18 +149,26 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                     <input
                       autoFocus
                       placeholder="Buscar..."
-                      className="w-48 md:w-64 h-8 border-b border-primary/20 focus:border-primary bg-transparent text-[11px] tracking-wider outline-none px-1 transition-all"
+                      className={cn(
+                        "w-48 md:w-64 h-8 border-b text-[11px] tracking-wider outline-none px-1 transition-all",
+                        scrolled 
+                          ? "border-primary/20 focus:border-primary text-primary" 
+                          : "border-white/20 focus:border-white text-white placeholder:text-white/50 bg-transparent"
+                      )}
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
                     />
                     <button type="button" onClick={() => setIsSearchOpen(false)}>
-                      <X className="h-4 w-4 text-primary/40 hover:text-primary transition-colors" />
+                      <X className={cn("h-4 w-4 transition-colors", scrolled ? "text-primary/40 hover:text-primary" : "text-white/40 hover:text-white")} />
                     </button>
                   </form>
                 ) : (
                   <button
                     onClick={() => setIsSearchOpen(true)}
-                    className="p-2.5 text-primary/50 hover:text-primary transition-colors"
+                    className={cn(
+                      "p-2.5 transition-colors",
+                      scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
+                    )}
                   >
                     <Search className="h-[18px] w-[18px]" />
                   </button>
@@ -161,10 +177,13 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
               <Link
                 href="/meus-pedidos"
-                className="p-2.5 text-primary/50 hover:text-primary transition-colors hidden md:flex items-center gap-1.5 group"
+                className={cn(
+                  "p-2.5 transition-colors hidden md:flex items-center gap-1.5 group",
+                  scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
+                )}
               >
                 <Package className="h-[18px] w-[18px]" />
-                <span className="text-[9px] font-semibold uppercase tracking-widest group-hover:text-primary transition-colors hidden xl:block">
+                <span className="text-[9px] font-semibold uppercase tracking-widest hidden xl:block">
                   Pedidos
                 </span>
               </Link>
@@ -172,7 +191,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               {isAdmin && (
                 <button
                   onClick={handleAdminClick}
-                  className="p-2.5 text-primary/50 hover:text-accent transition-colors hidden md:flex"
+                  className={cn(
+                    "p-2.5 transition-colors hidden md:flex",
+                    scrolled ? "text-primary/50 hover:text-accent" : "text-white/80 hover:text-accent"
+                  )}
                   title="Painel Admin"
                 >
                   <LayoutDashboard className="h-[18px] w-[18px]" />
@@ -181,18 +203,27 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
               <button
                 onClick={onOpenLogin}
-                className="p-2.5 text-primary/50 hover:text-primary transition-colors"
+                className={cn(
+                  "p-2.5 transition-colors",
+                  scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
+                )}
               >
                 <User className="h-[18px] w-[18px]" />
               </button>
 
               <button
                 onClick={onOpenCart}
-                className="relative p-2.5 text-primary/50 hover:text-primary transition-colors"
+                className={cn(
+                  "relative p-2.5 transition-colors",
+                  scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
+                )}
               >
                 <ShoppingBag className="h-[18px] w-[18px]" />
                 {cartCount > 0 && (
-                  <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-primary text-white text-[8px] font-bold flex items-center justify-center">
+                  <span className={cn(
+                    "absolute top-1 right-1 h-4 w-4 rounded-full text-white text-[8px] font-bold flex items-center justify-center",
+                    scrolled ? "bg-primary" : "bg-accent"
+                  )}>
                     {cartCount}
                   </span>
                 )}
@@ -200,11 +231,17 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
               <button
                 onClick={onOpenFavorites}
-                className="relative p-2.5 text-primary/50 hover:text-accent transition-colors"
+                className={cn(
+                  "relative p-2.5 transition-colors",
+                  scrolled ? "text-primary/50 hover:text-accent" : "text-white/80 hover:text-accent"
+                )}
               >
                 <Heart className="h-[18px] w-[18px]" />
                 {favoritesCount > 0 && (
-                  <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-accent text-white text-[8px] font-bold flex items-center justify-center">
+                  <span className={cn(
+                    "absolute top-1 right-1 h-4 w-4 rounded-full text-white text-[8px] font-bold flex items-center justify-center",
+                    scrolled ? "bg-accent" : "bg-primary"
+                  )}>
                     {favoritesCount}
                   </span>
                 )}
@@ -216,7 +253,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
       {/* Menu mobile drawer */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-[60] lg:hidden">
           <div
             className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={() => setIsMenuOpen(false)}
@@ -239,7 +276,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                     link.highlight ? "text-accent" : "text-primary/70"
                   )}
                 >
-                  {link.label}
+                  {link.label === 'ECONOMIZE' ? 'SALE' : link.label}
                 </Link>
               ))}
               <Link
@@ -265,11 +302,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         </div>
       )}
 
-      {/* Spacer para compensar o header fixo */}
-      <div className={cn(
-        "transition-all duration-500",
-        scrolled ? "h-16 md:h-[72px]" : "h-24 md:h-[104px]"
-      )} />
+      {/* Spacer removido (h-0) para que o banner suba, 
+          conforme solicitado nas diretrizes de transparência Animale */}
+      <div className="h-0" />
     </>
   );
 }
