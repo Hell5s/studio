@@ -113,7 +113,7 @@ export default function AdminProductsPage() {
              <div className="h-px w-8 bg-accent" />
              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Gestão Editorial</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary tracking-tighter">Boutique Catalog</h1>
+          <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary tracking-tighter">Loja Catalog</h1>
         </div>
         <Button 
           onClick={() => setIsFormOpen(true)}
@@ -260,7 +260,7 @@ export default function AdminProductsPage() {
                     <Package className="h-16 w-16 text-primary/10 mx-auto" />
                     <div className="space-y-1">
                       <p className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Catálogo Vazio</p>
-                      <p className="text-sm text-muted-foreground italic font-light">Inicie a seleção da sua boutique adicionando peças exclusivas.</p>
+                      <p className="text-sm text-muted-foreground italic font-light">Inicie a seleção da sua loja adicionando peças exclusivas.</p>
                     </div>
                   </td>
                 </tr>

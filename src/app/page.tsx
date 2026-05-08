@@ -204,7 +204,7 @@ function StorefrontContent() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 md:py-40 space-y-6">
               <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Loja...</p>
             </div>
           ) : (
             <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 -mx-4 md:mx-0 items-start">
@@ -293,7 +293,7 @@ function StorefrontContent() {
                       {settings?.purposeTitle || 'Moda com Propósito'}
                     </h3>
                     <p className="text-base md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
-                      {settings?.purposeText || 'Cada peça em nossa boutique é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.'}
+                      {settings?.purposeText || 'Cada peça em nossa loja é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.'}
                     </p>
                   </div>
                   <button 

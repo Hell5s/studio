@@ -144,7 +144,7 @@ export default function MeusPedidosPage() {
           {isOrdersLoading ? (
             <div className="py-40 flex flex-col items-center justify-center space-y-6">
               <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Loja...</p>
             </div>
           ) : !user ? (
             null // useEffect handles redirect
@@ -229,7 +229,7 @@ export default function MeusPedidosPage() {
                        <div className="lg:col-span-5 bg-secondary/20 p-8 md:p-12 space-y-12 border-l border-primary/5">
                           <div className="space-y-6">
                              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent flex items-center gap-3">
-                                <MapPin className="h-4 w-4" /> Destino Boutique
+                                <MapPin className="h-4 w-4" /> Destino da Entrega
                              </p>
                              <div className="space-y-6 bg-white/60 p-8 rounded-[2.5rem] border border-primary/5 shadow-sm">
                                 <div className="space-y-1">

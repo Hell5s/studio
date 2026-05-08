@@ -149,7 +149,7 @@ export function FavoritesDialog({ open, onOpenChange }: FavoritesDialogProps) {
               </div>
               <div className="space-y-4">
                  <h3 className="text-3xl font-headline font-bold text-primary">Sua Wishlist está vazia</h3>
-                 <p className="text-muted-foreground italic font-light max-w-xs mx-auto">Navegue pela boutique e salve as peças que refletem sua essência.</p>
+                 <p className="text-muted-foreground italic font-light max-w-xs mx-auto">Navegue pela loja e salve as peças que refletem sua essência.</p>
               </div>
               <Button 
                 onClick={() => onOpenChange(false)}

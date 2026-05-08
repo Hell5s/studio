@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import {
@@ -80,12 +80,12 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                 <Info className="h-10 w-10 text-primary/30" />
               </div>
               <h3 className="text-xl font-headline font-bold text-primary">Acesso Necessário</h3>
-              <p className="text-muted-foreground italic max-w-xs mx-auto">Por favor, realize o login na boutique para visualizar seu histórico de pedidos.</p>
+              <p className="text-muted-foreground italic max-w-xs mx-auto">Por favor, realize o login na loja para visualizar seu histórico de pedidos.</p>
             </div>
           ) : isLoading ? (
             <div className="flex flex-col items-center justify-center py-32 space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-accent" />
-              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40">Sincronizando Boutique...</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40">Sincronizando Loja...</p>
             </div>
           ) : orders && orders.length > 0 ? (
             <div className="space-y-12">

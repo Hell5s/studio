@@ -107,7 +107,7 @@ export default function CategoryPage() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-40 space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Loja...</p>
             </div>
           ) : products && products.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-12">

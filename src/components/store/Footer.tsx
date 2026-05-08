@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -37,7 +38,7 @@ const INFO_CONTENT: Record<string, { title: string; content: React.ReactNode }> 
     content: (
       <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
         <p>Sua privacidade é nossa prioridade máxima. Na Toda Bela, utilizamos as tecnologias mais avançadas de criptografia para garantir que seus dados pessoais e de pagamento estejam 100% protegidos.</p>
-        <p>Coletamos apenas as informações necessárias para processar seus pedidos e oferecer uma experiência personalizada na boutique.</p>
+        <p>Coletamos apenas as informações necessárias para processar seus pedidos e oferecer uma experiência personalizada na loja.</p>
       </div>
     )
   },
@@ -45,7 +46,7 @@ const INFO_CONTENT: Record<string, { title: string; content: React.ReactNode }> 
     title: 'Termos de Uso',
     content: (
       <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
-        <p>Ao navegar em nossa boutique, você concorda com os termos de excelência e respeito mútuo da nossa comunidade. Todos os preços e condições são válidos exclusivamente para compras realizadas no site.</p>
+        <p>Ao navegar em nossa loja, você concorda com os termos de excelência e respeito mútuo da nossa comunidade. Todos os preços e condições são válidos exclusivamente para compras realizadas no site.</p>
         <p>As imagens dos produtos são produzidas em estúdio profissional para representar as cores e detalhes com a maior fidelidade possível.</p>
       </div>
     )
@@ -132,7 +133,7 @@ export function Footer() {
                 { label: 'Coleções', href: '/#colecoes' },
                 { label: 'Produtos', href: '/#vitrine' },
                 { label: 'Mais Vendidos', href: '/#mais-vendidos' },
-                { label: 'Economize', href: '/economize' },
+                { label: 'SALE', href: '/economize' },
               ].map((link) => (
                 <li key={link.label}>
                   <a href={link.href} className="text-[11px] text-white/50 hover:text-white transition-colors uppercase tracking-wider">

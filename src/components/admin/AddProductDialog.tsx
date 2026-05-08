@@ -136,7 +136,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
     toast({
       title: "Produto Cadastrado",
-      description: `${formData.name} foi adicionado à Boutique.`,
+      description: `${formData.name} foi adicionado à Loja.`,
     });
     
     setLoading(false);
@@ -245,7 +245,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent/80">Novo Cadastro</p>
-              <DialogHeader><DialogTitle className="text-2xl font-bold">Peça de Boutique</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="text-2xl font-bold">Peça Exclusiva</DialogTitle></DialogHeader>
             </div>
           </div>
           <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-12 bg-accent text-primary hover:brightness-110 font-bold uppercase tracking-widest text-[10px] shadow-xl border-none">
@@ -328,7 +328,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 </div>
                 <div className="space-y-2">
                   <Label>Nome do Fornecedor</Label>
-                  <Input value={formData.supplierName} onChange={e => setFormData({...formData, supplierName: e.target.value})} placeholder="Ex: Boutique Global Store" className="bg-gray-50/50" />
+                  <Input value={formData.supplierName} onChange={e => setFormData({...formData, supplierName: e.target.value})} placeholder="Ex: Global Store" className="bg-gray-50/50" />
                 </div>
                 <div className="md:col-span-2 space-y-2">
                    <Label>Observações Internas</Label>

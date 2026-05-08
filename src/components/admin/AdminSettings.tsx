@@ -31,7 +31,7 @@ export function AdminSettings() {
     featuredSubtitle: 'Editorial de Estilo',
     heroCta: 'Conferir Looks',
     purposeTitle: 'Moda com Propósito',
-    purposeText: 'Cada peça em nossa boutique é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.',
+    purposeText: 'Cada peça em nossa loja é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.',
     freeShippingMin: '249',
     freeShippingOthers: '499',
     navLinks: [
@@ -56,7 +56,7 @@ export function AdminSettings() {
     setLoading(true);
     try {
       await setDoc(settingsRef, formData, { merge: true });
-      toast({ title: "Configurações atualizadas!", description: "Sua boutique já está com as novas informações." });
+      toast({ title: "Configurações atualizadas!", description: "Sua loja já está com as novas informações." });
     } catch (error) {
       toast({ title: "Erro ao salvar", variant: "destructive" });
     } finally {
@@ -77,7 +77,7 @@ export function AdminSettings() {
       <div className="flex justify-between items-center bg-white p-8 rounded-[2.5rem] shadow-sm border border-primary/5 sticky top-0 z-30">
          <div>
             <h4 className="text-2xl font-headline font-bold text-primary flex items-center gap-3">
-              <Settings className="h-6 w-6 text-accent" /> Configurações da Boutique
+              <Settings className="h-6 w-6 text-accent" /> Configurações da Loja
             </h4>
             <p className="text-xs text-muted-foreground italic">Gerencie a identidade visual e operacional da Toda Bela.</p>
          </div>
@@ -96,7 +96,7 @@ export function AdminSettings() {
         <Card className="p-10 border-none shadow-premium bg-white space-y-10 rounded-[3rem]">
           <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
              <Info className="h-5 w-5" />
-             <h5 className="text-[11px] font-bold uppercase tracking-[0.4em]">Informações da Boutique</h5>
+             <h5 className="text-[11px] font-bold uppercase tracking-[0.4em]">Informações da Loja</h5>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-2">

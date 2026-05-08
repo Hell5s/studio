@@ -75,25 +75,25 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     { label: 'SALE', href: '/economize', highlight: true },
   ];
 
-  // Lógica de transparência Animale: apenas na home e se não houver scroll
+  // Lógica de transparência dinâmica Animale — SOMENTE NA HOME (/)
   const isHomePage = pathname === '/';
   const isTransparent = isHomePage && !scrolled;
 
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-700 flex flex-col",
-        isTransparent 
-          ? "bg-transparent border-transparent" 
-          : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-gray-100"
+        "fixed left-0 right-0 z-50 transition-all duration-500",
+        isTransparent
+          ? "bg-transparent border-transparent top-8"
+          : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-gray-100 top-0"
       )}>
 
-        {/* Barra superior — frete grátis */}
+        {/* Barra superior — frete grátis (Responsiva) */}
         <div className={cn(
           "w-full bg-primary text-white flex items-center justify-center transition-all duration-500 overflow-hidden",
           scrolled ? "h-0 opacity-0" : "h-8 opacity-100"
         )}>
-          <p className="text-[9px] md:text-[10px] font-medium tracking-[0.3em] md:tracking-[0.5em] uppercase px-4 text-center whitespace-nowrap">
+          <p className="text-[7px] md:text-[10px] font-medium tracking-[0.2em] md:tracking-[0.5em] uppercase px-4 text-center whitespace-nowrap">
             Frete Grátis • Sul e Sudeste acima de R$ 249
           </p>
         </div>
@@ -105,7 +105,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
             {/* Hamburger mobile — Lado Esquerdo */}
             <div className="flex-1 lg:hidden">
               <button
-                className={cn("p-2 -ml-2 transition-colors focus:outline-none", isTransparent ? "text-white/80" : "text-primary/60")}
+                className={cn("p-2 -ml-2 transition-colors focus:outline-none", isTransparent ? "text-white" : "text-primary/60")}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 aria-label="Abrir Menu"
               >
@@ -174,7 +174,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                     onClick={() => setIsSearchOpen(true)}
                     className={cn(
                       "p-2.5 transition-colors",
-                      isTransparent ? "text-white/80 hover:text-white" : "text-primary/50 hover:text-primary"
+                      isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
                     )}
                   >
                     <Search className="h-[18px] w-[18px]" />
@@ -187,7 +187,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 href="/meus-pedidos"
                 className={cn(
                   "p-2.5 transition-colors group flex items-center gap-0.5",
-                  isTransparent ? "text-white/80 hover:text-white" : "text-primary/50 hover:text-primary"
+                  isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
                 )}
               >
                 <Package className="h-[18px] w-[18px]" />
@@ -200,7 +200,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   onClick={handleAdminClick}
                   className={cn(
                     "p-2.5 transition-colors flex items-center gap-0.5 hidden sm:flex",
-                    isTransparent ? "text-white/80 hover:text-accent" : "text-primary/50 hover:text-accent"
+                    isTransparent ? "text-white hover:text-accent" : "text-primary/50 hover:text-accent"
                   )}
                   title="Painel Admin"
                 >
@@ -214,7 +214,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 onClick={onOpenLogin}
                 className={cn(
                   "p-2.5 transition-colors flex items-center gap-0.5 hidden sm:flex",
-                  isTransparent ? "text-white/80 hover:text-white" : "text-primary/50 hover:text-primary"
+                  isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
                 )}
               >
                 <User className="h-[18px] w-[18px]" />
@@ -226,7 +226,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 onClick={onOpenCart}
                 className={cn(
                   "relative p-2.5 transition-colors flex items-center gap-0.5",
-                  isTransparent ? "text-white/80 hover:text-white" : "text-primary/50 hover:text-primary"
+                  isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
                 )}
               >
                 <div className="relative">
@@ -248,7 +248,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 onClick={onOpenFavorites}
                 className={cn(
                   "relative p-2.5 transition-colors flex items-center gap-0.5 hidden xs:flex",
-                  isTransparent ? "text-white/80 hover:text-accent" : "text-primary/50 hover:text-accent"
+                  isTransparent ? "text-white hover:text-accent" : "text-primary/50 hover:text-accent"
                 )}
               >
                 <div className="relative">
@@ -318,7 +318,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               <form onSubmit={handleSearchSubmit} className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
                 <input
-                  placeholder="Buscar na Boutique..."
+                  placeholder="Buscar na Loja..."
                   className="w-full h-12 bg-white rounded-full pl-11 pr-4 text-[11px] tracking-widest outline-none border border-primary/5 focus:border-accent/40 transition-all placeholder:italic placeholder:font-light"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}

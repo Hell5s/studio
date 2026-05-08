@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -89,7 +90,7 @@ export default function ProductDetailPage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-white p-6 text-center">
         <h1 className="text-3xl font-headline font-bold text-primary uppercase">Peça não encontrada</h1>
         <Button onClick={() => router.push('/')} className="rounded-full px-16 h-16 bg-primary text-white font-bold uppercase tracking-widest text-xs">
-          Voltar para a Boutique
+          Voltar para a Loja
         </Button>
       </div>
     );

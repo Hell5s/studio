@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -25,7 +26,7 @@ interface CheckoutDialogProps {
 }
 
 const shippingMethods = [
-  { id: 'standard', name: 'Entrega Boutique', time: '15-20 dias', price: 0 },
+  { id: 'standard', name: 'Entrega Especial', time: '15-20 dias', price: 0 },
   { id: 'express', name: 'Entrega Expressa VIP', time: '10-15 dias', price: 19.90 },
 ];
 
@@ -82,7 +83,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
       } else {
         toast({
           title: "Frete Calculado",
-          description: "Entrega disponível para sua localidade via transportadora boutique.",
+          description: "Entrega disponível para sua localidade via transportadora própria.",
         });
       }
     }, 1200);
@@ -227,7 +228,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 onClick={() => onOpenChange(false)}
                 className="mt-4 text-[10px] font-bold uppercase tracking-[0.3em] underline underline-offset-8 text-accent min-h-[44px]"
               >
-                Explorar Boutique
+                Explorar Loja
               </button>
             </div>
           ) : step === 'cart' ? (
@@ -247,7 +248,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                           {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
                         </div>
                         <div className="flex flex-col pt-2">
-                          <p className="text-[10px] text-muted-foreground uppercase font-medium">Qtd: {item.quantity}</p>
+                          <p className="text-10px text-muted-foreground uppercase font-medium">Qtd: {item.quantity}</p>
                           <div className="flex items-center gap-3 pt-1">
                             <button
                               onClick={() => onUpdateQuantity(item.id, -1)}

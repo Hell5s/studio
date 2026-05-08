@@ -128,7 +128,7 @@ export function AdminShopeeImport() {
       ];
 
       setProduct({
-        title: "Vestido Midi Satin Rouge - Coleção Boutique",
+        title: "Vestido Midi Satin Rouge - Coleção Exclusiva",
         description: "Elegância e sofisticação em cetim premium. Um corte que valoriza a silhueta feminina com o toque de luxo que a mulher Toda Bela merece.",
         images: [
           "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=80",
