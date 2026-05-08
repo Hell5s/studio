@@ -30,7 +30,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const router = useRouter();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
+    const handleScroll = () => setScrolled(window.scrollY > 80);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -77,8 +77,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-700",
-        scrolled ? "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)]" : "bg-white"
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+        scrolled
+          ? "bg-white shadow-[0_1px_12px_rgba(0,0,0,0.06)]"
+          : "bg-transparent"
       )}>
 
         {/* Barra superior — frete grátis */}
@@ -86,24 +88,28 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
           "w-full bg-primary text-white flex items-center justify-center transition-all duration-500 overflow-hidden",
           scrolled ? "h-0 opacity-0" : "h-8 opacity-100"
         )}>
-          <p className="text-[9px] font-medium tracking-[0.5em] uppercase px-4 text-center">
+          <p className="text-[9px] font-medium tracking-[0.5em] uppercase">
             Frete Grátis • Sul e Sudeste acima de R$ 249
           </p>
         </div>
 
         {/* Navbar principal */}
-        <div className="w-full border-b border-gray-100">
-          <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
+        <div className={cn(
+          "w-full transition-all duration-500",
+          !scrolled && "border-b border-white/10"
+        )}>
+          <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between">
 
             {/* Hamburger mobile */}
-            <div className="flex-1 lg:hidden">
-              <button
-                className="p-1 text-primary/60 hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              >
-                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            </div>
+            <button
+              className={cn(
+                "lg:hidden p-1 transition-colors",
+                scrolled ? "text-primary/60 hover:text-primary" : "text-white/80 hover:text-white"
+              )}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
 
             {/* Links — esquerda no desktop */}
             <div className="hidden lg:flex items-center gap-10 flex-1">
@@ -112,63 +118,74 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   key={link.label}
                   href={link.href}
                   className={cn(
-                    "text-[11px] font-semibold tracking-[0.15em] transition-all duration-200 relative group pb-0.5 uppercase",
-                    link.highlight
-                      ? "text-accent hover:text-accent/70"
-                      : "text-primary/70 hover:text-primary"
+                    "text-[10px] font-semibold tracking-[0.25em] uppercase transition-all duration-200 relative group pb-0.5",
+                    scrolled
+                      ? link.highlight ? "text-accent" : "text-primary/60 hover:text-primary"
+                      : link.highlight ? "text-accent" : "text-white/80 hover:text-white"
                   )}
                 >
                   {link.label}
                   <span className={cn(
                     "absolute bottom-0 left-0 h-px transition-all duration-300 group-hover:w-full w-0",
-                    link.highlight ? "bg-accent" : "bg-primary"
+                    link.highlight ? "bg-accent" : (scrolled ? "bg-primary" : "bg-white")
                   )} />
                 </Link>
               ))}
             </div>
 
             {/* Logo — centro absoluto */}
-            <div className="absolute left-1/2 -translate-x-1/2 z-10">
+            <div className={cn(
+              "absolute left-1/2 -translate-x-1/2 transition-all duration-500",
+              !scrolled && "brightness-0 invert"
+            )}>
               <Link href="/">
                 <LogoMark />
               </Link>
             </div>
 
             {/* Ícones — direita */}
-            <div className="flex items-center gap-0.5 md:gap-1 flex-1 justify-end">
+            <div className="flex items-center gap-0.5 flex-1 justify-end">
 
               {/* Busca expansível */}
               <div className="flex items-center">
                 {isSearchOpen ? (
-                  <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300 absolute right-4 md:relative md:right-0 bg-white md:bg-transparent p-2 md:p-0 z-20 rounded-full shadow-lg md:shadow-none border border-primary/5 md:border-none">
+                  <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300">
                     <input
                       autoFocus
                       placeholder="Buscar..."
-                      className="w-32 md:w-64 h-8 border-b border-primary/20 focus:border-primary bg-transparent text-[11px] tracking-wider outline-none px-1 transition-all"
+                      className={cn(
+                        "w-48 md:w-64 h-8 border-b focus:border-primary bg-transparent text-[11px] tracking-wider outline-none px-1 transition-all",
+                        scrolled ? "border-primary/20 text-primary" : "border-white/20 text-white"
+                      )}
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
                     />
                     <button type="button" onClick={() => setIsSearchOpen(false)}>
-                      <X className="h-4 w-4 text-primary/40 hover:text-primary transition-colors" />
+                      <X className={cn("h-4 w-4 transition-colors", scrolled ? "text-primary/40 hover:text-primary" : "text-white/40 hover:text-white")} />
                     </button>
                   </form>
                 ) : (
                   <button
                     onClick={() => setIsSearchOpen(true)}
-                    className="p-2 text-primary/50 hover:text-primary transition-colors"
+                    className={cn(
+                      "p-2 transition-colors",
+                      scrolled ? "text-primary/40 hover:text-primary" : "text-white/80 hover:text-white"
+                    )}
                   >
                     <Search className="h-[18px] w-[18px]" />
                   </button>
                 )}
               </div>
 
-              {/* Pedidos - Visível em tablets e desktop */}
               <Link
                 href="/meus-pedidos"
-                className="p-2 text-primary/50 hover:text-primary transition-colors hidden sm:flex items-center gap-1.5 group"
+                className={cn(
+                  "p-2 transition-colors hidden md:flex items-center gap-1.5 group",
+                  scrolled ? "text-primary/40 hover:text-primary" : "text-white/80 hover:text-white"
+                )}
               >
                 <Package className="h-[18px] w-[18px]" />
-                <span className="text-[9px] font-semibold uppercase tracking-widest group-hover:text-primary transition-colors hidden xl:block">
+                <span className="text-[9px] font-semibold uppercase tracking-widest hidden xl:block">
                   Pedidos
                 </span>
               </Link>
@@ -176,28 +193,36 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               {isAdmin && (
                 <button
                   onClick={handleAdminClick}
-                  className="p-2 text-primary/50 hover:text-accent transition-colors hidden md:flex"
+                  className={cn(
+                    "p-2 transition-colors hidden md:flex",
+                    scrolled ? "text-primary/40 hover:text-accent" : "text-white/80 hover:text-accent"
+                  )}
                   title="Painel Admin"
                 >
                   <LayoutDashboard className="h-[18px] w-[18px]" />
                 </button>
               )}
 
-              {/* Conta - Apenas Desktop para não poluir o celular (já está no drawer) */}
               <button
                 onClick={onOpenLogin}
-                className="p-2 text-primary/50 hover:text-primary transition-colors hidden lg:block"
+                className={cn(
+                  "p-2 transition-colors",
+                  scrolled ? "text-primary/40 hover:text-primary" : "text-white/80 hover:text-white"
+                )}
               >
                 <User className="h-[18px] w-[18px]" />
               </button>
 
               <button
                 onClick={onOpenCart}
-                className="relative p-2 text-primary/50 hover:text-primary transition-colors"
+                className={cn(
+                  "relative p-2 transition-colors",
+                  scrolled ? "text-primary/40 hover:text-primary" : "text-white/80 hover:text-white"
+                )}
               >
                 <ShoppingBag className="h-[18px] w-[18px]" />
                 {cartCount > 0 && (
-                  <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-primary text-white text-[7px] font-bold flex items-center justify-center">
+                  <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-primary text-white text-[8px] font-bold flex items-center justify-center shadow-sm">
                     {cartCount}
                   </span>
                 )}
@@ -205,11 +230,14 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
               <button
                 onClick={onOpenFavorites}
-                className="relative p-2 text-primary/50 hover:text-accent transition-colors"
+                className={cn(
+                  "relative p-2 transition-colors",
+                  scrolled ? "text-primary/40 hover:text-accent" : "text-accent hover:text-white"
+                )}
               >
                 <Heart className="h-[18px] w-[18px]" />
                 {favoritesCount > 0 && (
-                  <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-accent text-white text-[7px] font-bold flex items-center justify-center">
+                  <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-accent text-white text-[8px] font-bold flex items-center justify-center shadow-sm">
                     {favoritesCount}
                   </span>
                 )}
@@ -266,17 +294,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 >
                   <User className="h-4 w-4" /> {user ? 'Dados da Conta' : 'Acessar / Criar Conta'}
                 </button>
-                {isAdmin && (
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      handleAdminClick();
-                    }}
-                    className="flex items-center gap-3 py-4 text-[11px] font-bold tracking-[0.2em] text-accent hover:text-primary transition-colors uppercase w-full text-left"
-                  >
-                    <LayoutDashboard className="h-4 w-4" /> Painel Admin
-                  </button>
-                )}
               </div>
             </nav>
             <div className="p-6 border-t border-gray-100 bg-secondary/10">
@@ -286,11 +303,8 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         </div>
       )}
 
-      {/* Spacer para compensar o header fixo */}
-      <div className={cn(
-        "transition-all duration-500",
-        scrolled ? "h-16 md:h-[72px]" : "h-24 md:h-[104px]"
-      )} />
+      {/* Spacer removido para o header sobrepor o banner */}
+      <div className="h-0" />
     </>
   );
 }

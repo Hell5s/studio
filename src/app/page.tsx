@@ -159,7 +159,11 @@ function StorefrontContent() {
       />
 
       <main>
-        {!selectedCategory && <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />}
+        {!selectedCategory && (
+          <section className="pt-0">
+            <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
+          </section>
+        )}
 
         <section id="vitrine" className={cn(
           "container mx-auto px-4 md:px-6 pb-12 md:pb-24 scroll-mt-24 transition-all duration-700",
