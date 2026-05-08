@@ -4,10 +4,11 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingBag, User, Search, Heart, Package, Menu, X, LayoutDashboard } from 'lucide-react';
+import { ShoppingBag, Search, Heart, Package, Menu, X, LayoutDashboard } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, doc } from 'firebase/firestore';
 import { LogoMark } from './LogoMark';
+import { LoginDialog } from '../auth/LoginDialog';
 import { cn } from '@/lib/utils';
 
 interface NavbarProps {
@@ -25,6 +26,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { user } = useUser();
   const db = useFirestore();
   const router = useRouter();
@@ -75,7 +77,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     { label: 'SALE', href: '/economize', highlight: true },
   ];
 
-  // Lógica de transparência dinâmica Animale — SOMENTE NA HOME (/)
+  // Lógica de transparência dinâmica — SOMENTE NA HOME (/)
   const isHomePage = pathname === '/';
   const isTransparent = isHomePage && !scrolled;
 
@@ -88,7 +90,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
           : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-gray-100 top-0"
       )}>
 
-        {/* Barra superior — frete grátis (Responsiva) */}
+        {/* Barra superior — frete grátis */}
         <div className={cn(
           "w-full bg-primary text-white flex items-center justify-center transition-all duration-500 overflow-hidden",
           scrolled ? "h-0 opacity-0" : "h-8 opacity-100"
@@ -102,7 +104,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         <div className="w-full">
           <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
 
-            {/* Hamburger mobile — Lado Esquerdo */}
+            {/* Hamburger mobile */}
             <div className="flex-1 lg:hidden">
               <button
                 className={cn("p-2 -ml-2 transition-colors focus:outline-none", isTransparent ? "text-white" : "text-primary/60")}
@@ -113,7 +115,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               </button>
             </div>
 
-            {/* Links Desktop — Lado Esquerdo */}
+            {/* Links Desktop */}
             <div className="hidden lg:flex items-center gap-10 flex-1">
               {navLinks.map((link: any) => (
                 <Link
@@ -135,7 +137,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               ))}
             </div>
 
-            {/* Logo — Centro Absoluto */}
+            {/* Logo Central */}
             <div className="absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
               <Link href="/">
                 <div className={cn(
@@ -149,10 +151,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               </Link>
             </div>
 
-            {/* Ícones — Lado Direito */}
+            {/* Ícones Direita */}
             <div className="flex items-center gap-0.5 flex-1 justify-end">
 
-              {/* Busca Desktop */}
+              {/* Busca */}
               <div className="hidden lg:flex items-center">
                 {isSearchOpen ? (
                   <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300 mr-2">
@@ -182,11 +184,11 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 )}
               </div>
 
-              {/* Pedidos — Onipresente */}
+              {/* Pedidos */}
               <Link
                 href="/meus-pedidos"
                 className={cn(
-                  "p-2.5 transition-colors group flex items-center gap-0.5",
+                  "p-2.5 transition-colors group flex items-center gap-0.5 hidden xs:flex",
                   isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
                 )}
               >
@@ -194,34 +196,17 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Pedidos</span>
               </Link>
 
-              {/* Admin — Desktop/Tablet */}
-              {isAdmin && (
-                <button
-                  onClick={handleAdminClick}
-                  className={cn(
-                    "p-2.5 transition-colors flex items-center gap-0.5 hidden sm:flex",
-                    isTransparent ? "text-white hover:text-accent" : "text-primary/50 hover:text-accent"
-                  )}
-                  title="Painel Admin"
-                >
-                  <LayoutDashboard className="h-[18px] w-[18px]" />
-                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Admin</span>
-                </button>
-              )}
+              {/* Menu de Conta (Popover) */}
+              <LoginDialog 
+                open={isLoginOpen} 
+                onOpenChange={setIsLoginOpen} 
+                isTransparent={isTransparent}
+                isAdmin={isAdmin}
+                onOpenAdmin={handleAdminClick}
+                onOpenFavorites={onOpenFavorites}
+              />
 
-              {/* Conta — Desktop/Tablet */}
-              <button
-                onClick={onOpenLogin}
-                className={cn(
-                  "p-2.5 transition-colors flex items-center gap-0.5 hidden sm:flex",
-                  isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
-                )}
-              >
-                <User className="h-[18px] w-[18px]" />
-                <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Conta</span>
-              </button>
-
-              {/* Sacola — Onipresente */}
+              {/* Sacola */}
               <button
                 onClick={onOpenCart}
                 className={cn(
@@ -243,7 +228,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Bolsa</span>
               </button>
 
-              {/* Favoritos — Somente se houver espaço */}
+              {/* Favoritos */}
               <button
                 onClick={onOpenFavorites}
                 className={cn(
@@ -306,7 +291,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               </Link>
               <button
                 onClick={() => {
-                  onOpenLogin();
+                  setIsLoginOpen(true);
                   setIsMenuOpen(false);
                 }}
                 className="flex items-center gap-4 py-5 border-b border-gray-50 text-[13px] font-bold uppercase tracking-[0.2em] text-primary/70 hover:text-accent transition-colors w-full text-left"
@@ -328,9 +313,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
           </div>
         </div>
       )}
-
-      {/* Spacer zero para garantir colagem no topo */}
-      <div className="h-0" />
     </>
   );
 }
