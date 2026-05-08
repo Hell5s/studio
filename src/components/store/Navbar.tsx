@@ -68,72 +68,42 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   };
 
   const navLinks = settings?.navLinks || [
-    { label: 'COLEÇÕES', href: '/#colecoes' },
-    { label: 'PRODUTOS', href: '/#vitrine' },
-    { label: 'MAIS VENDIDOS', href: '/#mais-vendidos' },
+    { label: 'Coleções', href: '/#colecoes' },
+    { label: 'Produtos', href: '/#vitrine' },
+    { label: 'Mais Vendidos', href: '/#mais-vendidos' },
     { label: 'SALE', href: '/economize', highlight: true },
   ];
 
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-700",
-        scrolled 
-          ? "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.08)] border-b border-black/5" 
-          : "bg-transparent border-none"
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-700 flex flex-col",
+        scrolled ? "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)]" : "bg-transparent"
       )}>
 
-        {/* Barra superior — frete grátis (Responsivo) */}
+        {/* Barra superior — frete grátis */}
         <div className={cn(
           "w-full bg-primary text-white flex items-center justify-center transition-all duration-500 overflow-hidden",
           scrolled ? "h-0 opacity-0" : "h-8 opacity-100"
         )}>
-          <p className="text-[7px] md:text-[9px] font-medium tracking-[0.2em] md:tracking-[0.5em] uppercase px-4 text-center whitespace-nowrap">
+          <p className="text-[9px] font-medium tracking-[0.5em] uppercase px-4 text-center whitespace-nowrap">
             Frete Grátis • Sul e Sudeste acima de R$ 249
           </p>
         </div>
 
         {/* Navbar principal */}
         <div className="w-full">
-          <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
+          
+          {/* MOBILE LAYOUT (Mantido) */}
+          <nav className="lg:hidden max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between">
+            <button
+              className={cn("p-1 transition-colors", scrolled ? "text-primary/60" : "text-white/80")}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
 
-            {/* Hamburger mobile */}
-            <div className="flex-1 flex items-center lg:hidden">
-              <button
-                className={cn(
-                  "p-1 transition-colors",
-                  scrolled ? "text-primary/60 hover:text-primary" : "text-white/80 hover:text-white"
-                )}
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            </div>
-
-            {/* Links — esquerda no desktop */}
-            <div className="hidden lg:flex items-center gap-10 flex-1">
-              {navLinks.map((link: any) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className={cn(
-                    "text-[11px] font-semibold tracking-[0.15em] transition-all duration-200 relative group pb-0.5",
-                    scrolled
-                      ? link.highlight ? "text-accent hover:text-accent/70" : "text-primary/70 hover:text-primary"
-                      : link.highlight ? "text-accent hover:text-accent/70" : "text-white/90 hover:text-white"
-                  )}
-                >
-                  {link.label}
-                  <span className={cn(
-                    "absolute bottom-0 left-0 h-px transition-all duration-300 group-hover:w-full w-0",
-                    link.highlight ? "bg-accent" : (scrolled ? "bg-primary" : "bg-white")
-                  )} />
-                </Link>
-              ))}
-            </div>
-
-            {/* Logo — centro absoluto com bolinha dinâmica */}
-            <div className="absolute left-1/2 -translate-x-1/2 z-10">
+            <div className="absolute left-1/2 -translate-x-1/2">
               <Link href="/">
                 <div className={cn(
                   "transition-all duration-500",
@@ -146,115 +116,193 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               </Link>
             </div>
 
-            {/* Ícones — direita */}
-            <div className="flex items-center gap-0.5 flex-1 justify-end">
-
-              {/* Busca expansível */}
-              <div className="flex items-center">
-                {isSearchOpen ? (
-                  <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300">
-                    <input
-                      autoFocus
-                      placeholder="Buscar..."
-                      className={cn(
-                        "w-32 md:w-64 h-8 border-b text-[11px] tracking-wider outline-none px-1 transition-all",
-                        scrolled 
-                          ? "border-primary/20 focus:border-primary text-primary" 
-                          : "border-white/20 focus:border-white text-white placeholder:text-white/50 bg-transparent"
-                      )}
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                    />
-                    <button type="button" onClick={() => setIsSearchOpen(false)}>
-                      <X className={cn("h-4 w-4 transition-colors", scrolled ? "text-primary/40 hover:text-primary" : "text-white/40 hover:text-white")} />
-                    </button>
-                  </form>
-                ) : (
-                  <button
-                    onClick={() => setIsSearchOpen(true)}
-                    className={cn(
-                      "p-2.5 transition-colors",
-                      scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
-                    )}
-                  >
-                    <Search className="h-[18px] w-[18px]" />
-                  </button>
-                )}
-              </div>
-
-              <Link
-                href="/meus-pedidos"
-                className={cn(
-                  "p-2.5 transition-colors hidden md:flex items-center gap-1.5 group",
-                  scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
-                )}
-              >
-                <Package className="h-[18px] w-[18px]" />
-                <span className="text-[9px] font-semibold uppercase tracking-widest group-hover:text-primary transition-colors hidden xl:block">
-                  Pedidos
-                </span>
-              </Link>
-
-              {isAdmin && (
-                <button
-                  onClick={handleAdminClick}
-                  className={cn(
-                    "p-2.5 transition-colors hidden md:flex",
-                    scrolled ? "text-primary/50 hover:text-accent" : "text-white/80 hover:text-accent"
-                  )}
-                  title="Painel Admin"
-                >
-                  <LayoutDashboard className="h-[18px] w-[18px]" />
-                </button>
-              )}
-
-              <button
-                onClick={onOpenLogin}
-                className={cn(
-                  "p-2.5 transition-colors hidden sm:block",
-                  scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
-                )}
-              >
-                <User className="h-[18px] w-[18px]" />
-              </button>
-
+            <div className="flex items-center gap-1">
               <button
                 onClick={onOpenCart}
-                className={cn(
-                  "relative p-2.5 transition-colors",
-                  scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
-                )}
+                className={cn("relative p-2 transition-colors", scrolled ? "text-primary/50" : "text-white/80")}
               >
                 <ShoppingBag className="h-[18px] w-[18px]" />
                 {cartCount > 0 && (
-                  <span className={cn(
-                    "absolute top-1 right-1 h-4 w-4 rounded-full text-white text-[8px] font-bold flex items-center justify-center",
-                    scrolled ? "bg-primary" : "bg-accent"
-                  )}>
+                  <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-accent text-white text-[8px] font-bold flex items-center justify-center">
                     {cartCount}
                   </span>
                 )}
               </button>
-
               <button
                 onClick={onOpenFavorites}
-                className={cn(
-                  "relative p-2.5 transition-colors",
-                  scrolled ? "text-primary/50 hover:text-accent" : "text-white/80 hover:text-accent"
-                )}
+                className={cn("relative p-2 transition-colors", scrolled ? "text-primary/50" : "text-white/80")}
               >
                 <Heart className="h-[18px] w-[18px]" />
-                {favoritesCount > 0 && (
-                  <span className={cn(
-                    "absolute top-1 right-1 h-4 w-4 rounded-full text-white text-[8px] font-bold flex items-center justify-center",
-                    scrolled ? "bg-accent" : "bg-primary"
-                  )}>
-                    {favoritesCount}
-                  </span>
-                )}
               </button>
             </div>
           </nav>
+
+          {/* DESKTOP LAYOUT (Dois Níveis) */}
+          <div className="hidden lg:flex flex-col max-w-[1400px] mx-auto px-12 transition-all duration-700">
+            
+            {/* Nível 1: Logo Centralizada */}
+            <div className={cn(
+              "flex justify-center transition-all duration-700",
+              scrolled ? "py-2" : "py-6"
+            )}>
+              <Link href="/">
+                <div className={cn(
+                  "transition-all duration-700",
+                  !scrolled 
+                    ? "brightness-0 invert [&_#logo-ball]:opacity-0 [&_#logo-ball]:pointer-events-none [&_#logo-ball]:w-0 [&_#logo-ball]:overflow-hidden" 
+                    : "[&_#logo-ball]:opacity-100 [&_#logo-ball]:w-auto"
+                )}>
+                  <LogoMark />
+                </div>
+              </Link>
+            </div>
+
+            {/* Nível 2: Links Centralizados + Ícones Direita */}
+            <div className={cn(
+              "flex items-center justify-between transition-all duration-700 border-t",
+              scrolled ? "h-14 border-primary/5" : "h-16 border-white/10"
+            )}>
+              {/* Espaçador Esquerdo para garantir centralização absoluta dos links */}
+              <div className="flex-1" />
+
+              {/* Links Centralizados */}
+              <div className="flex items-center gap-10">
+                {navLinks.map((link: any) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className={cn(
+                      "text-[10px] font-bold tracking-[0.25em] uppercase transition-all duration-200 relative group pb-0.5",
+                      scrolled
+                        ? link.highlight ? "text-accent" : "text-primary/70 hover:text-primary"
+                        : link.highlight ? "text-accent" : "text-white hover:text-white/70"
+                    )}
+                  >
+                    {link.label}
+                    <span className={cn(
+                      "absolute bottom-0 left-0 h-px transition-all duration-300 group-hover:w-full w-0",
+                      link.highlight ? "bg-accent" : (scrolled ? "bg-primary" : "bg-white")
+                    )} />
+                  </Link>
+                ))}
+              </div>
+
+              {/* Ícones Direita */}
+              <div className="flex-1 flex items-center justify-end gap-0.5">
+                
+                {/* Busca expansível */}
+                <div className="flex items-center">
+                  {isSearchOpen ? (
+                    <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300 mr-2">
+                      <input
+                        autoFocus
+                        placeholder="Buscar..."
+                        className={cn(
+                          "w-48 h-8 border-b text-[10px] tracking-wider outline-none px-1 transition-all",
+                          scrolled 
+                            ? "border-primary/20 focus:border-primary text-primary" 
+                            : "border-white/20 focus:border-white text-white placeholder:text-white/50 bg-transparent"
+                        )}
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                      />
+                      <button type="button" onClick={() => setIsSearchOpen(false)}>
+                        <X className={cn("h-4 w-4 transition-colors", scrolled ? "text-primary/40 hover:text-primary" : "text-white/40 hover:text-white")} />
+                      </button>
+                    </form>
+                  ) : (
+                    <button
+                      onClick={() => setIsSearchOpen(true)}
+                      className={cn(
+                        "p-2.5 transition-colors",
+                        scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
+                      )}
+                    >
+                      <Search className="h-[18px] w-[18px]" />
+                    </button>
+                  )}
+                </div>
+
+                <Link
+                  href="/meus-pedidos"
+                  className={cn(
+                    "p-2.5 transition-colors group flex flex-col items-center gap-0.5",
+                    scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
+                  )}
+                >
+                  <Package className="h-[18px] w-[18px]" />
+                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Pedidos</span>
+                </Link>
+
+                {isAdmin && (
+                  <button
+                    onClick={handleAdminClick}
+                    className={cn(
+                      "p-2.5 transition-colors flex flex-col items-center gap-0.5",
+                      scrolled ? "text-primary/50 hover:text-accent" : "text-white/80 hover:text-accent"
+                    )}
+                    title="Painel Admin"
+                  >
+                    <LayoutDashboard className="h-[18px] w-[18px]" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Admin</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={onOpenLogin}
+                  className={cn(
+                    "p-2.5 transition-colors flex flex-col items-center gap-0.5",
+                    scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
+                  )}
+                >
+                  <User className="h-[18px] w-[18px]" />
+                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Conta</span>
+                </button>
+
+                <button
+                  onClick={onOpenCart}
+                  className={cn(
+                    "relative p-2.5 transition-colors flex flex-col items-center gap-0.5",
+                    scrolled ? "text-primary/50 hover:text-primary" : "text-white/80 hover:text-white"
+                  )}
+                >
+                  <div className="relative">
+                    <ShoppingBag className="h-[18px] w-[18px]" />
+                    {cartCount > 0 && (
+                      <span className={cn(
+                        "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
+                        scrolled ? "bg-primary" : "bg-accent"
+                      )}>
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Bolsa</span>
+                </button>
+
+                <button
+                  onClick={onOpenFavorites}
+                  className={cn(
+                    "relative p-2.5 transition-colors flex flex-col items-center gap-0.5",
+                    scrolled ? "text-primary/50 hover:text-accent" : "text-white/80 hover:text-accent"
+                  )}
+                >
+                  <div className="relative">
+                    <Heart className="h-[18px] w-[18px]" />
+                    {favoritesCount > 0 && (
+                      <span className={cn(
+                        "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
+                        scrolled ? "bg-accent" : "bg-primary"
+                      )}>
+                        {favoritesCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Desejos</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -318,7 +366,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         </div>
       )}
 
-      {/* Spacer para garantir que o Hero fique no topo em páginas com banner */}
+      {/* Spacer para garantir que o Hero fique no topo */}
       <div className="h-0" />
     </>
   );
