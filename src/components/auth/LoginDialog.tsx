@@ -29,7 +29,6 @@ interface LoginDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isTransparent?: boolean;
-  onOpenFavorites?: () => void;
   isAdmin?: boolean;
   onOpenAdmin?: () => void;
 }
@@ -38,7 +37,6 @@ export function LoginDialog({
   open, 
   onOpenChange, 
   isTransparent, 
-  onOpenFavorites,
   isAdmin,
   onOpenAdmin
 }: LoginDialogProps) {
@@ -90,7 +88,6 @@ export function LoginDialog({
   const menuOptions = [
     { label: 'Dados Pessoais', icon: <User className="h-4 w-4" />, href: '/dados-pessoais' },
     { label: 'Meus Pedidos', icon: <Package className="h-4 w-4" />, href: '/meus-pedidos' },
-    { label: 'Wishlist', icon: <Heart className="h-4 w-4" />, onClick: onOpenFavorites },
   ];
 
   const handleMenuClick = (opt: any) => {

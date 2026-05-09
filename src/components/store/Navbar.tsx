@@ -79,11 +79,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     { label: 'SALE', href: '/economize', highlight: true },
   ];
 
-  // Lógica de transparência dinâmica — SOMENTE NA HOME (/)
   const isHomePage = pathname === '/';
   const isTransparent = isHomePage && !scrolled;
 
-  // Estilos de sombra para legibilidade em fundos variados
   const shadowStyle = isTransparent ? { textShadow: '0 1px 4px rgba(0,0,0,0.4)' } : undefined;
   const iconFilterStyle = isTransparent ? { filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' } : undefined;
 
@@ -91,7 +89,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     <>
       <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-500", isTransparent ? "bg-transparent border-transparent" : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/[0.08]")}>
 
-        {/* Barra superior — frete grátis */}
         <div className={cn(
           "w-full bg-primary text-white flex items-center justify-center transition-all duration-500 overflow-hidden",
           (!isHomePage || scrolled) ? "h-0 opacity-0 pointer-events-none" : "h-8 opacity-100"
@@ -101,11 +98,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
           </p>
         </div>
 
-        {/* Navbar principal */}
         <div className={cn("w-full transition-all duration-500", isTransparent ? "bg-transparent" : "bg-white")}>
           <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
 
-            {/* Hamburger mobile */}
             <div className="flex-1 lg:hidden">
               <button
                 className={cn("p-2 -ml-2 transition-colors focus:outline-none", isTransparent ? "text-white" : "text-primary/60")}
@@ -116,7 +111,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               </button>
             </div>
 
-            {/* Links Desktop */}
             <div className="hidden lg:flex items-center gap-10 flex-1">
               {navLinks.map((link: any) => (
                 <Link
@@ -139,7 +133,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               ))}
             </div>
 
-            {/* Logo Central */}
             <div className="absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
               <Link href="/">
                 <div className={cn(
@@ -153,10 +146,8 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               </Link>
             </div>
 
-            {/* Ícones Direita */}
             <div className="flex items-center gap-0.5 flex-1 justify-end">
 
-              {/* Busca */}
               <div className="hidden lg:flex items-center">
                 {isSearchOpen ? (
                   <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300 mr-2">
@@ -188,7 +179,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 )}
               </div>
 
-              {/* Pedidos */}
               <Link
                 href="/meus-pedidos"
                 className={cn(
@@ -202,7 +192,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 </div>
               </Link>
 
-              {/* Menu de Conta */}
               <div style={iconFilterStyle}>
                 <LoginDialog 
                   open={isAccountOpen} 
@@ -210,11 +199,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   isTransparent={isTransparent}
                   isAdmin={isAdmin}
                   onOpenAdmin={handleAdminClick}
-                  onOpenFavorites={onOpenFavorites}
                 />
               </div>
 
-              {/* Favoritos */}
               <button
                 onClick={onOpenFavorites}
                 className={cn(
@@ -238,7 +225,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 </div>
               </button>
 
-              {/* Sacola */}
               <button
                 onClick={onOpenCart}
                 className={cn(
@@ -267,7 +253,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         </div>
       </header>
 
-      {/* Menu mobile drawer */}
       {isMenuOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden">
           <div
