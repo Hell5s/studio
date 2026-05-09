@@ -82,28 +82,39 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const isHomePage = pathname === '/';
   const isTransparent = isHomePage && !scrolled;
 
+  const showIcons = settings?.visibleIcons || { search: true, orders: true, favorites: true, cart: true, account: true };
+  const headerBg = !isTransparent ? (settings?.headerBgColor || "#ffffff") : "transparent";
+  const linkColor = !isTransparent ? (settings?.headerLinkColor || "#2A1F22") : "#ffffff";
+  const iconColor = !isTransparent ? (settings?.headerIconColor || "#6E3C47") : "#ffffff";
+
   const shadowStyle = isTransparent ? { textShadow: '0 1px 4px rgba(0,0,0,0.4)' } : undefined;
   const iconFilterStyle = isTransparent ? { filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' } : undefined;
 
   return (
     <>
-      <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-500", isTransparent ? "bg-transparent border-transparent" : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/[0.08]")}>
-
-        <div className={cn(
-          "w-full bg-primary text-white flex items-center justify-center transition-all duration-500 overflow-hidden",
-          (!isHomePage || scrolled) ? "h-0 opacity-0 pointer-events-none" : "h-8 opacity-100"
-        )}>
-          <p className="text-[7px] md:text-[10px] font-medium tracking-[0.2em] md:tracking-[0.5em] uppercase px-4 text-center whitespace-nowrap">
-            Frete Grátis • Sul e Sudeste acima de R$ 249
+      <header 
+        className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-500", isTransparent ? "border-transparent" : "shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/[0.08]")}
+        style={{ backgroundColor: headerBg }}
+      >
+        <div 
+          className={cn(
+            "w-full flex items-center justify-center transition-all duration-500 overflow-hidden",
+            (!isHomePage || scrolled || settings?.showShippingBar === false) ? "h-0 opacity-0 pointer-events-none" : "h-8 opacity-100"
+          )}
+          style={{ backgroundColor: settings?.shippingBgColor || "#6E3C47" }}
+        >
+          <p className="text-[7px] md:text-[10px] font-medium tracking-[0.2em] md:tracking-[0.5em] uppercase px-4 text-center whitespace-nowrap text-white">
+            {settings?.shippingMessage || 'Frete Grátis • Sul e Sudeste acima de R$ 249'}
           </p>
         </div>
 
-        <div className={cn("w-full transition-all duration-500", isTransparent ? "bg-transparent" : "bg-white")}>
+        <div className="w-full transition-all duration-500">
           <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
 
             <div className="flex-1 lg:hidden">
               <button
-                className={cn("p-2 -ml-2 transition-colors focus:outline-none", isTransparent ? "text-white" : "text-primary/60")}
+                className="p-2 -ml-2 transition-colors focus:outline-none"
+                style={{ color: iconColor }}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 aria-label="Abrir Menu"
               >
@@ -118,11 +129,12 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   href={link.href}
                   className={cn(
                     "text-[11px] font-semibold tracking-[0.15em] transition-all duration-200 relative group pb-0.5",
-                    isTransparent
-                      ? link.highlight ? "text-accent" : "text-white hover:text-white/70"
-                      : link.highlight ? "text-accent" : "text-primary/70 hover:text-primary"
+                    link.highlight && "text-accent"
                   )}
-                  style={shadowStyle}
+                  style={{ 
+                    color: link.highlight ? 'hsl(var(--accent))' : linkColor,
+                    ...shadowStyle 
+                  }}
                 >
                   {link.label}
                   <span className={cn(
@@ -138,9 +150,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 <div 
                   className={cn(
                     "transition-all duration-500 scale-90 md:scale-100",
-                    isTransparent 
-                      ? "brightness-0 invert [&_#logo-ball]:opacity-0 [&_#logo-ball]:pointer-events-none [&_#logo-ball]:w-0 [&_#logo-ball]:overflow-hidden" 
-                      : "[&_#logo-ball]:opacity-100 [&_#logo-ball]:w-auto"
+                    isTransparent && "brightness-0 invert [&_#logo-ball]:opacity-0 [&_#logo-ball]:pointer-events-none [&_#logo-ball]:w-0 [&_#logo-ball]:overflow-hidden" 
                   )}
                   style={isTransparent ? { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' } : undefined}
                 >
@@ -151,105 +161,107 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
             <div className="flex items-center gap-0.5 flex-1 justify-end">
 
-              <div className="hidden lg:flex items-center">
-                {isSearchOpen ? (
-                  <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300 mr-2">
-                    <input
-                      autoFocus
-                      placeholder="Buscar na loja..."
-                      className={cn(
-                        "w-48 h-8 border-b text-[11px] tracking-wider outline-none px-1 transition-all",
-                        isTransparent 
-                          ? "border-white/20 focus:border-white text-white placeholder:text-white/50 bg-transparent"
-                          : "border-primary/20 focus:border-primary text-primary" 
+              {showIcons.search && (
+                <div className="hidden lg:flex items-center">
+                  {isSearchOpen ? (
+                    <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300 mr-2">
+                      <input
+                        autoFocus
+                        placeholder="Buscar na loja..."
+                        className={cn(
+                          "w-48 h-8 border-b text-[11px] tracking-wider outline-none px-1 transition-all",
+                          isTransparent 
+                            ? "border-white/20 focus:border-white text-white placeholder:text-white/50 bg-transparent"
+                            : "border-primary/20 focus:border-primary text-primary bg-transparent" 
+                        )}
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                      />
+                    </form>
+                  ) : (
+                    <button
+                      onClick={() => setIsSearchOpen(true)}
+                      className="p-2.5 transition-colors"
+                      style={{ color: iconColor }}
+                    >
+                      <div style={iconFilterStyle}>
+                        <Search className="h-[18px] w-[18px]" />
+                      </div>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {showIcons.orders && (
+                <Link
+                  href="/meus-pedidos"
+                  className="p-2.5 transition-colors group flex items-center gap-0.5 hidden xs:flex"
+                  style={{ color: iconColor }}
+                >
+                  <div style={iconFilterStyle} className="flex items-center gap-0.5">
+                    <Package className="h-[18px] w-[18px]" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Pedidos</span>
+                  </div>
+                </Link>
+              )}
+
+              {showIcons.account && (
+                <div style={iconFilterStyle}>
+                  <LoginDialog 
+                    open={isAccountOpen} 
+                    onOpenChange={setIsAccountOpen} 
+                    isTransparent={isTransparent}
+                    isAdmin={isAdmin}
+                    onOpenAdmin={handleAdminClick}
+                  />
+                </div>
+              )}
+
+              {showIcons.favorites && (
+                <button
+                  onClick={onOpenFavorites}
+                  className="relative p-2.5 transition-colors flex items-center gap-0.5"
+                  style={{ color: isTransparent ? (favoritesCount > 0 ? "hsl(var(--accent))" : "#ffffff") : iconColor }}
+                >
+                  <div style={iconFilterStyle} className="flex items-center gap-0.5">
+                    <div className="relative">
+                      <Heart className={cn("h-[18px] w-[18px]", favoritesCount > 0 && "fill-current text-accent")} />
+                      {favoritesCount > 0 && (
+                        <span className={cn(
+                          "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
+                          isTransparent ? "bg-primary" : "bg-accent"
+                        )}>
+                          {favoritesCount}
+                        </span>
                       )}
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                    />
-                  </form>
-                ) : (
-                  <button
-                    onClick={() => setIsSearchOpen(true)}
-                    className={cn(
-                      "p-2.5 transition-colors",
-                      isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
-                    )}
-                  >
-                    <div style={iconFilterStyle}>
-                      <Search className="h-[18px] w-[18px]" />
                     </div>
-                  </button>
-                )}
-              </div>
-
-              <Link
-                href="/meus-pedidos"
-                className={cn(
-                  "p-2.5 transition-colors group flex items-center gap-0.5 hidden xs:flex",
-                  isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
-                )}
-              >
-                <div style={iconFilterStyle} className="flex items-center gap-0.5">
-                  <Package className="h-[18px] w-[18px]" />
-                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Pedidos</span>
-                </div>
-              </Link>
-
-              <div style={iconFilterStyle}>
-                <LoginDialog 
-                  open={isAccountOpen} 
-                  onOpenChange={setIsAccountOpen} 
-                  isTransparent={isTransparent}
-                  isAdmin={isAdmin}
-                  onOpenAdmin={handleAdminClick}
-                />
-              </div>
-
-              <button
-                onClick={onOpenFavorites}
-                className={cn(
-                  "relative p-2.5 transition-colors flex items-center gap-0.5",
-                  isTransparent ? "text-white hover:text-accent" : "text-primary/50 hover:text-accent"
-                )}
-              >
-                <div style={iconFilterStyle} className="flex items-center gap-0.5">
-                  <div className="relative">
-                    <Heart className="h-[18px] w-[18px]" />
-                    {favoritesCount > 0 && (
-                      <span className={cn(
-                        "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
-                        isTransparent ? "bg-primary" : "bg-accent"
-                      )}>
-                        {favoritesCount}
-                      </span>
-                    )}
+                    <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Desejos</span>
                   </div>
-                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Desejos</span>
-                </div>
-              </button>
+                </button>
+              )}
 
-              <button
-                onClick={onOpenCart}
-                className={cn(
-                  "relative p-2.5 transition-colors flex items-center gap-0.5",
-                  isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
-                )}
-              >
-                <div style={iconFilterStyle} className="flex items-center gap-0.5">
-                  <div className="relative">
-                    <ShoppingBag className="h-[18px] w-[18px]" />
-                    {cartCount > 0 && (
-                      <span className={cn(
-                        "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
-                        isTransparent ? "bg-accent" : "bg-primary"
-                      )}>
-                        {cartCount}
-                      </span>
-                    )}
+              {showIcons.cart && (
+                <button
+                  onClick={onOpenCart}
+                  className="relative p-2.5 transition-colors flex items-center gap-0.5"
+                  style={{ color: iconColor }}
+                >
+                  <div style={iconFilterStyle} className="flex items-center gap-0.5">
+                    <div className="relative">
+                      <ShoppingBag className="h-[18px] w-[18px]" />
+                      {cartCount > 0 && (
+                        <span className={cn(
+                          "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
+                          isTransparent ? "bg-accent" : "bg-primary"
+                        )}>
+                          {cartCount}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Bolsa</span>
                   </div>
-                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Bolsa</span>
-                </div>
-              </button>
+                </button>
+              )}
             </div>
           </nav>
         </div>

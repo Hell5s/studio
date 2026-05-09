@@ -18,7 +18,8 @@ import {
   BarChart3,
   LogOut,
   Palette,
-  Loader2
+  Loader2,
+  Layout
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ import { AdminReports } from './AdminReports';
 import { AdminSettings } from './AdminSettings';
 import { AdminCategories } from './AdminCategories';
 import { AddProductDialog } from './AddProductDialog';
+import { AdminHeaderSettings } from './AdminHeaderSettings';
 
 interface AdminDashboardProps {
   productsCount: number;
@@ -42,7 +44,7 @@ interface AdminDashboardProps {
   onExit?: () => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings';
+type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header';
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const db = useFirestore();
@@ -69,6 +71,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'orders', label: 'Pedidos', icon: <Truck className="h-4 w-4" /> },
     { id: 'products', label: 'Produtos', icon: <Package className="h-4 w-4" /> },
     { id: 'categories', label: 'Categorias', icon: <Layers className="h-4 w-4" /> },
+    { id: 'header', label: 'Cabeçalho', icon: <Layout className="h-4 w-4" /> },
     { id: 'coupons', label: 'Cupons', icon: <Tag className="h-4 w-4" /> },
     { id: 'customers', label: 'Clientes', icon: <Users className="h-4 w-4" /> },
     { id: 'appearance', label: 'Aparência', icon: <Palette className="h-4 w-4" /> },
@@ -154,6 +157,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             {activeTab === 'products' && <ProductManagement />}
             {activeTab === 'orders' && <OrderManagement />}
             {activeTab === 'categories' && <AdminCategories />}
+            {activeTab === 'header' && <AdminHeaderSettings />}
             {activeTab === 'coupons' && <AdminCoupons />}
             {activeTab === 'customers' && <AdminCustomers />}
             {activeTab === 'appearance' && <BannerManagement />}
