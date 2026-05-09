@@ -147,7 +147,7 @@ function StorefrontContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background selection:bg-accent/30 selection:text-primary overflow-x-hidden">
+    <div className="min-h-screen selection:bg-accent/30 selection:text-primary overflow-x-hidden">
       <Navbar 
         onOpenLogin={() => setIsLoginOpen(true)}
         onOpenCart={() => setIsCheckoutOpen(true)}
@@ -160,7 +160,7 @@ function StorefrontContent() {
 
       <main>
         {!selectedCategory && (
-          <section className="pt-[64px] md:pt-[104px]">
+          <section className="pt-0">
             <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
           </section>
         )}
