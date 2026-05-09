@@ -32,10 +32,11 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const pathname = usePathname();
 
   useEffect(() => {
+    setScrolled(window.scrollY > 10);
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname]);
 
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings } = useDoc(settingsRef);
