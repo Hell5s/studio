@@ -87,7 +87,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         isTransparent
           ? "bg-transparent border-transparent"
-          : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-gray-100"
+          : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/5"
       )}>
 
         {/* Barra superior — frete grátis */}
@@ -160,7 +160,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300 mr-2">
                     <input
                       autoFocus
-                      placeholder="Buscar..."
+                      placeholder="Buscar na loja..."
                       className={cn(
                         "w-48 h-8 border-b text-[11px] tracking-wider outline-none px-1 transition-all",
                         isTransparent 
@@ -303,7 +303,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               <form onSubmit={handleSearchSubmit} className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
                 <input
-                  placeholder="Buscar na Loja..."
+                  placeholder="Buscar na loja..."
                   className="w-full h-12 bg-white rounded-full pl-11 pr-4 text-[11px] tracking-widest outline-none border border-primary/5 focus:border-accent/40 transition-all placeholder:italic placeholder:font-light"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
