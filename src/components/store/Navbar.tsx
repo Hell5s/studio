@@ -100,7 +100,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         </div>
 
         {/* Navbar principal */}
-        <div className="w-full">
+        <div className={cn("w-full", isTransparent ? "bg-transparent" : "bg-white")}>
           <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
 
             {/* Hamburger mobile */}
