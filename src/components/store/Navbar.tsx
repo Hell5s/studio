@@ -92,7 +92,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         {/* Barra superior — frete grátis (Aparece apenas na home sem scroll) */}
         <div className={cn(
           "w-full bg-primary text-white flex items-center justify-center transition-all duration-500 overflow-hidden",
-          isHomePage && !scrolled ? "h-8 opacity-100" : "h-0 opacity-0"
+          (!isHomePage || scrolled) ? "h-0 opacity-0" : "h-8 opacity-100"
         )}>
           <p className="text-[7px] md:text-[10px] font-medium tracking-[0.2em] md:tracking-[0.5em] uppercase px-4 text-center whitespace-nowrap">
             Frete Grátis • Sul e Sudeste acima de R$ 249
