@@ -66,7 +66,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
               src={img}
               alt={`${name} - Imagem ${idx + 1}`}
               fill
-              className="object-cover transition-transform duration-[2s] group-hover:scale-105"
+              className="object-cover transition-transform duration-[2000ms] group-hover:scale-105"
               priority={idx === 0}
               sizes="(max-width: 1200px) 50vw, 33vw"
             />

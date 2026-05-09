@@ -84,10 +84,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   return (
     <>
       <header className={cn(
-        "fixed left-0 right-0 z-50 transition-all duration-500",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         isTransparent
-          ? "bg-transparent border-transparent top-8"
-          : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-gray-100 top-0"
+          ? "bg-transparent border-transparent"
+          : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-gray-100"
       )}>
 
         {/* Barra superior — frete grátis */}
