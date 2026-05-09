@@ -81,6 +81,10 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const isHomePage = pathname === '/';
   const isTransparent = isHomePage && !scrolled;
 
+  // Estilos de sombra para legibilidade em fundos variados
+  const shadowStyle = isTransparent ? { textShadow: '0 1px 4px rgba(0,0,0,0.4)' } : undefined;
+  const iconFilterStyle = isTransparent ? { filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' } : undefined;
+
   return (
     <>
       <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-500", isTransparent ? "bg-transparent border-transparent" : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/[0.08]")}>
@@ -122,6 +126,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                       ? link.highlight ? "text-accent" : "text-white hover:text-white/70"
                       : link.highlight ? "text-accent" : "text-primary/70 hover:text-primary"
                   )}
+                  style={shadowStyle}
                 >
                   {link.label}
                   <span className={cn(
@@ -174,7 +179,9 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                       isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
                     )}
                   >
-                    <Search className="h-[18px] w-[18px]" />
+                    <div style={iconFilterStyle}>
+                      <Search className="h-[18px] w-[18px]" />
+                    </div>
                   </button>
                 )}
               </div>
@@ -187,19 +194,23 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
                 )}
               >
-                <Package className="h-[18px] w-[18px]" />
-                <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Pedidos</span>
+                <div style={iconFilterStyle} className="flex items-center gap-0.5">
+                  <Package className="h-[18px] w-[18px]" />
+                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Pedidos</span>
+                </div>
               </Link>
 
               {/* Menu de Conta (Popover) */}
-              <LoginDialog 
-                open={false} 
-                onOpenChange={() => {}} 
-                isTransparent={isTransparent}
-                isAdmin={isAdmin}
-                onOpenAdmin={handleAdminClick}
-                onOpenFavorites={onOpenFavorites}
-              />
+              <div style={iconFilterStyle}>
+                <LoginDialog 
+                  open={false} 
+                  onOpenChange={() => {}} 
+                  isTransparent={isTransparent}
+                  isAdmin={isAdmin}
+                  onOpenAdmin={handleAdminClick}
+                  onOpenFavorites={onOpenFavorites}
+                />
+              </div>
 
               {/* Sacola */}
               <button
@@ -209,18 +220,20 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   isTransparent ? "text-white" : "text-primary/50 hover:text-primary"
                 )}
               >
-                <div className="relative">
-                  <ShoppingBag className="h-[18px] w-[18px]" />
-                  {cartCount > 0 && (
-                    <span className={cn(
-                      "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
-                      isTransparent ? "bg-accent" : "bg-primary"
-                    )}>
-                      {cartCount}
-                    </span>
-                  )}
+                <div style={iconFilterStyle} className="flex items-center gap-0.5">
+                  <div className="relative">
+                    <ShoppingBag className="h-[18px] w-[18px]" />
+                    {cartCount > 0 && (
+                      <span className={cn(
+                        "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
+                        isTransparent ? "bg-accent" : "bg-primary"
+                      )}>
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Bolsa</span>
                 </div>
-                <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Bolsa</span>
               </button>
 
               {/* Favoritos */}
@@ -231,18 +244,20 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   isTransparent ? "text-white hover:text-accent" : "text-primary/50 hover:text-accent"
                 )}
               >
-                <div className="relative">
-                  <Heart className="h-[18px] w-[18px]" />
-                  {favoritesCount > 0 && (
-                    <span className={cn(
-                      "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
-                      isTransparent ? "bg-primary" : "bg-accent"
-                    )}>
-                      {favoritesCount}
-                    </span>
-                  )}
+                <div style={iconFilterStyle} className="flex items-center gap-0.5">
+                  <div className="relative">
+                    <Heart className="h-[18px] w-[18px]" />
+                    {favoritesCount > 0 && (
+                      <span className={cn(
+                        "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
+                        isTransparent ? "bg-primary" : "bg-accent"
+                      )}>
+                        {favoritesCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Desejos</span>
                 </div>
-                <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block">Desejos</span>
               </button>
             </div>
           </nav>
