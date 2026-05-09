@@ -17,7 +17,6 @@ import {
   Loader2, 
   User, 
   Package, 
-  Heart, 
   ChevronRight, 
   LogOut, 
   LayoutDashboard

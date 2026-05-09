@@ -205,7 +205,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               <button
                 onClick={onOpenFavorites}
                 className={cn(
-                  "relative p-2.5 transition-colors flex items-center gap-0.5 hidden xs:flex",
+                  "relative p-2.5 transition-colors flex items-center gap-0.5",
                   isTransparent ? "text-white hover:text-accent" : "text-primary/50 hover:text-accent"
                 )}
               >
