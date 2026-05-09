@@ -25,6 +25,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const [searchValue, setSearchValue] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user } = useUser();
   const db = useFirestore();
@@ -68,6 +69,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     } else {
       router.push('/?admin=true');
     }
+    setIsAccountOpen(false);
   };
 
   const navLinks = settings?.navLinks || [
@@ -89,7 +91,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     <>
       <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-500", isTransparent ? "bg-transparent border-transparent" : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/[0.08]")}>
 
-        {/* Barra superior — frete grátis (Aparece apenas na home sem scroll) */}
+        {/* Barra superior — frete grátis */}
         <div className={cn(
           "w-full bg-primary text-white flex items-center justify-center transition-all duration-500 overflow-hidden",
           (!isHomePage || scrolled) ? "h-0 opacity-0 pointer-events-none" : "h-8 opacity-100"
@@ -200,17 +202,41 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 </div>
               </Link>
 
-              {/* Menu de Conta (Popover) */}
+              {/* Menu de Conta */}
               <div style={iconFilterStyle}>
                 <LoginDialog 
-                  open={false} 
-                  onOpenChange={() => {}} 
+                  open={isAccountOpen} 
+                  onOpenChange={setIsAccountOpen} 
                   isTransparent={isTransparent}
                   isAdmin={isAdmin}
                   onOpenAdmin={handleAdminClick}
                   onOpenFavorites={onOpenFavorites}
                 />
               </div>
+
+              {/* Favoritos */}
+              <button
+                onClick={onOpenFavorites}
+                className={cn(
+                  "relative p-2.5 transition-colors flex items-center gap-0.5 hidden xs:flex",
+                  isTransparent ? "text-white hover:text-accent" : "text-primary/50 hover:text-accent"
+                )}
+              >
+                <div style={iconFilterStyle} className="flex items-center gap-0.5">
+                  <div className="relative">
+                    <Heart className="h-[18px] w-[18px]" />
+                    {favoritesCount > 0 && (
+                      <span className={cn(
+                        "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
+                        isTransparent ? "bg-primary" : "bg-accent"
+                      )}>
+                        {favoritesCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Desejos</span>
+                </div>
+              </button>
 
               {/* Sacola */}
               <button
@@ -236,29 +262,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 </div>
               </button>
 
-              {/* Favoritos */}
-              <button
-                onClick={onOpenFavorites}
-                className={cn(
-                  "relative p-2.5 transition-colors flex items-center gap-0.5 hidden xs:flex",
-                  isTransparent ? "text-white hover:text-accent" : "text-primary/50 hover:text-accent"
-                )}
-              >
-                <div style={iconFilterStyle} className="flex items-center gap-0.5">
-                  <div className="relative">
-                    <Heart className="h-[18px] w-[18px]" />
-                    {favoritesCount > 0 && (
-                      <span className={cn(
-                        "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
-                        isTransparent ? "bg-primary" : "bg-accent"
-                      )}>
-                        {favoritesCount}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Desejos</span>
-                </div>
-              </button>
             </div>
           </nav>
         </div>
