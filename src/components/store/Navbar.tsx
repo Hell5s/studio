@@ -82,17 +82,12 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
   return (
     <>
-      <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
-        isTransparent
-          ? "bg-transparent border-transparent"
-          : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/[0.08]"
-      )}>
+      <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-500", isTransparent ? "bg-transparent border-transparent" : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/[0.08]")}>
 
         {/* Barra superior — frete grátis (Aparece apenas na home sem scroll) */}
         <div className={cn(
           "w-full bg-primary text-white flex items-center justify-center transition-all duration-500 overflow-hidden",
-          (!isHomePage || scrolled) ? "h-0 opacity-0" : "h-8 opacity-100"
+          (!isHomePage || scrolled) ? "h-0 opacity-0 pointer-events-none" : "h-8 opacity-100"
         )}>
           <p className="text-[7px] md:text-[10px] font-medium tracking-[0.2em] md:tracking-[0.5em] uppercase px-4 text-center whitespace-nowrap">
             Frete Grátis • Sul e Sudeste acima de R$ 249
@@ -100,7 +95,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         </div>
 
         {/* Navbar principal */}
-        <div className={cn("w-full", isTransparent ? "bg-transparent" : "bg-white")}>
+        <div className={cn("w-full transition-all duration-500", isTransparent ? "bg-transparent" : "bg-white")}>
           <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
 
             {/* Hamburger mobile */}
