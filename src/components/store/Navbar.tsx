@@ -26,7 +26,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { user } = useUser();
   const db = useFirestore();
   const router = useRouter();
@@ -87,7 +86,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         isTransparent
           ? "bg-transparent border-transparent"
-          : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/5"
+          : "bg-white shadow-[0_1px_20px_rgba(0,0,0,0.06)] border-b border-black/[0.08]"
       )}>
 
         {/* Barra superior — frete grátis */}
@@ -198,8 +197,8 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
               {/* Menu de Conta (Popover) */}
               <LoginDialog 
-                open={isLoginOpen} 
-                onOpenChange={setIsLoginOpen} 
+                open={false} 
+                onOpenChange={() => {}} 
                 isTransparent={isTransparent}
                 isAdmin={isAdmin}
                 onOpenAdmin={handleAdminClick}
@@ -289,15 +288,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               >
                 <Package className="h-4 w-4" /> Meus Pedidos
               </Link>
-              <button
-                onClick={() => {
-                  setIsLoginOpen(true);
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center gap-4 py-5 border-b border-gray-50 text-[13px] font-bold uppercase tracking-[0.2em] text-primary/70 hover:text-accent transition-colors w-full text-left"
-              >
-                <User className="h-4 w-4" /> Minha Conta
-              </button>
             </nav>
             <div className="p-8 border-t border-gray-100 bg-secondary/10">
               <form onSubmit={handleSearchSubmit} className="relative">
