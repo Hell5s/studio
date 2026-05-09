@@ -135,12 +135,15 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
             <div className="absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
               <Link href="/">
-                <div className={cn(
-                  "transition-all duration-500 scale-90 md:scale-100",
-                  isTransparent 
-                    ? "brightness-0 invert [&_#logo-ball]:opacity-0 [&_#logo-ball]:pointer-events-none [&_#logo-ball]:w-0 [&_#logo-ball]:overflow-hidden" 
-                    : "[&_#logo-ball]:opacity-100 [&_#logo-ball]:w-auto"
-                )}>
+                <div 
+                  className={cn(
+                    "transition-all duration-500 scale-90 md:scale-100",
+                    isTransparent 
+                      ? "brightness-0 invert [&_#logo-ball]:opacity-0 [&_#logo-ball]:pointer-events-none [&_#logo-ball]:w-0 [&_#logo-ball]:overflow-hidden" 
+                      : "[&_#logo-ball]:opacity-100 [&_#logo-ball]:w-auto"
+                  )}
+                  style={isTransparent ? { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' } : undefined}
+                >
                   <LogoMark />
                 </div>
               </Link>
@@ -247,7 +250,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Bolsa</span>
                 </div>
               </button>
-
             </div>
           </nav>
         </div>
