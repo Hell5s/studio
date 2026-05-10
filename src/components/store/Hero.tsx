@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, limit, doc } from 'firebase/firestore';
+import { collection, query, limit, doc } from 'firebase/firestore';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
@@ -33,7 +33,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     if (!db) return null;
     return query(
       collection(db, 'banners'), 
-      where('active', '==', true), 
       limit(10)
     );
   }, [db]);
