@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useMemo } from 'react';
@@ -40,8 +41,8 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, query, orderBy, doc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, uploadString } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 
 export function BannerManagement() {
@@ -167,18 +168,30 @@ export function BannerManagement() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!storage) {
+      toast({ title: "Erro de Configuração", description: "O serviço de arquivos (Storage) não foi inicializado corretamente.", variant: "destructive" });
+      return;
+    }
+
     setIsUploading(true);
     setPreviewImage('');
     try {
-      const storageRef = ref(storage!, `banners/${mediaType === 'video' ? 'videos' : 'images'}/${Date.now()}-${file.name}`);
+      const path = `banners/${mediaType === 'video' ? 'videos' : 'images'}/${Date.now()}-${file.name}`;
+      const storageRef = ref(storage, path);
       const snapshot = await uploadBytes(storageRef, file, { contentType: file.type });
       const url = await getDownloadURL(snapshot.ref);
+      
       setPreviewImage(url);
       setImagePosition({ x: 50, y: 20 });
       setZoom(100);
       toast({ title: "Arquivo carregado!" });
     } catch (error: any) {
-      toast({ title: "Erro no upload", variant: "destructive" });
+      console.error("Storage Upload Error:", error);
+      toast({ 
+        title: "Erro no upload", 
+        description: error.message || "Erro desconhecido. Verifique as regras de segurança do Storage.",
+        variant: "destructive" 
+      });
     } finally {
       setIsUploading(false);
     }
@@ -190,13 +203,11 @@ export function BannerManagement() {
       let finalUrl = previewImage;
 
       if (previewImage.startsWith('data:')) {
-        const { ref, uploadString, getDownloadURL } = await import('firebase/storage');
         const storageRef = ref(storage!, `banners/${Date.now()}-ai-banner.jpg`);
         const snapshot = await uploadString(storageRef, previewImage, 'data_url');
         finalUrl = await getDownloadURL(snapshot.ref);
       }
 
-      const { addDoc } = await import('firebase/firestore');
       await addDoc(collection(db, 'banners'), {
         ...bannerData,
         imageUrl: finalUrl,
@@ -217,7 +228,8 @@ export function BannerManagement() {
       setZoom(100);
       toast({ title: "Banner Ativado!" });
     } catch (error: any) {
-      toast({ title: "Erro ao salvar", variant: "destructive" });
+      console.error("Firestore Save Error:", error);
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
     }
   };
 
