@@ -42,7 +42,7 @@ import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp, addDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, uploadString } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, uploadString, deleteObject } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 
 export function BannerManagement() {
@@ -237,9 +237,21 @@ export function BannerManagement() {
     updateDocumentNonBlocking(doc(db, 'banners', banner.id), { active: !banner.active });
   };
 
-  const handleDelete = (id: string) => {
-    if (!id) return;
-    deleteDocumentNonBlocking(doc(db, 'banners', id));
+  const handleDelete = async (banner: any) => {
+    if (!banner?.id) return;
+    
+    // Se a imagem estiver no nosso Storage, deleta o arquivo físico primeiro
+    if (banner.imageUrl && banner.imageUrl.includes('firebasestorage.googleapis.com')) {
+      try {
+        const fileRef = ref(storage!, banner.imageUrl);
+        await deleteObject(fileRef);
+      } catch (error: any) {
+        console.warn("Arquivo não encontrado no Storage ou erro na remoção:", error.message);
+        // Prosseguimos com a remoção do doc mesmo se o arquivo não existir
+      }
+    }
+
+    deleteDocumentNonBlocking(doc(db, 'banners', banner.id));
     toast({ title: "Banner removido" });
   };
 
@@ -480,7 +492,7 @@ export function BannerManagement() {
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
-                    <button onClick={() => handleDelete(banner.id)} className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={() => handleDelete(banner)} className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
