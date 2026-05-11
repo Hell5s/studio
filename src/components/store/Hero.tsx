@@ -180,7 +180,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               {/* Overlay suave para legibilidade */}
               <div className="absolute inset-0 bg-black/30 pointer-events-none" />
               
-              <div className="container mx-auto h-full px-5 md:px-12 flex items-end pb-8 md:pb-32 relative z-10 pointer-events-none">
+              <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10 pointer-events-none">
                 <div className={cn(
                   "max-w-2xl space-y-4 md:space-y-10 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
