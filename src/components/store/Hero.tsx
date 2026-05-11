@@ -114,19 +114,21 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   if (!displayBanners.length && isBannersLoading) {
     return (
       <section
-        className="relative w-full overflow-hidden flex items-center justify-center bg-[#1a0a0e]"
+        className="relative w-full overflow-hidden animate-pulse"
         style={{ 
           width: '100%',
           aspectRatio: '16/9',
           maxHeight: '95vh',
           minHeight: '400px',
+          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 50%, #1a0a0e 100%)'
         }}
       >
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-accent/20 mx-auto" />
-          <p className="text-[10px] font-bold uppercase tracking-[0.6em] text-white/20 animate-pulse">
-            Sincronizando Vitrine...
-          </p>
+        <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10">
+          <div className="space-y-4">
+            <div className="w-64 h-6 bg-white/10 rounded animate-pulse" />
+            <div className="w-48 h-3 bg-white/10 rounded mt-3 animate-pulse" />
+            <div className="w-32 h-10 bg-white/10 rounded-full mt-6 animate-pulse" />
+          </div>
         </div>
       </section>
     );
