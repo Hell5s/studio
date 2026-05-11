@@ -77,7 +77,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     if (cachedBanner) {
       return [cachedBanner];
     }
-    // Retorna vazio para que os fallbacks de UI (skeleton ou tela elegante) assumam
+    // Retorna vazio para que os fallbacks de UI assumam
     return [];
   }, [banners, cachedBanner]);
 
@@ -143,7 +143,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         
         {/* Decorative circle overlay */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-           <div className="w-[85%] h-[85%] max-w-[650px] max-h-[650px] border border-white/10 rounded-full animate-spin-slow" />
+           <div className="w-[85%] h-[85%] max-w-[650px] max-h-[650px] border border-white/5 rounded-full animate-spin-slow" />
         </div>
       </section>
     );
