@@ -102,9 +102,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         className="relative w-full overflow-hidden animate-pulse"
         style={{ 
           width: '100%',
-          aspectRatio: '16/9',
-          maxHeight: '95vh',
-          minHeight: '400px',
+          height: '100vh',
+          maxHeight: '100vh',
+          minHeight: '600px',
           background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 50%, #1a0a0e 100%)'
         }}
       >
@@ -126,9 +126,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         className="relative w-full overflow-hidden flex items-center justify-center"
         style={{ 
           width: '100%',
-          aspectRatio: '16/9',
-          maxHeight: '95vh',
-          minHeight: '400px',
+          height: '100vh',
+          maxHeight: '100vh',
+          minHeight: '600px',
           background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 60%, #1a0a0e 100%)'
         }}
       >
@@ -154,9 +154,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
       className="relative w-full overflow-hidden bg-black group"
       style={{ 
         width: '100%',
-        aspectRatio: '16/9',
-        maxHeight: '95vh',
-        minHeight: '400px'
+        height: '100vh',
+        maxHeight: '100vh',
+        minHeight: '600px'
       }}
     >
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
