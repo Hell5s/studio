@@ -187,12 +187,12 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 )}>
                   <div className="space-y-2 md:space-y-4">
                     <h1 
-                      className="text-2xl md:text-7xl font-headline font-bold text-white uppercase tracking-tight leading-[0.9]"
+                      className="text-lg md:text-4xl font-headline font-bold text-white uppercase tracking-[0.01em] leading-[0.9]"
                     >
                       {banner.title || ''}
                     </h1>
                     <p 
-                      className="text-xs md:text-2xl text-white/90 font-light italic max-w-lg leading-relaxed"
+                      className="text-xs md:text-base text-white/90 font-light italic max-w-lg leading-relaxed"
                     >
                       {banner.subtitle || ''}
                     </p>
