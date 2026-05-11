@@ -105,7 +105,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
           height: '100vh',
           maxHeight: '100vh',
           minHeight: '600px',
-          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 50%, #1a0a0e 100%)'
+          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 50%, #1a0a0e 100%)',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: 'translateZ(0)'
         }}
       >
         <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10">
@@ -129,7 +131,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
           height: '100vh',
           maxHeight: '100vh',
           minHeight: '600px',
-          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 60%, #1a0a0e 100%)'
+          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 60%, #1a0a0e 100%)',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: 'translateZ(0)'
         }}
       >
         <div className="relative z-10 text-center space-y-4 md:space-y-6 animate-in fade-in zoom-in-95 duration-1000">
@@ -156,7 +160,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         width: '100%',
         height: '100vh',
         maxHeight: '100vh',
-        minHeight: '600px'
+        minHeight: '600px',
+        WebkitBackfaceVisibility: 'hidden',
+        transform: 'translateZ(0)'
       }}
     >
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
@@ -174,6 +180,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   style={{
                     objectPosition: 'center center',
                     willChange: 'transform',
+                    objectFit: 'cover',
+                    imageRendering: 'high-quality' as any
                   }}
                 >
                   <source src={banner.imageUrl} type="video/mp4" />
@@ -188,6 +196,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                       ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
                       : 'center center',
                     backgroundRepeat: 'no-repeat',
+                    imageRendering: 'high-quality' as any,
+                    WebkitFontSmoothing: 'antialiased'
                   }} 
                   role="img"
                   aria-label={banner.title || "Banner Toda Bela"}
