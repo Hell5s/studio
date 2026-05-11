@@ -42,7 +42,7 @@ import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp, addDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, uploadString, deleteObject } from 'firebase/storage';
+import { ref, deleteObject } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 
 export function BannerManagement() {
@@ -67,7 +67,6 @@ export function BannerManagement() {
   const [editingBanner, setEditingBanner] = useState<any>(null);
   const [editData, setEditData] = useState({ title: '', subtitle: '', ctaText: '', duration: 6 });
 
-  // IA Textos States
   const [showAiTextPanel, setShowAiTextPanel] = useState(false);
   const [aiTextContext, setAiTextContext] = useState('');
   const textSuggestions = ["Plus Size", "Dia das Mães", "Inverno", "Festa & Glamour", "Moda Praia", "Estilo Executivo"];
@@ -152,7 +151,7 @@ export function BannerManagement() {
     try {
       const result = await generateBannerTexts({ 
         concept: combinedContext,
-        imageUrl: previewImage.startsWith('data:') || previewImage.startsWith('https://firebasestorage') ? previewImage : undefined 
+        imageUrl: previewImage.startsWith('data:') || previewImage.includes('cloudinary.com') ? previewImage : undefined 
       });
       setBannerData({ title: result.title, subtitle: result.subtitle, ctaText: result.ctaText });
       toast({ title: "Textos criados!" });
@@ -168,28 +167,39 @@ export function BannerManagement() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!storage) {
-      toast({ title: "Erro de Configuração", description: "O serviço de arquivos (Storage) não foi inicializado corretamente.", variant: "destructive" });
-      return;
-    }
-
     setIsUploading(true);
     setPreviewImage('');
     try {
-      const path = `banners/${mediaType === 'video' ? 'videos' : 'images'}/${Date.now()}-${file.name}`;
-      const storageRef = ref(storage, path);
-      const snapshot = await uploadBytes(storageRef, file, { contentType: file.type });
-      const url = await getDownloadURL(snapshot.ref);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'todabela_upload');
+
+      const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
+      const uploadUrl = `https://api.cloudinary.com/v1_1/djtuzexfd/${resourceType}/upload`;
+
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Falha no upload para o Cloudinary');
+      }
+
+      const data = await response.json();
+      const url = data.secure_url;
       
       setPreviewImage(url);
+      setMediaType(resourceType === 'video' ? 'video' : 'image');
       setImagePosition({ x: 50, y: 20 });
       setZoom(100);
-      toast({ title: "Arquivo carregado!" });
+      toast({ title: "Mídia carregada com sucesso!" });
     } catch (error: any) {
-      console.error("Storage Upload Error:", error);
+      console.error("Cloudinary Upload Error:", error);
       toast({ 
         title: "Erro no upload", 
-        description: error.message || "Erro desconhecido. Verifique as regras de segurança do Storage.",
+        description: error.message || "Não foi possível enviar o arquivo.",
         variant: "destructive" 
       });
     } finally {
@@ -202,10 +212,20 @@ export function BannerManagement() {
     try {
       let finalUrl = previewImage;
 
+      // Se for imagem gerada por IA (Base64), envia para o Cloudinary
       if (previewImage.startsWith('data:')) {
-        const storageRef = ref(storage!, `banners/${Date.now()}-ai-banner.jpg`);
-        const snapshot = await uploadString(storageRef, previewImage, 'data_url');
-        finalUrl = await getDownloadURL(snapshot.ref);
+        const formData = new FormData();
+        formData.append('file', previewImage);
+        formData.append('upload_preset', 'todabela_upload');
+
+        const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error('Falha ao salvar imagem da IA no Cloudinary');
+        const data = await response.json();
+        finalUrl = data.secure_url;
       }
 
       await addDoc(collection(db, 'banners'), {
@@ -228,7 +248,6 @@ export function BannerManagement() {
       setZoom(100);
       toast({ title: "Banner Ativado!" });
     } catch (error: any) {
-      console.error("Firestore Save Error:", error);
       toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
     }
   };
@@ -240,14 +259,13 @@ export function BannerManagement() {
   const handleDelete = async (banner: any) => {
     if (!banner?.id) return;
     
-    // Se a imagem estiver no nosso Storage, deleta o arquivo físico primeiro
+    // Se a imagem for legado do Firebase Storage, tenta deletar
     if (banner.imageUrl && banner.imageUrl.includes('firebasestorage.googleapis.com')) {
       try {
         const fileRef = ref(storage!, banner.imageUrl);
         await deleteObject(fileRef);
-      } catch (error: any) {
-        console.warn("Arquivo não encontrado no Storage ou erro na remoção:", error.message);
-        // Prosseguimos com a remoção do doc mesmo se o arquivo não existir
+      } catch (error) {
+        console.warn("Erro ao deletar arquivo legado do Storage");
       }
     }
 
@@ -259,7 +277,7 @@ export function BannerManagement() {
     <div className="space-y-12 animate-in fade-in duration-1000">
       <div className="flex flex-col gap-2">
         <h4 className="text-3xl font-headline font-bold text-primary">Estúdio Criativo</h4>
-        <p className="text-sm text-muted-foreground italic font-light">Gerencie campanhas com ordem e tempo de exibição personalizados.</p>
+        <p className="text-sm text-muted-foreground italic font-light">Gerencie campanhas com upload via Cloudinary e inteligência artificial.</p>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-10">
@@ -311,9 +329,9 @@ export function BannerManagement() {
                   {isGenerating ? <Loader2 className="animate-spin h-5 w-5 mr-3" /> : <Sparkles className="h-5 w-5 mr-3" />} Gerar com IA
                 </Button>
                 <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="rounded-full h-16 border-accent text-accent shadow-xl font-bold uppercase tracking-widest text-[11px]">
-                  {isUploading ? <Loader2 className="animate-spin h-5 w-5 mr-3" /> : <Upload className="h-5 w-5 mr-3" />} Upload {mediaType === 'video' ? 'Vídeo' : 'Foto'}
+                  {isUploading ? <Loader2 className="animate-spin h-5 w-5 mr-3" /> : <Upload className="h-5 w-5 mr-3" />} Upload Foto/Vídeo
                 </Button>
-                <input type="file" ref={fileInputRef} className="hidden" accept={mediaType === 'video' ? 'video/*' : 'image/*'} onChange={handleFileUpload} />
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
               </div>
             </div>
 
