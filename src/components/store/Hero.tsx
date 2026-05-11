@@ -68,17 +68,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
-  // Fallback se não houver NADA (nem banners, nem cache)
-  const defaultBanner = {
-    imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1920&q=80',
-    title: 'Essência Toda Bela',
-    subtitle: 'Moda feminina com propósito e sofisticação.',
-    ctaText: 'Ver Coleção',
-    mediaType: 'image',
-    duration: 6,
-    imagePosition: { x: 50, y: 50 }
-  };
-
   const displayBanners = useMemo(() => {
     // Se temos banners do Firestore, usamos eles
     if (banners && banners.length > 0) {
@@ -88,13 +77,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     if (cachedBanner) {
       return [cachedBanner];
     }
-    // Se carregou e está vazio, ou não temos cache, usamos o default
-    if (!isBannersLoading) {
-      return [defaultBanner];
-    }
-    // Enquanto carrega e não tem nada, retorna lista vazia para o placeholder de loading
+    // Retorna vazio para que os fallbacks de UI (skeleton ou tela elegante) assumam
     return [];
-  }, [banners, cachedBanner, isBannersLoading]);
+  }, [banners, cachedBanner]);
 
   // Autoplay baseado na duração customizada de cada banner
   useEffect(() => {
@@ -110,7 +95,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return () => clearTimeout(timer);
   }, [emblaApi, selectedIndex, displayBanners]);
 
-  // Estado de carregamento inicial (Gradiante Editorial)
+  // 1. ESTADO DE CARREGAMENTO (SKELETON EDITORIAL)
   if (!displayBanners.length && isBannersLoading) {
     return (
       <section
@@ -129,6 +114,36 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
             <div className="w-48 h-3 bg-white/10 rounded mt-3 animate-pulse" />
             <div className="w-32 h-10 bg-white/10 rounded-full mt-6 animate-pulse" />
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  // 2. ESTADO SEM BANNERS (TELA ELEGANTE LOGO)
+  if (!displayBanners.length && !isBannersLoading) {
+    return (
+      <section
+        className="relative w-full overflow-hidden flex items-center justify-center"
+        style={{ 
+          width: '100%',
+          aspectRatio: '16/9',
+          maxHeight: '95vh',
+          minHeight: '400px',
+          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 60%, #1a0a0e 100%)'
+        }}
+      >
+        <div className="relative z-10 text-center space-y-4 md:space-y-6 animate-in fade-in zoom-in-95 duration-1000">
+           <h1 className="font-headline text-4xl md:text-7xl text-white tracking-[0.1em] uppercase leading-none">
+             Toda <span className="italic font-light text-accent">Bela</span>
+           </h1>
+           <p className="text-[10px] tracking-[0.5em] text-white/40 uppercase font-bold">
+             MODA FEMININA
+           </p>
+        </div>
+        
+        {/* Decorative circle overlay */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+           <div className="w-[85%] h-[85%] max-w-[650px] max-h-[650px] border border-white/10 rounded-full animate-spin-slow" />
         </div>
       </section>
     );
@@ -167,7 +182,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 <div
                   className="absolute inset-0 w-full h-full"
                   style={{
-                    backgroundImage: `url(${banner.imageUrl || defaultBanner.imageUrl})`,
+                    backgroundImage: `url(${banner.imageUrl})`,
                     backgroundSize: 'cover',
                     backgroundPosition: banner.imagePosition 
                       ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
