@@ -52,6 +52,7 @@ export function BannerManagement() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
+  const dragContainerRef = useRef<HTMLDivElement>(null);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingTexts, setIsGeneratingTexts] = useState(false);
@@ -76,6 +77,8 @@ export function BannerManagement() {
     imageZoom: 100,
     imageUrl: ''
   });
+
+  const [isDragging, setIsDragging] = useState(false);
 
   const [showAiTextPanel, setShowAiTextPanel] = useState(false);
   const [aiTextContext, setAiTextContext] = useState('');
@@ -287,6 +290,33 @@ export function BannerManagement() {
 
     deleteDocumentNonBlocking(doc(db, 'banners', banner.id));
     toast({ title: "Banner removido" });
+  };
+
+  // Drag logic for background position
+  const handleDragStart = (e: React.MouseEvent) => {
+    if (editingBanner?.mediaType === 'video') return;
+    setIsDragging(true);
+    handleDragMove(e);
+  };
+
+  const handleDragMove = (e: React.MouseEvent) => {
+    if (!isDragging || !dragContainerRef.current) return;
+    
+    const rect = dragContainerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    setEditData(prev => ({
+      ...prev,
+      imagePosition: {
+        x: Math.max(0, Math.min(100, Math.round(x))),
+        y: Math.max(0, Math.min(100, Math.round(y)))
+      }
+    }));
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
   };
 
   return (
@@ -571,34 +601,48 @@ export function BannerManagement() {
             </DialogHeader>
           </div>
           <div className="p-8 space-y-4">
-            <div className="rounded-xl overflow-hidden aspect-video bg-black relative group">
-              {editingBanner?.mediaType === 'video' ? (
-                <video key={editData.imageUrl} muted loop playsInline className="w-full h-full object-cover">
-                  <source src={editData.imageUrl} type="video/mp4" />
-                </video>
-              ) : (
-                <div 
-                  className="w-full h-full"
-                  style={{
-                    backgroundImage: `url(${editData.imageUrl})`,
-                    backgroundSize: `${editData.imageZoom}%`,
-                    backgroundPosition: `${editData.imagePosition.x}% ${editData.imagePosition.y}%`,
-                    backgroundRepeat: 'no-repeat'
-                  }}
-                />
-              )}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
-                 <Button 
-                  onClick={() => replaceFileInputRef.current?.click()} 
-                  disabled={isUploading}
-                  className="rounded-full bg-white text-primary text-[10px] font-bold uppercase tracking-widest px-6 h-10 shadow-xl"
-                 >
-                   {isUploading ? <Loader2 className="animate-spin h-3.5 w-3.5 mr-2" /> : <RefreshCw className="h-3.5 w-3.5 mr-2" />}
-                   Substituir Mídia
-                 </Button>
-                 <input type="file" ref={replaceFileInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, true)} />
+            <div className="space-y-2">
+               <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Preview Interativo (Arraste para reposicionar)</Label>
+               <div 
+                ref={dragContainerRef}
+                className={cn(
+                  "rounded-xl overflow-hidden aspect-video bg-black relative group select-none",
+                  editingBanner?.mediaType !== 'video' ? "cursor-move" : "cursor-default"
+                )}
+                onMouseDown={handleDragStart}
+                onMouseMove={handleDragMove}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
+               >
+                {editingBanner?.mediaType === 'video' ? (
+                  <video key={editData.imageUrl} muted loop playsInline className="w-full h-full object-cover">
+                    <source src={editData.imageUrl} type="video/mp4" />
+                  </video>
+                ) : (
+                  <div 
+                    className="w-full h-full pointer-events-none"
+                    style={{
+                      backgroundImage: `url(${editData.imageUrl})`,
+                      backgroundSize: `${editData.imageZoom}%`,
+                      backgroundPosition: `${editData.imagePosition.x}% ${editData.imagePosition.y}%`,
+                      backgroundRepeat: 'no-repeat'
+                    }}
+                  />
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+                   <Button 
+                    onClick={() => replaceFileInputRef.current?.click()} 
+                    disabled={isUploading}
+                    className="rounded-full bg-white text-primary text-[10px] font-bold uppercase tracking-widest px-6 h-10 shadow-xl"
+                   >
+                     {isUploading ? <Loader2 className="animate-spin h-3.5 w-3.5 mr-2" /> : <RefreshCw className="h-3.5 w-3.5 mr-2" />}
+                     Substituir Mídia
+                   </Button>
+                   <input type="file" ref={replaceFileInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, true)} />
+                </div>
               </div>
             </div>
+
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Título</Label>
@@ -641,34 +685,12 @@ export function BannerManagement() {
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-primary/5">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Enquadramento</Label>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-[9px] font-bold uppercase text-primary/40">Posição Horizontal (X): {editData.imagePosition.x}%</Label>
-                    </div>
-                    <Slider 
-                      value={[editData.imagePosition.x]} 
-                      min={0} 
-                      max={100} 
-                      step={1} 
-                      onValueChange={([v]) => setEditData(prev => ({ ...prev, imagePosition: { ...prev.imagePosition, x: v } }))} 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-[9px] font-bold uppercase text-primary/40">Posição Vertical (Y): {editData.imagePosition.y}%</Label>
-                    </div>
-                    <Slider 
-                      value={[editData.imagePosition.y]} 
-                      min={0} 
-                      max={100} 
-                      step={1} 
-                      onValueChange={([v]) => setEditData(prev => ({ ...prev, imagePosition: { ...prev.imagePosition, y: v } }))} 
-                    />
-                  </div>
-                </div>
+              <div className="flex justify-between items-center pt-2 px-1">
+                 <div className="flex flex-col">
+                    <span className="text-[8px] font-bold uppercase text-muted-foreground">Posição Salva</span>
+                    <span className="text-[10px] font-mono text-accent">X: {editData.imagePosition.x}% Y: {editData.imagePosition.y}%</span>
+                 </div>
+                 <Button variant="ghost" size="sm" onClick={() => setEditData(prev => ({ ...prev, imagePosition: { x: 50, y: 50 } }))} className="h-7 text-[8px] font-bold uppercase border border-primary/5">Resetar Centro</Button>
               </div>
             </div>
           </div>
@@ -704,4 +726,3 @@ export function BannerManagement() {
     </div>
   );
 }
-
