@@ -8,9 +8,11 @@ import { collection, query, limit, doc } from 'firebase/firestore';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const db = useFirestore();
+  const isMobile = useIsMobile();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [hasHydrated, setHasHydrated] = useState(false);
   
@@ -109,9 +111,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         className="relative w-full overflow-hidden flex items-center justify-center"
         style={{ 
           width: '100%',
-          height: '100vh',
+          height: isMobile ? '70vh' : '100vh',
           maxHeight: '100vh',
-          minHeight: '600px',
+          minHeight: isMobile ? '450px' : '600px',
           background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 60%, #1a0a0e 100%)',
           WebkitBackfaceVisibility: 'hidden',
           transform: 'translateZ(0)'
@@ -139,9 +141,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         className="relative w-full overflow-hidden animate-pulse"
         style={{ 
           width: '100%',
-          height: '100vh',
+          height: isMobile ? '70vh' : '100vh',
           maxHeight: '100vh',
-          minHeight: '600px',
+          minHeight: isMobile ? '450px' : '600px',
           background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 50%, #1a0a0e 100%)',
           WebkitBackfaceVisibility: 'hidden',
           transform: 'translateZ(0)'
@@ -163,9 +165,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
       className="relative w-full overflow-hidden bg-black group"
       style={{ 
         width: '100%',
-        height: '100vh',
+        height: isMobile ? '70vh' : '100vh',
         maxHeight: '100vh',
-        minHeight: '600px',
+        minHeight: isMobile ? '450px' : '600px',
         WebkitBackfaceVisibility: 'hidden',
         backfaceVisibility: 'hidden',
         perspective: '1000px',
@@ -178,6 +180,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
             const optimizedUrl = banner.imageUrl?.includes('cloudinary') 
               ? banner.imageUrl.replace('/upload/', '/upload/q_100,f_auto/') 
               : banner.imageUrl;
+
+            // Define se a imagem deve ser contain ou cover
+            // Desktop: contain (quadro) | Mobile: cover (preenche)
+            const defaultSize = isMobile ? 'cover' : 'contain';
 
             return (
               <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full bg-[#1a0a0e]">
@@ -203,7 +209,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     className="absolute inset-0 w-full h-full"
                     style={{
                       backgroundImage: `url(${optimizedUrl})`,
-                      backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : 'contain',
+                      backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : defaultSize,
                       backgroundPosition: banner.imagePosition 
                         ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
                         : 'center center',
