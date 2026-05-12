@@ -1,11 +1,10 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   ShoppingBag, 
   Users, 
-  Truck, 
   BarChart3, 
   ArrowRight, 
   AlertCircle,
@@ -14,33 +13,96 @@ import {
   Package,
   Image as ImageIcon,
   Tag,
-  Settings
+  Settings,
+  Calendar
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit, where } from 'firebase/firestore';
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
+import { cn } from '@/lib/utils';
 
 export function AdminOverview({ onNavigate }: { onNavigate: (tab: any) => void }) {
   const db = useFirestore();
+  const [timeframe, setTimeframe] = useState(30);
 
-  // Consultas para o Dashboard
-  const ordersQuery = useMemoFirebase(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(5)), [db]);
-  const { data: recentOrders } = useCollection(ordersQuery);
+  // Consulta de todos os pedidos para métricas e gráfico
+  const allOrdersQuery = useMemoFirebase(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc')), [db]);
+  const { data: allOrders } = useCollection(allOrdersQuery);
+
+  // Consulta para pedidos recentes na tabela
+  const recentOrdersQuery = useMemoFirebase(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(5)), [db]);
+  const { data: recentOrders } = useCollection(recentOrdersQuery);
 
   const pendingQuery = useMemoFirebase(() => query(collection(db, 'orders'), where('status', '==', 'pending')), [db]);
   const { data: pendingOrders } = useCollection(pendingQuery);
 
-  const stats = [
-    { label: "Vendas Brutas (Mês)", value: "R$ 0,00", icon: <TrendingUp className="h-5 w-5" />, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Pedidos Pendentes", value: pendingOrders?.length || 0, icon: <Clock className="h-5 w-5" />, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Novas Clientes", value: "0", icon: <Users className="h-5 w-5" />, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Ticket Médio", value: "R$ 0,00", icon: <BarChart3 className="h-5 w-5" />, color: "text-purple-600", bg: "bg-purple-50" },
-  ];
+  // Processamento de dados para o gráfico
+  const chartData = useMemo(() => {
+    if (!allOrders) return [];
+    
+    const now = new Date();
+    const startDate = new Date();
+    startDate.setDate(now.getDate() - timeframe);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const dataMap = new Map();
+    
+    // Inicializa o mapa com todas as datas do período para não haver buracos
+    for (let i = 0; i <= timeframe; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      dataMap.set(dateStr, 0);
+    }
+
+    allOrders.forEach(order => {
+      const date = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+      if (date >= startDate) {
+        const dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        if (dataMap.has(dateStr)) {
+          dataMap.set(dateStr, dataMap.get(dateStr) + (order.total || 0));
+        }
+      }
+    });
+
+    return Array.from(dataMap.entries()).map(([date, value]) => ({ date, value }));
+  }, [allOrders, timeframe]);
+
+  // Cálculo de Métricas Reais
+  const stats = useMemo(() => {
+    if (!allOrders) return [
+      { label: "Vendas Brutas", value: "R$ 0,00", icon: <TrendingUp className="h-5 w-5" />, color: "text-emerald-600", bg: "bg-emerald-50" },
+      { label: "Pedidos Pendentes", value: 0, icon: <Clock className="h-5 w-5" />, color: "text-amber-600", bg: "bg-amber-50" },
+      { label: "Novas Clientes", value: "0", icon: <Users className="h-5 w-5" />, color: "text-blue-600", bg: "bg-blue-50" },
+      { label: "Ticket Médio", value: "R$ 0,00", icon: <BarChart3 className="h-5 w-5" />, color: "text-purple-600", bg: "bg-purple-50" },
+    ];
+
+    const totalRevenue = allOrders.reduce((acc, o) => acc + (o.total || 0), 0);
+    const uniqueCustomers = new Set(allOrders.map(o => o.customer?.email?.toLowerCase())).size;
+    const avgTicket = allOrders.length > 0 ? totalRevenue / allOrders.length : 0;
+
+    return [
+      { label: "Vendas Brutas (Total)", value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalRevenue), icon: <TrendingUp className="h-5 w-5" />, color: "text-emerald-600", bg: "bg-emerald-50" },
+      { label: "Pedidos Pendentes", value: pendingOrders?.length || 0, icon: <Clock className="h-5 w-5" />, color: "text-amber-600", bg: "bg-amber-50" },
+      { label: "Total de Clientes", value: uniqueCustomers, icon: <Users className="h-5 w-5" />, color: "text-blue-600", bg: "bg-blue-50" },
+      { label: "Ticket Médio", value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(avgTicket), icon: <BarChart3 className="h-5 w-5" />, color: "text-purple-600", bg: "bg-purple-50" },
+    ];
+  }, [allOrders, pendingOrders]);
 
   return (
     <div className="space-y-10">
+      {/* Metrics Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
           <Card key={i} className="p-6 border-none shadow-sm flex items-center gap-5 bg-white rounded-[2rem]">
@@ -55,8 +117,86 @@ export function AdminOverview({ onNavigate }: { onNavigate: (tab: any) => void }
         ))}
       </div>
 
+      {/* Sales Chart Section */}
+      <Card className="p-8 border-none shadow-sm bg-white rounded-[2.5rem] space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-1">
+            <h4 className="font-bold text-primary flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-accent" />
+              Desempenho de Vendas
+            </h4>
+            <p className="text-xs text-muted-foreground italic">Faturamento por dia no período selecionado.</p>
+          </div>
+          <div className="flex bg-secondary/20 p-1 rounded-xl">
+            {[
+              { label: '7 Dias', value: 7 },
+              { label: '30 Dias', value: 30 },
+              { label: '90 Dias', value: 90 },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setTimeframe(opt.value)}
+                className={cn(
+                  "px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all",
+                  timeframe === opt.value ? "bg-white text-primary shadow-sm" : "text-primary/40 hover:text-primary"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="h-[350px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#C7A17A" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#C7A17A" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="date" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fontSize: 10, fontWeight: 'bold', fill: '#2A1F22', opacity: 0.4 }} 
+                minTickGap={30}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fontSize: 10, fontWeight: 'bold', fill: '#2A1F22', opacity: 0.4 }}
+                tickFormatter={(val) => `R$ ${val}`}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  borderRadius: '1.5rem', 
+                  border: 'none', 
+                  boxShadow: '0 20px 50px rgba(110, 60, 71, 0.1)',
+                  padding: '1rem'
+                }}
+                itemStyle={{ fontSize: '12px', fontWeight: 'bold', color: '#6E3C47' }}
+                labelStyle={{ fontSize: '10px', textTransform: 'uppercase', color: '#C7A17A', marginBottom: '4px', fontWeight: 'black' }}
+                formatter={(val: number) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val), 'Vendas']}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="value" 
+                stroke="#6E3C47" 
+                strokeWidth={3}
+                fillOpacity={1} 
+                fill="url(#colorValue)" 
+                animationDuration={1500}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
+
       <div className="grid lg:grid-cols-12 gap-8">
-        {/* Pedidos Recentes */}
+        {/* Recent Orders Table */}
         <Card className="lg:col-span-8 p-0 border-none shadow-sm overflow-hidden bg-white rounded-[2.5rem]">
           <div className="p-8 border-b border-gray-100 flex justify-between items-center">
             <h4 className="font-bold text-primary flex items-center gap-2">
@@ -103,7 +243,7 @@ export function AdminOverview({ onNavigate }: { onNavigate: (tab: any) => void }
           </div>
         </Card>
 
-        {/* Atalhos Rápidos */}
+        {/* Quick Actions / Shortcuts */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="p-8 border-none shadow-sm bg-primary text-white space-y-6 rounded-[2.5rem]">
             <div className="flex items-center gap-3">
