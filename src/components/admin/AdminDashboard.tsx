@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingBag, 
   Users, 
@@ -19,12 +19,16 @@ import {
   LogOut,
   Palette,
   Loader2,
-  Layout
+  Layout,
+  Bell,
+  BellRing,
+  ChevronRight,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, orderBy, limit } from 'firebase/firestore';
 import { ProductManagement } from './ProductManagement';
 import { OrderManagement } from './OrderManagement';
 import { BannerManagement } from './BannerManagement';
@@ -36,6 +40,15 @@ import { AdminSettings } from './AdminSettings';
 import { AdminCategories } from './AdminCategories';
 import { AddProductDialog } from './AddProductDialog';
 import { AdminHeaderSettings } from './AdminHeaderSettings';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface AdminDashboardProps {
   productsCount: number;
@@ -49,14 +62,94 @@ type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'coupons' | 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  
+  // Real-time Notifications State
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const initialLoadRef = useRef(true);
 
   const adminDocRef = useMemoFirebase(() => {
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
   const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
+
+  // Sound Notification Helper
+  const playNotificationSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5);
+
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.5);
+    } catch (e) {
+      console.warn('Som de notificação bloqueado pelo navegador');
+    }
+  };
+
+  // Load read status from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('tb_admin_read_orders');
+    if (saved) {
+      setReadIds(new Set(JSON.parse(saved)));
+    }
+  }, []);
+
+  // Sync real-time orders
+  useEffect(() => {
+    if (!db || !isAdmin) return;
+
+    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(10));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const orders: any[] = [];
+      snapshot.forEach((doc) => {
+        orders.push({ id: doc.id, ...doc.data() });
+      });
+
+      if (!initialLoadRef.current) {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const newOrder = change.doc.data();
+            toast({
+              title: "🛍️ Novo Pedido!",
+              description: `Pedido #${newOrder.orderNumber} - R$ ${newOrder.total?.toFixed(2)}`,
+              duration: 5000,
+            });
+            playNotificationSound();
+          }
+        });
+      }
+
+      setNotifications(orders);
+      initialLoadRef.current = false;
+    });
+
+    return () => unsubscribe();
+  }, [db, isAdmin, toast]);
+
+  const markAsRead = (id: string) => {
+    const newReadIds = new Set(readIds);
+    newReadIds.add(id);
+    setReadIds(newReadIds);
+    localStorage.setItem('tb_admin_read_orders', JSON.stringify(Array.from(newReadIds)));
+  };
+
+  const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
 
   if (isUserLoading || isAdminLoading) {
     return <div className="h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-accent" /></div>;
@@ -81,7 +174,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
 
   return (
     <div className="flex h-screen bg-[#F4F6F8] overflow-hidden font-sans">
-      {/* Sidebar - Estilo Nuvemshop Profissional */}
+      {/* Sidebar */}
       <aside className="w-64 bg-[#2A1F22] text-white flex flex-col shadow-2xl relative z-20">
         <div className="p-8 border-b border-white/5">
           <div className="flex items-center gap-3">
@@ -136,7 +229,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
              </h1>
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
             <Button 
               onClick={onOpenAI} 
               variant="outline" 
@@ -145,6 +238,78 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
               <Sparkles className="mr-2 h-4 w-4" />
               Redator IA
             </Button>
+
+            {/* Real-time Notification Bell */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="relative h-10 w-10 rounded-full bg-secondary flex items-center justify-center border border-primary/5 cursor-pointer hover:bg-accent/10 transition-colors">
+                  {unreadCount > 0 ? (
+                    <BellRing className="h-5 w-5 text-accent animate-bounce" />
+                  ) : (
+                    <Bell className="h-5 w-5 text-primary/40" />
+                  )}
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center shadow-lg border-2 border-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[320px] rounded-2xl border-none shadow-premium p-0 overflow-hidden bg-white mt-2">
+                <DropdownMenuLabel className="bg-primary p-5 text-white font-headline text-lg">
+                  Novidades da Boutique
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="m-0" />
+                <div className="max-h-[350px] overflow-y-auto py-2 no-scrollbar">
+                  {notifications.length > 0 ? (
+                    notifications.map((order) => (
+                      <DropdownMenuItem 
+                        key={order.id} 
+                        onClick={() => {
+                          markAsRead(order.id);
+                          setActiveTab('orders');
+                        }}
+                        className={cn(
+                          "px-5 py-4 cursor-pointer flex gap-4 transition-colors",
+                          !readIds.has(order.id) ? "bg-accent/5" : "opacity-60"
+                        )}
+                      >
+                        <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-primary font-bold shrink-0">
+                          {order.customer?.name?.[0].toUpperCase() || '#'}
+                        </div>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex justify-between items-start">
+                            <p className="text-[11px] font-bold text-primary truncate">#{order.orderNumber}</p>
+                            <p className="text-[10px] font-bold text-accent">R$ {order.total?.toFixed(2)}</p>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground truncate">{order.customer?.name}</p>
+                          <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground uppercase font-black tracking-tighter">
+                            <Clock className="h-2.5 w-2.5" /> 
+                            {new Date(order.createdAt?.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                        {!readIds.has(order.id) && (
+                          <div className="h-2 w-2 rounded-full bg-accent mt-2 shrink-0" />
+                        )}
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center space-y-3">
+                       <ShoppingBag className="h-10 w-10 text-primary/5 mx-auto" />
+                       <p className="text-[10px] font-bold uppercase tracking-widest text-primary/20">Sem pedidos recentes</p>
+                    </div>
+                  )}
+                </div>
+                <DropdownMenuSeparator className="m-0" />
+                <button 
+                  onClick={() => setActiveTab('orders')}
+                  className="w-full py-4 text-[10px] font-bold uppercase tracking-widest text-accent hover:bg-accent/5 transition-colors flex items-center justify-center gap-2"
+                >
+                  Ver todos os pedidos <ChevronRight className="h-3 w-3" />
+                </button>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center border border-primary/5 cursor-pointer hover:bg-accent/10 transition-colors">
                <Users className="h-4 w-4 text-primary" />
             </div>
