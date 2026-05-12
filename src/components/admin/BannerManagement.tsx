@@ -24,7 +24,8 @@ import {
   ChevronRight,
   Pencil,
   Minus,
-  Maximize2
+  Maximize2,
+  RefreshCw
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -50,6 +51,7 @@ export function BannerManagement() {
   const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceFileInputRef = useRef<HTMLInputElement>(null);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingTexts, setIsGeneratingTexts] = useState(false);
@@ -70,7 +72,9 @@ export function BannerManagement() {
     subtitle: '', 
     ctaText: '', 
     duration: 6,
-    imagePosition: { x: 50, y: 50 }
+    imagePosition: { x: 50, y: 50 },
+    imageZoom: 100,
+    imageUrl: ''
   });
 
   const [showAiTextPanel, setShowAiTextPanel] = useState(false);
@@ -169,12 +173,13 @@ export function BannerManagement() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isReplace = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
-    setPreviewImage('');
+    if (!isReplace) setPreviewImage('');
+    
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -196,11 +201,16 @@ export function BannerManagement() {
       const data = await response.json();
       const url = data.secure_url;
       
-      setPreviewImage(url);
-      setMediaType(resourceType === 'video' ? 'video' : 'image');
-      setImagePosition({ x: 50, y: 20 });
-      setZoom(100);
-      toast({ title: "Mídia carregada com sucesso!" });
+      if (isReplace) {
+        setEditData(prev => ({ ...prev, imageUrl: url }));
+        toast({ title: "Nova imagem carregada!" });
+      } else {
+        setPreviewImage(url);
+        setMediaType(resourceType === 'video' ? 'video' : 'image');
+        setImagePosition({ x: 50, y: 20 });
+        setZoom(100);
+        toast({ title: "Mídia carregada com sucesso!" });
+      }
     } catch (error: any) {
       console.error("Cloudinary Upload Error:", error);
       toast({ 
@@ -238,7 +248,7 @@ export function BannerManagement() {
         ...bannerData,
         imageUrl: finalUrl,
         imagePosition: imagePosition,
-        zoom: zoom,
+        imageZoom: zoom,
         mediaType: mediaType,
         aspectRatio,
         duration,
@@ -497,7 +507,7 @@ export function BannerManagement() {
                       className="w-full h-full object-cover" 
                       style={{ 
                         objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center',
-                        transform: banner.zoom && banner.zoom > 100 ? `scale(${banner.zoom / 100})` : 'none'
+                        backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : 'cover'
                       }} 
                     />
                   )}
@@ -510,7 +520,9 @@ export function BannerManagement() {
                           subtitle: banner.subtitle || '',
                           ctaText: banner.ctaText || 'Conferir Looks',
                           duration: banner.duration || 6,
-                          imagePosition: banner.imagePosition || { x: 50, y: 50 }
+                          imagePosition: banner.imagePosition || { x: 50, y: 50 },
+                          imageZoom: banner.imageZoom || 100,
+                          imageUrl: banner.imageUrl || ''
                         })
                       }}
                       className="p-3 bg-blue-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"
@@ -559,20 +571,33 @@ export function BannerManagement() {
             </DialogHeader>
           </div>
           <div className="p-8 space-y-4">
-            <div className="rounded-xl overflow-hidden aspect-video bg-black relative">
+            <div className="rounded-xl overflow-hidden aspect-video bg-black relative group">
               {editingBanner?.mediaType === 'video' ? (
-                <video key={editingBanner?.imageUrl} muted loop playsInline className="w-full h-full object-cover">
-                  <source src={editingBanner?.imageUrl} type="video/mp4" />
+                <video key={editData.imageUrl} muted loop playsInline className="w-full h-full object-cover">
+                  <source src={editData.imageUrl} type="video/mp4" />
                 </video>
               ) : (
-                <img 
-                  src={editingBanner?.imageUrl} 
-                  className="w-full h-full object-cover" 
+                <div 
+                  className="w-full h-full"
                   style={{
-                    objectPosition: `${editData.imagePosition.x}% ${editData.imagePosition.y}%`
+                    backgroundImage: `url(${editData.imageUrl})`,
+                    backgroundSize: `${editData.imageZoom}%`,
+                    backgroundPosition: `${editData.imagePosition.x}% ${editData.imagePosition.y}%`,
+                    backgroundRepeat: 'no-repeat'
                   }}
                 />
               )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+                 <Button 
+                  onClick={() => replaceFileInputRef.current?.click()} 
+                  disabled={isUploading}
+                  className="rounded-full bg-white text-primary text-[10px] font-bold uppercase tracking-widest px-6 h-10 shadow-xl"
+                 >
+                   {isUploading ? <Loader2 className="animate-spin h-3.5 w-3.5 mr-2" /> : <RefreshCw className="h-3.5 w-3.5 mr-2" />}
+                   Substituir Mídia
+                 </Button>
+                 <input type="file" ref={replaceFileInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, true)} />
+              </div>
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
@@ -587,20 +612,33 @@ export function BannerManagement() {
                 <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Texto do Botão</Label>
                 <Input placeholder="Texto do Botão" value={editData.ctaText} onChange={e => setEditData({...editData, ctaText: e.target.value})} className="h-12 rounded-xl border-primary/10" />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Tempo de Exibição</Label>
-                <select
-                  value={editData.duration}
-                  onChange={e => setEditData({...editData, duration: Number(e.target.value)})}
-                  className="w-full h-12 rounded-xl border border-primary/10 px-4 text-sm font-bold text-primary outline-none"
-                >
-                  <option value={3}>3 segundos</option>
-                  <option value={5}>5 segundos</option>
-                  <option value={6}>6 segundos (padrão)</option>
-                  <option value={8}>8 segundos</option>
-                  <option value={10}>10 segundos</option>
-                  <option value={15}>15 segundos</option>
-                </select>
+              
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Tempo</Label>
+                  <select
+                    value={editData.duration}
+                    onChange={e => setEditData({...editData, duration: Number(e.target.value)})}
+                    className="w-full h-11 rounded-xl border border-primary/10 px-4 text-xs font-bold text-primary outline-none"
+                  >
+                    <option value={3}>3s</option>
+                    <option value={5}>5s</option>
+                    <option value={6}>6s</option>
+                    <option value={10}>10s</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Zoom: {editData.imageZoom}%</Label>
+                  <div className="flex items-center h-11">
+                    <Slider 
+                      value={[editData.imageZoom]} 
+                      min={100} 
+                      max={200} 
+                      step={1} 
+                      onValueChange={([v]) => setEditData(prev => ({ ...prev, imageZoom: v }))} 
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-4 pt-4 border-t border-primary/5">
@@ -649,7 +687,9 @@ export function BannerManagement() {
                   subtitle: editData.subtitle,
                   ctaText: editData.ctaText,
                   duration: editData.duration,
-                  imagePosition: editData.imagePosition
+                  imagePosition: editData.imagePosition,
+                  imageZoom: editData.imageZoom,
+                  imageUrl: editData.imageUrl
                 })
                 toast({ title: "Banner atualizado!" })
                 setEditingBanner(null)
@@ -664,3 +704,4 @@ export function BannerManagement() {
     </div>
   );
 }
+

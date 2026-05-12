@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -196,7 +197,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                   className="absolute inset-0 w-full h-full"
                   style={{
                     backgroundImage: `url(${banner.imageUrl})`,
-                    backgroundSize: 'cover',
+                    backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : 'cover',
                     backgroundPosition: banner.imagePosition 
                       ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
                       : 'center center',
