@@ -259,18 +259,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
           >
             <ChevronRight className="h-6 w-6" />
           </button>
-          
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
-            {displayBanners.map((_, i) => (
-              <div 
-                key={i} 
-                className={cn(
-                  "h-1 transition-all duration-500 rounded-full",
-                  selectedIndex === i ? "w-8 bg-accent" : "w-2 bg-white/30"
-                )} 
-              />
-            ))}
-          </div>
         </>
       )}
     </section>
