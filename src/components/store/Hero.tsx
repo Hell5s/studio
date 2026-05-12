@@ -12,22 +12,26 @@ import { cn } from '@/lib/utils';
 export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const db = useFirestore();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [hasHydrated, setHasHydrated] = useState(false);
   
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings } = useDoc(settingsRef);
 
   // Recupera o último banner do cache para evitar "flash" preto/vazio no carregamento
-  const [cachedBanner, setCachedBanner] = useState<any>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lastBannerData');
+  const [cachedBanner, setCachedBanner] = useState<any>(null);
+
+  // Efeito para garantir hidratação segura e carregar cache do localStorage
+  useEffect(() => {
+    setHasHydrated(true);
+    const saved = localStorage.getItem('lastBannerData');
+    if (saved) {
       try {
-        return saved ? JSON.parse(saved) : null;
+        setCachedBanner(JSON.parse(saved));
       } catch (e) {
-        return null;
+        console.warn("Erro ao carregar banner do cache:", e);
       }
     }
-    return null;
-  });
+  }, []);
 
   const bannersQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -69,6 +73,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   const displayBanners = useMemo(() => {
+    // CRITICAL: Durante a hidratação, displayBanners deve ser vazio para bater com o HTML do servidor
+    if (!hasHydrated) return [];
+
     // Se temos banners do Firestore, usamos eles
     if (banners && banners.length > 0) {
       return [...banners].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -79,7 +86,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     }
     // Retorna vazio para que os fallbacks de UI assumam
     return [];
-  }, [banners, cachedBanner]);
+  }, [banners, cachedBanner, hasHydrated]);
 
   // Autoplay baseado na duração customizada de cada banner
   useEffect(() => {
@@ -121,8 +128,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     );
   }
 
-  // 2. ESTADO SEM BANNERS (TELA ELEGANTE LOGO)
-  if (!displayBanners.length && !isBannersLoading) {
+  // 2. ESTADO SEM BANNERS OU DURANTE HIDRATAÇÃO (TELA ELEGANTE LOGO)
+  // hasHydrated é falso no servidor e na primeira renderização do cliente, garantindo paridade
+  if (!displayBanners.length && (!isBannersLoading || !hasHydrated)) {
     return (
       <section
         className="relative w-full overflow-hidden flex items-center justify-center"
