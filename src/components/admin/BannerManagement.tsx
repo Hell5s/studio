@@ -65,7 +65,13 @@ export function BannerManagement() {
   const [zoom, setZoom] = useState(100);
 
   const [editingBanner, setEditingBanner] = useState<any>(null);
-  const [editData, setEditData] = useState({ title: '', subtitle: '', ctaText: '', duration: 6 });
+  const [editData, setEditData] = useState({ 
+    title: '', 
+    subtitle: '', 
+    ctaText: '', 
+    duration: 6,
+    imagePosition: { x: 50, y: 50 }
+  });
 
   const [showAiTextPanel, setShowAiTextPanel] = useState(false);
   const [aiTextContext, setAiTextContext] = useState('');
@@ -503,7 +509,8 @@ export function BannerManagement() {
                           title: banner.title || '',
                           subtitle: banner.subtitle || '',
                           ctaText: banner.ctaText || 'Conferir Looks',
-                          duration: banner.duration || 6
+                          duration: banner.duration || 6,
+                          imagePosition: banner.imagePosition || { x: 50, y: 50 }
                         })
                       }}
                       className="p-3 bg-blue-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"
@@ -552,13 +559,21 @@ export function BannerManagement() {
             </DialogHeader>
           </div>
           <div className="p-8 space-y-4">
-            {editingBanner?.mediaType === 'video' ? (
-              <video key={editingBanner?.imageUrl} muted loop playsInline className="w-full aspect-video object-cover rounded-xl">
-                <source src={editingBanner?.imageUrl} type="video/mp4" />
-              </video>
-            ) : (
-              <img src={editingBanner?.imageUrl} className="w-full aspect-video object-cover rounded-xl" />
-            )}
+            <div className="rounded-xl overflow-hidden aspect-video bg-black relative">
+              {editingBanner?.mediaType === 'video' ? (
+                <video key={editingBanner?.imageUrl} muted loop playsInline className="w-full h-full object-cover">
+                  <source src={editingBanner?.imageUrl} type="video/mp4" />
+                </video>
+              ) : (
+                <img 
+                  src={editingBanner?.imageUrl} 
+                  className="w-full h-full object-cover" 
+                  style={{
+                    objectPosition: `${editData.imagePosition.x}% ${editData.imagePosition.y}%`
+                  }}
+                />
+              )}
+            </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Título</Label>
@@ -587,6 +602,36 @@ export function BannerManagement() {
                   <option value={15}>15 segundos</option>
                 </select>
               </div>
+
+              <div className="space-y-4 pt-4 border-t border-primary/5">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Enquadramento</Label>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-[9px] font-bold uppercase text-primary/40">Posição Horizontal (X): {editData.imagePosition.x}%</Label>
+                    </div>
+                    <Slider 
+                      value={[editData.imagePosition.x]} 
+                      min={0} 
+                      max={100} 
+                      step={1} 
+                      onValueChange={([v]) => setEditData(prev => ({ ...prev, imagePosition: { ...prev.imagePosition, x: v } }))} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-[9px] font-bold uppercase text-primary/40">Posição Vertical (Y): {editData.imagePosition.y}%</Label>
+                    </div>
+                    <Slider 
+                      value={[editData.imagePosition.y]} 
+                      min={0} 
+                      max={100} 
+                      step={1} 
+                      onValueChange={([v]) => setEditData(prev => ({ ...prev, imagePosition: { ...prev.imagePosition, y: v } }))} 
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div className="px-8 pb-8 flex gap-3">
@@ -603,7 +648,8 @@ export function BannerManagement() {
                   title: editData.title,
                   subtitle: editData.subtitle,
                   ctaText: editData.ctaText,
-                  duration: editData.duration
+                  duration: editData.duration,
+                  imagePosition: editData.imagePosition
                 })
                 toast({ title: "Banner atualizado!" })
                 setEditingBanner(null)
