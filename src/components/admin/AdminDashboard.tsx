@@ -24,7 +24,8 @@ import {
   BellRing,
   ChevronRight,
   Clock,
-  Star
+  Star,
+  Megaphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -42,6 +43,7 @@ import { AdminCategories } from './AdminCategories';
 import { AddProductDialog } from './AddProductDialog';
 import { AdminHeaderSettings } from './AdminHeaderSettings';
 import { AdminReviews } from './AdminReviews';
+import { AdminMarketing } from './AdminMarketing';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -59,7 +61,7 @@ interface AdminDashboardProps {
   onExit?: () => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header';
+type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing';
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const db = useFirestore();
@@ -171,6 +173,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'orders', label: 'Pedidos', icon: <Truck className="h-4 w-4" /> },
     { id: 'products', label: 'Produtos', icon: <Package className="h-4 w-4" /> },
     { id: 'categories', label: 'Categorias', icon: <Layers className="h-4 w-4" /> },
+    { id: 'marketing', label: 'Marketing', icon: <Megaphone className="h-4 w-4" /> },
     { id: 'reviews', label: 'Avaliações', icon: <Star className="h-4 w-4" />, badge: pendingReviewsCount },
     { id: 'header', label: 'Cabeçalho', icon: <Layout className="h-4 w-4" /> },
     { id: 'coupons', label: 'Cupons', icon: <Tag className="h-4 w-4" /> },
@@ -334,6 +337,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             {activeTab === 'overview' && <AdminOverview onNavigate={setActiveTab} />}
             {activeTab === 'products' && <ProductManagement />}
             {activeTab === 'orders' && <OrderManagement />}
+            {activeTab === 'marketing' && <AdminMarketing />}
             {activeTab === 'categories' && <AdminCategories />}
             {activeTab === 'reviews' && <AdminReviews />}
             {activeTab === 'header' && <AdminHeaderSettings />}
