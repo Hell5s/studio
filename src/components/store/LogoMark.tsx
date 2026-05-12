@@ -28,24 +28,37 @@ export function LogoMark({ className }: LogoMarkProps) {
             <img src={logoUrl} className="w-full h-full object-contain p-2" alt={brandName} />
           ) : (
             <>
-              {/* Animated decorative jewelry ring */}
-              <div className="absolute inset-[2px] rounded-full border border-dashed border-accent/20 animate-spin-slow group-hover:border-accent/50" />
+              {/* Outer decorative ring - Luxury Watch Style */}
+              <div className="absolute inset-[2px] rounded-full border border-primary/5" />
+              <div className="absolute inset-[4px] rounded-full border border-dashed border-accent/20 animate-spin-slow group-hover:border-accent/40" />
               
-              {/* Monogram Seal */}
-              <svg viewBox="0 0 100 100" className="h-6 w-6 md:h-10 md:w-10 relative z-10" fill="none">
-                {/* Stylized 'T' */}
+              {/* Monogram Seal - Premium Fashion Monogram */}
+              <svg viewBox="0 0 100 100" className="h-7 w-7 md:h-11 md:w-11 relative z-10" fill="none">
+                {/* Subtle gradient definition */}
+                <defs>
+                  <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#6E3C47" />
+                    <stop offset="100%" stopColor="#C7A17A" />
+                  </linearGradient>
+                </defs>
+
+                {/* Stylized 'T' - elegant thin lines */}
                 <path
-                  d="M32 32H68V36H52V72H48V36H32V32Z"
+                  d="M32 38H68V40.5H51.5V70H48.5V40.5H32V38Z"
                   fill="#6E3C47"
-                  className="transition-colors duration-700 group-hover:fill-accent"
+                  className="transition-colors duration-700 group-hover:fill-black"
                 />
-                {/* Stylized 'B' */}
+                
+                {/* Stylized 'B' - artistic overlapping curve */}
                 <path
-                  d="M52 42H64C69.5 42 74 46.5 74 52C74 55.8 71.5 59 68 60.5C71.5 62 74 65.2 74 69C74 74.5 69.5 79 64 79H48V42H52Z"
-                  fill="#C7A17A"
-                  className="opacity-60 mix-blend-multiply transition-all duration-1000 group-hover:translate-x-1 group-hover:opacity-90"
+                  d="M48 45C58 45 64 49 64 54C64 57.5 61 60 57 61C61.5 62.5 65 66 65 71C65 77 59 81 48 81H40V45H48Z"
+                  fill="url(#logo-grad)"
+                  fillOpacity="0.4"
+                  className="mix-blend-multiply transition-all duration-1000 group-hover:translate-x-1.5 group-hover:opacity-60"
                 />
-                <circle cx="50" cy="50" r="48" stroke="#C7A17A" strokeWidth="0.5" strokeOpacity="0.2" />
+                
+                {/* Center dot - Focal point */}
+                <circle cx="50" cy="40" r="1.5" fill="#C7A17A" className="animate-pulse" />
               </svg>
             </>
           )}
