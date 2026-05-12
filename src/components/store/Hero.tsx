@@ -148,7 +148,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
           transform: 'translateZ(0)'
         }}
       >
-        <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10">
+        <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-16 md:pb-28 relative z-10">
           <div className="space-y-4">
             <div className="w-64 h-6 bg-white/10 rounded" />
             <div className="w-48 h-3 bg-white/10 rounded mt-3" />
@@ -213,19 +213,19 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               {/* Banner legibility overlay */}
               <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
-              <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10 pointer-events-none">
+              <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-16 md:pb-28 relative z-10 pointer-events-none">
                 <div className={cn(
                   "max-w-2xl space-y-4 md:space-y-10 transition-all duration-1000 pointer-events-auto",
                   selectedIndex === idx ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                 )}>
                   <div className="space-y-2 md:space-y-4">
                     <h1 
-                      className="text-lg md:text-4xl font-headline font-bold text-white uppercase tracking-[0.01em] leading-[0.9]"
+                      className="text-base md:text-3xl font-headline font-semibold text-white uppercase tracking-[0.08em] leading-[0.9]"
                     >
                       {banner.title || ''}
                     </h1>
                     <p 
-                      className="text-xs md:text-base text-white/90 font-light italic max-w-lg leading-relaxed"
+                      className="text-xs md:text-sm text-white/90 font-light italic max-w-lg leading-relaxed"
                     >
                       {banner.subtitle || ''}
                     </p>
