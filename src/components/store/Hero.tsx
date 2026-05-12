@@ -103,7 +103,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   }, [emblaApi, selectedIndex, displayBanners]);
 
   // ESTADO SEM BANNERS OU DURANTE HIDRATAÇÃO (TELA ELEGANTE LOGO)
-  // Garantimos que o servidor e o primeiro render do cliente entrem aqui.
   if (!hasHydrated || (!displayBanners.length && !isBannersLoading)) {
     return (
       <section
@@ -168,80 +167,90 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         maxHeight: '100vh',
         minHeight: '600px',
         WebkitBackfaceVisibility: 'hidden',
+        backfaceVisibility: 'hidden',
+        perspective: '1000px',
         transform: 'translateZ(0)'
       }}
     >
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full w-full">
-          {displayBanners.map((banner: any, idx: number) => (
-            <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full bg-[#1a0a0e]">
-              {banner.mediaType === 'video' ? (
-                <video
-                  key={banner.imageUrl}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{
-                    objectPosition: 'center center',
-                    willChange: 'transform',
-                    objectFit: 'cover',
-                    imageRendering: 'high-quality' as any
-                  }}
-                >
-                  <source src={banner.imageUrl} type="video/mp4" />
-                </video>
-              ) : (
-                <div
-                  className="absolute inset-0 w-full h-full"
-                  style={{
-                    backgroundImage: `url(${banner.imageUrl})`,
-                    backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : 'cover',
-                    backgroundPosition: banner.imagePosition 
-                      ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
-                      : 'center center',
-                    backgroundRepeat: 'no-repeat',
-                    imageRendering: 'high-quality' as any,
-                    WebkitFontSmoothing: 'antialiased'
-                  }} 
-                  role="img"
-                  aria-label={banner.title || "Banner Toda Bela"}
-                />
-              )}
-              
-              {/* Banner legibility overlay */}
-              <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+          {displayBanners.map((banner: any, idx: number) => {
+            const optimizedUrl = banner.imageUrl?.includes('cloudinary') 
+              ? banner.imageUrl.replace('/upload/', '/upload/q_100,f_auto/') 
+              : banner.imageUrl;
 
-              <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-16 md:pb-28 relative z-10 pointer-events-none">
-                <div className={cn(
-                  "max-w-2xl space-y-4 md:space-y-10 transition-all duration-1000 pointer-events-auto",
-                  selectedIndex === idx ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-                )}>
-                  <div className="space-y-2 md:space-y-4">
-                    <h1 
-                      className="text-base md:text-3xl font-headline font-semibold text-white uppercase tracking-[0.08em] leading-[0.9]"
-                    >
-                      {banner.title || ''}
-                    </h1>
-                    <p 
-                      className="text-xs md:text-sm text-white/90 font-light italic max-w-lg leading-relaxed"
-                    >
-                      {banner.subtitle || ''}
-                    </p>
+            return (
+              <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full bg-[#1a0a0e]">
+                {banner.mediaType === 'video' ? (
+                  <video
+                    key={optimizedUrl}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{
+                      objectPosition: 'center center',
+                      willChange: 'transform',
+                      objectFit: 'cover',
+                      imageRendering: 'high-quality' as any
+                    }}
+                  >
+                    <source src={optimizedUrl} type="video/mp4" />
+                  </video>
+                ) : (
+                  <div
+                    className="absolute inset-0 w-full h-full"
+                    style={{
+                      backgroundImage: `url(${optimizedUrl})`,
+                      backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : '100%',
+                      backgroundPosition: banner.imagePosition 
+                        ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
+                        : 'center center',
+                      backgroundRepeat: 'no-repeat',
+                      imageRendering: 'high-quality' as any,
+                      WebkitFontSmoothing: 'antialiased',
+                      willChange: 'transform',
+                      transform: 'translateZ(0)',
+                      WebkitTransform: 'translateZ(0)'
+                    }} 
+                    role="img"
+                    aria-label={banner.title || "Banner Toda Bela"}
+                  />
+                )}
+                
+                <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+
+                <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-16 md:pb-28 relative z-10 pointer-events-none">
+                  <div className={cn(
+                    "max-w-2xl space-y-4 md:space-y-10 transition-all duration-1000 pointer-events-auto",
+                    selectedIndex === idx ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                  )}>
+                    <div className="space-y-2 md:space-y-4">
+                      <h1 
+                        className="text-base md:text-3xl font-headline font-semibold text-white uppercase tracking-[0.08em] leading-[0.9]"
+                      >
+                        {banner.title || ''}
+                      </h1>
+                      <p 
+                        className="text-xs md:text-sm text-white/90 font-light italic max-w-lg leading-relaxed"
+                      >
+                        {banner.subtitle || ''}
+                      </p>
+                    </div>
+                    {(banner.ctaText || settings?.heroCta) && (
+                      <Button 
+                        onClick={onShopNow}
+                        className="rounded-full bg-white text-black px-6 py-2 md:px-8 md:py-3 text-[10px] md:text-xs tracking-[0.2em] font-bold uppercase w-fit h-auto hover:bg-accent hover:text-white transition-all shadow-2xl"
+                      >
+                        {banner.ctaText || settings?.heroCta || 'Conferir'}
+                      </Button>
+                    )}
                   </div>
-                  {(banner.ctaText || settings?.heroCta) && (
-                    <Button 
-                      onClick={onShopNow}
-                      className="rounded-full bg-white text-black px-6 py-2 md:px-8 md:py-3 text-[10px] md:text-xs tracking-[0.2em] font-bold uppercase w-fit h-auto hover:bg-accent hover:text-white transition-all shadow-2xl"
-                    >
-                      {banner.ctaText || settings?.heroCta || 'Conferir'}
-                    </Button>
-                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
