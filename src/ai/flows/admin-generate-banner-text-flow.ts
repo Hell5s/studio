@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview Um agente de IA para gerar textos editoriais (Título, Subtítulo e CTA) para banners de moda.
+ * @fileOverview Um agente de IA para gerar textos editoriais (Título, Subtítulo e CTA) para banners de moda usando a API do Groq.
  *
- * - generateBannerTexts - Função que gera os textos baseada em um conceito de campanha ou análise de imagem.
+ * - generateBannerTexts - Função que gera os textos baseada em um conceito de campanha.
  */
 
 import { ai } from '@/ai/genkit';
@@ -10,7 +10,7 @@ import { z } from 'genkit';
 
 const GenerateBannerTextInputSchema = z.object({
   concept: z.string().optional().describe('O tema ou inspiração da campanha (opcional).'),
-  imageUrl: z.string().optional().describe('URL da imagem do banner para análise visual.'),
+  imageUrl: z.string().optional().describe('URL da imagem do banner para análise (não suportado pelo modelo Llama 3 Texto).'),
 });
 export type GenerateBannerTextInput = z.infer<typeof GenerateBannerTextInputSchema>;
 
@@ -25,42 +25,6 @@ export async function generateBannerTexts(input: GenerateBannerTextInput): Promi
   return generateBannerTextFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateBannerTextPrompt',
-  model: 'googleai/gemini-2.5-flash',
-  input: { schema: GenerateBannerTextInputSchema },
-  output: { schema: GenerateBannerTextOutputSchema },
-  prompt: `Você é um redator de moda sênior da boutique de luxo 'Toda Bela'.
-Sua marca celebra a sofisticação, a confiança feminina e a elegância minimalista.
-
-{{#if imageUrl}}
-Analise visualmente esta imagem da nossa coleção: {{media url=imageUrl}}
-Os textos gerados devem harmonizar com o estilo, cores e iluminação desta fotografia.
-{{/if}}
-
-Contexto Central da Campanha:
-{{#if concept}}
-"{{{concept}}}"
-{{else}}
-"Essência Feminina Premium"
-{{/if}}
-
-Sua missão é criar um copy editorial de alto impacto baseado OBRIGATORIAMENTE no contexto acima como base central.
-
-DIRETRIZES RÍGIDAS:
-1. BASE TEMÁTICA: O tema deve ser o coração da mensagem.
-   - Se o contexto for "Plus Size": Títulos que celebram curvas, poder e orgulho.
-   - Se "Dia das Mães": Títulos emotivos, repletos de carinho e conexão.
-   - Se "Inverno": Títulos que evocam aconchego, tecidos nobres e elegância fria.
-2. PROIBIÇÃO DE GENÉRICOS: É estritamente proibido usar clichês vazios como "Nova Coleção", "Elegância Sem Limites", "Descubra o Novo" ou "Estilo Único".
-3. TÍTULO: Máximo de 3 palavras. Deve ser potente, específico e visceralmente ligado ao contexto.
-4. SUBTÍTULO: Máximo de 10 palavras. Deve evocar uma emoção profunda e exclusiva ligada ao tema.
-5. CTA: Curto, direto e refinado (Ex: "Sinta o Luxo", "Celebre-se", "Presenteie com Amor").
-6. IDIOMA: Português do Brasil (PT-BR).
-
-Gere agora os textos para o banner de moda premium:`,
-});
-
 const generateBannerTextFlow = ai.defineFlow(
   {
     name: 'generateBannerTextFlow',
@@ -68,18 +32,65 @@ const generateBannerTextFlow = ai.defineFlow(
     outputSchema: GenerateBannerTextOutputSchema,
   },
   async (input) => {
+    const concept = input.concept || "Essência Feminina Premium";
+    
+    const promptMessage = `Você é um redator de moda sênior da boutique de luxo 'Toda Bela'.
+Sua marca celebra a sofisticação, a confiança feminina e a elegância minimalista.
+
+Sua missão é criar um copy editorial de alto impacto baseado no contexto da campanha.
+
+CONTEXTO: "${concept}"
+
+DIRETRIZES RÍGIDAS:
+1. BASE TEMÁTICA: O tema deve ser o coração da mensagem.
+2. PROIBIÇÃO DE GENÉRICOS: Proibido usar "Nova Coleção", "Elegância Sem Limites" ou "Estilo Único". Seja específico e criativo.
+3. TÍTULO: Máximo de 3 palavras. Deve ser potente e visceral.
+4. SUBTÍTULO: Máximo de 10 palavras. Deve evocar uma emoção profunda.
+5. CTA: Curto e refinado (Ex: "Sinta o Luxo", "Celebre-se", "Presenteie com Amor").
+6. IDIOMA: Português do Brasil (PT-BR).
+
+REGRAS DE RESPOSTA:
+- Responda APENAS com um objeto JSON válido.
+- Estrutura: {"title": "...", "subtitle": "...", "ctaText": "..."}`;
+
     try {
-      // Tenta gerar com imagem se fornecida
-      const { output } = await prompt(input);
-      if (!output) throw new Error('A IA não retornou um formato de texto válido.');
-      return output;
-    } catch (error: any) {
-      console.warn('Erro ao processar imagem no fluxo de texto, tentando apenas texto:', error);
-      // Se falhar (ex: erro de download de imagem externa), tenta apenas com o conceito em texto
-      if (input.imageUrl) {
-        const { output } = await prompt({ concept: input.concept });
-        if (output) return output;
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer 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',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama3-8b-8192',
+          messages: [
+            { role: 'system', content: 'Você é um assistente de redação que fala apenas JSON.' },
+            { role: 'user', content: promptMessage }
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.6,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Groq API Error: ${errorText}`);
       }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+
+      if (!content) throw new Error('A IA não retornou um conteúdo válido.');
+
+      const result = JSON.parse(content);
+      
+      // Validação final com Zod para garantir que o output segue o contrato esperado
+      return GenerateBannerTextOutputSchema.parse({
+        title: result.title || 'Essência Toda Bela',
+        subtitle: result.subtitle || 'Elegância em cada movimento.',
+        ctaText: result.ctaText || 'Ver Coleção'
+      });
+    } catch (error: any) {
+      console.error('Erro Groq Flow:', error);
       throw new Error(`Falha na IA: ${error.message || 'Erro de processamento'}`);
     }
   }
