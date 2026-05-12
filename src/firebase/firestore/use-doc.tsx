@@ -35,6 +35,8 @@ export function useDoc<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (!memoizedDocRef) {
       setData(null);
       setIsLoading(false);
@@ -48,6 +50,8 @@ export function useDoc<T = any>(
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
+        if (!isMounted) return;
+
         if (snapshot.exists()) {
           setData({ ...(snapshot.data() as T), id: snapshot.id });
         } else {
@@ -57,9 +61,13 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (serverError: FirestoreError) => {
+        if (!isMounted) return;
+
         // CRITICAL: Defer the error handling to the next execution cycle.
         // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK.
         setTimeout(() => {
+          if (!isMounted) return;
+
           const contextualError = new FirestorePermissionError({
             operation: 'get',
             path: memoizedDocRef ? memoizedDocRef.path : 'unknown-doc',
@@ -74,6 +82,7 @@ export function useDoc<T = any>(
     );
 
     return () => {
+      isMounted = false;
       unsubscribe();
       setIsLoading(false);
     };

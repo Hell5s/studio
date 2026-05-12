@@ -36,6 +36,8 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (!targetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -49,6 +51,8 @@ export function useCollection<T = any>(
     const unsubscribe = onSnapshot(
       targetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
+        if (!isMounted) return;
+
         const results: WithId<T>[] = [];
         snapshot.forEach((doc) => {
           results.push({ ...(doc.data() as T), id: doc.id });
@@ -58,9 +62,13 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (serverError: FirestoreError) => {
+        if (!isMounted) return;
+
         // CRITICAL: Defer the error handling to the next execution cycle.
         // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK.
         setTimeout(() => {
+          if (!isMounted) return;
+
           let path = 'collection-query';
           try {
             if (targetRefOrQuery) {
@@ -88,6 +96,7 @@ export function useCollection<T = any>(
     );
 
     return () => {
+      isMounted = false;
       unsubscribe();
       // Ensure loading state is cleaned up if the query changes rapidly
       setIsLoading(false);
