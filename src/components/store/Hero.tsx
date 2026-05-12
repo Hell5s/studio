@@ -205,7 +205,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               )}
               
               {/* Overlay suave para legibilidade */}
-              <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+              <div className="absolute inset-0 bg-black/10 pointer-events-none" />
               
               <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10 pointer-events-none">
                 <div className={cn(
