@@ -59,7 +59,7 @@ export function useCollection<T = any>(
       },
       (serverError: FirestoreError) => {
         // CRITICAL: Defer the error handling to the next execution cycle.
-        // This prevents the "Unexpected state" error in Firebase SDK.
+        // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK.
         setTimeout(() => {
           let path = 'collection-query';
           try {
@@ -87,7 +87,11 @@ export function useCollection<T = any>(
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      // Ensure loading state is cleaned up if the query changes rapidly
+      setIsLoading(false);
+    };
   }, [targetRefOrQuery]); 
   
   return { data, isLoading, error };

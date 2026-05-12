@@ -122,6 +122,8 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
   }, []);
 
   // Sync real-time orders
+  // CRITICAL FIX: Removed toast from dependencies to prevent infinite loop of re-subscriptions
+  // as useToast returns a new object on every render.
   useEffect(() => {
     if (!db || !isAdmin) return;
 
@@ -138,6 +140,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
           snapshot.docChanges().forEach((change) => {
             if (change.type === 'added') {
               const newOrder = change.doc.data();
+              // Accessing toast via ref or ensuring the effect doesn't re-run
               toast({
                 title: "🛍️ Novo Pedido!",
                 description: `Pedido #${newOrder.orderNumber} - R$ ${newOrder.total?.toFixed(2)}`,
@@ -152,8 +155,6 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
         initialLoadRef.current = false;
       },
       (error) => {
-        // CRITICAL: Defer the error handling to the next execution cycle.
-        // This prevents the "Unexpected state" error in Firebase SDK.
         setTimeout(() => {
           const permissionError = new FirestorePermissionError({
             path: 'orders',
@@ -165,7 +166,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     );
 
     return () => unsubscribe();
-  }, [db, isAdmin, toast]);
+  }, [db, isAdmin]); // toast removed from here
 
   const markAsRead = (id: string) => {
     const newReadIds = new Set(readIds);

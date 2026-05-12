@@ -58,6 +58,7 @@ export function useDoc<T = any>(
       },
       (serverError: FirestoreError) => {
         // CRITICAL: Defer the error handling to the next execution cycle.
+        // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK.
         setTimeout(() => {
           const contextualError = new FirestorePermissionError({
             operation: 'get',
@@ -72,7 +73,10 @@ export function useDoc<T = any>(
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      setIsLoading(false);
+    };
   }, [memoizedDocRef]);
 
   return { data, isLoading, error };
