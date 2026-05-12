@@ -203,11 +203,12 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     className="absolute inset-0 w-full h-full"
                     style={{
                       backgroundImage: `url(${optimizedUrl})`,
-                      backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : '100%',
+                      backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : 'contain',
                       backgroundPosition: banner.imagePosition 
                         ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
                         : 'center center',
                       backgroundRepeat: 'no-repeat',
+                      backgroundColor: '#0a0a0a',
                       imageRendering: 'high-quality' as any,
                       WebkitFontSmoothing: 'antialiased',
                       willChange: 'transform',
