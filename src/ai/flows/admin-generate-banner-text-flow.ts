@@ -9,14 +9,17 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateBannerTextInputSchema = z.object({
-  concept: z.string().optional().describe('O tema ou inspiração da campanha (opcional).'),
+  concept: z.string().optional().describe('O tema ou inspiração da campanha.'),
+  tags: z.array(z.string()).optional().describe('Palavras-chave ou estilos da campanha.'),
+  currentTitle: z.string().optional().describe('Título atual como referência.'),
+  currentSubtitle: z.string().optional().describe('Subtítulo atual como referência.'),
 });
 export type GenerateBannerTextInput = z.infer<typeof GenerateBannerTextInputSchema>;
 
 const GenerateBannerTextOutputSchema = z.object({
   title: z.string().describe('Um título curto e impactante para o banner.'),
   subtitle: z.string().describe('Um subtítulo elegante e fluido.'),
-  ctaText: z.string().describe('Um texto curto para o botão de ação, ex: Confira, Ver Coleção.'),
+  ctaText: z.string().describe('Um texto curto para o botão de ação.'),
 });
 export type GenerateBannerTextOutput = z.infer<typeof GenerateBannerTextOutputSchema>;
 
@@ -31,26 +34,24 @@ const generateBannerTextFlow = ai.defineFlow(
     outputSchema: GenerateBannerTextOutputSchema,
   },
   async (input) => {
-    const concept = input.concept || "Essência Feminina Premium";
+    const concept = input.concept || "Moda Feminina Premium";
+    const tags = (input.tags || []).join(", ");
     
-    const promptMessage = `Você é um redator de moda sênior da boutique de luxo 'Toda Bela'.
-Sua marca celebra a sofisticação, a confiança feminina e a elegância minimalista.
+    const promptMessage = `Você é um especialista em copywriting de moda feminina brasileira de alto padrão. 
+Sua marca chama-se 'Toda Bela', focada em sofisticação, confiança e elegância minimalista.
 
-Sua missão é criar um copy editorial de alto impacto baseado no contexto da campanha.
+Com base no contexto da campanha: "${concept}", 
+Tags e Estilos: "${tags}",
+Referência atual (se houver): Título: "${input.currentTitle || ''}", Subtítulo: "${input.currentSubtitle || ''}"
 
-CONTEXTO: "${concept}"
+Sua missão é criar um copy editorial de alto impacto.
 
-DIRETRIZES RÍGIDAS:
-1. BASE TEMÁTICA: O tema deve ser o coração da mensagem.
-2. PROIBIÇÃO DE GENÉRICOS: Proibido usar "Nova Coleção", "Elegância Sem Limites" ou "Estilo Único". Seja específico e criativo.
-3. TÍTULO: Máximo de 3 palavras. Deve ser potente e visceral.
-4. SUBTÍTULO: Máximo de 10 palavras. Deve evocar uma emoção profunda.
-5. CTA: Curto e refinado (Ex: "Sinta o Luxo", "Celebre-se", "Presenteie com Amor").
-6. IDIOMA: Português do Brasil (PT-BR).
+DIRETRIZES:
+1. TÍTULO: 1 título impactante obrigatoriamente em CAIXA ALTA (máximo 4 palavras).
+2. SUBTÍTULO: 1 subtítulo elegante, sofisticado e fluido (máximo 10 palavras).
+3. CTA: 1 texto para o botão de ação, curto e refinado (máximo 2 palavras).
 
-REGRAS DE RESPOSTA:
-- Responda APENAS com um objeto JSON válido.
-- Estrutura: {"title": "...", "subtitle": "...", "ctaText": "..."}`;
+Responda APENAS em JSON no seguinte formato: { "title": "...", "subtitle": "...", "cta": "..." }`;
 
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -62,11 +63,11 @@ REGRAS DE RESPOSTA:
         body: JSON.stringify({
           model: 'llama-3.1-8b-instant',
           messages: [
-            { role: 'system', content: 'Você é um assistente de redação que fala apenas JSON.' },
+            { role: 'system', content: 'Você é um assistente de redação de moda de luxo que fala apenas JSON.' },
             { role: 'user', content: promptMessage }
           ],
           response_format: { type: 'json_object' },
-          temperature: 0.6,
+          temperature: 0.7,
         }),
       });
 
@@ -80,15 +81,15 @@ REGRAS DE RESPOSTA:
 
       if (!content) throw new Error('A IA não retornou um conteúdo válido.');
 
-      // Limpeza de possíveis blocos de código markdown que a IA possa ter retornado mesmo em modo JSON
+      // Limpeza de possíveis blocos de código markdown
       content = content.replace(/```json/g, '').replace(/```/g, '').trim();
 
       const result = JSON.parse(content);
       
       return GenerateBannerTextOutputSchema.parse({
-        title: result.title || 'Essência Toda Bela',
+        title: result.title || 'ESSÊNCIA TODA BELA',
         subtitle: result.subtitle || 'Elegância em cada movimento.',
-        ctaText: result.ctaText || 'Ver Coleção'
+        ctaText: result.cta || 'CONFIRA'
       });
     } catch (error: any) {
       console.error('Erro Groq Flow:', error);

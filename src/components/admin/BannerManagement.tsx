@@ -150,23 +150,24 @@ export function BannerManagement() {
   };
 
   const handleGenerateTexts = async () => {
-    const combinedContext = aiTextContext 
-      ? (prompt ? `${aiTextContext}. ${prompt}` : aiTextContext)
-      : prompt;
-
-    if (!previewImage && !combinedContext) {
-      toast({ title: "Falta informação", description: "Adicione uma imagem ou especifique um tema/contexto.", variant: "destructive" });
-      return;
-    }
-
     setIsGeneratingTexts(true);
     try {
-      // Removido o envio da imagem para o flow de texto para reduzir o payload (Llama 3 é focado em texto)
+      const tags = aiTextContext ? [aiTextContext] : [];
+      
       const result = await generateBannerTexts({ 
-        concept: combinedContext
+        concept: prompt || aiTextContext,
+        tags: tags,
+        currentTitle: bannerData.title,
+        currentSubtitle: bannerData.subtitle
       });
-      setBannerData({ title: result.title, subtitle: result.subtitle, ctaText: result.ctaText });
-      toast({ title: "Textos criados!" });
+      
+      setBannerData({ 
+        title: result.title, 
+        subtitle: result.subtitle, 
+        ctaText: result.ctaText 
+      });
+      
+      toast({ title: "Textos editoriais gerados!" });
       setShowAiTextPanel(false);
     } catch (error: any) {
       toast({ 
@@ -234,7 +235,6 @@ export function BannerManagement() {
     try {
       let finalUrl = previewImage;
 
-      // Se for imagem gerada por IA (Base64), envia para o Cloudinary
       if (previewImage.startsWith('data:')) {
         const formData = new FormData();
         formData.append('file', previewImage);
@@ -281,7 +281,6 @@ export function BannerManagement() {
   const handleDelete = async (banner: any) => {
     if (!banner?.id) return;
     
-    // Se a imagem for legado do Firebase Storage, tenta deletar
     if (banner.imageUrl && banner.imageUrl.includes('firebasestorage.googleapis.com')) {
       try {
         const fileRef = ref(storage!, banner.imageUrl);
@@ -295,7 +294,6 @@ export function BannerManagement() {
     toast({ title: "Banner removido" });
   };
 
-  // Drag logic for background position
   const handleDragStart = (e: React.MouseEvent) => {
     if (editingBanner?.mediaType === 'video') return;
     setIsDragging(true);
