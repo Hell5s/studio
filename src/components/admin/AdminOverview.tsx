@@ -211,31 +211,47 @@ export function AdminOverview({ onNavigate }: { onNavigate: (tab: any) => void }
             <table className="w-full text-left">
               <thead className="bg-gray-50 text-[10px] uppercase font-bold text-muted-foreground tracking-widest">
                 <tr>
+                  <th className="px-8 py-5">Item</th>
                   <th className="px-8 py-5">Pedido</th>
-                  <th className="px-8 py-5">Cliente</th>
+                  <th className="px-8 py-5">Cliente / Local</th>
                   <th className="px-8 py-5">Status</th>
                   <th className="px-8 py-5 text-right">Valor</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {recentOrders?.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-8 py-5 font-mono text-xs font-bold text-primary">#{order.orderNumber}</td>
-                    <td className="px-8 py-5">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-primary">{order.customer?.name}</span>
-                        <span className="text-[10px] text-muted-foreground uppercase">{order.customer?.city}</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <Badge className="bg-secondary text-primary border-none text-[9px] font-bold uppercase px-3">{order.status}</Badge>
-                    </td>
-                    <td className="px-8 py-5 text-right font-bold text-primary">R$ {order.total?.toFixed(2)}</td>
-                  </tr>
-                ))}
+                {recentOrders?.map((order) => {
+                  const firstItem = order.items?.[0];
+                  const displayId = order.orderNumber || `PED-${order.id.slice(-6).toUpperCase()}`;
+                  return (
+                    <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-8 py-5">
+                        <div className="h-12 w-10 rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-50">
+                          {firstItem?.image ? (
+                            <img src={firstItem.image} className="h-full w-full object-cover" alt={firstItem.name} />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-primary/10">
+                               <ImageIcon className="h-4 w-4" />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 font-mono text-xs font-bold text-primary">#{displayId}</td>
+                      <td className="px-8 py-5">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-primary">{order.customer?.name}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase">{order.customer?.city}, {order.customer?.state}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <Badge className="bg-secondary text-primary border-none text-[9px] font-bold uppercase px-3">{order.status}</Badge>
+                      </td>
+                      <td className="px-8 py-5 text-right font-bold text-primary">R$ {order.total?.toFixed(2)}</td>
+                    </tr>
+                  )
+                })}
                 {recentOrders?.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-20 text-center text-muted-foreground italic text-sm">Nenhum pedido registrado ainda.</td>
+                    <td colSpan={5} className="py-20 text-center text-muted-foreground italic text-sm">Nenhum pedido registrado ainda.</td>
                   </tr>
                 )}
               </tbody>
