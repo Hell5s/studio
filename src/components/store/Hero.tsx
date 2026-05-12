@@ -181,10 +181,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               ? banner.imageUrl.replace('/upload/', '/upload/q_100,f_auto/') 
               : banner.imageUrl;
 
-            // Define se a imagem deve ser contain ou cover
-            // Desktop: contain (quadro) | Mobile: cover (preenche)
-            const defaultSize = isMobile ? 'cover' : 'contain';
-
             return (
               <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full bg-[#1a0a0e]">
                 {banner.mediaType === 'video' ? (
@@ -209,12 +205,11 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     className="absolute inset-0 w-full h-full"
                     style={{
                       backgroundImage: `url(${optimizedUrl})`,
-                      backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : defaultSize,
+                      backgroundSize: isMobile ? 'cover' : (banner.imageZoom ? `${banner.imageZoom}%` : 'contain'),
                       backgroundPosition: banner.imagePosition 
                         ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
                         : 'center center',
                       backgroundRepeat: 'no-repeat',
-                      backgroundColor: '#0a0a0a',
                       imageRendering: 'high-quality' as any,
                       WebkitFontSmoothing: 'antialiased',
                       willChange: 'transform',
@@ -228,7 +223,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 
                 <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
-                <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-16 md:pb-28 relative z-10 pointer-events-none">
+                <div className={cn(
+                  "container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-16 md:pb-28 relative z-10 pointer-events-none",
+                  "max-md:absolute max-md:bottom-[20px] max-md:left-[16px] max-md:h-auto max-md:pb-0 max-md:px-0 max-md:pl-0 max-md:items-start"
+                )}>
                   <div className={cn(
                     "max-w-2xl space-y-4 md:space-y-10 transition-all duration-1000 pointer-events-auto",
                     selectedIndex === idx ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
