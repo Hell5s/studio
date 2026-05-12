@@ -139,7 +139,7 @@ export default function ProductDetailPage() {
 
           {/* Full Width Professional Reviews Section */}
           <div className="mt-24 md:mt-40">
-             <ProductReviews productId={product.id} />
+             <ProductReviews product={product} />
           </div>
 
           <div className="mt-24 md:mt-40">

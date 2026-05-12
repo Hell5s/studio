@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { Star, CheckCircle2, Check, Loader2, Sparkles, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, where, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -27,6 +27,10 @@ interface Review {
   comment: string;
   size: string;
   recommended: boolean;
+  status?: 'pending' | 'published';
+  productId: string;
+  productName: string;
+  productImage: string;
   createdAt?: any;
 }
 
@@ -54,7 +58,10 @@ const DEFAULT_REVIEWS: Review[] = [
     rating: 5,
     comment: 'O tecido é de uma qualidade absurda, veste super bem e valoriza muito o corpo. Chegou antes do prazo e a embalagem é um luxo.',
     size: 'M',
-    recommended: true
+    recommended: true,
+    productId: 'default',
+    productName: 'Default',
+    productImage: ''
   },
   {
     id: 'default-2',
@@ -63,20 +70,14 @@ const DEFAULT_REVIEWS: Review[] = [
     rating: 5,
     comment: 'Comprei para usar no trabalho e recebi muitos elogios. O caimento é perfeito e a cor é exatamente como na foto.',
     size: 'P',
-    recommended: true
-  },
-  {
-    id: 'default-3',
-    user: 'CARLA F.',
-    headline: 'Minha melhor compra do ano',
-    rating: 4,
-    comment: 'A peça é linda e muito bem acabada. Só achei o tamanho G um pouco justo, mas nada que comprometa o uso.',
-    size: 'G',
-    recommended: true
+    recommended: true,
+    productId: 'default',
+    productName: 'Default',
+    productImage: ''
   }
 ];
 
-export function ProductReviews({ productId }: { productId: string }) {
+export function ProductReviews({ product }: { product: any }) {
   const db = useFirestore();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -92,19 +93,25 @@ export function ProductReviews({ productId }: { productId: string }) {
   });
 
   const reviewsQuery = useMemoFirebase(() => {
-    if (!db || !productId) return null;
-    return query(collection(db, 'products', productId, 'reviews'), orderBy('createdAt', 'desc'));
-  }, [db, productId]);
+    if (!db || !product?.id) return null;
+    return query(
+      collection(db, 'reviews'), 
+      where('productId', '==', product.id),
+      where('status', '==', 'published'),
+      orderBy('createdAt', 'desc')
+    );
+  }, [db, product?.id]);
 
   const { data: dbReviews, isLoading } = useCollection<Review>(reviewsQuery);
 
   const reviews = useMemo(() => {
     const list = dbReviews || [];
-    if (list.length === 0) return DEFAULT_REVIEWS;
+    if (list.length === 0 && !isLoading) return DEFAULT_REVIEWS;
     return list;
-  }, [dbReviews]);
+  }, [dbReviews, isLoading]);
 
   const stats = useMemo(() => {
+    if (reviews.length === 0) return { avg: 5.0, total: 0, recommendedPercent: 100 };
     const total = reviews.length;
     const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
     const recommended = reviews.filter(r => r.recommended).length;
@@ -122,14 +129,21 @@ export function ProductReviews({ productId }: { productId: string }) {
     }
 
     setIsSubmitting(true);
-    const reviewsRef = collection(db, 'products', productId, 'reviews');
+    const reviewsRef = collection(db, 'reviews');
     
     addDocumentNonBlocking(reviewsRef, {
       ...newReview,
+      productId: product.id,
+      productName: product.name,
+      productImage: product.image,
+      status: 'pending', // Novas avaliações começam como pendentes para moderação
       createdAt: serverTimestamp()
     });
 
-    toast({ title: "Avaliação enviada!", description: "Obrigada por compartilhar sua experiência Toda Bela." });
+    toast({ 
+      title: "Avaliação enviada!", 
+      description: "Obrigada! Sua experiência será publicada após uma breve moderação." 
+    });
     setIsSubmitting(false);
     setIsDialogOpen(false);
     setNewReview({ user: '', rating: 5, headline: '', comment: '', size: 'M', recommended: true });
@@ -191,23 +205,6 @@ export function ProductReviews({ productId }: { productId: string }) {
             <MessageSquare className="h-4 w-4 group-hover:scale-110 transition-transform" />
             Escrever Avaliação
           </button>
-
-          <div className="grid grid-cols-2 gap-10 pt-8 border-t border-primary/5">
-            <div className="space-y-5">
-              <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground text-center">Ocasiões</h5>
-              <div className="flex flex-wrap gap-2.5 justify-center">
-                <span className="px-4 py-2 bg-secondary/50 text-[10px] text-primary/80 rounded-full italic font-medium">Eventos</span>
-                <span className="px-4 py-2 bg-secondary/50 text-[10px] text-primary/80 rounded-full italic font-medium">Lazer Chic</span>
-              </div>
-            </div>
-            <div className="space-y-5">
-              <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground text-center">Destaques</h5>
-              <div className="flex flex-wrap gap-2.5 justify-center">
-                <span className="px-4 py-2 bg-secondary/50 text-[10px] text-primary/80 rounded-full italic font-medium">Toque Macio</span>
-                <span className="px-4 py-2 bg-secondary/50 text-[10px] text-primary/80 rounded-full italic font-medium">Sofisticação</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Reviews List Column */}

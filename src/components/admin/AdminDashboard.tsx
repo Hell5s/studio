@@ -23,12 +23,13 @@ import {
   Bell,
   BellRing,
   ChevronRight,
-  Clock
+  Clock,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
-import { doc, onSnapshot, collection, query, orderBy, limit } from 'firebase/firestore';
+import { useUser, useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
+import { doc, onSnapshot, collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { ProductManagement } from './ProductManagement';
 import { OrderManagement } from './OrderManagement';
 import { BannerManagement } from './BannerManagement';
@@ -40,6 +41,7 @@ import { AdminSettings } from './AdminSettings';
 import { AdminCategories } from './AdminCategories';
 import { AddProductDialog } from './AddProductDialog';
 import { AdminHeaderSettings } from './AdminHeaderSettings';
+import { AdminReviews } from './AdminReviews';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -57,7 +59,7 @@ interface AdminDashboardProps {
   onExit?: () => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header';
+type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header';
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const db = useFirestore();
@@ -76,6 +78,11 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
   }, [db, user]);
   const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
+
+  // Pending Reviews Count
+  const pendingReviewsQuery = useMemoFirebase(() => query(collection(db, 'reviews'), where('status', '==', 'pending')), [db]);
+  const { data: pendingReviews } = useCollection(pendingReviewsQuery);
+  const pendingReviewsCount = pendingReviews?.length || 0;
 
   // Sound Notification Helper
   const playNotificationSound = () => {
@@ -164,6 +171,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'orders', label: 'Pedidos', icon: <Truck className="h-4 w-4" /> },
     { id: 'products', label: 'Produtos', icon: <Package className="h-4 w-4" /> },
     { id: 'categories', label: 'Categorias', icon: <Layers className="h-4 w-4" /> },
+    { id: 'reviews', label: 'Avaliações', icon: <Star className="h-4 w-4" />, badge: pendingReviewsCount },
     { id: 'header', label: 'Cabeçalho', icon: <Layout className="h-4 w-4" /> },
     { id: 'coupons', label: 'Cupons', icon: <Tag className="h-4 w-4" /> },
     { id: 'customers', label: 'Clientes', icon: <Users className="h-4 w-4" /> },
@@ -197,7 +205,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
               key={item.id} 
               onClick={() => setActiveTab(item.id as AdminTab)}
               className={cn(
-                "w-full text-left px-4 py-3 rounded-xl text-[12px] font-medium transition-all flex items-center gap-3",
+                "w-full text-left px-4 py-3 rounded-xl text-[12px] font-medium transition-all flex items-center gap-3 relative",
                 activeTab === item.id 
                   ? "bg-white/10 text-accent" 
                   : "text-white/60 hover:bg-white/5 hover:text-white"
@@ -205,6 +213,11 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             >
               {item.icon}
               {item.label}
+              {item.badge > 0 && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 h-4 min-w-4 px-1 rounded-full bg-accent text-primary text-[8px] font-black flex items-center justify-center shadow-lg">
+                  {item.badge}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -322,6 +335,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             {activeTab === 'products' && <ProductManagement />}
             {activeTab === 'orders' && <OrderManagement />}
             {activeTab === 'categories' && <AdminCategories />}
+            {activeTab === 'reviews' && <AdminReviews />}
             {activeTab === 'header' && <AdminHeaderSettings />}
             {activeTab === 'coupons' && <AdminCoupons />}
             {activeTab === 'customers' && <AdminCustomers />}
