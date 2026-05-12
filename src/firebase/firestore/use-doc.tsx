@@ -1,4 +1,3 @@
-
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -62,7 +61,7 @@ export function useDoc<T = any>(
         setTimeout(() => {
           const contextualError = new FirestorePermissionError({
             operation: 'get',
-            path: memoizedDocRef.path,
+            path: memoizedDocRef ? memoizedDocRef.path : 'unknown-doc',
           });
 
           errorEmitter.emit('permission-error', contextualError);

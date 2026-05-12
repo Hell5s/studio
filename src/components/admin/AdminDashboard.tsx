@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -29,7 +28,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useUser, useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
+import { useUser, useDoc, useMemoFirebase, useFirestore, useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, onSnapshot, collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { ProductManagement } from './ProductManagement';
 import { OrderManagement } from './OrderManagement';
@@ -114,7 +113,11 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
   useEffect(() => {
     const saved = localStorage.getItem('tb_admin_read_orders');
     if (saved) {
-      setReadIds(new Set(JSON.parse(saved)));
+      try {
+        setReadIds(new Set(JSON.parse(saved)));
+      } catch (e) {
+        console.warn("Erro ao ler notificações salvas");
+      }
     }
   }, []);
 
@@ -124,29 +127,42 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
 
     const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(10));
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const orders: any[] = [];
-      snapshot.forEach((doc) => {
-        orders.push({ id: doc.id, ...doc.data() });
-      });
-
-      if (!initialLoadRef.current) {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === 'added') {
-            const newOrder = change.doc.data();
-            toast({
-              title: "🛍️ Novo Pedido!",
-              description: `Pedido #${newOrder.orderNumber} - R$ ${newOrder.total?.toFixed(2)}`,
-              duration: 5000,
-            });
-            playNotificationSound();
-          }
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        const orders: any[] = [];
+        snapshot.forEach((doc) => {
+          orders.push({ id: doc.id, ...doc.data() });
         });
-      }
 
-      setNotifications(orders);
-      initialLoadRef.current = false;
-    });
+        if (!initialLoadRef.current) {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+              const newOrder = change.doc.data();
+              toast({
+                title: "🛍️ Novo Pedido!",
+                description: `Pedido #${newOrder.orderNumber} - R$ ${newOrder.total?.toFixed(2)}`,
+                duration: 5000,
+              });
+              playNotificationSound();
+            }
+          });
+        }
+
+        setNotifications(orders);
+        initialLoadRef.current = false;
+      },
+      (error) => {
+        // CRITICAL: Defer the error handling to the next execution cycle.
+        // This prevents the "Unexpected state" error in Firebase SDK.
+        setTimeout(() => {
+          const permissionError = new FirestorePermissionError({
+            path: 'orders',
+            operation: 'list',
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        }, 0);
+      }
+    );
 
     return () => unsubscribe();
   }, [db, isAdmin, toast]);
@@ -216,7 +232,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             >
               {item.icon}
               {item.label}
-              {item.badge > 0 && (
+              {(item.badge ?? 0) > 0 && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 h-4 min-w-4 px-1 rounded-full bg-accent text-primary text-[8px] font-black flex items-center justify-center shadow-lg">
                   {item.badge}
                 </span>
@@ -255,7 +271,6 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
               Redator IA
             </Button>
 
-            {/* Real-time Notification Bell */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="relative h-10 w-10 rounded-full bg-secondary flex items-center justify-center border border-primary/5 cursor-pointer hover:bg-accent/10 transition-colors">
@@ -301,7 +316,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
                           <p className="text-[10px] text-muted-foreground truncate">{order.customer?.name}</p>
                           <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground uppercase font-black tracking-tighter">
                             <Clock className="h-2.5 w-2.5" /> 
-                            {new Date(order.createdAt?.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            {order.createdAt ? new Date(order.createdAt?.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                           </div>
                         </div>
                         {!readIds.has(order.id) && (

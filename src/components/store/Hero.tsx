@@ -101,35 +101,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return () => clearTimeout(timer);
   }, [emblaApi, selectedIndex, displayBanners]);
 
-  // 1. ESTADO DE CARREGAMENTO (SKELETON EDITORIAL)
-  if (!displayBanners.length && isBannersLoading) {
-    return (
-      <section
-        className="relative w-full overflow-hidden animate-pulse"
-        style={{ 
-          width: '100%',
-          height: '100vh',
-          maxHeight: '100vh',
-          minHeight: '600px',
-          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 50%, #1a0a0e 100%)',
-          WebkitBackfaceVisibility: 'hidden',
-          transform: 'translateZ(0)'
-        }}
-      >
-        <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10">
-          <div className="space-y-4">
-            <div className="w-64 h-6 bg-white/10 rounded animate-pulse" />
-            <div className="w-48 h-3 bg-white/10 rounded mt-3 animate-pulse" />
-            <div className="w-32 h-10 bg-white/10 rounded-full mt-6 animate-pulse" />
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // 2. ESTADO SEM BANNERS OU DURANTE HIDRATAÇÃO (TELA ELEGANTE LOGO)
-  // hasHydrated é falso no servidor e na primeira renderização do cliente, garantindo paridade
-  if (!displayBanners.length && (!isBannersLoading || !hasHydrated)) {
+  // ESTADO SEM BANNERS OU DURANTE HIDRATAÇÃO (TELA ELEGANTE LOGO)
+  // Garantimos que o servidor e o primeiro render do cliente entrem aqui.
+  if (!hasHydrated || (!displayBanners.length && !isBannersLoading)) {
     return (
       <section
         className="relative w-full overflow-hidden flex items-center justify-center"
@@ -151,10 +125,34 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
              MODA FEMININA
            </p>
         </div>
-        
-        {/* Decorative circle overlay */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
            <div className="w-[85%] h-[85%] max-w-[650px] max-h-[650px] border border-white/5 rounded-full animate-spin-slow" />
+        </div>
+      </section>
+    );
+  }
+
+  // ESTADO DE CARREGAMENTO (SKELETON EDITORIAL)
+  if (!displayBanners.length && isBannersLoading) {
+    return (
+      <section
+        className="relative w-full overflow-hidden animate-pulse"
+        style={{ 
+          width: '100%',
+          height: '100vh',
+          maxHeight: '100vh',
+          minHeight: '600px',
+          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 50%, #1a0a0e 100%)',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: 'translateZ(0)'
+        }}
+      >
+        <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10">
+          <div className="space-y-4">
+            <div className="w-64 h-6 bg-white/10 rounded" />
+            <div className="w-48 h-3 bg-white/10 rounded mt-3" />
+            <div className="w-32 h-10 bg-white/10 rounded-full mt-6" />
+          </div>
         </div>
       </section>
     );
@@ -211,7 +209,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 />
               )}
               
-              {/* Banner dimming overlay */}
+              {/* Banner legibility overlay */}
               <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
               <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10 pointer-events-none">
@@ -261,7 +259,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
             <ChevronRight className="h-6 w-6" />
           </button>
           
-          {/* Indicadores de slide */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
             {displayBanners.map((_, i) => (
               <div 
