@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useMemo } from 'react';
@@ -162,15 +161,19 @@ export function BannerManagement() {
 
     setIsGeneratingTexts(true);
     try {
+      // Removido o envio da imagem para o flow de texto para reduzir o payload (Llama 3 é focado em texto)
       const result = await generateBannerTexts({ 
-        concept: combinedContext,
-        imageUrl: previewImage.startsWith('data:') || previewImage.includes('cloudinary.com') ? previewImage : undefined 
+        concept: combinedContext
       });
       setBannerData({ title: result.title, subtitle: result.subtitle, ctaText: result.ctaText });
       toast({ title: "Textos criados!" });
       setShowAiTextPanel(false);
     } catch (error: any) {
-      toast({ title: "Falha na redação", description: "Tente novamente mais tarde.", variant: "destructive" });
+      toast({ 
+        title: "Falha na redação", 
+        description: error.message || "Tente novamente mais tarde.", 
+        variant: "destructive" 
+      });
     } finally {
       setIsGeneratingTexts(false);
     }
@@ -364,7 +367,7 @@ export function BannerManagement() {
 
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
-                  <LinkIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40" />
+                  <LinkIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-accent/40" />
                   <Input placeholder={`Colar URL (https://...)`} className="rounded-full h-16 pl-14 bg-secondary/10 border-none" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
                 </div>
                 <Button onClick={handleUseUrl} disabled={!imageUrl} className="rounded-full h-16 px-8 bg-accent text-primary font-bold uppercase tracking-widest text-[10px]">Usar URL</Button>

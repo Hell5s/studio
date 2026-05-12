@@ -10,7 +10,6 @@ import { z } from 'genkit';
 
 const GenerateBannerTextInputSchema = z.object({
   concept: z.string().optional().describe('O tema ou inspiração da campanha (opcional).'),
-  imageUrl: z.string().optional().describe('URL da imagem do banner para análise (não suportado pelo modelo Llama 3 Texto).'),
 });
 export type GenerateBannerTextInput = z.infer<typeof GenerateBannerTextInputSchema>;
 
@@ -73,17 +72,19 @@ REGRAS DE RESPOSTA:
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Groq API Error: ${errorText}`);
+        throw new Error(`Erro na API Groq: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
+      let content = data.choices?.[0]?.message?.content;
 
       if (!content) throw new Error('A IA não retornou um conteúdo válido.');
 
+      // Limpeza de possíveis blocos de código markdown que a IA possa ter retornado mesmo em modo JSON
+      content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+
       const result = JSON.parse(content);
       
-      // Validação final com Zod para garantir que o output segue o contrato esperado
       return GenerateBannerTextOutputSchema.parse({
         title: result.title || 'Essência Toda Bela',
         subtitle: result.subtitle || 'Elegância em cada movimento.',
@@ -91,7 +92,7 @@ REGRAS DE RESPOSTA:
       });
     } catch (error: any) {
       console.error('Erro Groq Flow:', error);
-      throw new Error(`Falha na IA: ${error.message || 'Erro de processamento'}`);
+      throw new Error(error.message || 'Erro inesperado no processamento da IA');
     }
   }
 );
