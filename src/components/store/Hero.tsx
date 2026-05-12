@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -212,6 +211,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                 />
               )}
               
+              {/* Banner dimming overlay */}
+              <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+
               <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-12 md:pb-20 relative z-10 pointer-events-none">
                 <div className={cn(
                   "max-w-2xl space-y-4 md:space-y-10 transition-all duration-1000 pointer-events-auto",
