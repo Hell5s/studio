@@ -206,9 +206,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     style={{
                       backgroundImage: `url(${optimizedUrl})`,
                       backgroundSize: isMobile ? 'cover' : (banner.imageZoom ? `${banner.imageZoom}%` : 'contain'),
-                      backgroundPosition: banner.imagePosition 
-                        ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` 
-                        : 'center center',
+                      backgroundPosition: isMobile 
+                        ? 'center center' 
+                        : (banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center'),
                       backgroundRepeat: 'no-repeat',
                       imageRendering: 'high-quality' as any,
                       WebkitFontSmoothing: 'antialiased',
