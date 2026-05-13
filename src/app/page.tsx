@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
@@ -254,7 +253,7 @@ function StorefrontContent() {
                     >
                       <img 
                         src={col.image || 'https://picsum.photos/seed/placeholder/400/500'} 
-                        className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110" 
+                        className="w-full h-full object-cover transition-transform duration-2000 group-hover:scale-110" 
                         alt={col.name} 
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/20 to-transparent" />
@@ -281,7 +280,7 @@ function StorefrontContent() {
                 <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[6rem] overflow-hidden shadow-premium group">
                   <img 
                     src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80" 
-                    className="object-cover w-full h-full transition-transform duration-[2500ms] group-hover:scale-110" 
+                    className="object-cover w-full h-full transition-transform duration-2500 group-hover:scale-110" 
                     alt="Essência Toda Bela" 
                   />
                   <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
