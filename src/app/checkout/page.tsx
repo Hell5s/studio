@@ -16,14 +16,17 @@ function CheckoutContent() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // IMPORTANTE: Substitua pela sua PUBLIC_KEY real de PRODUÇÃO
-    // Você a encontra em: mercadopago.com.br/developers/panel/credentials
-    initMercadoPago('APP_USR-f3d3d6b0-7d3e-4d5c-9c9d-1d2e3f4g5h6i', { 
+    // Inicialização do SDK com a Public Key de produção fornecida
+    initMercadoPago('APP_USR-1a33d506-6ac5-447d-942f-bdcd287f3a84', { 
       locale: 'pt-BR' 
     });
 
     if (!preferenceId) {
-      router.replace('/');
+      // Pequeno atraso para evitar falsos positivos durante a navegação
+      const timeout = setTimeout(() => {
+        if (!preferenceId) router.replace('/');
+      }, 500);
+      return () => clearTimeout(timeout);
     } else {
       setIsReady(true);
     }
