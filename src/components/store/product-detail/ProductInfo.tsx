@@ -201,7 +201,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
           onClick={handleBuyNowClick}
           className="w-full h-14 md:h-16 text-[12px] md:text-[14px] font-bold uppercase tracking-[0.3em] bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-500 rounded-none shadow-2xl min-h-[54px]"
         >
-          FINALIZAR COMPRA AGORA
+          COMPRAR AGORA
         </Button>
         
         <Button
