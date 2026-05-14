@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { ShoppingBag, Loader2, CheckCircle2, ArrowLeft, X } from 'lucide-react';
+import { ShoppingBag, Loader2, CheckCircle2, ArrowLeft, X, CreditCard } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Sheet,
@@ -38,7 +38,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
   const [loading, setLoading] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [orderComplete, setOrderComplete] = useState(false);
   const [selectedShipping, setSelectedShipping] = useState(shippingMethods[0]);
   const [coupon, setCoupon] = useState('');
   const [zipCode, setZipCode] = useState('');
@@ -73,19 +72,10 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     setTimeout(() => {
       setIsCalculating(false);
       setFormData(prev => ({ ...prev, zipCode: zipCode }));
-      
-      const firstDigit = cleanZip[0];
-      if (['0', '1', '2', '3'].includes(firstDigit)) {
-        toast({
-          title: "Frete Disponível",
-          description: "Sua região possui frete grátis nas compras acima de R$ 249,00.",
-        });
-      } else {
-        toast({
-          title: "Frete Calculado",
-          description: "Entrega disponível para sua localidade via transportadora própria.",
-        });
-      }
+      toast({
+        title: "Frete Calculado",
+        description: "Opções de entrega atualizadas para sua região.",
+      });
     }, 1200);
   };
 
@@ -101,7 +91,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     if (!user) {
       toast({
         title: "Acesso necessário",
-        description: "Faça login para salvar seus pedidos e acompanhar a entrega.",
+        description: "Faça login para finalizar sua compra com segurança.",
         variant: "destructive"
       });
       return;
@@ -110,7 +100,9 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     setLoading(true);
     try {
       const orderId = `PED-${Date.now()}`;
-      const payload = {
+      
+      // 1. Criar pedido no Firestore como pendente
+      const orderPayload = {
         orderNumber: orderId,
         userId: user.uid,
         customer: {
@@ -128,7 +120,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           price: Number(item.price || 0),
           quantity: Number(item.quantity || 1),
           image: item.image,
-          category: item.category || 'Geral',
           selectedSize: item.selectedSize || null,
           selectedColor: item.selectedColor || null
         })),
@@ -139,26 +130,37 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           estimatedTime: selectedShipping.time
         },
         total: finalTotal,
-        status: "Pedido recebido",
-        trackingCode: "Aguardando envio",
+        status: "pending",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
 
-      await setDoc(doc(db, 'orders', orderId), payload);
+      await setDoc(doc(db, 'orders', orderId), orderPayload);
 
-      setOrderComplete(true);
-      setTimeout(() => {
-        onSuccess();
-        onOpenChange(false);
-        setOrderComplete(false);
-        setStep('cart');
-      }, 3500);
+      // 2. Chamar API para criar preferência no Mercado Pago
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cartItems,
+          orderId: orderId,
+          customer: orderPayload.customer
+        }),
+      });
+
+      const { init_point, error } = await response.json();
+
+      if (error) throw new Error(error);
+
+      // 3. Redirecionar para o Checkout Pro
+      if (init_point) {
+        window.location.href = init_point;
+      }
     } catch (error: any) {
-      console.error("Erro ao processar pedido:", error);
+      console.error("Erro no Checkout:", error);
       toast({
         title: "Erro ao processar",
-        description: "Não foi possível registrar seu pedido. Tente novamente.",
+        description: "Não foi possível iniciar o pagamento. Tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -166,33 +168,12 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     }
   };
 
-  if (orderComplete) {
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full max-w-[420px] p-0 flex flex-col items-center justify-center bg-white">
-          <div className="text-center space-y-6 px-10">
-            <div className="h-24 w-24 bg-black rounded-full flex items-center justify-center mx-auto shadow-2xl">
-              <CheckCircle2 className="h-12 w-12 text-white" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-headline font-bold text-primary uppercase tracking-widest">Reserva Confirmada!</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed italic font-light">
-                Sua seleção extraordinária foi processada com sucesso. Em instantes você poderá acompanhar o status em sua conta.
-              </p>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
         className="w-full max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100 overflow-hidden"
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 shrink-0">
           {step === 'checkout' ? (
             <button
@@ -204,7 +185,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           ) : (
             <SheetHeader className="p-0 space-y-0">
               <SheetTitle className="text-xs font-bold text-primary uppercase tracking-[0.3em]">
-                {step === 'cart' ? 'MINHA SELEÇÃO' : 'FINALIZAR PEDIDO'}
+                MINHA SELEÇÃO
               </SheetTitle>
             </SheetHeader>
           )}
@@ -213,7 +194,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           </button>
         </div>
 
-        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-32 px-10 text-center space-y-6">
@@ -224,22 +204,15 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Sua bolsa está vazia</h3>
                 <p className="text-[12px] text-muted-foreground italic font-light">Inicie sua jornada editorial escolhendo peças exclusivas.</p>
               </div>
-              <button
-                onClick={() => onOpenChange(false)}
-                className="mt-4 text-[10px] font-bold uppercase tracking-[0.3em] underline underline-offset-8 text-accent min-h-[44px]"
-              >
-                Explorar Loja
-              </button>
             </div>
           ) : step === 'cart' ? (
             <div className="p-6 space-y-8">
-              {/* Item List */}
               <div className="space-y-0">
                 {cartItems.map((item, idx) => (
                   <div key={item.id}>
                     <div className="flex gap-6 py-6 group">
                       <div className="h-24 w-18 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm">
-                        <img src={item.image} className="h-full w-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700" alt={item.name} />
+                        <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
                       </div>
                       <div className="flex-1 min-w-0 space-y-2">
                         <p className="text-[11px] font-bold text-primary leading-tight uppercase tracking-tight line-clamp-2">{item.name}</p>
@@ -247,136 +220,60 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                           {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
                           {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
                         </div>
-                        <div className="flex flex-col pt-2">
-                          <p className="text-10px text-muted-foreground uppercase font-medium">Qtd: {item.quantity}</p>
-                          <div className="flex items-center gap-3 pt-1">
-                            <button
-                              onClick={() => onUpdateQuantity(item.id, -1)}
-                              className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs"
-                            >
-                              −
-                            </button>
+                        <div className="flex items-center gap-3 pt-3">
+                            <button onClick={() => onUpdateQuantity(item.id, -1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">−</button>
                             <span className="text-[11px] font-bold w-4 text-center">{item.quantity}</span>
-                            <button
-                              onClick={() => onUpdateQuantity(item.id, 1)}
-                              className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs"
-                            >
-                              +
-                            </button>
-                          </div>
-                          <div className="flex items-center justify-between pt-2">
-                            <p className="text-sm font-bold text-primary">{formatCurrency(item.price * item.quantity)}</p>
-                          </div>
+                            <button onClick={() => onUpdateQuantity(item.id, 1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">+</button>
                         </div>
                       </div>
-                      <button
-                        onClick={() => onRemoveItem(item.id)}
-                        className="text-primary/10 hover:text-destructive transition-colors self-start min-h-[44px] min-w-[44px] flex items-center justify-center"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                      <button onClick={() => onRemoveItem(item.id)} className="text-primary/10 hover:text-destructive self-start p-2"><X className="h-4 w-4" /></button>
                     </div>
                     {idx < cartItems.length - 1 && <div className="h-px bg-primary/5" />}
                   </div>
                 ))}
               </div>
 
-              {/* Calculated Totals */}
               <div className="pt-8 border-t border-primary/5 space-y-6">
                 <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-primary/40">
                   <span>SUBTOTAL</span>
                   <span className="text-sm text-primary">{formatCurrency(total)}</span>
                 </div>
-
-                <div className="space-y-4">
-                   <div className="flex gap-3">
-                    <Input
-                      placeholder="CUPOM EDITORIAL"
-                      value={coupon}
-                      onChange={e => setCoupon(e.target.value.toUpperCase())}
-                      className="h-14 text-[10px] rounded-none border-primary/10 flex-1 uppercase tracking-widest font-bold placeholder:font-light"
-                    />
-                    <button className="px-8 h-14 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] shrink-0 hover:bg-accent transition-all min-h-[44px]">
-                      APLICAR
-                    </button>
-                  </div>
-
-                  <div className="flex gap-3">
+                <div className="flex gap-3">
                     <Input
                       placeholder="CONSULTAR CEP"
                       value={zipCode}
                       onChange={e => setZipCode(e.target.value)}
                       maxLength={9}
-                      className="h-14 text-[10px] rounded-none border-primary/10 flex-1 tracking-widest font-bold placeholder:font-light"
+                      className="h-14 text-[10px] rounded-none border-primary/10 flex-1 tracking-widest font-bold"
                     />
-                    <button 
-                      onClick={handleCalculateShipping}
-                      disabled={isCalculating}
-                      className="px-8 h-14 bg-secondary text-primary text-[10px] font-bold uppercase tracking-[0.2em] shrink-0 hover:bg-primary hover:text-white transition-all min-h-[44px] flex items-center justify-center min-w-[120px]"
-                    >
-                      {isCalculating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'CALCULAR'}
+                    <button onClick={handleCalculateShipping} className="px-8 h-14 bg-secondary text-primary text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all">
+                      CALCULAR
                     </button>
-                  </div>
                 </div>
-
                 <div className="pt-6 border-t border-primary/10 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-black uppercase tracking-[0.3em] text-primary">VALOR FINAL</span>
+                    <span className="text-xs font-black uppercase tracking-[0.3em] text-primary">TOTAL</span>
                     <span className="text-2xl font-bold text-primary">{formatCurrency(finalTotal)}</span>
                   </div>
-                  <p className="text-[10px] text-accent font-bold uppercase tracking-widest text-right italic">
-                    Parcele em 10x de {formatCurrency(finalTotal / 10)}
-                  </p>
                 </div>
               </div>
             </div>
           ) : (
-            /* Checkout Form */
             <div className="p-6 space-y-10">
               <div className="space-y-6">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">DADOS DE DESTINO</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">DADOS DE ENVIO</p>
                 <div className="space-y-4">
-                  <Input
-                    placeholder="Nome Completo para Identificação"
-                    value={formData.name}
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
-                  />
-                  <Input
-                    placeholder="WhatsApp VIP (Acompanhamento)"
-                    value={formData.phone}
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                    className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      placeholder="CEP"
-                      value={formData.zipCode}
-                      onChange={e => setFormData({ ...formData, zipCode: e.target.value })}
-                      className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
-                    />
-                    <Input
-                      placeholder="Estado (Ex: SP)"
-                      value={formData.state}
-                      onChange={e => setFormData({ ...formData, state: e.target.value })}
-                      className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
-                    />
+                  <Input placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 text-[11px] rounded-none border-primary/10 px-6" />
+                  <Input placeholder="WhatsApp com DDD" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 text-[11px] rounded-none border-primary/10 px-6" />
+                  <Input placeholder="CEP" value={formData.zipCode} onChange={e => setFormData({ ...formData, zipCode: e.target.value })} className="h-14 text-[11px] rounded-none border-primary/10 px-6" />
+                  <Input placeholder="Endereço e Número" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className="h-14 text-[11px] rounded-none border-primary/10 px-6" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input placeholder="Cidade" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} className="h-14 text-[11px] rounded-none border-primary/10 px-6" />
+                    <Input placeholder="Estado" value={formData.state} onChange={e => setFormData({ ...formData, state: e.target.value })} className="h-14 text-[11px] rounded-none border-primary/10 px-6" />
                   </div>
-                  <Input
-                    placeholder="Endereço, Número e Complemento"
-                    value={formData.address}
-                    onChange={e => setFormData({ ...formData, address: e.target.value })}
-                    className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
-                  />
-                  <Input
-                    placeholder="Cidade"
-                    value={formData.city}
-                    onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    className="h-14 text-[11px] rounded-none border-primary/10 px-6 font-medium"
-                  />
                 </div>
               </div>
-
+              
               <div className="space-y-6">
                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">MÉTODO DE ENVIO</p>
                 <div className="space-y-4">
@@ -385,51 +282,42 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                       key={method.id}
                       onClick={() => setSelectedShipping(method)}
                       className={cn(
-                        "w-full flex items-center justify-between p-6 border transition-all duration-500 text-left min-h-[80px]",
-                        selectedShipping.id === method.id
-                          ? "border-primary bg-primary text-white shadow-xl"
-                          : "border-primary/10 text-primary hover:border-accent"
+                        "w-full flex items-center justify-between p-6 border transition-all duration-500",
+                        selectedShipping.id === method.id ? "border-primary bg-primary text-white shadow-xl" : "border-primary/10 text-primary hover:border-accent"
                       )}
                     >
                       <div className="space-y-1">
                         <p className="text-[11px] font-black uppercase tracking-widest">{method.name}</p>
-                        <p className={cn("text-[10px] italic font-light", selectedShipping.id === method.id ? "text-white/60" : "text-muted-foreground")}>{method.time}</p>
+                        <p className={cn("text-[10px] italic", selectedShipping.id === method.id ? "text-white/60" : "text-muted-foreground")}>{method.time}</p>
                       </div>
                       <p className="text-sm font-bold">{method.price === 0 ? 'GRÁTIS' : formatCurrency(method.price)}</p>
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Checkout Summary */}
-              <div className="pt-10 border-t border-primary/10 space-y-4">
-                <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest text-primary/40">
-                  <span>SUBTOTAL</span>
-                  <span>{formatCurrency(total)}</span>
-                </div>
-                <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest text-primary/40">
-                  <span>TAXA DE ENVIO</span>
-                  <span className="text-accent">{selectedShipping.price === 0 ? 'GRÁTIS' : formatCurrency(selectedShipping.price)}</span>
-                </div>
-                <div className="flex justify-between items-center pt-4">
-                  <span className="text-xs font-black uppercase tracking-[0.4em] text-primary">VALOR FINAL</span>
-                  <span className="text-2xl font-bold text-primary">{formatCurrency(finalTotal)}</span>
-                </div>
-              </div>
             </div>
           )}
         </div>
 
-        {/* Sticky Action Button */}
         {cartItems.length > 0 && (
           <div className="shrink-0 border-t border-primary/5 bg-white p-4">
             <button
               onClick={step === 'cart' ? () => setStep('checkout') : handlePlaceOrder}
               disabled={loading}
-              className="w-full h-16 bg-primary text-white text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-accent transition-all duration-700 disabled:opacity-50 flex items-center justify-center gap-4 shadow-2xl min-h-[54px]"
+              className="w-full h-16 bg-primary text-white text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-accent transition-all duration-700 flex items-center justify-center gap-4 shadow-2xl"
             >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : step === 'cart' ? 'FINALIZAR SELEÇÃO' : 'CONFIRMAR RESERVA'}
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : step === 'cart' ? (
+                'CONTINUAR PARA ENVIO'
+              ) : (
+                <>
+                  <CreditCard className="h-4 w-4" />
+                  FINALIZAR PAGAMENTO
+                </>
+              )}
             </button>
+            <p className="text-[8px] text-center text-muted-foreground uppercase mt-4 tracking-widest opacity-60">Ambiente seguro processado pelo Mercado Pago</p>
           </div>
         )}
       </SheetContent>
