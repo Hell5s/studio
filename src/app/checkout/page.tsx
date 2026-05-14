@@ -125,7 +125,8 @@ function CheckoutContent() {
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
   const freteValor = shippingMethod === 'sedex' ? 25.90 : 0;
-  const totalGeral = (order?.subtotal || 0) + freteValor;
+  const subtotal = order?.subtotal || 0;
+  const totalGeral = Number((subtotal + freteValor).toFixed(2));
 
   const handleNextStep = async () => {
     if (currentStep === 'identificacao') {
@@ -169,30 +170,42 @@ function CheckoutContent() {
       });
 
       if (pagamento === 'pix') {
+        // Sanitização rigorosa do valor para garantir ponto como decimal
+        const amountToSend = Number(totalGeral.toString().replace(',', '.'));
+        
+        const pixPayload = { 
+          formData: {
+            transaction_amount: amountToSend,
+            description: `Pedido #${order?.orderNumber} - Toda Bela`,
+            external_reference: order?.orderNumber,
+            payer: {
+              email: identificacao.email,
+              first_name: identificacao.nome.split(' ')[0],
+              last_name: identificacao.nome.split(' ').slice(1).join(' ') || 'Cliente'
+            }
+          }
+        };
+
+        console.log('--- DEBUG PIX CHECKOUT ---');
+        console.log('Enviando Objeto:', pixPayload);
+        console.log('Valor Final (amountToSend):', amountToSend);
+        console.log('Tipo do Valor:', typeof amountToSend);
+
         const response = await fetch('/api/checkout/pix', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            formData: {
-              transaction_amount: totalGeral,
-              description: `Pedido #${order?.orderNumber} - Toda Bela`,
-              external_reference: order?.orderNumber,
-              payer: {
-                email: identificacao.email,
-                first_name: identificacao.nome.split(' ')[0],
-                last_name: identificacao.nome.split(' ').slice(1).join(' ') || 'Cliente'
-              }
-            }
-          }),
+          body: JSON.stringify(pixPayload),
         });
+        
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Erro ao gerar PIX');
+        if (!response.ok) throw new Error(data.error || data.message || 'Erro ao gerar PIX');
         setPixData(data);
       } else {
         // Redireciona para Checkout Pro para Cartão e Boleto
         window.location.href = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preferenceId}`;
       }
     } catch (error: any) {
+      console.error('Erro no Checkout:', error);
       toast({ title: "Erro no checkout", description: error.message, variant: "destructive" });
     } finally {
       setIsProcessing(false);

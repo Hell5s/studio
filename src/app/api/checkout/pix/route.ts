@@ -7,17 +7,20 @@ export async function POST(request: Request) {
 
     if (!formData) throw new Error('Dados do formulário são obrigatórios');
 
-    // Sanitização e Conversão do Valor para Número
-    const transaction_amount = Number(formData.transaction_amount);
+    // Sanitização rigorosa: garante que seja um número decimal puro
+    // Substitui vírgulas por pontos se existirem e força conversão para Number
+    const rawAmount = formData.transaction_amount?.toString().replace(',', '.');
+    const transaction_amount = Number(parseFloat(rawAmount).toFixed(2));
     
     // Log de Depuração no Servidor
     console.log('--- Processando Pagamento PIX ---');
-    console.log('Valor recebido:', formData.transaction_amount);
+    console.log('Valor bruto recebido:', formData.transaction_amount);
     console.log('Valor convertido (transaction_amount):', transaction_amount);
     console.log('Tipo:', typeof transaction_amount);
 
     if (isNaN(transaction_amount) || transaction_amount <= 0) {
-      throw new Error(`Valor de transação inválido: ${formData.transaction_amount}`);
+      console.error('Valor de transação inválido:', formData.transaction_amount);
+      return NextResponse.json({ error: `Valor de transação inválido: ${formData.transaction_amount}` }, { status: 400 });
     }
 
     const payerEmail = formData.payer?.email || formData.email || 'contato@todabela.com.br';
