@@ -42,7 +42,7 @@ function CheckoutContent() {
       creditCard: 'all' as const,
       debitCard: 'all' as const,
       ticket: 'all' as const,
-      bankTransfer: ['pix'] as const,
+      bankTransfer: 'all' as const, // Habilita PIX e transferências bancárias
       maxInstallments: 10,
     },
   };
@@ -165,6 +165,11 @@ function CheckoutContent() {
           letter-spacing: 0.2em !important;
           background-color: #6E3C47 !important;
           height: 56px !important;
+          transition: all 0.3s ease !important;
+        }
+        #paymentBrick_container button:hover {
+          background-color: #C7A17A !important;
+          color: #2A1F22 !important;
         }
         #paymentBrick_container .mp-bricks-subtitle {
           color: #C7A17A !important;
@@ -176,6 +181,22 @@ function CheckoutContent() {
         #paymentBrick_container .mp-bricks-title {
           font-family: 'Playfair Display', serif !important;
           color: #2A1F22 !important;
+        }
+        /* Customização para a tela de PIX e Tickets */
+        .mp-bricks-status-screen-pix-container {
+          background-color: #FFF9F7 !important;
+          border-radius: 2rem !important;
+          padding: 2rem !important;
+          border: 1px solid #F7E8EA !important;
+        }
+        .mp-bricks-status-screen-pix-code-container {
+          border: 1px dashed #C7A17A !important;
+          border-radius: 1rem !important;
+          padding: 1.5rem !important;
+        }
+        .mp-bricks-status-screen-pix-code-text {
+          font-family: monospace !important;
+          color: #6E3C47 !important;
         }
       `}</style>
     </div>
