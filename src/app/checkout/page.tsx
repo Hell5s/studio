@@ -6,14 +6,19 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
-import { Loader2, ArrowLeft, ShieldCheck, Lock } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, Lock, Copy, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { toast } = useToast();
   const preferenceId = searchParams.get('preferenceId');
   const [isReady, setIsReady] = useState(false);
+  const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     // Inicialização do SDK com a Public Key de produção fornecida
@@ -22,7 +27,6 @@ function CheckoutContent() {
     });
 
     if (!preferenceId) {
-      // Pequeno atraso para evitar falsos positivos durante a navegação
       const timeout = setTimeout(() => {
         if (!preferenceId) router.replace('/');
       }, 500);
@@ -42,27 +46,64 @@ function CheckoutContent() {
       creditCard: 'all' as const,
       debitCard: 'all' as const,
       ticket: 'all' as const,
-      bankTransfer: 'all' as const, // Habilita PIX e transferências bancárias
+      bankTransfer: 'all' as const,
       maxInstallments: 10,
     },
   };
 
   const initialization = {
-    amount: 1, // O valor final é controlado pelo preferenceId gerado no backend
+    amount: 1,
     preferenceId: preferenceId || '',
   };
 
   const onSubmit = async ({ selectedPaymentMethod, formData }: any) => {
-    // O Bricks gerencia a submissão via preferenceId automaticamente
-    console.log("Processando pagamento via:", selectedPaymentMethod);
+    setIsProcessing(true);
+    try {
+      const response = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formData }),
+      });
+      
+      const payment = await response.json();
+
+      if (payment.error) {
+        throw new Error(payment.error);
+      }
+
+      if (selectedPaymentMethod === 'pix' || payment.payment_method_id === 'pix') {
+        const pixRes = await fetch('/api/checkout/pix', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payment_id: payment.id }),
+        });
+        const data = await pixRes.json();
+        setPixData(data);
+      } else if (payment.status === 'approved') {
+        router.push('/pedido-confirmado');
+      } else {
+        router.push('/pedido-pendente');
+      }
+    } catch (error: any) {
+      console.error("Erro ao processar pagamento:", error);
+      toast({
+        title: "Erro no pagamento",
+        description: "Não foi possível processar sua solicitação. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const onError = (error: any) => {
-    console.error("Erro no Mercado Pago Bricks:", error);
-  };
-
-  const onReady = () => {
-    console.log("Formulário de pagamento pronto");
+  const copyPixCode = () => {
+    if (pixData?.qr_code) {
+      navigator.clipboard.writeText(pixData.qr_code);
+      toast({
+        title: "Copiado!",
+        description: "Código PIX copiado para a área de transferência.",
+      });
+    }
   };
 
   if (!isReady || !preferenceId) {
@@ -94,22 +135,65 @@ function CheckoutContent() {
                 <div className="h-px w-12 bg-accent" />
               </div>
               <h1 className="text-4xl md:text-6xl font-headline font-bold text-primary leading-[0.95] tracking-tighter">
-                Finalizar <span className="italic font-light text-accent">Reserva</span>
+                {pixData ? 'Aguardando' : 'Finalizar'} <span className="italic font-light text-accent">{pixData ? 'Pagamento' : 'Reserva'}</span>
               </h1>
             </header>
 
             <div className="grid lg:grid-cols-12 gap-12 items-start">
-              {/* Coluna do Pagamento */}
+              {/* Coluna Principal */}
               <div className="lg:col-span-8 bg-white border border-primary/5 rounded-[2rem] p-6 md:p-10 shadow-editorial">
-                <div id="paymentBrick_container" className="min-h-[400px]">
-                  <Payment
-                    initialization={initialization}
-                    customization={customization}
-                    onSubmit={onSubmit}
-                    onReady={onReady}
-                    onError={onError}
-                  />
-                </div>
+                {isProcessing ? (
+                  <div className="py-32 flex flex-col items-center gap-6">
+                    <Loader2 className="h-12 w-12 animate-spin text-accent" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Processando Pagamento...</p>
+                  </div>
+                ) : pixData ? (
+                  <div className="space-y-10 animate-in fade-in zoom-in-95 duration-500 text-center">
+                    <div className="space-y-4">
+                      <div className="h-12 w-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                      </div>
+                      <h3 className="text-xl font-headline font-bold text-primary">Pedido Reservado!</h3>
+                      <p className="text-sm text-muted-foreground italic font-light">Escaneie o QR Code abaixo para concluir sua compra instantaneamente.</p>
+                    </div>
+
+                    <div className="bg-secondary/20 p-8 rounded-[2rem] inline-block mx-auto border border-primary/5 shadow-inner">
+                      {pixData.qr_code_base64 && (
+                        <img 
+                          src={`data:image/png;base64,${pixData.qr_code_base64}`} 
+                          alt="QR Code PIX" 
+                          className="w-64 h-64 mx-auto rounded-xl"
+                        />
+                      )}
+                    </div>
+
+                    <div className="space-y-6 max-w-sm mx-auto">
+                      <Button 
+                        onClick={copyPixCode}
+                        className="w-full h-16 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[11px] shadow-xl hover:scale-105 transition-all"
+                      >
+                        <Copy className="mr-3 h-4 w-4" /> Copiar código PIX
+                      </Button>
+                      <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-[0.2em]">O código expira em 30 minutos</p>
+                    </div>
+
+                    <div className="pt-10 border-t border-primary/5">
+                       <Link href="/meus-pedidos">
+                         <button className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-primary transition-colors underline underline-offset-8">Acompanhar meu pedido</button>
+                       </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div id="paymentBrick_container" className="min-h-[400px]">
+                    <Payment
+                      initialization={initialization}
+                      customization={customization}
+                      onSubmit={onSubmit}
+                      onReady={() => console.log("Formulário pronto")}
+                      onError={(err) => console.error("Erro no Brick:", err)}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Coluna de Segurança */}
@@ -181,22 +265,6 @@ function CheckoutContent() {
         #paymentBrick_container .mp-bricks-title {
           font-family: 'Playfair Display', serif !important;
           color: #2A1F22 !important;
-        }
-        /* Customização para a tela de PIX e Tickets */
-        .mp-bricks-status-screen-pix-container {
-          background-color: #FFF9F7 !important;
-          border-radius: 2rem !important;
-          padding: 2rem !important;
-          border: 1px solid #F7E8EA !important;
-        }
-        .mp-bricks-status-screen-pix-code-container {
-          border: 1px dashed #C7A17A !important;
-          border-radius: 1rem !important;
-          padding: 1.5rem !important;
-        }
-        .mp-bricks-status-screen-pix-code-text {
-          font-family: monospace !important;
-          color: #6E3C47 !important;
         }
       `}</style>
     </div>
