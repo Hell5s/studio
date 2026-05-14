@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
+    // Log de diagnóstico solicitado
+    console.log('Token exists:', !!process.env.MERCADO_PAGO_ACCESS_TOKEN);
+
     const { formData } = await request.json();
 
     if (!formData) throw new Error('Dados do formulário são obrigatórios');
