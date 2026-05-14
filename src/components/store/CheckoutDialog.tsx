@@ -31,6 +31,12 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
 
   const handleFinalizarCompra = () => {
     setLoading(true);
+    
+    // Salva itens no sessionStorage para o checkout ler instantaneamente
+    if (cartItems.length > 0) {
+      sessionStorage.setItem('checkout_items', JSON.stringify(cartItems));
+    }
+    
     // Redireciona diretamente para a página de checkout profissional
     onOpenChange(false);
     router.push('/checkout');
