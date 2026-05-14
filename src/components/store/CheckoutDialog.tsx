@@ -238,18 +238,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                   <span>SUBTOTAL</span>
                   <span className="text-sm text-primary">{formatCurrency(total)}</span>
                 </div>
-                <div className="flex gap-3">
-                    <Input
-                      placeholder="CONSULTAR CEP"
-                      value={zipCode}
-                      onChange={e => setZipCode(e.target.value)}
-                      maxLength={9}
-                      className="h-14 text-[10px] rounded-none border-primary/10 flex-1 tracking-widest font-bold"
-                    />
-                    <button onClick={handleCalculateShipping} className="px-8 h-14 bg-secondary text-primary text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all">
-                      CALCULAR
-                    </button>
-                </div>
+                
                 <div className="pt-6 border-t border-primary/10 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-black uppercase tracking-[0.3em] text-primary">TOTAL</span>
@@ -309,7 +298,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : step === 'cart' ? (
-                'CONTINUAR PARA ENVIO'
+                'FINALIZAR COMPRA'
               ) : (
                 <>
                   <CreditCard className="h-4 w-4" />
