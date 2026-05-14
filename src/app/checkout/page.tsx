@@ -21,7 +21,7 @@ function CheckoutContent() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    // Inicialização do SDK com a Public Key de produção fornecida
+    // Inicialização do SDK com a Public Key de produção
     initMercadoPago('APP_USR-1a33d506-6ac5-447d-942f-bdcd287f3a84', { 
       locale: 'pt-BR' 
     });
@@ -52,43 +52,46 @@ function CheckoutContent() {
   };
 
   const initialization = {
-    amount: 1,
+    amount: 1, // O valor real é controlado pelo preferenceId
     preferenceId: preferenceId || '',
   };
 
   const onSubmit = async ({ selectedPaymentMethod, formData }: any) => {
     setIsProcessing(true);
     try {
-      const response = await fetch('/api/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formData }),
-      });
-      
-      const payment = await response.json();
-
-      if (payment.error) {
-        throw new Error(payment.error);
-      }
-
-      if (selectedPaymentMethod === 'pix' || payment.payment_method_id === 'pix') {
-        const pixRes = await fetch('/api/checkout/pix', {
+      // Solução Direta para PIX conforme solicitado
+      if (selectedPaymentMethod === 'pix') {
+        const response = await fetch('/api/checkout/pix', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment_id: payment.id }),
+          body: JSON.stringify({ formData }),
         });
-        const data = await pixRes.json();
+        
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
         setPixData(data);
-      } else if (payment.status === 'approved') {
-        router.push('/pedido-confirmado');
       } else {
-        router.push('/pedido-pendente');
+        // Outros métodos via endpoint geral
+        const response = await fetch('/api/payments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ formData }),
+        });
+        
+        const payment = await response.json();
+        if (payment.error) throw new Error(payment.error);
+
+        if (payment.status === 'approved') {
+          router.push('/pedido-confirmado');
+        } else {
+          router.push('/pedido-pendente');
+        }
       }
     } catch (error: any) {
       console.error("Erro ao processar pagamento:", error);
       toast({
         title: "Erro no pagamento",
-        description: "Não foi possível processar sua solicitação. Tente novamente.",
+        description: error.message || "Não foi possível processar sua solicitação. Tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -168,6 +171,11 @@ function CheckoutContent() {
                     </div>
 
                     <div className="space-y-6 max-w-sm mx-auto">
+                      <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-primary/10 overflow-hidden">
+                        <p className="text-[9px] font-mono text-primary/60 break-all select-all">
+                          {pixData.qr_code}
+                        </p>
+                      </div>
                       <Button 
                         onClick={copyPixCode}
                         className="w-full h-16 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[11px] shadow-xl hover:scale-105 transition-all"
@@ -253,17 +261,6 @@ function CheckoutContent() {
         }
         #paymentBrick_container button:hover {
           background-color: #C7A17A !important;
-          color: #2A1F22 !important;
-        }
-        #paymentBrick_container .mp-bricks-subtitle {
-          color: #C7A17A !important;
-          font-size: 10px !important;
-          text-transform: uppercase !important;
-          font-weight: 700 !important;
-          letter-spacing: 0.1em !important;
-        }
-        #paymentBrick_container .mp-bricks-title {
-          font-family: 'Playfair Display', serif !important;
           color: #2A1F22 !important;
         }
       `}</style>
