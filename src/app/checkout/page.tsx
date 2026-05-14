@@ -33,7 +33,17 @@ function CheckoutContent() {
   const { data: order, isLoading: isOrderLoading } = useDoc(orderRef);
 
   const handlePixPayment = async () => {
-    if (!order) return;
+    if (!order) {
+      toast({ title: "Erro no pedido", description: "Não foi possível recuperar os dados do seu pedido.", variant: "destructive" });
+      return;
+    }
+
+    const totalAmount = Number(order.total);
+    if (isNaN(totalAmount) || totalAmount <= 0) {
+      toast({ title: "Valor inválido", description: "O valor total do pedido está incorreto.", variant: "destructive" });
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const response = await fetch('/api/checkout/pix', {
@@ -41,7 +51,7 @@ function CheckoutContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           formData: {
-            transaction_amount: order.total,
+            transaction_amount: totalAmount,
             description: `Pedido #${order.orderNumber} - Toda Bela`,
             external_reference: order.orderNumber,
             payer: {

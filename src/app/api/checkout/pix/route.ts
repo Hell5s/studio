@@ -7,7 +7,19 @@ export async function POST(request: Request) {
 
     if (!formData) throw new Error('Dados do formulário são obrigatórios');
 
-    // Prioriza o e-mail vindo do objeto payer ou do campo direto, garantindo que nunca seja nulo
+    // Sanitização e Conversão do Valor para Número
+    const transaction_amount = Number(formData.transaction_amount);
+    
+    // Log de Depuração no Servidor
+    console.log('--- Processando Pagamento PIX ---');
+    console.log('Valor recebido:', formData.transaction_amount);
+    console.log('Valor convertido (transaction_amount):', transaction_amount);
+    console.log('Tipo:', typeof transaction_amount);
+
+    if (isNaN(transaction_amount) || transaction_amount <= 0) {
+      throw new Error(`Valor de transação inválido: ${formData.transaction_amount}`);
+    }
+
     const payerEmail = formData.payer?.email || formData.email || 'contato@todabela.com.br';
 
     const response = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -18,7 +30,7 @@ export async function POST(request: Request) {
         'X-Idempotency-Key': `pix-${Date.now()}`
       },
       body: JSON.stringify({
-        transaction_amount: formData.transaction_amount,
+        transaction_amount: transaction_amount,
         description: formData.description || 'Compra na Toda Bela',
         payment_method_id: 'pix',
         payer: {
@@ -27,7 +39,7 @@ export async function POST(request: Request) {
           last_name: formData.payer?.last_name || 'Toda Bela',
           identification: formData.payer?.identification
         },
-        external_reference: formData.external_reference,
+        external_reference: String(formData.external_reference),
         notification_url: 'https://studio-mocha-sigma-26.vercel.app/api/webhook/mercadopago',
       }),
     });
