@@ -7,7 +7,7 @@ import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNo
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Heart } from 'lucide-react';
+import { Heart, Camera } from 'lucide-react';
 
 interface ProductGalleryProps {
   images: string[];
@@ -15,14 +15,11 @@ interface ProductGalleryProps {
   productId: string;
 }
 
-const IMAGE_PLACEHOLDER = "https://picsum.photos/seed/placeholder-fashion/600/800";
-
 export function ProductGallery({ images, name, productId }: ProductGalleryProps) {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
 
-  // Estado para rastrear imagens com erro e substituí-las
   const [errorImages, setErrorImages] = useState<Record<number, boolean>>({});
 
   const favoriteRef = React.useMemo(() => {
@@ -62,6 +59,29 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
     setErrorImages(prev => ({ ...prev, [idx]: true }));
   };
 
+  const renderImage = (img: string, idx: number, isPriority = false) => {
+    if (errorImages[idx]) {
+      return (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-300">
+          <Camera className="h-12 w-12 mb-3 opacity-20" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Preview Indisponível</span>
+        </div>
+      );
+    }
+
+    return (
+      <Image
+        src={img}
+        alt={`${name} - Imagem ${idx + 1}`}
+        fill
+        className="object-cover transition-transform duration-2000 group-hover:scale-105"
+        priority={isPriority}
+        sizes="(max-width: 1200px) 100vw, 50vw"
+        onError={() => handleImageError(idx)}
+      />
+    );
+  };
+
   return (
     <div className="relative space-y-4">
       {/* Desktop Grid */}
@@ -71,15 +91,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
             key={idx}
             className="relative aspect-[3/4] overflow-hidden bg-[#F5F5F5] group rounded-sm"
           >
-            <Image
-              src={errorImages[idx] ? IMAGE_PLACEHOLDER : (img || IMAGE_PLACEHOLDER)}
-              alt={`${name} - Imagem ${idx + 1}`}
-              fill
-              className="object-cover transition-transform duration-2000 group-hover:scale-105"
-              priority={idx === 0}
-              sizes="(max-width: 1200px) 50vw, 33vw"
-              onError={() => handleImageError(idx)}
-            />
+            {renderImage(img, idx, idx === 0)}
           </div>
         ))}
       </div>
@@ -88,15 +100,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       <div className="flex flex-col md:hidden gap-2">
         {images.map((img, idx) => (
           <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F5F5F5] rounded-sm">
-            <Image
-              src={errorImages[idx] ? IMAGE_PLACEHOLDER : (img || IMAGE_PLACEHOLDER)}
-              alt={`${name} - ${idx + 1}`}
-              fill
-              className="object-cover"
-              priority={idx === 0}
-              sizes="100vw"
-              onError={() => handleImageError(idx)}
-            />
+            {renderImage(img, idx, idx === 0)}
           </div>
         ))}
       </div>

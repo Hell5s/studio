@@ -4,7 +4,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart } from 'lucide-react';
+import { Heart, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
@@ -22,9 +22,6 @@ interface ProductCardProps {
   onAddToCart?: () => void;
 }
 
-// Placeholder elegante para imagens quebradas
-const IMAGE_PLACEHOLDER = "https://picsum.photos/seed/placeholder-fashion/600/800";
-
 export const ProductCard = React.memo(function ProductCard({
   id,
   name,
@@ -38,11 +35,10 @@ export const ProductCard = React.memo(function ProductCard({
   const { toast } = useToast();
   const stringId = String(id);
 
-  // Estado para gerenciar a URL da imagem e fallback se falhar
-  const [imgSrc, setImgSrc] = useState<string>(image || IMAGE_PLACEHOLDER);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    setImgSrc(image || IMAGE_PLACEHOLDER);
+    setHasError(false);
   }, [image]);
 
   const favoriteRef = useMemo(() => {
@@ -92,16 +88,22 @@ export const ProductCard = React.memo(function ProductCard({
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
-        <Image
-          src={imgSrc}
-          alt={name}
-          fill
-          loading="lazy"
-          className="object-cover transition-transform duration-1500 group-hover:scale-105"
-          sizes="(max-width: 640px) 45vw, (max-width: 1024px) 33vw, 25vw"
-          data-ai-hint="fashion clothes"
-          onError={() => setImgSrc(IMAGE_PLACEHOLDER)}
-        />
+        {!hasError ? (
+          <Image
+            src={image}
+            alt={name}
+            fill
+            loading="lazy"
+            className="object-cover transition-transform duration-1500 group-hover:scale-105"
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 33vw, 25vw"
+            onError={() => setHasError(true)}
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-300">
+            <Camera className="h-8 w-8 mb-2 opacity-20" />
+            <span className="text-[8px] font-bold uppercase tracking-widest opacity-40">Imagem Indisponível</span>
+          </div>
+        )}
         
         {badge && (
           <Badge className="absolute top-2 md:top-4 left-2 md:left-4 bg-primary text-white border-none px-2 md:px-3 py-0.5 md:py-1 font-bold uppercase text-[7px] md:text-[9px] rounded-full tracking-widest z-10">
