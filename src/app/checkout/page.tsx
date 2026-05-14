@@ -68,7 +68,11 @@ function CheckoutContent() {
         });
         
         const data = await response.json();
-        if (data.error) throw new Error(data.error);
+        
+        if (!response.ok) {
+          throw new Error(data.message || data.error || 'Erro ao gerar PIX');
+        }
+        
         setPixData(data);
       } else {
         // Outros métodos via endpoint geral
@@ -79,7 +83,12 @@ function CheckoutContent() {
         });
         
         const payment = await response.json();
-        if (payment.error) throw new Error(payment.error);
+        
+        if (!response.ok) {
+          // Extrai a mensagem de erro amigável do Mercado Pago se disponível
+          const errorMessage = payment.message || payment.error || 'Erro ao processar pagamento';
+          throw new Error(errorMessage);
+        }
 
         if (payment.status === 'approved') {
           router.push('/pedido-confirmado');
@@ -90,8 +99,8 @@ function CheckoutContent() {
     } catch (error: any) {
       console.error("Erro ao processar pagamento:", error);
       toast({
-        title: "Erro no pagamento",
-        description: error.message || "Não foi possível processar sua solicitação. Tente novamente.",
+        title: "Não foi possível finalizar",
+        description: error.message || "Ocorreu um erro inesperado. Verifique os dados e tente novamente.",
         variant: "destructive"
       });
     } finally {
