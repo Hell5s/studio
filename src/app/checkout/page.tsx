@@ -1,144 +1,101 @@
 
 "use client";
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
-import { Loader2, ArrowLeft, ShieldCheck, Lock, Copy, CheckCircle2 } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, Lock, Copy, CheckCircle2, QrCode, CreditCard, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import Link from 'next/link';
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const db = useFirestore();
   const { user } = useUser();
+  
   const preferenceId = searchParams.get('preferenceId');
-  const [isReady, setIsReady] = useState(false);
+  const orderId = searchParams.get('orderId');
+
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    // Inicialização do SDK com a Public Key de produção
-    initMercadoPago('APP_USR-1a33d506-6ac5-447d-942f-bdcd287f3a84', { 
-      locale: 'pt-BR' 
-    });
+  // Buscar detalhes do pedido no Firestore para ter certeza do valor e dados do cliente
+  const orderRef = useMemoFirebase(() => {
+    return orderId ? doc(db, 'orders', orderId) : null;
+  }, [db, orderId]);
+  
+  const { data: order, isLoading: isOrderLoading } = useDoc(orderRef);
 
-    if (!preferenceId) {
-      const timeout = setTimeout(() => {
-        if (!preferenceId) router.replace('/');
-      }, 500);
-      return () => clearTimeout(timeout);
-    } else {
-      setIsReady(true);
-    }
-  }, [preferenceId, router]);
-
-  const customization = {
-    visual: {
-      style: {
-        theme: 'default' as const,
-      },
-      hidePaymentButton: false,
-    },
-    paymentMethods: {
-      creditCard: 'all' as const,
-      debitCard: 'all' as const,
-      ticket: 'all' as const,
-      bankTransfer: 'all' as const,
-      maxInstallments: 10,
-    },
-  };
-
-  const initialization = {
-    amount: 1, // O valor real é controlado pelo preferenceId
-    preferenceId: preferenceId || '',
-    payer: {
-      email: user?.email || '',
-    }
-  };
-
-  const onSubmit = async ({ selectedPaymentMethod, formData }: any) => {
+  const handlePixPayment = async () => {
+    if (!order) return;
     setIsProcessing(true);
     try {
-      // Injeta o e-mail do usuário logado se não estiver presente no formData
-      const enrichedFormData = {
-        ...formData,
-        payer: {
-          ...formData.payer,
-          email: formData.payer?.email || user?.email || 'contato@todabela.com.br'
-        }
-      };
-
-      // Solução Direta para PIX
-      if (selectedPaymentMethod === 'pix') {
-        const response = await fetch('/api/checkout/pix', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ formData: enrichedFormData }),
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.message || data.error || 'Erro ao gerar PIX');
-        }
-        
-        setPixData(data);
-      } else {
-        // Outros métodos via endpoint geral
-        const response = await fetch('/api/payments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ formData: enrichedFormData }),
-        });
-        
-        const payment = await response.json();
-        
-        if (!response.ok) {
-          const errorMessage = payment.message || payment.error || 'Erro ao processar pagamento';
-          throw new Error(errorMessage);
-        }
-
-        if (payment.status === 'approved') {
-          router.push('/pedido-confirmado');
-        } else {
-          router.push('/pedido-pendente');
-        }
-      }
-    } catch (error: any) {
-      console.error("Erro ao processar pagamento:", error);
-      toast({
-        title: "Não foi possível finalizar",
-        description: error.message || "Ocorreu um erro inesperado. Verifique os dados e tente novamente.",
-        variant: "destructive"
+      const response = await fetch('/api/checkout/pix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          formData: {
+            transaction_amount: order.total,
+            description: `Pedido #${order.orderNumber} - Toda Bela`,
+            external_reference: order.orderNumber,
+            payer: {
+              email: order.customer.email,
+              first_name: order.customer.name.split(' ')[0],
+              last_name: order.customer.name.split(' ').slice(1).join(' ') || 'Cliente'
+            }
+          }
+        }),
       });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || data.error || 'Erro ao gerar PIX');
+      
+      setPixData(data);
+      toast({ title: "PIX Gerado!", description: "Escaneie o código para pagar." });
+    } catch (error: any) {
+      console.error("Erro no PIX:", error);
+      toast({ title: "Erro no PIX", description: error.message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
   };
 
+  const handleRedirectPayment = () => {
+    if (!preferenceId) return;
+    // Redireciona para o Checkout Pro oficial, que aceita cartões e boletos sem erros de Bricks
+    window.location.href = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preferenceId}`;
+  };
+
   const copyPixCode = () => {
     if (pixData?.qr_code) {
       navigator.clipboard.writeText(pixData.qr_code);
-      toast({
-        title: "Copiado!",
-        description: "Código PIX copiado para a área de transferência.",
-      });
+      toast({ title: "Copiado!", description: "Código PIX pronto para colar." });
     }
   };
 
-  if (!isReady || !preferenceId) {
+  if (isOrderLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-accent" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Iniciando Checkout Seguro...</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Carregando Detalhes...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!preferenceId || !order) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center gap-6 bg-white p-10 text-center">
+        <p className="text-primary font-headline text-xl">Ops! Não encontramos seu checkout.</p>
+        <p className="text-muted-foreground italic font-light max-w-xs">Parece que os dados do seu pedido expiraram ou são inválidos.</p>
+        <Button onClick={() => router.replace('/')} className="rounded-full px-10 h-14 bg-primary text-white">Voltar para a Loja</Button>
       </div>
     );
   }
@@ -171,7 +128,7 @@ function CheckoutContent() {
                 {isProcessing ? (
                   <div className="py-32 flex flex-col items-center gap-6">
                     <Loader2 className="h-12 w-12 animate-spin text-accent" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Processando Pagamento...</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Iniciando Transação...</p>
                   </div>
                 ) : pixData ? (
                   <div className="space-y-10 animate-in fade-in zoom-in-95 duration-500 text-center">
@@ -215,14 +172,66 @@ function CheckoutContent() {
                     </div>
                   </div>
                 ) : (
-                  <div id="paymentBrick_container" className="min-h-[400px]">
-                    <Payment
-                      initialization={initialization}
-                      customization={customization}
-                      onSubmit={onSubmit}
-                      onReady={() => console.log("Formulário pronto")}
-                      onError={(err) => console.error("Erro no Brick:", err)}
-                    />
+                  <div className="space-y-10">
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-headline font-bold text-primary">Escolha como pagar</h3>
+                      <p className="text-sm text-muted-foreground italic font-light">Selecione o método de sua preferência para concluir sua compra na Toda Bela.</p>
+                    </div>
+
+                    <div className="grid gap-4">
+                      <button 
+                        onClick={handlePixPayment}
+                        className="group w-full flex items-center justify-between p-6 rounded-2xl bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 transition-all text-left"
+                      >
+                        <div className="flex items-center gap-6">
+                           <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center text-emerald-500 shadow-sm">
+                              <QrCode className="h-6 w-6" />
+                           </div>
+                           <div>
+                              <p className="font-bold text-primary uppercase text-sm tracking-tight">Pagar com PIX</p>
+                              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Aprovação Instantânea</p>
+                           </div>
+                        </div>
+                        <ArrowLeft className="h-4 w-4 rotate-180 text-emerald-300 group-hover:translate-x-1 transition-transform" />
+                      </button>
+
+                      <button 
+                        onClick={handleRedirectPayment}
+                        className="group w-full flex items-center justify-between p-6 rounded-2xl bg-secondary/30 border border-primary/5 hover:bg-white hover:shadow-lg transition-all text-left"
+                      >
+                        <div className="flex items-center gap-6">
+                           <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
+                              <CreditCard className="h-6 w-6" />
+                           </div>
+                           <div>
+                              <p className="font-bold text-primary uppercase text-sm tracking-tight">Pagar com Cartão</p>
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Até 10x sem juros</p>
+                           </div>
+                        </div>
+                        <ArrowLeft className="h-4 w-4 rotate-180 text-primary/10 group-hover:translate-x-1 transition-transform" />
+                      </button>
+
+                      <button 
+                        onClick={handleRedirectPayment}
+                        className="group w-full flex items-center justify-between p-6 rounded-2xl bg-secondary/30 border border-primary/5 hover:bg-white hover:shadow-lg transition-all text-left"
+                      >
+                        <div className="flex items-center gap-6">
+                           <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
+                              <FileText className="h-6 w-6" />
+                           </div>
+                           <div>
+                              <p className="font-bold text-primary uppercase text-sm tracking-tight">Pagar com Boleto</p>
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Processamento em até 2 dias</p>
+                           </div>
+                        </div>
+                        <ArrowLeft className="h-4 w-4 rotate-180 text-primary/10 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </div>
+
+                    <div className="pt-8 border-t border-primary/5 flex items-center justify-center gap-3">
+                       <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Pagamento 100% Blindado</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -266,31 +275,7 @@ function CheckoutContent() {
           </div>
         </section>
       </main>
-
       <Footer />
-
-      <style jsx global>{`
-        #paymentBrick_container .mp-bricks-wrapper {
-          font-family: inherit !important;
-        }
-        #paymentBrick_container button {
-          border-radius: 9999px !important;
-          font-weight: 700 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.2em !important;
-          background-color: #6E3C47 !important;
-          height: 56px !important;
-          transition: all 0.3s ease !important;
-        }
-        #paymentBrick_container button:hover {
-          background-color: #C7A17A !important;
-          color: #2A1F22 !important;
-        }
-        /* Esconde campos de e-mail nativos do Brick para PIX conforme solicitado */
-        #paymentBrick_container .mp-bricks-email-input {
-          display: none !important;
-        }
-      `}</style>
     </div>
   );
 }

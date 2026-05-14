@@ -151,10 +151,10 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
 
       if (error) throw new Error(error);
 
-      // 3. Redirecionar para a página interna de Checkout Bricks
       if (preferenceId) {
         onOpenChange(false);
-        router.push(`/checkout?preferenceId=${preferenceId}`);
+        // Redireciona para a página de checkout interna passando o orderId e preferenceId
+        router.push(`/checkout?preferenceId=${preferenceId}&orderId=${orderId}`);
       }
     } catch (error: any) {
       console.error("Erro no Checkout:", error);
@@ -313,7 +313,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               ) : (
                 <>
                   <CreditCard className="h-4 w-4" />
-                  IR PARA PAGAMENTO
+                  PAGAMENTO E REVISÃO
                 </>
               )}
             </button>
