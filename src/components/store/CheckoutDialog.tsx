@@ -4,6 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { ShoppingBag, Loader2, CheckCircle2, ArrowLeft, X, CreditCard } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
 import {
   Sheet,
   SheetContent,
@@ -34,12 +35,12 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
   const [loading, setLoading] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [selectedShipping, setSelectedShipping] = useState(shippingMethods[0]);
-  const [coupon, setCoupon] = useState('');
   const [zipCode, setZipCode] = useState('');
 
   const [formData, setFormData] = useState({
@@ -101,7 +102,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     try {
       const orderId = `PED-${Date.now()}`;
       
-      // 1. Criar pedido no Firestore como pendente
       const orderPayload = {
         orderNumber: orderId,
         userId: user.uid,
@@ -137,7 +137,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
 
       await setDoc(doc(db, 'orders', orderId), orderPayload);
 
-      // 2. Chamar API para criar preferência no Mercado Pago
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -148,13 +147,14 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
         }),
       });
 
-      const { init_point, error } = await response.json();
+      const { preferenceId, error } = await response.json();
 
       if (error) throw new Error(error);
 
-      // 3. Redirecionar para o Checkout Pro
-      if (init_point) {
-        window.location.href = init_point;
+      // 3. Redirecionar para a página interna de Checkout Bricks
+      if (preferenceId) {
+        onOpenChange(false);
+        router.push(`/checkout?preferenceId=${preferenceId}`);
       }
     } catch (error: any) {
       console.error("Erro no Checkout:", error);
@@ -194,7 +194,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto no-scrollbar">
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-32 px-10 text-center space-y-6">
               <div className="h-20 w-20 bg-secondary/30 rounded-full flex items-center justify-center text-primary/10">
@@ -313,11 +313,11 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               ) : (
                 <>
                   <CreditCard className="h-4 w-4" />
-                  FINALIZAR PAGAMENTO
+                  IR PARA PAGAMENTO
                 </>
               )}
             </button>
-            <p className="text-[8px] text-center text-muted-foreground uppercase mt-4 tracking-widest opacity-60">Ambiente seguro processado pelo Mercado Pago</p>
+            <p className="text-[8px] text-center text-muted-foreground uppercase mt-4 tracking-widest opacity-60">Ambiente seguro com criptografia SSL</p>
           </div>
         )}
       </SheetContent>

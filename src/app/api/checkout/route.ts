@@ -54,7 +54,8 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
-    return NextResponse.json({ init_point: data.init_point });
+    // Retornamos o preferenceId (id) para o Checkout Bricks
+    return NextResponse.json({ preferenceId: data.id, init_point: data.init_point });
   } catch (error: any) {
     console.error('Checkout API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
