@@ -7,8 +7,9 @@ export async function POST(request: Request) {
 
     if (!formData) throw new Error('Dados do formulário são obrigatórios');
 
-    // Criação direta do pagamento PIX na API do Mercado Pago
-    // Adicionado tratamento seguro para campos do pagador (payer)
+    // Prioriza o e-mail vindo do objeto payer ou do campo direto, garantindo que nunca seja nulo
+    const payerEmail = formData.payer?.email || formData.email || 'contato@todabela.com.br';
+
     const response = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
         description: formData.description || 'Compra na Toda Bela',
         payment_method_id: 'pix',
         payer: {
-          email: formData.payer?.email || formData.email || 'contato@todabela.com.br',
+          email: payerEmail,
           first_name: formData.payer?.first_name || 'Cliente',
           last_name: formData.payer?.last_name || 'Toda Bela',
           identification: formData.payer?.identification

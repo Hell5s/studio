@@ -9,12 +9,14 @@ import { Footer } from '@/components/store/Footer';
 import { Loader2, ArrowLeft, ShieldCheck, Lock, Copy, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
 import Link from 'next/link';
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useUser();
   const preferenceId = searchParams.get('preferenceId');
   const [isReady, setIsReady] = useState(false);
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
@@ -41,6 +43,7 @@ function CheckoutContent() {
       style: {
         theme: 'default' as const,
       },
+      hidePaymentButton: false,
     },
     paymentMethods: {
       creditCard: 'all' as const,
@@ -54,17 +57,29 @@ function CheckoutContent() {
   const initialization = {
     amount: 1, // O valor real é controlado pelo preferenceId
     preferenceId: preferenceId || '',
+    payer: {
+      email: user?.email || '',
+    }
   };
 
   const onSubmit = async ({ selectedPaymentMethod, formData }: any) => {
     setIsProcessing(true);
     try {
-      // Solução Direta para PIX conforme solicitado
+      // Injeta o e-mail do usuário logado se não estiver presente no formData
+      const enrichedFormData = {
+        ...formData,
+        payer: {
+          ...formData.payer,
+          email: formData.payer?.email || user?.email || 'contato@todabela.com.br'
+        }
+      };
+
+      // Solução Direta para PIX
       if (selectedPaymentMethod === 'pix') {
         const response = await fetch('/api/checkout/pix', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ formData }),
+          body: JSON.stringify({ formData: enrichedFormData }),
         });
         
         const data = await response.json();
@@ -79,13 +94,12 @@ function CheckoutContent() {
         const response = await fetch('/api/payments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ formData }),
+          body: JSON.stringify({ formData: enrichedFormData }),
         });
         
         const payment = await response.json();
         
         if (!response.ok) {
-          // Extrai a mensagem de erro amigável do Mercado Pago se disponível
           const errorMessage = payment.message || payment.error || 'Erro ao processar pagamento';
           throw new Error(errorMessage);
         }
@@ -271,6 +285,10 @@ function CheckoutContent() {
         #paymentBrick_container button:hover {
           background-color: #C7A17A !important;
           color: #2A1F22 !important;
+        }
+        /* Esconde campos de e-mail nativos do Brick para PIX conforme solicitado */
+        #paymentBrick_container .mp-bricks-email-input {
+          display: none !important;
         }
       `}</style>
     </div>
