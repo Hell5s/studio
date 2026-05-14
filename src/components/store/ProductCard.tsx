@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
@@ -21,7 +22,9 @@ interface ProductCardProps {
   onAddToCart?: () => void;
 }
 
-// Memoização para evitar re-renders desnecessários na vitrine e carrosséis
+// Placeholder elegante para imagens quebradas
+const IMAGE_PLACEHOLDER = "https://picsum.photos/seed/placeholder-fashion/600/800";
+
 export const ProductCard = React.memo(function ProductCard({
   id,
   name,
@@ -34,6 +37,13 @@ export const ProductCard = React.memo(function ProductCard({
   const db = useFirestore();
   const { toast } = useToast();
   const stringId = String(id);
+
+  // Estado para gerenciar a URL da imagem e fallback se falhar
+  const [imgSrc, setImgSrc] = useState<string>(image || IMAGE_PLACEHOLDER);
+
+  useEffect(() => {
+    setImgSrc(image || IMAGE_PLACEHOLDER);
+  }, [image]);
 
   const favoriteRef = useMemo(() => {
     if (!db || !user?.uid || !stringId) return null;
@@ -81,16 +91,16 @@ export const ProductCard = React.memo(function ProductCard({
 
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
-      {/* Container da Imagem com proporção fixa 3:4 */}
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
         <Image
-          src={image || 'https://picsum.photos/seed/placeholder/600/800'}
+          src={imgSrc}
           alt={name}
           fill
           loading="lazy"
           className="object-cover transition-transform duration-1500 group-hover:scale-105"
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 33vw, 25vw"
           data-ai-hint="fashion clothes"
+          onError={() => setImgSrc(IMAGE_PLACEHOLDER)}
         />
         
         {badge && (
@@ -120,7 +130,6 @@ export const ProductCard = React.memo(function ProductCard({
         </div>
       </div>
 
-      {/* Conteúdo do Card */}
       <div className="p-3 md:p-6 text-center flex flex-col flex-1 gap-2 md:gap-4">
         <h3 className="line-clamp-2 text-[10px] md:sm uppercase leading-tight tracking-tight text-primary/80 font-bold min-h-[2.5em]">
           {name}

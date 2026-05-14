@@ -1,6 +1,7 @@
+
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
@@ -14,10 +15,15 @@ interface ProductGalleryProps {
   productId: string;
 }
 
+const IMAGE_PLACEHOLDER = "https://picsum.photos/seed/placeholder-fashion/600/800";
+
 export function ProductGallery({ images, name, productId }: ProductGalleryProps) {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+
+  // Estado para rastrear imagens com erro e substituí-las
+  const [errorImages, setErrorImages] = useState<Record<number, boolean>>({});
 
   const favoriteRef = React.useMemo(() => {
     if (!db || !user?.uid || !productId) return null;
@@ -52,6 +58,10 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
     }
   };
 
+  const handleImageError = (idx: number) => {
+    setErrorImages(prev => ({ ...prev, [idx]: true }));
+  };
+
   return (
     <div className="relative space-y-4">
       {/* Desktop Grid */}
@@ -62,12 +72,13 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
             className="relative aspect-[3/4] overflow-hidden bg-[#F5F5F5] group rounded-sm"
           >
             <Image
-              src={img}
+              src={errorImages[idx] ? IMAGE_PLACEHOLDER : (img || IMAGE_PLACEHOLDER)}
               alt={`${name} - Imagem ${idx + 1}`}
               fill
               className="object-cover transition-transform duration-2000 group-hover:scale-105"
               priority={idx === 0}
               sizes="(max-width: 1200px) 50vw, 33vw"
+              onError={() => handleImageError(idx)}
             />
           </div>
         ))}
@@ -78,12 +89,13 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         {images.map((img, idx) => (
           <div key={idx} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F5F5F5] rounded-sm">
             <Image
-              src={img}
+              src={errorImages[idx] ? IMAGE_PLACEHOLDER : (img || IMAGE_PLACEHOLDER)}
               alt={`${name} - ${idx + 1}`}
               fill
               className="object-cover"
               priority={idx === 0}
               sizes="100vw"
+              onError={() => handleImageError(idx)}
             />
           </div>
         ))}

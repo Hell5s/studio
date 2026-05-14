@@ -30,8 +30,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { doc, serverTimestamp } from 'firebase/firestore';
-import { useFirestore, useFirebase, updateDocumentNonBlocking } from '@/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { cn } from '@/lib/utils';
 
@@ -43,7 +42,6 @@ interface EditProductDialogProps {
 
 export function EditProductDialog({ product, open, onOpenChange }: EditProductDialogProps) {
   const db = useFirestore();
-  const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -99,6 +97,21 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       });
     }
   }, [product]);
+
+  const uploadToCloudinary = async (file: File) => {
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'todabela_upload');
+    
+    const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
+      method: 'POST',
+      body: data
+    });
+
+    if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
+    const result = await response.json();
+    return result.secure_url;
+  };
 
   const parsePrice = (val: string) => {
     if (!val) return 0;
@@ -156,13 +169,11 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
     setUploading(true);
     try {
-      const storageRef = ref(storage!, `products/${product.id}/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      setFormData(prev => ({ ...prev, image: downloadURL }));
-      toast({ title: "Imagem atualizada" });
+      const url = await uploadToCloudinary(file);
+      setFormData(prev => ({ ...prev, image: url }));
+      toast({ title: "Imagem principal no Cloudinary!" });
     } catch (error: any) {
-      toast({ title: "Erro no upload", variant: "destructive" });
+      toast({ title: "Erro no upload Cloudinary", variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -177,16 +188,14 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       const newUrls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const storageRef = ref(storage!, `products/${product.id}/gallery/${Date.now()}-${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(snapshot.ref);
+        const url = await uploadToCloudinary(file);
         newUrls.push(url);
       }
       setFormData(prev => ({ 
         ...prev, 
         gallery: [...prev.gallery, ...newUrls] 
       }));
-      toast({ title: `${newUrls.length} imagens adicionadas!` });
+      toast({ title: `${newUrls.length} imagens na galeria Cloudinary!` });
     } catch (error: any) {
       toast({ title: "Erro no upload da galeria", variant: "destructive" });
     } finally {
@@ -201,10 +210,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     
     setUploading(true);
     try {
-      const storageRef = ref(storage!, `products/${product.id}/variations/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
-      
+      const url = await uploadToCloudinary(file);
       handleVariationChange(activeVariationIndex, 'image', url);
       toast({ title: "Foto da cor carregada!" });
     } catch (error: any) {

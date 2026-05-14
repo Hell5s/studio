@@ -30,8 +30,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { doc, serverTimestamp } from 'firebase/firestore';
-import { useFirestore, useFirebase, setDocumentNonBlocking } from '@/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { cn } from '@/lib/utils';
 
@@ -42,7 +41,6 @@ interface AddProductDialogProps {
 
 export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) {
   const db = useFirestore();
-  const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -76,6 +74,21 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     bestseller: false,
     variations: [] as { color: string; image: string }[]
   });
+
+  const uploadToCloudinary = async (file: File) => {
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'todabela_upload');
+    
+    const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
+      method: 'POST',
+      body: data
+    });
+
+    if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
+    const result = await response.json();
+    return result.secure_url;
+  };
 
   const parsePrice = (val: string) => {
     return Number(String(val).replace(/\./g, "").replace(",", ".")) || 0;
@@ -155,13 +168,11 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     if (!file) return;
     setUploading(true);
     try {
-      const storageRef = ref(storage!, `products/uploads/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
+      const url = await uploadToCloudinary(file);
       setFormData(prev => ({ ...prev, image: url }));
-      toast({ title: "Imagem carregada!" });
+      toast({ title: "Imagem carregada no Cloudinary!" });
     } catch (error: any) {
-      toast({ title: "Erro no upload", variant: "destructive" });
+      toast({ title: "Erro no upload Cloudinary", variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -176,16 +187,14 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       const newUrls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const storageRef = ref(storage!, `products/gallery/${Date.now()}-${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(snapshot.ref);
+        const url = await uploadToCloudinary(file);
         newUrls.push(url);
       }
       setFormData(prev => ({ 
         ...prev, 
         gallery: [...prev.gallery, ...newUrls] 
       }));
-      toast({ title: `${newUrls.length} imagens adicionadas!` });
+      toast({ title: `${newUrls.length} imagens adicionadas ao Cloudinary!` });
     } catch (error: any) {
       toast({ title: "Erro no upload da galeria", variant: "destructive" });
     } finally {
@@ -199,11 +208,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     if (!file || activeVariationIndex === null) return;
     setUploading(true);
     try {
-      const storageRef = ref(storage!, `products/variations/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
+      const url = await uploadToCloudinary(file);
       handleVariationChange(activeVariationIndex, 'image', url);
-      toast({ title: "Foto da cor OK!" });
+      toast({ title: "Foto da cor carregada!" });
     } catch (error: any) {
       toast({ title: "Erro no upload da cor", variant: "destructive" });
     } finally {

@@ -24,9 +24,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 
@@ -37,7 +36,6 @@ interface ProductFormProps {
 
 export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   const db = useFirestore();
-  const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +100,21 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     }
   }, [initialData]);
 
+  const uploadToCloudinary = async (file: File) => {
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'todabela_upload');
+    
+    const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
+      method: 'POST',
+      body: data
+    });
+
+    if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
+    const result = await response.json();
+    return result.secure_url;
+  };
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     setFormData(prev => ({
@@ -139,9 +152,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       const uploadedUrls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const storageRef = ref(storage!, `products/${Date.now()}-${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(snapshot.ref);
+        const url = await uploadToCloudinary(file);
         uploadedUrls.push(url);
       }
       if (isGallery) {
@@ -149,9 +160,9 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       } else {
         setFormData(prev => ({ ...prev, image: uploadedUrls[0] }));
       }
-      toast({ title: "Upload concluído" });
+      toast({ title: "Upload Cloudinary concluído" });
     } catch (error: any) {
-      toast({ title: "Erro no upload", variant: "destructive" });
+      toast({ title: "Erro no upload Cloudinary", variant: "destructive" });
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -164,14 +175,11 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     
     setUploading(true);
     try {
-      const storageRef = ref(storage!, `products/variations/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
-      
+      const url = await uploadToCloudinary(file);
       handleVariationChange(activeVariationIndex, 'image', url);
-      toast({ title: "Foto da cor carregada!" });
+      toast({ title: "Variação salva no Cloudinary!" });
     } catch (error: any) {
-      toast({ title: "Erro no upload da variação", variant: "destructive" });
+      toast({ title: "Erro no upload Cloudinary", variant: "destructive" });
     } finally {
       setUploading(false);
       setActiveVariationIndex(null);
@@ -279,7 +287,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               <div className="flex items-center justify-between text-primary border-b border-gray-200 pb-3">
                 <div className="flex items-center gap-3 text-accent">
                   <ImageIcon className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos (Upload Múltiplo)</h4>
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos (Cloudinary)</h4>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Fotos</Button>
               </div>
@@ -317,7 +325,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-accent">
                   <Palette className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Miniaturas por Cor (Clique p/ Upload)</h4>
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Miniaturas por Cor</h4>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[9px] font-bold uppercase border border-accent/20 px-4 rounded-full">Nova Cor</Button>
               </div>
