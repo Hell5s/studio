@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer APP_USR-5316375940685600-051401-3a50359645e6380f06bf00fcab4f0b3f-3402398272',
+        'Authorization': `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(preference),
@@ -54,7 +54,6 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
-    // Retornamos o preferenceId (id) para o Checkout Bricks
     return NextResponse.json({ preferenceId: data.id, init_point: data.init_point });
   } catch (error: any) {
     console.error('Checkout API Error:', error);
