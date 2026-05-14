@@ -1,17 +1,18 @@
 
 import { NextResponse } from 'next/server';
 
+const MP_TOKEN = 'APP_USR-5316375940685600-051401-3a50359645e6380f06bf00fcab4f0b3f-3402398272';
+
 export async function POST(request: Request) {
   try {
     // Log de diagnóstico solicitado
-    console.log('Token exists:', !!process.env.MERCADO_PAGO_ACCESS_TOKEN);
+    console.log('Using hardcoded token for test');
 
     const { formData } = await request.json();
 
     if (!formData) throw new Error('Dados do formulário são obrigatórios');
 
     // Sanitização rigorosa: garante que seja um número decimal puro
-    // Substitui vírgulas por pontos se existirem e força conversão para Number
     const rawAmount = formData.transaction_amount?.toString().replace(',', '.');
     const transaction_amount = Number(parseFloat(rawAmount).toFixed(2));
     
@@ -19,7 +20,6 @@ export async function POST(request: Request) {
     console.log('--- Processando Pagamento PIX ---');
     console.log('Valor bruto recebido:', formData.transaction_amount);
     console.log('Valor convertido (transaction_amount):', transaction_amount);
-    console.log('Tipo:', typeof transaction_amount);
 
     if (isNaN(transaction_amount) || transaction_amount <= 0) {
       console.error('Valor de transação inválido:', formData.transaction_amount);
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     const response = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN}`,
+        'Authorization': `Bearer ${MP_TOKEN}`,
         'Content-Type': 'application/json',
         'X-Idempotency-Key': `pix-${Date.now()}`
       },
