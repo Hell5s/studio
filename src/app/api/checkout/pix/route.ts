@@ -1,13 +1,8 @@
 
 import { NextResponse } from 'next/server';
 
-const MP_TOKEN = 'APP_USR-5316375940685600-051401-3a50359645e6380f06bf00fcab4f0b3f-3402398272';
-
 export async function POST(request: Request) {
   try {
-    // Log de diagnóstico solicitado
-    console.log('Using hardcoded token for test');
-
     const { formData } = await request.json();
 
     if (!formData) throw new Error('Dados do formulário são obrigatórios');
@@ -31,7 +26,7 @@ export async function POST(request: Request) {
     const response = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${MP_TOKEN}`,
+        'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
         'X-Idempotency-Key': `pix-${Date.now()}`
       },
