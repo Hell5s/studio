@@ -202,10 +202,12 @@ function CheckoutContent() {
   const handleNextStep = async () => {
     if (currentStep === 'identificacao') {
       const cleanCpf = identificacao.cpf.replace(/\D/g, '');
-      if (!identificacao.nome || !identificacao.email || cleanCpf.length < 11) {
+      const cleanTelefone = identificacao.telefone.replace(/\D/g, '');
+      
+      if (!identificacao.nome || !identificacao.email || cleanCpf.length < 11 || cleanTelefone.length < 10) {
         toast({ 
           title: "Campos obrigatórios", 
-          description: "Preencha seu nome completo, e-mail e CPF válido para continuar.", 
+          description: "Preencha seu nome completo, e-mail, CPF e um telefone válido para continuar.", 
           variant: "destructive" 
         });
         return;
@@ -564,7 +566,7 @@ function CheckoutContent() {
                   </div>
                   <div className="md:col-span-2 space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Telefone / WhatsApp</Label>
-                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="(00) 00000-0000" />
+                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="(00) 00000-0000" required />
                   </div>
                   <div className="md:col-span-2 pt-4">
                     <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">Ir para Entrega</Button>
