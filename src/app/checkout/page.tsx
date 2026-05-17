@@ -290,7 +290,15 @@ function CheckoutContent() {
         }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message || 'Erro ao gerar PIX');
+      console.log('Resposta completa MP:', JSON.stringify(result, null, 2));
+      if (!response.ok) {
+        throw new Error(
+          result?.cause?.[0]?.description 
+          || result?.detail?.[0]?.description 
+          || result?.message 
+          || 'Erro desconhecido'
+        );
+      }
       if (result.point_of_interaction?.transaction_data) {
         sessionStorage.removeItem('checkout_items');
         setPixData({
@@ -301,7 +309,20 @@ function CheckoutContent() {
         throw new Error('QR Code não retornado pelo Mercado Pago');
       }
     } catch (error: any) {
-      toast({ title: "Erro ao gerar PIX", description: error.message, variant: "destructive" });
+      console.error('Payment Error completo:', error);
+      let errorMsg = error.message;
+      try {
+        const errData = typeof error === 'object' ? error : JSON.parse(error);
+        errorMsg = errData?.detail?.[0]?.description 
+          || errData?.cause?.[0]?.description 
+          || errData?.message 
+          || error.message;
+      } catch {}
+      toast({ 
+        title: "Erro ao gerar PIX", 
+        description: errorMsg, 
+        variant: "destructive" 
+      });
     } finally {
       setIsProcessing(false);
     }
