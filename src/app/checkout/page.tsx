@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -27,9 +26,6 @@ import { LogoMark } from '@/components/store/LogoMark';
 import { cn } from '@/lib/utils';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
-// Inicializa o SDK do Mercado Pago - Chave pública da Toda Bela
-initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-63259836-3982-4665-9854-850f8f902677');
-
 type Step = 'identificacao' | 'entrega' | 'pagamento';
 
 function CheckoutContent() {
@@ -46,6 +42,15 @@ function CheckoutContent() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isBrickReady, setIsBrickReady] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+
+  // Inicializa o SDK do Mercado Pago apenas quando necessário
+  useEffect(() => {
+    if (currentStep === 'pagamento') {
+      initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || 'TEST-1bea5cd3-689c-414c-8b7d-70a9c6e00cc1', {
+        locale: 'pt-BR',
+      });
+    }
+  }, [currentStep]);
 
   // Form States
   const [identificacao, setIdentificacao] = useState({
