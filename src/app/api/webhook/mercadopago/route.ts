@@ -1,6 +1,14 @@
+
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { firebaseConfig } from '@/firebase/config';
+
+// Inicialização segura para o lado do servidor (API Routes)
+function getDb() {
+  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  return getFirestore(app);
+}
 
 export async function POST(request: Request) {
   try {
@@ -31,7 +39,7 @@ export async function POST(request: Request) {
       console.log('Pagamento:', { orderId, status, paymentId: dataId });
 
       if (orderId) {
-        const { firestore } = initializeFirebase();
+        const firestore = getDb();
         const orderRef = doc(firestore, 'orders', orderId);
         
         let newStatus = 'pending';
@@ -52,9 +60,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ status: 'ok' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Webhook Error:', error);
-    return NextResponse.json({ status: 'error' }, { status: 500 });
+    return NextResponse.json({ status: 'error', message: error.message }, { status: 500 });
   }
 }
 

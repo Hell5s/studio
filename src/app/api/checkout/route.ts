@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN}`,
+        'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(preference),
