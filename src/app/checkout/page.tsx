@@ -128,7 +128,7 @@ function CheckoutContent() {
   const freteValor = shippingMethod === 'sedex' ? 25.90 : 0;
   const totalGeral = Number((subtotal + freteValor).toFixed(2));
 
-  // Memoização das configurações do Mercado Pago para evitar erros de inicialização (Bricks Initialization Failed)
+  // Memoização das configurações do Mercado Pago para evitar erros de inicialização
   const paymentInitialization = useMemo(() => {
     const cleanCpf = identificacao.cpf.replace(/\D/g, '');
     const names = identificacao.nome.trim().split(' ');
@@ -256,9 +256,20 @@ function CheckoutContent() {
       if (paymentResult.status === 'approved') {
         sessionStorage.removeItem('checkout_items');
         router.push('/pedido-confirmado');
-      } else if (paymentResult.status === 'in_process') {
+      } else if (paymentResult.status === 'in_process' || paymentResult.status === 'pending') {
         sessionStorage.removeItem('checkout_items');
-        router.push('/pedido-pendente');
+        if (paymentResult.payment_method_id === 'pix' && paymentResult.point_of_interaction?.transaction_data) {
+          sessionStorage.setItem('pix_data', JSON.stringify({
+            qr_code: paymentResult.point_of_interaction.transaction_data.qr_code,
+            qr_code_base64: paymentResult.point_of_interaction.transaction_data.qr_code_base64,
+            ticket_url: paymentResult.point_of_interaction.transaction_data.ticket_url,
+            orderId: paymentResult.external_reference,
+            amount: paymentResult.transaction_amount,
+          }));
+          router.push('/pedido-pendente?metodo=pix');
+        } else {
+          router.push('/pedido-pendente');
+        }
       } else {
         toast({ title: "Pagamento Recusado", description: "Verifique os dados do cartão ou escolha outro método.", variant: "destructive" });
       }
