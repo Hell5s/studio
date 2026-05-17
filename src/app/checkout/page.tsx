@@ -54,7 +54,7 @@ function CheckoutContent() {
   // Inicializa o SDK do Mercado Pago apenas quando necessário
   useEffect(() => {
     if (currentStep === 'pagamento') {
-      initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || 'TEST-1bea5cd3-689c-414c-8b7d-70a9c6e00cc1', {
+      initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-a7da70eb-433e-41a8-bd29-55ef74c24025', {
         locale: 'pt-BR',
       });
     }
@@ -290,6 +290,7 @@ function CheckoutContent() {
         }),
       });
       const result = await response.json();
+      
       console.log('Resposta completa MP:', JSON.stringify(result, null, 2));
       if (!response.ok) {
         throw new Error(
@@ -299,6 +300,7 @@ function CheckoutContent() {
           || 'Erro desconhecido'
         );
       }
+
       if (result.point_of_interaction?.transaction_data) {
         sessionStorage.removeItem('checkout_items');
         setPixData({
