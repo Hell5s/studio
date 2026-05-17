@@ -33,6 +33,11 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import { LogoMark } from '@/components/store/LogoMark';
 import { cn } from '@/lib/utils';
+import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
+
+// Inicializa o SDK do Mercado Pago
+// Substitua pela sua Chave Pública (Public Key)
+initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-63259836-3982-4665-9854-850f8f902677');
 
 type Step = 'identificacao' | 'entrega' | 'pagamento';
 
@@ -43,16 +48,16 @@ function CheckoutContent() {
   const db = useFirestore();
   const { user } = useUser();
   
-  const orderId = searchParams.get('orderId');
-  const preferenceId = searchParams.get('preferenceId');
+  const orderIdParam = searchParams.get('orderId');
+  const [generatedOrderId, setGeneratedOrderId] = useState<string | null>(null);
+  const activeOrderId = orderIdParam || generatedOrderId;
 
   const [currentStep, setCurrentStep] = useState<Step>('identificacao');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
   const [shippingMethod, setShippingMethod] = useState<'pac' | 'sedex'>('pac');
-  const [hasError, setHasError] = useState<string | null>(null);
   const [sessionItems, setSessionItems] = useState<any[]>([]);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [isBrickReady, setIsBrickReady] = useState(false);
 
   // Form States
   const [identificacao, setIdentificacao] = useState({
@@ -72,77 +77,48 @@ function CheckoutContent() {
     estado: ''
   });
 
-  const [pagamento, setPagamento] = useState<'pix' | 'cartao' | 'boleto'>('pix');
-
   // Buscar detalhes do pedido no Firestore (se houver ID)
   const orderRef = useMemoFirebase(() => {
-    try {
-      return orderId ? doc(db, 'orders', orderId) : null;
-    } catch (e) {
-      console.error("Erro ao criar referência do pedido:", e);
-      return null;
-    }
-  }, [db, orderId]);
+    return activeOrderId ? doc(db, 'orders', activeOrderId) : null;
+  }, [db, activeOrderId]);
   
   const { data: order, isLoading: isOrderLoading } = useDoc(orderRef);
 
-  // Efeito para carregar itens do sessionStorage e gerenciar redirecionamento
+  // Carregar itens do sessionStorage
   useEffect(() => {
-    const loadSessionData = () => {
-      const raw = sessionStorage.getItem('checkout_items');
-      if (raw) {
-        try {
-          const items = JSON.parse(raw);
-          if (Array.isArray(items) && items.length > 0) {
-            setSessionItems(items);
-            return true;
-          }
-        } catch (e) {
-          console.error("Erro ao processar itens da sessão:", e);
+    const raw = sessionStorage.getItem('checkout_items');
+    if (raw) {
+      try {
+        const items = JSON.parse(raw);
+        if (Array.isArray(items) && items.length > 0) {
+          setSessionItems(items);
         }
+      } catch (e) {
+        console.error("Erro ao processar itens da sessão:", e);
       }
-      return false;
-    };
-
-    if (loadSessionData()) {
-      setIsCheckingSession(false);
-      return;
     }
+    setIsCheckingSession(false);
+  }, []);
 
-    // Se o sessionStorage estiver vazio, aguarda 1 segundo antes de redirecionar
-    const timer = setTimeout(() => {
-      if (!loadSessionData()) {
-        console.warn("Checkout: Sacola vazia no sessionStorage. Redirecionando...");
-        router.push('/');
-      }
-      setIsCheckingSession(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [router]);
-
-  // Preencher dados automático do perfil ou pedido existente
+  // Preencher dados automático
   useEffect(() => {
-    try {
-      if (user?.email) {
-        setIdentificacao(prev => ({ ...prev, email: user.email || '' }));
-      }
-      if (order?.customer) {
-        setIdentificacao(prev => ({ 
-          ...prev, 
-          nome: order.customer.name || identificacao.nome,
-          telefone: order.customer.phone || identificacao.telefone
-        }));
-        setEntrega(prev => ({
-          ...prev,
-          cep: order.customer.zip || entrega.cep,
-          endereco: order.customer.address || entrega.endereco,
-          cidade: order.customer.city || entrega.cidade,
-          estado: order.customer.state || entrega.estado
-        }));
-      }
-    } catch (e) {
-      console.error("Erro ao popular campos do formulário:", e);
+    if (user?.email) {
+      setIdentificacao(prev => ({ ...prev, email: user.email || '' }));
+    }
+    if (order?.customer) {
+      setIdentificacao(prev => ({ 
+        ...prev, 
+        nome: order.customer.name || prev.nome,
+        cpf: order.customer.cpf || prev.cpf,
+        telefone: order.customer.phone || prev.telefone
+      }));
+      setEntrega(prev => ({
+        ...prev,
+        cep: order.customer.zip || prev.cep,
+        endereco: order.customer.address?.split(',')[0] || prev.endereco,
+        cidade: order.customer.city || prev.cidade,
+        estado: order.customer.state || prev.estado
+      }));
     }
   }, [user, order]);
 
@@ -164,16 +140,12 @@ function CheckoutContent() {
           }));
         }
       } catch (e) {
-        console.error("Erro ao buscar CEP via API:", e);
+        console.error("Erro ao buscar CEP:", e);
       }
     }
   };
 
-  const formatPrice = (val: number) => 
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-
   const subtotal = useMemo(() => {
-    // Prioriza itens da sessão, mas pode usar do Firestore como backup se houver ID
     const items = sessionItems.length > 0 ? sessionItems : (order?.items || []);
     return items.reduce((acc: number, it: any) => acc + ((it.price || 0) * (it.quantity || 1)), 0);
   }, [sessionItems, order]);
@@ -184,150 +156,107 @@ function CheckoutContent() {
   const handleNextStep = async () => {
     if (currentStep === 'identificacao') {
       if (!identificacao.nome || !identificacao.cpf) {
-        toast({ title: "Campos obrigatórios", description: "Por favor, preencha nome e CPF.", variant: "destructive" });
+        toast({ title: "Campos obrigatórios", description: "Preencha nome e CPF.", variant: "destructive" });
         return;
       }
       setCurrentStep('entrega');
     } else if (currentStep === 'entrega') {
       if (!entrega.cep || !entrega.numero) {
-        toast({ title: "Dados de entrega", description: "Informe o CEP e o número da residência.", variant: "destructive" });
+        toast({ title: "Dados de entrega", description: "Informe o CEP e o número.", variant: "destructive" });
         return;
       }
-      setCurrentStep('pagamento');
+      
+      // Antes de ir para o pagamento, garantimos que o pedido existe no Firestore
+      setIsProcessing(true);
+      try {
+        const finalId = activeOrderId || `TB-${Date.now().toString().slice(-6)}`;
+        if (!activeOrderId) setGeneratedOrderId(finalId);
+
+        await setDoc(doc(db, 'orders', finalId), {
+          orderNumber: finalId,
+          userId: user?.uid || null,
+          items: sessionItems.length > 0 ? sessionItems : (order?.items || []),
+          customer: {
+            name: identificacao.nome,
+            email: identificacao.email,
+            cpf: identificacao.cpf,
+            phone: identificacao.telefone,
+            address: `${entrega.endereco}, ${entrega.numero} ${entrega.complemento}`,
+            city: entrega.cidade,
+            state: entrega.estado,
+            zip: entrega.cep
+          },
+          subtotal: subtotal,
+          total: totalGeral,
+          status: 'pending',
+          shipping: {
+            method: shippingMethod === 'sedex' ? 'SEDEX' : 'PAC',
+            price: freteValor
+          },
+          updatedAt: serverTimestamp(),
+          createdAt: order?.createdAt || serverTimestamp()
+        }, { merge: true });
+
+        setCurrentStep('pagamento');
+      } catch (e) {
+        toast({ title: "Erro ao salvar", description: "Tente novamente.", variant: "destructive" });
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
-  const handleFinalizarCompra = async () => {
+  const handlePaymentSubmit = async ({ formData }: any) => {
     setIsProcessing(true);
-    const finalOrderId = orderId || `TB-${Date.now().toString().slice(-6)}`;
-
     try {
-      const orderRef = doc(db, 'orders', finalOrderId);
-      
-      // Cria ou atualiza o pedido no Firestore
-      await setDoc(orderRef, {
-        orderNumber: finalOrderId,
-        userId: user?.uid || null,
-        items: sessionItems.length > 0 ? sessionItems : (order?.items || []),
-        customer: {
-          name: identificacao.nome,
-          email: identificacao.email,
-          cpf: identificacao.cpf,
-          phone: identificacao.telefone,
-          address: `${entrega.endereco}, ${entrega.numero} ${entrega.complemento}`,
-          city: entrega.cidade,
-          state: entrega.estado,
-          zip: entrega.cep
-        },
-        subtotal: subtotal,
-        total: totalGeral,
-        status: 'pending',
-        shipping: {
-          method: shippingMethod === 'sedex' ? 'SEDEX' : 'PAC',
-          price: freteValor
-        },
-        updatedAt: serverTimestamp(),
-        createdAt: order?.createdAt || serverTimestamp()
-      }, { merge: true });
-
-      if (pagamento === 'pix') {
-        const pixPayload = { 
+      const response = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           formData: {
-            transaction_amount: totalGeral,
-            description: `Pedido #${finalOrderId} - Toda Bela`,
-            external_reference: finalOrderId,
-            payer: {
-              email: identificacao.email || user?.email || 'contato@todabela.com.br',
-              first_name: identificacao.nome.split(' ')[0] || 'Cliente',
-              last_name: identificacao.nome.split(' ').slice(1).join(' ') || 'Toda Bela'
-            }
+            ...formData,
+            external_reference: activeOrderId,
+            description: `Pedido #${activeOrderId} - Toda Bela`,
           }
-        };
+        }),
+      });
 
-        console.log('--- Enviando Pagamento PIX ---', pixPayload);
+      const paymentResult = await response.json();
 
-        const response = await fetch('/api/checkout/pix', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(pixPayload),
-        });
-        
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || data.message || 'Erro ao gerar PIX');
-        setPixData(data);
-      } else {
-        // Redireciona para o Checkout Pro do Mercado Pago
-        const checkoutRes = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: sessionItems.length > 0 ? sessionItems : order?.items,
-            orderId: finalOrderId,
-            customer: {
-              name: identificacao.nome,
-              email: identificacao.email,
-              phone: identificacao.telefone,
-              zip: entrega.cep,
-              address: entrega.endereco
-            }
-          })
-        });
-        const checkoutData = await checkoutRes.json();
-        if (checkoutData.init_point) {
-          window.location.href = checkoutData.init_point;
-        } else {
-          throw new Error("Erro ao gerar link de pagamento");
-        }
+      if (!response.ok) throw new Error(paymentResult.message || 'Erro ao processar pagamento');
+
+      // Se for aprovado ou pendente (PIX/Boleto)
+      if (paymentResult.status === 'approved') {
+        router.push('/pedido-confirmado');
+      } else if (paymentResult.status === 'in_process') {
+        router.push('/pedido-pendente');
+      } else if (paymentResult.status === 'rejected') {
+        toast({ title: "Pagamento Recusado", description: "Verifique os dados do cartão.", variant: "destructive" });
       }
     } catch (error: any) {
-      console.error('Erro crítico no processo de finalização:', error);
-      toast({ title: "Erro no checkout", description: error.message, variant: "destructive" });
+      console.error('Payment Error:', error);
+      toast({ title: "Erro no Checkout", description: error.message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  if (hasError) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center bg-white p-6 text-center space-y-6">
-        <div className="h-20 w-20 bg-destructive/10 rounded-full flex items-center justify-center text-destructive">
-          <AlertTriangle className="h-10 w-10" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-headline font-bold text-primary">Ops! Algo deu errado</h2>
-          <p className="text-muted-foreground italic max-w-sm mx-auto">{hasError}</p>
-        </div>
-        <Button onClick={() => router.push('/')} className="rounded-full h-14 px-10 bg-primary text-white font-bold uppercase tracking-widest text-[10px]">
-          Voltar para a Loja
-        </Button>
-      </div>
-    );
-  }
+  const formatPrice = (val: number) => 
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
-  if (isCheckingSession || (isOrderLoading && orderId)) {
+  if (isCheckingSession || (isOrderLoading && activeOrderId)) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-white space-y-6">
-        <div className="relative">
-          <Loader2 className="h-16 w-16 animate-spin text-accent/20" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <ShoppingBag className="h-6 w-6 text-accent animate-pulse" />
-          </div>
-        </div>
-        <div className="space-y-2 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 animate-pulse">Sincronizando sua sacola...</p>
-          <p className="text-[9px] text-muted-foreground italic">Preparando ambiente seguro</p>
-        </div>
+        <Loader2 className="h-12 w-12 animate-spin text-accent" />
+        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 animate-pulse">Preparando Checkout Seguro...</p>
       </div>
     );
   }
-
-  const itemsToDisplay = sessionItems.length > 0 ? sessionItems : (order?.items || []);
 
   return (
     <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30">
-      {/* Header Minimalista */}
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50">
-        <div className="container mx-auto px-6 h-24 flex items-center justify-between">
+        <div className="container mx-auto px-6 h-20 md:h-24 flex items-center justify-between">
           <Link href="/"><LogoMark className="scale-90 md:scale-100" /></Link>
           
           <div className="hidden md:flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-primary/30">
@@ -345,42 +274,41 @@ function CheckoutContent() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-12 lg:py-20">
-        <div className="grid lg:grid-cols-12 gap-12 items-start max-w-6xl mx-auto">
+      <main className="container mx-auto px-4 py-8 lg:py-16">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto">
           
-          {/* Coluna de Passos */}
-          <div className="lg:col-span-8 space-y-8">
+          <div className="lg:col-span-8 space-y-6">
             
             {/* ETAPA 1: IDENTIFICAÇÃO */}
             <Card className={cn(
               "rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
-              currentStep === 'identificacao' ? "bg-white p-8 md:p-12 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
+              currentStep === 'identificacao' ? "bg-white p-6 md:p-10 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
             )}>
-              <div className="flex items-center gap-4 mb-10">
-                <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">1</div>
-                <h2 className="text-xl font-headline font-bold text-primary uppercase tracking-tight">Dados de Identificação</h2>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">1</div>
+                <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Identificação</h2>
               </div>
 
               {currentStep === 'identificacao' && (
-                <div className="grid md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="md:col-span-2 space-y-2">
+                <div className="grid md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="md:col-span-2 space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-14 rounded-xl bg-secondary/20 border-none" placeholder="Como deseja ser chamada" />
+                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
-                    <Input value={identificacao.email} disabled className="h-14 rounded-xl bg-secondary/10 border-none opacity-60" />
+                    <Input value={identificacao.email} disabled className="h-12 rounded-xl bg-secondary/10 border-none opacity-60" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">CPF</Label>
-                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-14 rounded-xl bg-secondary/20 border-none" placeholder="000.000.000-00" />
+                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="000.000.000-00" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Telefone</Label>
-                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-14 rounded-xl bg-secondary/20 border-none" placeholder="(00) 00000-0000" />
+                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="(00) 00000-0000" />
                   </div>
-                  <div className="md:col-span-2 pt-6">
-                    <Button onClick={handleNextStep} className="w-full h-16 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[11px] shadow-xl hover:scale-[1.02] transition-all">Ir para Entrega</Button>
+                  <div className="md:col-span-2 pt-4">
+                    <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">Ir para Entrega</Button>
                   </div>
                 </div>
               )}
@@ -389,278 +317,170 @@ function CheckoutContent() {
             {/* ETAPA 2: ENTREGA */}
             <Card className={cn(
               "rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
-              currentStep === 'entrega' ? "bg-white p-8 md:p-12 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
+              currentStep === 'entrega' ? "bg-white p-6 md:p-10 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
             )}>
-              <div className="flex items-center gap-4 mb-10">
-                <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">2</div>
-                <h2 className="text-xl font-headline font-bold text-primary uppercase tracking-tight">Endereço de Entrega</h2>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">2</div>
+                <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Entrega</h2>
               </div>
 
               {currentStep === 'entrega' && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <div className="space-y-2">
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="grid md:grid-cols-3 gap-5">
+                    <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">CEP</Label>
-                      <Input value={entrega.cep} onChange={e => handleCepSearch(e.target.value)} maxLength={9} className="h-14 rounded-xl bg-secondary/20 border-none" placeholder="00000-000" />
+                      <Input value={entrega.cep} onChange={e => handleCepSearch(e.target.value)} maxLength={9} className="h-12 rounded-xl bg-secondary/20 border-none" />
                     </div>
-                    <div className="md:col-span-2 space-y-2">
+                    <div className="md:col-span-2 space-y-1.5">
                       <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Endereço</Label>
-                      <Input value={entrega.endereco} onChange={e => setEntrega({...entrega, endereco: e.target.value})} className="h-14 rounded-xl bg-secondary/20 border-none" />
+                      <Input value={entrega.endereco} onChange={e => setEntrega({...entrega, endereco: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Número</Label>
-                      <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-14 rounded-xl bg-secondary/20 border-none" />
+                      <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Complemento</Label>
-                      <Input value={entrega.complemento} onChange={e => setEntrega({...entrega, complemento: e.target.value})} className="h-14 rounded-xl bg-secondary/20 border-none" />
-                    </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Bairro</Label>
-                      <Input value={entrega.bairro} onChange={e => setEntrega({...entrega, bairro: e.target.value})} className="h-14 rounded-xl bg-secondary/20 border-none" />
+                      <Input value={entrega.bairro} onChange={e => setEntrega({...entrega, bairro: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
                     </div>
-                    <div className="md:col-span-2 space-y-2">
+                    <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Cidade</Label>
-                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-14 rounded-xl bg-secondary/20 border-none" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Estado</Label>
-                      <Input value={entrega.estado} onChange={e => setEntrega({...entrega, estado: e.target.value})} className="h-14 rounded-xl bg-secondary/20 border-none" />
+                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
                     </div>
                   </div>
 
-                  <div className="space-y-4 pt-4">
-                    <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Opções de Frete</Label>
+                  <div className="space-y-3 pt-2">
+                    <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Método de Envio</Label>
                     <div className="grid gap-3">
-                      <button 
-                        onClick={() => setShippingMethod('pac')}
-                        className={cn(
-                          "flex items-center justify-between p-6 rounded-2xl border transition-all",
-                          shippingMethod === 'pac' ? "border-primary bg-primary/5 shadow-md" : "border-primary/5 bg-white"
-                        )}
-                      >
-                        <div className="flex items-center gap-4">
-                           <Truck className="h-5 w-5 text-primary/40" />
-                           <div className="text-left">
-                              <p className="text-sm font-bold text-primary">PAC Econômico</p>
-                              <p className="text-[10px] text-muted-foreground">15 a 20 dias úteis</p>
-                           </div>
-                        </div>
-                        <span className="text-sm font-bold text-emerald-600">GRÁTIS</span>
+                      <button onClick={() => setShippingMethod('pac')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all", shippingMethod === 'pac' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
+                        <div className="flex items-center gap-3"><Truck className="h-4 w-4 text-primary/40" /><div className="text-left"><p className="text-xs font-bold text-primary">PAC Econômico</p><p className="text-[9px] text-muted-foreground">15-20 dias úteis</p></div></div>
+                        <span className="text-xs font-bold text-emerald-600">GRÁTIS</span>
                       </button>
-
-                      <button 
-                        onClick={() => setShippingMethod('sedex')}
-                        className={cn(
-                          "flex items-center justify-between p-6 rounded-2xl border transition-all",
-                          shippingMethod === 'sedex' ? "border-primary bg-primary/5 shadow-md" : "border-primary/5 bg-white"
-                        )}
-                      >
-                        <div className="flex items-center gap-4">
-                           <Truck className="h-5 w-5 text-accent" />
-                           <div className="text-left">
-                              <p className="text-sm font-bold text-primary">SEDEX Express VIP</p>
-                              <p className="text-[10px] text-muted-foreground">7 a 10 dias úteis</p>
-                           </div>
-                        </div>
-                        <span className="text-sm font-bold text-primary">R$ 25,90</span>
+                      <button onClick={() => setShippingMethod('sedex')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all", shippingMethod === 'sedex' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
+                        <div className="flex items-center gap-3"><Truck className="h-4 w-4 text-accent" /><div className="text-left"><p className="text-xs font-bold text-primary">SEDEX VIP</p><p className="text-[9px] text-muted-foreground">7-10 dias úteis</p></div></div>
+                        <span className="text-xs font-bold text-primary">R$ 25,90</span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="pt-6">
-                    <Button onClick={handleNextStep} className="w-full h-16 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[11px] shadow-xl">Ir para Pagamento</Button>
+                  <div className="pt-4">
+                    <Button onClick={handleNextStep} disabled={isProcessing} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px]">
+                      {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Ir para Pagamento'}
+                    </Button>
                   </div>
                 </div>
               )}
             </Card>
 
-            {/* ETAPA 3: PAGAMENTO */}
+            {/* ETAPA 3: PAGAMENTO (TRANSPARENTE) */}
             <Card className={cn(
               "rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
-              currentStep === 'pagamento' ? "bg-white p-8 md:p-12 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
+              currentStep === 'pagamento' ? "bg-white p-6 md:p-10 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
             )}>
-              <div className="flex items-center gap-4 mb-10">
-                <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">3</div>
-                <h2 className="text-xl font-headline font-bold text-primary uppercase tracking-tight">Forma de Pagamento</h2>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">3</div>
+                <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Pagamento Transparente</h2>
               </div>
 
               {currentStep === 'pagamento' && (
-                <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2">
-                  
-                  {pixData ? (
-                    <div className="text-center space-y-8 py-10 bg-secondary/10 rounded-[3rem] border border-primary/5">
-                        <div className="space-y-4">
-                           <div className="h-12 w-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto"><CheckCircle2 className="h-6 w-6 text-emerald-500" /></div>
-                           <h3 className="text-xl font-headline font-bold text-primary">Aguardando Pagamento PIX</h3>
-                           <p className="text-xs text-muted-foreground italic font-light">Escaneie o código abaixo com seu banco.</p>
-                        </div>
-                        <div className="bg-white p-6 rounded-3xl inline-block shadow-lg border border-primary/5">
-                           {pixData.qr_code_base64 && <img src={`data:image/png;base64,${pixData.qr_code_base64}`} className="w-56 h-56" />}
-                        </div>
-                        <div className="max-w-sm mx-auto space-y-4 px-6">
-                           <div className="p-4 bg-gray-50 rounded-xl border border-dashed text-[9px] font-mono break-all">{pixData.qr_code}</div>
-                           <Button onClick={() => { navigator.clipboard.writeText(pixData.qr_code); toast({ title: "Copiado!" }); }} className="w-full rounded-full h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px]">
-                              <Copy className="h-4 w-4 mr-3" /> Copiar Código
-                           </Button>
-                        </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex bg-secondary/20 p-1.5 rounded-2xl">
-                        {[
-                          { id: 'pix', label: 'PIX', icon: <QrCode className="h-4 w-4" /> },
-                          { id: 'cartao', label: 'Cartão', icon: <CardIcon className="h-4 w-4" /> },
-                          { id: 'boleto', label: 'Boleto', icon: <FileText className="h-4 w-4" /> }
-                        ].map(t => (
-                          <button
-                            key={t.id}
-                            onClick={() => setPagamento(t.id as any)}
-                            className={cn(
-                              "flex-1 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3",
-                              pagamento === t.id ? "bg-white text-primary shadow-sm" : "text-primary/40 hover:bg-white/50"
-                            )}
-                          >
-                            {t.icon} {t.label}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="min-h-[200px]">
-                         {pagamento === 'pix' && (
-                           <div className="space-y-6 text-center py-6">
-                              <div className="h-16 w-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-500 shadow-sm"><QrCode className="h-8 w-8" /></div>
-                              <div className="space-y-2">
-                                <p className="font-bold text-primary uppercase text-sm">Pagamento Instantâneo via PIX</p>
-                                <p className="text-xs text-muted-foreground italic font-light">Liberação imediata do pedido. O QR Code será gerado após clicar em finalizar.</p>
-                              </div>
-                           </div>
-                         )}
-
-                         {pagamento === 'cartao' && (
-                            <div className="grid md:grid-cols-2 gap-6 animate-in slide-in-from-right-4 duration-300">
-                               <div className="md:col-span-2 space-y-2">
-                                 <Label className="text-[9px] font-bold uppercase text-primary/40 ml-1">Número do Cartão</Label>
-                                 <Input className="h-14 rounded-xl bg-secondary/20 border-none" placeholder="0000 0000 0000 0000" />
-                               </div>
-                               <div className="space-y-2">
-                                 <Label className="text-[9px] font-bold uppercase text-primary/40 ml-1">Validade</Label>
-                                 <Input className="h-14 rounded-xl bg-secondary/20 border-none" placeholder="MM/AA" />
-                               </div>
-                               <div className="space-y-2">
-                                 <Label className="text-[9px] font-bold uppercase text-primary/40 ml-1">CVV</Label>
-                                 <Input className="h-14 rounded-xl bg-secondary/20 border-none" placeholder="123" />
-                               </div>
-                               <div className="md:col-span-2 space-y-2">
-                                 <Label className="text-[9px] font-bold uppercase text-primary/40 ml-1">Nome no Cartão</Label>
-                                 <Input className="h-14 rounded-xl bg-secondary/20 border-none uppercase" />
-                               </div>
-                            </div>
-                         )}
-
-                         {pagamento === 'boleto' && (
-                            <div className="space-y-6 text-center py-6">
-                               <div className="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-primary/40 shadow-sm"><FileText className="h-8 w-8" /></div>
-                               <div className="space-y-2">
-                                 <p className="font-bold text-primary uppercase text-sm">Boleto Bancário</p>
-                                 <p className="text-xs text-muted-foreground italic font-light">Compensação em até 48 horas úteis após o pagamento.</p>
-                               </div>
-                            </div>
-                         )}
-                      </div>
-
-                      <Button 
-                        onClick={handleFinalizarCompra} 
-                        disabled={isProcessing}
-                        className="w-full h-20 rounded-full bg-primary text-white font-bold uppercase tracking-[0.3em] text-[12px] shadow-2xl hover:scale-[1.02] transition-all"
-                      >
-                        {isProcessing ? <Loader2 className="animate-spin h-6 w-6" /> : 'Finalizar Escolha'}
-                      </Button>
-                    </>
-                  )}
-
-                  <div className="pt-8 border-t border-primary/5 flex items-center justify-center gap-3">
-                    <Lock className="h-3 w-3 text-emerald-500" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-primary/30">Criptografia de 256 bits com segurança SSL</span>
-                  </div>
+                <div className="animate-in fade-in slide-in-from-bottom-2 min-h-[400px]">
+                   {!isBrickReady && (
+                     <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-accent/40" />
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-primary/20">Criptografando ambiente...</p>
+                     </div>
+                   )}
+                   <Payment
+                      initialization={{
+                        amount: totalGeral,
+                        payer: {
+                          email: identificacao.email || user?.email || '',
+                          firstName: identificacao.nome.split(' ')[0],
+                          lastName: identificacao.nome.split(' ').slice(1).join(' '),
+                          identification: { type: 'CPF', number: identificacao.cpf.replace(/\D/g, '') },
+                        },
+                      }}
+                      customization={{
+                        paymentMethods: {
+                          creditCard: 'all',
+                          debitCard: 'all',
+                          bankTransfer: ['pix'],
+                          ticket: ['bolbradesco'],
+                        },
+                        visual: {
+                          style: {
+                            theme: 'default',
+                            customVariables: {
+                              formBackgroundColor: '#ffffff',
+                              baseColor: '#6E3C47',
+                              buttonBackgroundColor: '#6E3C47',
+                              buttonTextColor: '#ffffff',
+                              borderRadiusLarge: '24px',
+                            }
+                          }
+                        }
+                      }}
+                      onSubmit={handlePaymentSubmit}
+                      onReady={() => setIsBrickReady(true)}
+                    />
                 </div>
               )}
             </Card>
           </div>
 
-          {/* Coluna Resumo - Sticky */}
-          <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-36">
-            <Card className="rounded-[2.5rem] border-none bg-white shadow-premium p-8 space-y-8">
+          {/* RESUMO LATERAL */}
+          <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+            <Card className="rounded-[2.5rem] border-none bg-white shadow-premium p-8 space-y-6">
                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
                   <Package className="h-4 w-4" />
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]">Resumo do Pedido</h3>
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]">Resumo</h3>
                </div>
 
-               <div className="space-y-6 max-h-[350px] overflow-y-auto no-scrollbar">
-                  {itemsToDisplay.map((item: any, i: number) => (
+               <div className="space-y-4 max-h-[300px] overflow-y-auto no-scrollbar">
+                  {(sessionItems.length > 0 ? sessionItems : (order?.items || [])).map((item: any, i: number) => (
                     <div key={i} className="flex gap-4 items-center">
-                       <div className="h-20 w-16 rounded-xl bg-secondary/30 overflow-hidden shrink-0">
+                       <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0">
                           <img src={item.image} className="h-full w-full object-cover" />
                        </div>
                        <div className="flex-1 min-w-0">
                           <p className="text-[10px] font-bold text-primary uppercase truncate">{item.name}</p>
-                          <p className="text-[9px] text-muted-foreground italic">{item.quantity || 1}un • {formatPrice(item.price)}</p>
-                          {(item.selectedSize || item.selectedColor) && (
-                            <p className="text-[8px] font-black uppercase text-accent mt-1 tracking-tighter">
-                              {item.selectedSize} | {item.selectedColor}
-                            </p>
-                          )}
+                          <p className="text-[9px] text-muted-foreground italic">{item.quantity}un • {formatPrice(item.price)}</p>
                        </div>
-                       <p className="text-[11px] font-bold text-primary">{formatPrice((item.price || 0) * (item.quantity || 1))}</p>
+                       <p className="text-[11px] font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
                     </div>
                   ))}
                </div>
 
-               <div className="space-y-3 pt-6 border-t border-primary/5">
-                  <div className="flex justify-between text-[11px] font-medium text-primary/40 uppercase">
-                    <span>Subtotal</span>
-                    <span>{formatPrice(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] font-medium text-primary/40 uppercase">
-                    <span>Frete</span>
-                    <span className={cn(freteValor === 0 ? "text-emerald-600 font-bold" : "")}>{freteValor === 0 ? 'Grátis' : formatPrice(freteValor)}</span>
-                  </div>
+               <div className="space-y-2 pt-4 border-t border-primary/5">
+                  <div className="flex justify-between text-[11px] text-primary/40 uppercase"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+                  <div className="flex justify-between text-[11px] text-primary/40 uppercase"><span>Frete</span><span>{freteValor === 0 ? 'Grátis' : formatPrice(freteValor)}</span></div>
                   <div className="flex justify-between items-end pt-4">
-                    <span className="text-xs font-black uppercase tracking-widest text-primary">Total</span>
-                    <span className="text-3xl font-headline font-bold text-primary leading-none">{formatPrice(totalGeral)}</span>
+                    <span className="text-xs font-black uppercase text-primary">Total</span>
+                    <span className="text-2xl font-headline font-bold text-primary">{formatPrice(totalGeral)}</span>
                   </div>
                </div>
             </Card>
 
-            <div className="p-8 bg-secondary/20 rounded-[2.5rem] space-y-4">
-               <div className="flex items-center gap-3 text-primary">
-                  <ShieldCheck className="h-5 w-5 text-accent" />
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest">Entrega Toda Bela</h4>
+            <div className="p-6 bg-secondary/20 rounded-[2rem] space-y-3">
+               <div className="flex items-center gap-2 text-primary">
+                  <ShieldCheck className="h-4 w-4 text-accent" />
+                  <h4 className="text-[9px] font-bold uppercase tracking-widest">Entrega Toda Bela</h4>
                </div>
-               <p className="text-[11px] text-muted-foreground leading-relaxed italic font-light">
-                 Suas peças são selecionadas e embaladas com cuidado editorial. O código de rastreio será enviado via e-mail e WhatsApp em até 3 dias úteis após a confirmação.
+               <p className="text-[10px] text-muted-foreground leading-relaxed italic font-light">
+                 Sua seleção será preparada com cuidado editorial e enviada com seguro total.
                </p>
             </div>
           </aside>
 
         </div>
       </main>
-
-      <footer className="py-12 border-t border-primary/5 text-center">
-         <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-primary/20">© Toda Bela Boutique • Processamento Seguro via Mercado Pago</p>
-      </footer>
     </div>
   );
 }
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={
-      <div className="h-screen flex flex-col items-center justify-center bg-white space-y-6">
-        <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40">Iniciando Checkout Seguro...</p>
-      </div>
-    }>
+    <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>}>
       <CheckoutContent />
     </Suspense>
   );
