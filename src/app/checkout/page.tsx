@@ -5,23 +5,15 @@ import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   ShieldCheck, 
-  Lock, 
   ChevronRight, 
+  ChevronLeft,
   MapPin, 
   User, 
-  CreditCard, 
-  CheckCircle2, 
   Loader2, 
-  ArrowLeft,
   Package,
-  QrCode,
-  FileText,
-  Copy,
-  Info,
   Truck,
-  CreditCard as CardIcon,
-  AlertTriangle,
-  ShoppingBag
+  CreditCard,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +28,6 @@ import { cn } from '@/lib/utils';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
 // Inicializa o SDK do Mercado Pago
-// Substitua pela sua Chave Pública (Public Key)
 initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-63259836-3982-4665-9854-850f8f902677');
 
 type Step = 'identificacao' | 'entrega' | 'pagamento';
@@ -48,16 +39,13 @@ function CheckoutContent() {
   const db = useFirestore();
   const { user } = useUser();
   
-  const orderIdParam = searchParams.get('orderId');
-  const [generatedOrderId, setGeneratedOrderId] = useState<string | null>(null);
-  const activeOrderId = orderIdParam || generatedOrderId;
-
   const [currentStep, setCurrentStep] = useState<Step>('identificacao');
   const [isProcessing, setIsProcessing] = useState(false);
   const [shippingMethod, setShippingMethod] = useState<'pac' | 'sedex'>('pac');
   const [sessionItems, setSessionItems] = useState<any[]>([]);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isBrickReady, setIsBrickReady] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   // Form States
   const [identificacao, setIdentificacao] = useState({
@@ -77,13 +65,6 @@ function CheckoutContent() {
     estado: ''
   });
 
-  // Buscar detalhes do pedido no Firestore (se houver ID)
-  const orderRef = useMemoFirebase(() => {
-    return activeOrderId ? doc(db, 'orders', activeOrderId) : null;
-  }, [db, activeOrderId]);
-  
-  const { data: order, isLoading: isOrderLoading } = useDoc(orderRef);
-
   // Carregar itens do sessionStorage
   useEffect(() => {
     const raw = sessionStorage.getItem('checkout_items');
@@ -97,7 +78,13 @@ function CheckoutContent() {
         console.error("Erro ao processar itens da sessão:", e);
       }
     }
-    setIsCheckingSession(false);
+    
+    // Pequeno delay para garantir que o sessionStorage foi lido
+    const timer = setTimeout(() => {
+        setIsCheckingSession(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Preencher dados automático
@@ -105,22 +92,7 @@ function CheckoutContent() {
     if (user?.email) {
       setIdentificacao(prev => ({ ...prev, email: user.email || '' }));
     }
-    if (order?.customer) {
-      setIdentificacao(prev => ({ 
-        ...prev, 
-        nome: order.customer.name || prev.nome,
-        cpf: order.customer.cpf || prev.cpf,
-        telefone: order.customer.phone || prev.telefone
-      }));
-      setEntrega(prev => ({
-        ...prev,
-        cep: order.customer.zip || prev.cep,
-        endereco: order.customer.address?.split(',')[0] || prev.endereco,
-        cidade: order.customer.city || prev.cidade,
-        estado: order.customer.state || prev.estado
-      }));
-    }
-  }, [user, order]);
+  }, [user]);
 
   const handleCepSearch = async (val: string) => {
     const cep = val.replace(/\D/g, '');
@@ -146,9 +118,8 @@ function CheckoutContent() {
   };
 
   const subtotal = useMemo(() => {
-    const items = sessionItems.length > 0 ? sessionItems : (order?.items || []);
-    return items.reduce((acc: number, it: any) => acc + ((it.price || 0) * (it.quantity || 1)), 0);
-  }, [sessionItems, order]);
+    return sessionItems.reduce((acc, it) => acc + ((it.price || 0) * (it.quantity || 1)), 0);
+  }, [sessionItems]);
 
   const freteValor = shippingMethod === 'sedex' ? 25.90 : 0;
   const totalGeral = Number((subtotal + freteValor).toFixed(2));
@@ -156,26 +127,26 @@ function CheckoutContent() {
   const handleNextStep = async () => {
     if (currentStep === 'identificacao') {
       if (!identificacao.nome || !identificacao.cpf) {
-        toast({ title: "Campos obrigatórios", description: "Preencha nome e CPF.", variant: "destructive" });
+        toast({ title: "Campos obrigatórios", description: "Preencha seu nome e CPF para continuar.", variant: "destructive" });
         return;
       }
       setCurrentStep('entrega');
     } else if (currentStep === 'entrega') {
-      if (!entrega.cep || !entrega.numero) {
-        toast({ title: "Dados de entrega", description: "Informe o CEP e o número.", variant: "destructive" });
+      if (!entrega.cep || !entrega.numero || !entrega.endereco) {
+        toast({ title: "Dados de entrega", description: "Informe o CEP, número e endereço completo.", variant: "destructive" });
         return;
       }
       
-      // Antes de ir para o pagamento, garantimos que o pedido existe no Firestore
       setIsProcessing(true);
       try {
-        const finalId = activeOrderId || `TB-${Date.now().toString().slice(-6)}`;
-        if (!activeOrderId) setGeneratedOrderId(finalId);
+        const finalId = orderId || `PED-${Date.now().toString().slice(-6)}`;
+        setOrderId(finalId);
 
+        // Salva/Cria o pedido no Firestore antes de ir para o pagamento
         await setDoc(doc(db, 'orders', finalId), {
           orderNumber: finalId,
           userId: user?.uid || null,
-          items: sessionItems.length > 0 ? sessionItems : (order?.items || []),
+          items: sessionItems,
           customer: {
             name: identificacao.nome,
             email: identificacao.email,
@@ -194,12 +165,12 @@ function CheckoutContent() {
             price: freteValor
           },
           updatedAt: serverTimestamp(),
-          createdAt: order?.createdAt || serverTimestamp()
+          createdAt: serverTimestamp()
         }, { merge: true });
 
         setCurrentStep('pagamento');
       } catch (e) {
-        toast({ title: "Erro ao salvar", description: "Tente novamente.", variant: "destructive" });
+        toast({ title: "Erro ao processar", description: "Não foi possível salvar seu pedido. Tente novamente.", variant: "destructive" });
       } finally {
         setIsProcessing(false);
       }
@@ -208,6 +179,13 @@ function CheckoutContent() {
 
   const handlePaymentSubmit = async ({ formData }: any) => {
     setIsProcessing(true);
+    
+    // Sanitização do valor para garantir formato MP
+    const rawAmount = totalGeral.toString().replace(',', '.');
+    const transaction_amount = Number(parseFloat(rawAmount).toFixed(2));
+
+    console.log('Enviando pagamento:', { transaction_amount, orderId });
+
     try {
       const response = await fetch('/api/payments', {
         method: 'POST',
@@ -215,8 +193,9 @@ function CheckoutContent() {
         body: JSON.stringify({
           formData: {
             ...formData,
-            external_reference: activeOrderId,
-            description: `Pedido #${activeOrderId} - Toda Bela`,
+            transaction_amount,
+            external_reference: orderId,
+            description: `Pedido Toda Bela #${orderId}`,
           }
         }),
       });
@@ -225,13 +204,12 @@ function CheckoutContent() {
 
       if (!response.ok) throw new Error(paymentResult.message || 'Erro ao processar pagamento');
 
-      // Se for aprovado ou pendente (PIX/Boleto)
       if (paymentResult.status === 'approved') {
         router.push('/pedido-confirmado');
       } else if (paymentResult.status === 'in_process') {
         router.push('/pedido-pendente');
-      } else if (paymentResult.status === 'rejected') {
-        toast({ title: "Pagamento Recusado", description: "Verifique os dados do cartão.", variant: "destructive" });
+      } else {
+        toast({ title: "Pagamento Recusado", description: "Verifique os dados do cartão ou escolha outro método.", variant: "destructive" });
       }
     } catch (error: any) {
       console.error('Payment Error:', error);
@@ -244,11 +222,24 @@ function CheckoutContent() {
   const formatPrice = (val: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
-  if (isCheckingSession || (isOrderLoading && activeOrderId)) {
+  if (isCheckingSession) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-white space-y-6">
         <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 animate-pulse">Preparando Checkout Seguro...</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 animate-pulse">Sincronizando sua sacola...</p>
+      </div>
+    );
+  }
+
+  if (sessionItems.length === 0) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-white p-10 text-center space-y-8">
+        <Package className="h-16 w-16 text-primary/10" />
+        <div className="space-y-2">
+            <h1 className="text-2xl font-headline font-bold text-primary">Sua sacola está vazia</h1>
+            <p className="text-muted-foreground italic font-light">Selecione peças extraordinárias antes de finalizar sua compra.</p>
+        </div>
+        <Button onClick={() => router.push('/')} className="rounded-full h-14 px-10 bg-primary text-white">Voltar para a Loja</Button>
       </div>
     );
   }
@@ -257,20 +248,44 @@ function CheckoutContent() {
     <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30">
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50">
         <div className="container mx-auto px-6 h-20 md:h-24 flex items-center justify-between">
+          <div className="flex-1 hidden md:block">
+             <button onClick={() => router.back()} className="text-primary/40 hover:text-primary transition-colors flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                <ChevronLeft className="h-4 w-4" /> Voltar
+             </button>
+          </div>
+          
           <Link href="/"><LogoMark className="scale-90 md:scale-100" /></Link>
           
-          <div className="hidden md:flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-primary/30">
-            <span className={cn(currentStep === 'identificacao' ? "text-primary" : "text-emerald-500")}>Identificação</span>
-            <ChevronRight className="h-3 w-3" />
-            <span className={cn(currentStep === 'entrega' ? "text-primary" : currentStep === 'pagamento' ? "text-emerald-500" : "")}>Entrega</span>
-            <ChevronRight className="h-3 w-3" />
-            <span className={cn(currentStep === 'pagamento' ? "text-primary" : "")}>Pagamento</span>
+          <div className="flex-1 flex justify-end">
+            <div className="flex items-center gap-2 text-emerald-600">
+                <ShieldCheck className="h-5 w-5" />
+                <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Checkout Seguro</span>
+            </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2 text-emerald-600">
-            <ShieldCheck className="h-5 w-5" />
-            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Ambiente Seguro</span>
-          </div>
+        <div className="bg-secondary/10 py-3">
+            <div className="max-w-md mx-auto flex items-center justify-between px-6">
+                {[
+                    { id: 'identificacao', label: 'Dados' },
+                    { id: 'entrega', label: 'Entrega' },
+                    { id: 'pagamento', label: 'Pagamento' }
+                ].map((s, idx) => (
+                    <React.Fragment key={s.id}>
+                        <div className={cn(
+                            "flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest",
+                            currentStep === s.id ? "text-primary" : "text-primary/30"
+                        )}>
+                            <span className={cn(
+                                "h-5 w-5 rounded-full flex items-center justify-center text-[10px]",
+                                currentStep === s.id ? "bg-primary text-white" : "bg-primary/5"
+                            )}>{idx + 1}</span>
+                            {s.label}
+                        </div>
+                        {idx < 2 && <ChevronRight className="h-3 w-3 text-primary/10" />}
+                    </React.Fragment>
+                ))}
+            </div>
         </div>
       </header>
 
@@ -285,7 +300,7 @@ function CheckoutContent() {
               currentStep === 'identificacao' ? "bg-white p-6 md:p-10 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">1</div>
+                <User className="h-5 w-5 text-accent" />
                 <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Identificação</h2>
               </div>
 
@@ -297,15 +312,11 @@ function CheckoutContent() {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
-                    <Input value={identificacao.email} disabled className="h-12 rounded-xl bg-secondary/10 border-none opacity-60" />
+                    <Input value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">CPF</Label>
                     <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="000.000.000-00" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Telefone</Label>
-                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="(00) 00000-0000" />
                   </div>
                   <div className="md:col-span-2 pt-4">
                     <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">Ir para Entrega</Button>
@@ -320,7 +331,7 @@ function CheckoutContent() {
               currentStep === 'entrega' ? "bg-white p-6 md:p-10 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">2</div>
+                <MapPin className="h-5 w-5 text-accent" />
                 <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Entrega</h2>
               </div>
 
@@ -340,17 +351,17 @@ function CheckoutContent() {
                       <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Bairro</Label>
-                      <Input value={entrega.bairro} onChange={e => setEntrega({...entrega, bairro: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
-                    </div>
-                    <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Cidade</Label>
                       <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">UF</Label>
+                      <Input value={entrega.estado} onChange={e => setEntrega({...entrega, estado: e.target.value.toUpperCase()})} maxLength={2} className="h-12 rounded-xl bg-secondary/20 border-none" />
                     </div>
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Método de Envio</Label>
+                    <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Opção de Envio</Label>
                     <div className="grid gap-3">
                       <button onClick={() => setShippingMethod('pac')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all", shippingMethod === 'pac' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
                         <div className="flex items-center gap-3"><Truck className="h-4 w-4 text-primary/40" /><div className="text-left"><p className="text-xs font-bold text-primary">PAC Econômico</p><p className="text-[9px] text-muted-foreground">15-20 dias úteis</p></div></div>
@@ -363,8 +374,9 @@ function CheckoutContent() {
                     </div>
                   </div>
 
-                  <div className="pt-4">
-                    <Button onClick={handleNextStep} disabled={isProcessing} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px]">
+                  <div className="pt-4 flex gap-4">
+                    <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[10px] font-bold">Voltar</Button>
+                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px]">
                       {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Ir para Pagamento'}
                     </Button>
                   </div>
@@ -378,7 +390,7 @@ function CheckoutContent() {
               currentStep === 'pagamento' ? "bg-white p-6 md:p-10 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">3</div>
+                <CreditCard className="h-5 w-5 text-accent" />
                 <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Pagamento Transparente</h2>
               </div>
 
@@ -423,6 +435,10 @@ function CheckoutContent() {
                       onSubmit={handlePaymentSubmit}
                       onReady={() => setIsBrickReady(true)}
                     />
+                    
+                    <button onClick={() => setCurrentStep('entrega')} className="mt-8 text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary flex items-center gap-2">
+                        <ChevronLeft className="h-3 w-3" /> Alterar Dados de Entrega
+                    </button>
                 </div>
               )}
             </Card>
@@ -437,7 +453,7 @@ function CheckoutContent() {
                </div>
 
                <div className="space-y-4 max-h-[300px] overflow-y-auto no-scrollbar">
-                  {(sessionItems.length > 0 ? sessionItems : (order?.items || [])).map((item: any, i: number) => (
+                  {sessionItems.map((item: any, i: number) => (
                     <div key={i} className="flex gap-4 items-center">
                        <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0">
                           <img src={item.image} className="h-full w-full object-cover" />
@@ -463,11 +479,11 @@ function CheckoutContent() {
 
             <div className="p-6 bg-secondary/20 rounded-[2rem] space-y-3">
                <div className="flex items-center gap-2 text-primary">
-                  <ShieldCheck className="h-4 w-4 text-accent" />
-                  <h4 className="text-[9px] font-bold uppercase tracking-widest">Entrega Toda Bela</h4>
+                  <Lock className="h-4 w-4 text-accent" />
+                  <h4 className="text-[9px] font-bold uppercase tracking-widest">Segurança de Dados</h4>
                </div>
                <p className="text-[10px] text-muted-foreground leading-relaxed italic font-light">
-                 Sua seleção será preparada com cuidado editorial e enviada com seguro total.
+                 Sua transação é protegida por criptografia de 256 bits e processada pelo Mercado Pago.
                </p>
             </div>
           </aside>
