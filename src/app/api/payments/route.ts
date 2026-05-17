@@ -7,30 +7,37 @@ export async function POST(request: Request) {
 
     if (!formData) throw new Error('Dados do formulário são obrigatórios');
 
-    // Mapeamento dinâmico para a API do Mercado Pago V1
-    const paymentPayload = {
+    const isPix = formData.payment_method_id === 'pix';
+    const isBoleto = formData.payment_method_id === 'bolbradesco' || formData.payment_method_id === 'pec';
+
+    // Mapeamento dinâmico para a API do Mercado Pago
+    const paymentPayload: any = {
       transaction_amount: Number(formData.transaction_amount),
-      token: formData.token,
       description: formData.description || 'Compra na Toda Bela',
-      installments: Number(formData.installments),
       payment_method_id: formData.payment_method_id,
-      issuer_id: formData.issuer_id,
       payer: {
-        email: formData.payer?.email || 'contato@todabela.com.br',
-        identification: formData.payer?.identification,
+        email: formData.payer?.email || '',
         first_name: formData.payer?.first_name,
         last_name: formData.payer?.last_name,
+        identification: formData.payer?.identification,
       },
       external_reference: String(formData.external_reference),
       notification_url: 'https://studio-mocha-sigma-26.vercel.app/api/webhook/mercadopago',
     };
+
+    // Campos específicos para cartão de crédito
+    if (!isPix && !isBoleto) {
+      paymentPayload.token = formData.token;
+      paymentPayload.installments = Number(formData.installments);
+      paymentPayload.issuer_id = formData.issuer_id;
+    }
 
     const response = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': `pay-${Date.now()}`
+        'X-Idempotency-Key': `${formData.external_reference}-${Date.now()}`
       },
       body: JSON.stringify(paymentPayload),
     });

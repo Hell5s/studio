@@ -79,10 +79,9 @@ function CheckoutContent() {
       }
     }
     
-    // Pequeno delay para garantir que o sessionStorage foi lido
     const timer = setTimeout(() => {
         setIsCheckingSession(false);
-    }, 800);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -142,7 +141,6 @@ function CheckoutContent() {
         const finalId = orderId || `PED-${Date.now().toString().slice(-6)}`;
         setOrderId(finalId);
 
-        // Salva/Cria o pedido no Firestore antes de ir para o pagamento
         await setDoc(doc(db, 'orders', finalId), {
           orderNumber: finalId,
           userId: user?.uid || null,
@@ -180,11 +178,8 @@ function CheckoutContent() {
   const handlePaymentSubmit = async ({ formData }: any) => {
     setIsProcessing(true);
     
-    // Sanitização do valor para garantir formato MP
     const rawAmount = totalGeral.toString().replace(',', '.');
     const transaction_amount = Number(parseFloat(rawAmount).toFixed(2));
-
-    console.log('Enviando pagamento:', { transaction_amount, orderId });
 
     try {
       const response = await fetch('/api/payments', {
@@ -196,6 +191,13 @@ function CheckoutContent() {
             transaction_amount,
             external_reference: orderId,
             description: `Pedido Toda Bela #${orderId}`,
+            payer: {
+              ...formData.payer,
+              email: formData.payer?.email || identificacao.email || user?.email || '',
+              first_name: formData.payer?.firstName || identificacao.nome.split(' ')[0],
+              last_name: formData.payer?.lastName || identificacao.nome.split(' ').slice(1).join(' '),
+              identification: formData.payer?.identification || { type: 'CPF', number: identificacao.cpf.replace(/\D/g, '') },
+            },
           }
         }),
       });
@@ -205,8 +207,10 @@ function CheckoutContent() {
       if (!response.ok) throw new Error(paymentResult.message || 'Erro ao processar pagamento');
 
       if (paymentResult.status === 'approved') {
+        sessionStorage.removeItem('checkout_items');
         router.push('/pedido-confirmado');
       } else if (paymentResult.status === 'in_process') {
+        sessionStorage.removeItem('checkout_items');
         router.push('/pedido-pendente');
       } else {
         toast({ title: "Pagamento Recusado", description: "Verifique os dados do cartão ou escolha outro método.", variant: "destructive" });
