@@ -12,7 +12,10 @@ import {
   Package,
   Truck,
   CreditCard,
-  Lock
+  Lock,
+  QrCode,
+  Copy,
+  CheckCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +45,11 @@ function CheckoutContent() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isBrickReady, setIsBrickReady] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+
+  // Novos estados para o fluxo de pagamento personalizado
+  const [paymentMethod, setPaymentMethod] = useState<'cartao' | 'pix' | 'boleto'>('cartao');
+  const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Inicializa o SDK do Mercado Pago apenas quando necessário
   useEffect(() => {
@@ -146,27 +154,6 @@ function CheckoutContent() {
       },
     };
   }, [totalGeral, identificacao, user?.email]);
-
-  const paymentCustomization = useMemo(() => ({
-    paymentMethods: {
-      creditCard: 'all',
-      debitCard: 'all',
-      bankTransfer: ['pix'],
-      ticket: ['bolbradesco'],
-    },
-    visual: {
-      style: {
-        theme: 'default' as const,
-        customVariables: {
-          formBackgroundColor: '#ffffff',
-          baseColor: '#6E3C47',
-          buttonBackgroundColor: '#6E3C47',
-          buttonTextColor: '#ffffff',
-          borderRadiusLarge: '24px',
-        }
-      }
-    }
-  }), []);
 
   const handleNextStep = async () => {
     if (currentStep === 'identificacao') {
@@ -278,6 +265,53 @@ function CheckoutContent() {
       toast({ title: "Erro no Checkout", description: error.message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handlePixPayment = async () => {
+    setIsProcessing(true);
+    try {
+      const response = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formData: {
+            payment_method_id: 'pix',
+            transaction_amount: totalGeral,
+            external_reference: orderId,
+            description: `Pedido Toda Bela #${orderId}`,
+            payer: {
+              email: identificacao.email || user?.email || '',
+              first_name: identificacao.nome.split(' ')[0],
+              last_name: identificacao.nome.split(' ').slice(1).join(' ') || 'Toda Bela',
+              identification: { type: 'CPF', number: identificacao.cpf.replace(/\D/g, '') },
+            },
+          }
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Erro ao gerar PIX');
+      if (result.point_of_interaction?.transaction_data) {
+        sessionStorage.removeItem('checkout_items');
+        setPixData({
+          qr_code: result.point_of_interaction.transaction_data.qr_code,
+          qr_code_base64: result.point_of_interaction.transaction_data.qr_code_base64,
+        });
+      } else {
+        throw new Error('QR Code não retornado pelo Mercado Pago');
+      }
+    } catch (error: any) {
+      toast({ title: "Erro ao gerar PIX", description: error.message, variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCopyPix = () => {
+    if (pixData?.qr_code) {
+      navigator.clipboard.writeText(pixData.qr_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
     }
   };
 
@@ -461,23 +495,136 @@ function CheckoutContent() {
               </div>
 
               {currentStep === 'pagamento' && (
-                <div className="animate-in fade-in slide-in-from-bottom-2 min-h-[400px]">
-                   {!isBrickReady && (
-                     <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                        <Loader2 className="h-8 w-8 animate-spin text-accent/40" />
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-primary/20">Criptografando ambiente...</p>
-                     </div>
-                   )}
-                   <Payment
-                      initialization={paymentInitialization}
-                      customization={paymentCustomization}
-                      onSubmit={handlePaymentSubmit}
-                      onReady={() => setIsBrickReady(true)}
-                    />
-                    
-                    <button onClick={() => setCurrentStep('entrega')} className="mt-8 text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary flex items-center gap-2">
-                        <ChevronLeft className="h-3 w-3" /> Alterar Dados de Entrega
-                    </button>
+                <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6">
+
+                  {!pixData && (
+                    <>
+                      {/* Seletor de método */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          onClick={() => setPaymentMethod('cartao')}
+                          className={cn(
+                            "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all text-[10px] font-bold uppercase tracking-widest",
+                            paymentMethod === 'cartao' ? "border-primary bg-primary/5 text-primary" : "border-primary/10 text-primary/40"
+                          )}
+                        >
+                          <CreditCard className="h-5 w-5" />
+                          Cartão
+                        </button>
+                        <button
+                          onClick={() => setPaymentMethod('pix')}
+                          className={cn(
+                            "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all text-[10px] font-bold uppercase tracking-widest",
+                            paymentMethod === 'pix' ? "border-accent bg-accent/5 text-accent" : "border-primary/10 text-primary/40"
+                          )}
+                        >
+                          <QrCode className="h-5 w-5" />
+                          PIX
+                        </button>
+                        <button
+                          onClick={() => setPaymentMethod('boleto')}
+                          className={cn(
+                            "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all text-[10px] font-bold uppercase tracking-widest",
+                            paymentMethod === 'boleto' ? "border-primary bg-primary/5 text-primary" : "border-primary/10 text-primary/40"
+                          )}
+                        >
+                          <Package className="h-5 w-5" />
+                          Boleto
+                        </button>
+                      </div>
+
+                      {/* PIX: botão direto */}
+                      {paymentMethod === 'pix' && (
+                        <div className="flex flex-col items-center gap-6 py-8">
+                          <div className="h-20 w-20 bg-accent/10 rounded-full flex items-center justify-center">
+                            <QrCode className="h-10 w-10 text-accent" />
+                          </div>
+                          <div className="text-center space-y-2">
+                            <p className="text-sm font-bold text-primary">Pague com PIX</p>
+                            <p className="text-[11px] text-muted-foreground italic">Clique abaixo para gerar o QR Code. O pagamento é confirmado em segundos.</p>
+                          </div>
+                          <Button
+                            onClick={handlePixPayment}
+                            disabled={isProcessing}
+                            className="h-14 px-12 rounded-full bg-accent text-white font-bold uppercase tracking-widest text-[10px] shadow-lg"
+                          >
+                            {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Gerar QR Code PIX'}
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Cartão e Boleto: usa o Brick normalmente */}
+                      {(paymentMethod === 'cartao' || paymentMethod === 'boleto') && (
+                        <div className="min-h-[400px]">
+                          {!isBrickReady && (
+                            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                              <Loader2 className="h-8 w-8 animate-spin text-accent/40" />
+                              <p className="text-[9px] font-bold uppercase tracking-widest text-primary/20">Criptografando ambiente...</p>
+                            </div>
+                          )}
+                          <Payment
+                            initialization={paymentInitialization}
+                            customization={{
+                              paymentMethods: {
+                                creditCard: paymentMethod === 'cartao' ? 'all' : undefined,
+                                debitCard: paymentMethod === 'cartao' ? 'all' : undefined,
+                                ticket: paymentMethod === 'boleto' ? ['bolbradesco'] : undefined,
+                              },
+                              visual: {
+                                style: {
+                                  theme: 'default' as const,
+                                  customVariables: {
+                                    formBackgroundColor: '#ffffff',
+                                    baseColor: '#6E3C47',
+                                    buttonBackgroundColor: '#6E3C47',
+                                    buttonTextColor: '#ffffff',
+                                    borderRadiusLarge: '24px',
+                                  }
+                                }
+                              }
+                            }}
+                            onSubmit={handlePaymentSubmit}
+                            onReady={() => setIsBrickReady(true)}
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* QR Code gerado */}
+                  {pixData && (
+                    <div className="flex flex-col items-center gap-6 py-4">
+                      <div className="bg-white p-5 rounded-3xl shadow-sm border border-primary/5">
+                        <img
+                          src={`data:image/png;base64,${pixData.qr_code_base64}`}
+                          alt="QR Code PIX"
+                          className="w-56 h-56 md:w-64 md:h-64"
+                        />
+                      </div>
+                      <div className="w-full max-w-md space-y-3">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-primary/40 text-center">PIX Copia e Cola</p>
+                        <div className="flex gap-3">
+                          <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3 text-[10px] text-primary/60 font-mono truncate">
+                            {pixData.qr_code}
+                          </div>
+                          <button
+                            onClick={handleCopyPix}
+                            className="shrink-0 h-12 px-5 rounded-xl bg-primary text-white flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all"
+                          >
+                            {copied ? <CheckCheck className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                            {copied ? 'Copiado!' : 'Copiar'}
+                          </button>
+                        </div>
+                        <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest opacity-60">
+                          QR Code válido por 30 minutos
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <button onClick={() => setCurrentStep('entrega')} className="mt-4 text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary flex items-center gap-2">
+                    <ChevronLeft className="h-3 w-3" /> Alterar Dados de Entrega
+                  </button>
                 </div>
               )}
             </Card>
