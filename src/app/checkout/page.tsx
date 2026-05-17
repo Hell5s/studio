@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -640,7 +639,7 @@ function CheckoutContent() {
             )}>
               <div className="flex items-center gap-4 mb-8">
                 <CreditCard className="h-5 w-5 text-accent" />
-                <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Pagamento Transparente</h2>
+                <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Pagamento Seguro</h2>
               </div>
 
               {currentStep === 'pagamento' && (
