@@ -391,7 +391,7 @@ function CheckoutContent() {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-white space-y-6">
         <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 animate-pulse">Sincronizando sua sacola...</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 animate-pulse text-center px-6">Sincronizando sua sacola...</p>
       </div>
     );
   }
@@ -404,23 +404,23 @@ function CheckoutContent() {
             <h1 className="text-2xl font-headline font-bold text-primary">Sua sacola está vazia</h1>
             <p className="text-muted-foreground italic font-light">Selecione peças extraordinárias antes de finalizar sua compra.</p>
         </div>
-        <Button onClick={() => router.push('/')} className="rounded-full h-14 px-10 bg-primary text-white">Voltar para a Loja</Button>
+        <Button onClick={() => router.push('/')} className="rounded-full h-14 px-10 bg-primary text-white w-full max-w-xs">Voltar para a Loja</Button>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#FDFCFD] flex flex-col items-center justify-center px-6">
+      <div className="min-h-screen bg-[#FDFCFD] flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center space-y-3">
-            <LogoMark />
+            <div className="flex justify-center mb-4"><LogoMark /></div>
             <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40">Para finalizar sua compra</p>
             <h1 className="text-3xl font-headline font-bold text-primary">Acesse sua conta</h1>
             <p className="text-sm text-muted-foreground italic font-light">Entre ou crie sua conta Toda Bela para continuar</p>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] p-8 shadow-sm space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm space-y-6">
             <button
               onClick={handleGoogleAuth}
               disabled={authLoading}
@@ -461,28 +461,28 @@ function CheckoutContent() {
                 {authMode === 'register' && (
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={authForm.nome} onChange={e => setAuthForm({...authForm, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" required />
+                    <Input value={authForm.nome} onChange={e => setAuthForm({...authForm, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4" required />
                   </div>
                 )}
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
-                  <Input type="email" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" required />
+                  <Input type="email" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4" required />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Senha</Label>
-                  <Input type="password" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" required />
+                  <Input type="password" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4" required />
                 </div>
-                <Button disabled={authLoading} className="w-full h-12 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px]">
-                  {authLoading ? <Loader2 className="animate-spin h-4 w-4" /> : authMode === 'register' ? 'Criar Conta' : 'Entrar'}
+                <Button disabled={authLoading} className="w-full h-12 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">
+                  {authLoading ? <Loader2 className="animate-spin h-4 w-4" /> : authMode === 'register' ? 'Criar Minha Conta' : 'Entrar na Conta'}
                 </Button>
                 <button type="button" onClick={() => setAuthMode(null)} className="w-full text-center text-[9px] font-bold uppercase text-primary/30 hover:text-primary">
-                  Voltar
+                  Voltar para opções
                 </button>
               </form>
             )}
           </div>
 
-          <button onClick={() => router.back()} className="w-full text-center text-[9px] font-bold uppercase tracking-widest text-primary/30 hover:text-primary flex items-center justify-center gap-2">
+          <button onClick={() => router.back()} className="w-full text-center text-[9px] font-bold uppercase tracking-widest text-primary/30 hover:text-primary flex items-center justify-center gap-2 py-4">
             <ChevronLeft className="h-3 w-3" /> Voltar para a loja
           </button>
         </div>
@@ -493,40 +493,41 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30">
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50">
-        <div className="container mx-auto px-6 h-20 md:h-24 flex items-center justify-between">
-          <div className="flex-1 hidden md:block">
-             <button onClick={() => router.back()} className="text-primary/40 hover:text-primary transition-colors flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
-                <ChevronLeft className="h-4 w-4" /> Voltar
+        <div className="container mx-auto px-4 md:px-6 h-16 md:h-24 flex items-center justify-between">
+          <div className="flex-1 flex items-center">
+             <button onClick={() => router.back()} className="text-primary/40 hover:text-primary transition-colors flex items-center gap-1 md:gap-2 text-[9px] md:text-[10px] font-bold uppercase tracking-widest">
+                <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Voltar</span>
              </button>
           </div>
           
-          <Link href="/"><LogoMark className="scale-90 md:scale-100" /></Link>
+          <Link href="/"><LogoMark className="scale-75 md:scale-100" /></Link>
           
           <div className="flex-1 flex justify-end">
-            <div className="flex items-center gap-2 text-emerald-600">
-                <ShieldCheck className="h-5 w-5" />
-                <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Checkout Seguro</span>
+            <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
+                <ShieldCheck className="h-4 w-4 md:h-5 md:w-5" />
+                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest hidden xs:inline">Seguro</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-secondary/10 py-3">
+        <div className="bg-secondary/10 py-2 md:py-3">
             <div className="max-w-md mx-auto flex items-center justify-between px-6">
                 {[
                     { id: 'identificacao', label: 'Dados' },
                     { id: 'entrega', label: 'Entrega' },
-                    { id: 'pagamento', label: 'Pagamento' }
+                    { id: 'pagamento', label: 'Pague' }
                 ].map((s, idx) => (
                     <React.Fragment key={s.id}>
                         <div className={cn(
-                            "flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest",
+                            "flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[9px] font-bold uppercase tracking-widest",
                             currentStep === s.id ? "text-primary" : "text-primary/30"
                         )}>
                             <span className={cn(
-                                "h-5 w-5 rounded-full flex items-center justify-center text-[10px]",
+                                "h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center text-[9px] md:text-[10px]",
                                 currentStep === s.id ? "bg-primary text-white" : "bg-primary/5"
                             )}>{idx + 1}</span>
-                            {s.label}
+                            <span className="hidden sm:inline">{s.label === 'Pague' ? 'Pagamento' : s.label}</span>
+                            <span className="sm:hidden">{s.label}</span>
                         </div>
                         {idx < 2 && <ChevronRight className="h-3 w-3 text-primary/10" />}
                     </React.Fragment>
@@ -535,41 +536,41 @@ function CheckoutContent() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 lg:py-16">
+      <main className="container mx-auto px-4 py-6 md:py-16">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto">
           
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-4 md:space-y-6">
             
             {/* ETAPA 1: IDENTIFICAÇÃO */}
             <Card className={cn(
-              "rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
-              currentStep === 'identificacao' ? "bg-white p-6 md:p-10 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
+              currentStep === 'identificacao' ? "bg-white p-5 md:p-10 opacity-100" : "bg-white/40 p-5 opacity-60 pointer-events-none"
             )}>
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                 <User className="h-5 w-5 text-accent" />
-                <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Identificação</h2>
+                <h2 className="text-base md:text-lg font-headline font-bold text-primary uppercase tracking-tight">Identificação</h2>
               </div>
 
               {currentStep === 'identificacao' && (
-                <div className="grid md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-bottom-2">
+                <div className="grid md:grid-cols-2 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2">
                   <div className="md:col-span-2 space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" required />
+                    <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
+                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" required />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
-                    <Input type="email" value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" required />
+                    <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
+                    <Input type="email" value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" required />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">CPF</Label>
-                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="000.000.000-00" required />
+                    <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">CPF</Label>
+                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" placeholder="000.000.000-00" required />
                   </div>
                   <div className="md:col-span-2 space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Telefone / WhatsApp</Label>
-                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="(00) 00000-0000" required />
+                    <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Telefone / WhatsApp</Label>
+                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" placeholder="(00) 00000-0000" required />
                   </div>
-                  <div className="md:col-span-2 pt-4">
-                    <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">Ir para Entrega</Button>
+                  <div className="md:col-span-2 pt-2 md:pt-4">
+                    <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">Continuar para Entrega</Button>
                   </div>
                 </div>
               )}
@@ -577,36 +578,36 @@ function CheckoutContent() {
 
             {/* ETAPA 2: ENTREGA */}
             <Card className={cn(
-              "rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
-              currentStep === 'entrega' ? "bg-white p-6 md:p-10 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
+              currentStep === 'entrega' ? "bg-white p-5 md:p-10 opacity-100" : "bg-white/40 p-5 opacity-60 pointer-events-none"
             )}>
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                 <MapPin className="h-5 w-5 text-accent" />
-                <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Entrega</h2>
+                <h2 className="text-base md:text-lg font-headline font-bold text-primary uppercase tracking-tight">Entrega</h2>
               </div>
 
               {currentStep === 'entrega' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="grid md:grid-cols-3 gap-5">
+                  <div className="grid md:grid-cols-3 gap-4 md:gap-5">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">CEP</Label>
-                      <Input value={entrega.cep} onChange={e => handleCepSearch(e.target.value)} maxLength={9} className="h-12 rounded-xl bg-secondary/20 border-none" />
+                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">CEP</Label>
+                      <Input value={entrega.cep} onChange={e => handleCepSearch(e.target.value)} maxLength={9} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
                     </div>
                     <div className="md:col-span-2 space-y-1.5">
-                      <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Endereço</Label>
-                      <Input value={entrega.endereco} onChange={e => setEntrega({...entrega, endereco: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
+                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Endereço</Label>
+                      <Input value={entrega.endereco} onChange={e => setEntrega({...entrega, endereco: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Número</Label>
-                      <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
+                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Número</Label>
+                      <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Cidade</Label>
-                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
+                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Cidade</Label>
+                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">UF</Label>
-                      <Input value={entrega.estado} onChange={e => setEntrega({...entrega, estado: e.target.value.toUpperCase()})} maxLength={2} className="h-12 rounded-xl bg-secondary/20 border-none" />
+                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">UF</Label>
+                      <Input value={entrega.estado} onChange={e => setEntrega({...entrega, estado: e.target.value.toUpperCase()})} maxLength={2} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
                     </div>
                   </div>
 
@@ -624,10 +625,10 @@ function CheckoutContent() {
                     </div>
                   </div>
 
-                  <div className="pt-4 flex gap-4">
-                    <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[10px] font-bold">Voltar</Button>
-                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px]">
-                      {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Ir para Pagamento'}
+                  <div className="pt-2 md:pt-4 flex flex-col sm:flex-row gap-3">
+                    <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[10px] font-bold order-2 sm:order-1">Voltar</Button>
+                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] order-1 sm:order-2 shadow-lg">
+                      {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Confirmar Entrega'}
                     </Button>
                   </div>
                 </div>
@@ -636,12 +637,12 @@ function CheckoutContent() {
 
             {/* ETAPA 3: PAGAMENTO (TRANSPARENTE) */}
             <Card className={cn(
-              "rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
-              currentStep === 'pagamento' ? "bg-white p-6 md:p-10 opacity-100" : "bg-white/40 p-6 opacity-60 pointer-events-none"
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
+              currentStep === 'pagamento' ? "bg-white p-5 md:p-10 opacity-100" : "bg-white/40 p-5 opacity-60 pointer-events-none"
             )}>
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                 <CreditCard className="h-5 w-5 text-accent" />
-                <h2 className="text-lg font-headline font-bold text-primary uppercase tracking-tight">Pagamento Seguro</h2>
+                <h2 className="text-base md:text-lg font-headline font-bold text-primary uppercase tracking-tight">Pagamento Seguro</h2>
               </div>
 
               {currentStep === 'pagamento' && (
@@ -650,53 +651,53 @@ function CheckoutContent() {
                   {!pixData && (
                     <>
                       {/* Seletor de método */}
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-2 md:gap-3">
                         <button
                           onClick={() => setPaymentMethod('cartao')}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all text-[10px] font-bold uppercase tracking-widest",
-                            paymentMethod === 'cartao' ? "border-primary bg-primary/5 text-primary" : "border-primary/10 text-primary/40"
+                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest",
+                            paymentMethod === 'cartao' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40"
                           )}
                         >
                           <CreditCard className="h-5 w-5" />
-                          Cartão
+                          <span className="text-center">Cartão</span>
                         </button>
                         <button
                           onClick={() => setPaymentMethod('pix')}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all text-[10px] font-bold uppercase tracking-widest",
-                            paymentMethod === 'pix' ? "border-accent bg-accent/5 text-accent" : "border-primary/10 text-primary/40"
+                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest",
+                            paymentMethod === 'pix' ? "border-accent bg-accent/5 text-accent shadow-sm" : "border-primary/10 text-primary/40"
                           )}
                         >
                           <QrCode className="h-5 w-5" />
-                          PIX
+                          <span className="text-center">PIX</span>
                         </button>
                         <button
                           onClick={() => setPaymentMethod('boleto')}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all text-[10px] font-bold uppercase tracking-widest",
-                            paymentMethod === 'boleto' ? "border-primary bg-primary/5 text-primary" : "border-primary/10 text-primary/40"
+                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest",
+                            paymentMethod === 'boleto' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40"
                           )}
                         >
                           <Package className="h-5 w-5" />
-                          Boleto
+                          <span className="text-center">Boleto</span>
                         </button>
                       </div>
 
                       {/* PIX: botão direto */}
                       {paymentMethod === 'pix' && (
-                        <div className="flex flex-col items-center gap-6 py-8">
-                          <div className="h-20 w-20 bg-accent/10 rounded-full flex items-center justify-center">
-                            <QrCode className="h-10 w-10 text-accent" />
+                        <div className="flex flex-col items-center gap-6 py-6 md:py-8">
+                          <div className="h-16 w-16 md:h-20 md:w-20 bg-accent/10 rounded-full flex items-center justify-center">
+                            <QrCode className="h-8 w-8 md:h-10 md:w-10 text-accent" />
                           </div>
-                          <div className="text-center space-y-2">
+                          <div className="text-center space-y-2 px-4">
                             <p className="text-sm font-bold text-primary">Pague com PIX</p>
-                            <p className="text-[11px] text-muted-foreground italic">Clique abaixo para gerar o QR Code. O pagamento é confirmado em segundos.</p>
+                            <p className="text-[11px] text-muted-foreground italic leading-relaxed">Clique abaixo para gerar o QR Code. O pagamento é confirmado em segundos e seu pedido entra em produção imediatamente.</p>
                           </div>
                           <Button
                             onClick={handlePixPayment}
                             disabled={isProcessing}
-                            className="h-14 px-12 rounded-full bg-accent text-white font-bold uppercase tracking-widest text-[10px] shadow-lg"
+                            className="h-14 px-12 rounded-full bg-accent text-white font-bold uppercase tracking-widest text-[10px] shadow-lg w-full max-w-xs"
                           >
                             {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Gerar QR Code PIX'}
                           </Button>
@@ -709,7 +710,7 @@ function CheckoutContent() {
                           {!isBrickReady && (
                             <div className="flex flex-col items-center justify-center py-20 space-y-4">
                               <Loader2 className="h-8 w-8 animate-spin text-accent/40" />
-                              <p className="text-[9px] font-bold uppercase tracking-widest text-primary/20">Criptografando ambiente...</p>
+                              <p className="text-[9px] font-bold uppercase tracking-widest text-primary/20">Criptografando ambiente seguro...</p>
                             </div>
                           )}
                           <Payment
@@ -743,96 +744,108 @@ function CheckoutContent() {
 
                   {/* QR Code gerado */}
                   {pixData && (
-                    <div className="flex flex-col items-center gap-6 py-4">
-                      <div className="bg-white p-5 rounded-3xl shadow-sm border border-primary/5">
+                    <div className="flex flex-col items-center gap-6 py-4 animate-in zoom-in-95">
+                      <div className="bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-primary/5">
                         <img
                           src={`data:image/png;base64,${pixData.qr_code_base64}`}
                           alt="QR Code PIX"
-                          className="w-56 h-56 md:w-64 md:h-64"
+                          className="w-52 h-56 md:w-64 md:h-64"
                         />
                       </div>
-                      <div className="w-full max-w-md space-y-3">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-primary/40 text-center">PIX Copia e Cola</p>
-                        <div className="flex gap-3">
-                          <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3 text-[10px] text-primary/60 font-mono truncate">
+                      <div className="w-full max-w-md space-y-4 px-4">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">PIX Copia e Cola</p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[10px] text-primary/60 font-mono truncate border border-primary/5">
                             {pixData.qr_code}
                           </div>
                           <button
                             onClick={handleCopyPix}
-                            className="shrink-0 h-12 px-5 rounded-xl bg-primary text-white flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all"
+                            className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md"
                           >
                             {copied ? <CheckCheck className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            {copied ? 'Copiado!' : 'Copiar'}
+                            {copied ? 'Copiado!' : 'Copiar Código'}
                           </button>
                         </div>
                         <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest opacity-60">
-                          QR Code válido por 30 minutos
+                          QR Code válido por 30 minutos • Pagamento instantâneo
                         </p>
                       </div>
                     </div>
                   )}
 
-                  <button onClick={() => setCurrentStep('entrega')} className="mt-4 text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary flex items-center gap-2">
-                    <ChevronLeft className="h-3 w-3" /> Alterar Dados de Entrega
-                  </button>
+                  <div className="pt-4 border-t border-primary/5">
+                    <button onClick={() => setCurrentStep('entrega')} className="text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary flex items-center gap-2 py-2">
+                      <ChevronLeft className="h-3 w-3" /> Alterar Dados de Entrega
+                    </button>
+                  </div>
                 </div>
               )}
             </Card>
           </div>
 
           {/* RESUMO LATERAL */}
-          <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-            <Card className="rounded-[2.5rem] border-none bg-white shadow-premium p-8 space-y-6">
+          <aside className="lg:col-span-4 space-y-4 md:space-y-6 lg:sticky lg:top-24">
+            <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none bg-white shadow-premium p-6 md:p-8 space-y-6">
                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
                   <Package className="h-4 w-4" />
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]">Resumo</h3>
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]">Sua Escolha</h3>
                </div>
 
-               <div className="space-y-4 max-h-[300px] overflow-y-auto no-scrollbar">
+               <div className="space-y-4 max-h-[250px] md:max-h-[300px] overflow-y-auto no-scrollbar pr-1">
                   {sessionItems.map((item: any, i: number) => (
                     <div key={i} className="flex gap-4 items-center">
-                       <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0">
+                       <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0 border border-primary/5">
                           <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
                        </div>
                        <div className="flex-1 min-w-0">
                           <p className="text-[10px] font-bold text-primary uppercase truncate">{item.name}</p>
                           <p className="text-[9px] text-muted-foreground italic">{item.quantity}un • {formatPrice(item.price)}</p>
                        </div>
-                       <p className="text-[11px] font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
+                       <p className="text-[11px] font-bold text-primary whitespace-nowrap">{formatPrice(item.price * item.quantity)}</p>
                     </div>
                   ))}
                </div>
 
-               <div className="space-y-2 pt-4 border-t border-primary/5">
-                  <div className="flex justify-between text-[11px] text-primary/40 uppercase"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
-                  <div className="flex justify-between text-[11px] text-primary/40 uppercase"><span>Frete</span><span>{freteValor === 0 ? 'Grátis' : formatPrice(freteValor)}</span></div>
+               <div className="space-y-2.5 pt-4 border-t border-primary/5">
+                  <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+                  <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Envio Especial</span><span>{freteValor === 0 ? 'Grátis' : formatPrice(freteValor)}</span></div>
                   <div className="flex justify-between items-end pt-4">
-                    <span className="text-xs font-black uppercase text-primary">Total</span>
-                    <span className="text-2xl font-headline font-bold text-primary">{formatPrice(totalGeral)}</span>
+                    <span className="text-xs font-black uppercase text-primary tracking-tighter">Total Geral</span>
+                    <div className="text-right">
+                       <span className="text-2xl md:text-3xl font-headline font-bold text-primary leading-none block">{formatPrice(totalGeral)}</span>
+                       <span className="text-[9px] text-accent uppercase font-bold tracking-widest mt-1">10x sem juros no cartão</span>
+                    </div>
                   </div>
                </div>
             </Card>
 
-            <div className="p-6 bg-secondary/20 rounded-[2rem] space-y-3">
+            <div className="p-5 md:p-6 bg-secondary/20 rounded-[1.5rem] md:rounded-[2rem] space-y-3 border border-primary/5">
                <div className="flex items-center gap-2 text-primary">
                   <Lock className="h-4 w-4 text-accent" />
-                  <h4 className="text-[9px] font-bold uppercase tracking-widest">Segurança de Dados</h4>
+                  <h4 className="text-[9px] font-bold uppercase tracking-widest">Tecnologia de Segurança</h4>
                </div>
                <p className="text-[10px] text-muted-foreground leading-relaxed italic font-light">
-                 Sua transação é protegida por criptografia de 256 bits e processada pelo Mercado Pago.
+                 Sua compra é protegida por criptografia de nível bancário e processada com exclusividade pelo Mercado Pago.
                </p>
             </div>
           </aside>
 
         </div>
       </main>
+
+      <footer className="py-12 border-t border-primary/5 bg-white/40">
+        <div className="container mx-auto px-6 text-center space-y-4">
+           <div className="flex justify-center mb-6 opacity-30"><LogoMark className="scale-75" /></div>
+           <p className="text-[9px] text-primary/30 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
+        </div>
+      </footer>
     </div>
   );
 }
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-accent" /></div>}>
+    <Suspense fallback={<div className="h-screen flex flex-col items-center justify-center bg-white space-y-4"><Loader2 className="animate-spin text-accent h-10 w-10" /><p className="text-[10px] font-bold uppercase tracking-widest text-primary/20">Preparando ambiente...</p></div>}>
       <CheckoutContent />
     </Suspense>
   );
