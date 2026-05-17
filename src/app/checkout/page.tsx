@@ -20,14 +20,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import { LogoMark } from '@/components/store/LogoMark';
 import { cn } from '@/lib/utils';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
-// Inicializa o SDK do Mercado Pago
+// Inicializa o SDK do Mercado Pago - Chave pública da Toda Bela
 initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-63259836-3982-4665-9854-850f8f902677');
 
 type Step = 'identificacao' | 'entrega' | 'pagamento';
@@ -123,10 +123,55 @@ function CheckoutContent() {
   const freteValor = shippingMethod === 'sedex' ? 25.90 : 0;
   const totalGeral = Number((subtotal + freteValor).toFixed(2));
 
+  // Memoização das configurações do Mercado Pago para evitar erros de inicialização (Bricks Initialization Failed)
+  const paymentInitialization = useMemo(() => {
+    const cleanCpf = identificacao.cpf.replace(/\D/g, '');
+    const names = identificacao.nome.trim().split(' ');
+    
+    return {
+      amount: totalGeral,
+      payer: {
+        email: identificacao.email || user?.email || '',
+        firstName: names[0] || 'Cliente',
+        lastName: names.slice(1).join(' ') || 'Toda Bela',
+        identification: { 
+          type: 'CPF', 
+          number: cleanCpf 
+        },
+      },
+    };
+  }, [totalGeral, identificacao, user?.email]);
+
+  const paymentCustomization = useMemo(() => ({
+    paymentMethods: {
+      creditCard: 'all',
+      debitCard: 'all',
+      bankTransfer: ['pix'],
+      ticket: ['bolbradesco'],
+    },
+    visual: {
+      style: {
+        theme: 'default' as const,
+        customVariables: {
+          formBackgroundColor: '#ffffff',
+          baseColor: '#6E3C47',
+          buttonBackgroundColor: '#6E3C47',
+          buttonTextColor: '#ffffff',
+          borderRadiusLarge: '24px',
+        }
+      }
+    }
+  }), []);
+
   const handleNextStep = async () => {
     if (currentStep === 'identificacao') {
-      if (!identificacao.nome || !identificacao.cpf) {
-        toast({ title: "Campos obrigatórios", description: "Preencha seu nome e CPF para continuar.", variant: "destructive" });
+      const cleanCpf = identificacao.cpf.replace(/\D/g, '');
+      if (!identificacao.nome || !identificacao.email || cleanCpf.length < 11) {
+        toast({ 
+          title: "Campos obrigatórios", 
+          description: "Preencha seu nome completo, e-mail e CPF válido para continuar.", 
+          variant: "destructive" 
+        });
         return;
       }
       setCurrentStep('entrega');
@@ -178,9 +223,6 @@ function CheckoutContent() {
   const handlePaymentSubmit = async ({ formData }: any) => {
     setIsProcessing(true);
     
-    const rawAmount = totalGeral.toString().replace(',', '.');
-    const transaction_amount = Number(parseFloat(rawAmount).toFixed(2));
-
     try {
       const response = await fetch('/api/payments', {
         method: 'POST',
@@ -188,14 +230,14 @@ function CheckoutContent() {
         body: JSON.stringify({
           formData: {
             ...formData,
-            transaction_amount,
+            transaction_amount: totalGeral,
             external_reference: orderId,
             description: `Pedido Toda Bela #${orderId}`,
             payer: {
               ...formData.payer,
               email: formData.payer?.email || identificacao.email || user?.email || '',
               first_name: formData.payer?.firstName || identificacao.nome.split(' ')[0],
-              last_name: formData.payer?.lastName || identificacao.nome.split(' ').slice(1).join(' '),
+              last_name: formData.payer?.lastName || identificacao.nome.split(' ').slice(1).join(' ') || 'Toda Bela',
               identification: formData.payer?.identification || { type: 'CPF', number: identificacao.cpf.replace(/\D/g, '') },
             },
           }
@@ -312,15 +354,19 @@ function CheckoutContent() {
                 <div className="grid md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-bottom-2">
                   <div className="md:col-span-2 space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
+                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" required />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
-                    <Input value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" />
+                    <Input type="email" value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" required />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">CPF</Label>
-                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="000.000.000-00" />
+                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="000.000.000-00" required />
+                  </div>
+                  <div className="md:col-span-2 space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Telefone / WhatsApp</Label>
+                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none" placeholder="(00) 00000-0000" />
                   </div>
                   <div className="md:col-span-2 pt-4">
                     <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">Ir para Entrega</Button>
@@ -407,35 +453,8 @@ function CheckoutContent() {
                      </div>
                    )}
                    <Payment
-                      initialization={{
-                        amount: totalGeral,
-                        payer: {
-                          email: identificacao.email || user?.email || '',
-                          firstName: identificacao.nome.split(' ')[0],
-                          lastName: identificacao.nome.split(' ').slice(1).join(' '),
-                          identification: { type: 'CPF', number: identificacao.cpf.replace(/\D/g, '') },
-                        },
-                      }}
-                      customization={{
-                        paymentMethods: {
-                          creditCard: 'all',
-                          debitCard: 'all',
-                          bankTransfer: ['pix'],
-                          ticket: ['bolbradesco'],
-                        },
-                        visual: {
-                          style: {
-                            theme: 'default',
-                            customVariables: {
-                              formBackgroundColor: '#ffffff',
-                              baseColor: '#6E3C47',
-                              buttonBackgroundColor: '#6E3C47',
-                              buttonTextColor: '#ffffff',
-                              borderRadiusLarge: '24px',
-                            }
-                          }
-                        }
-                      }}
+                      initialization={paymentInitialization}
+                      customization={paymentCustomization}
                       onSubmit={handlePaymentSubmit}
                       onReady={() => setIsBrickReady(true)}
                     />
@@ -460,7 +479,7 @@ function CheckoutContent() {
                   {sessionItems.map((item: any, i: number) => (
                     <div key={i} className="flex gap-4 items-center">
                        <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0">
-                          <img src={item.image} className="h-full w-full object-cover" />
+                          <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
                        </div>
                        <div className="flex-1 min-w-0">
                           <p className="text-[10px] font-bold text-primary uppercase truncate">{item.name}</p>
