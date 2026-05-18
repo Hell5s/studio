@@ -411,16 +411,16 @@ function CheckoutContent() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#FDFCFD] flex flex-col items-center justify-center px-6 py-12">
+      <div className="min-h-screen bg-[#FDFCFD] flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-md space-y-8">
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-3 px-4">
             <div className="flex justify-center mb-4"><LogoMark /></div>
             <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40">Para finalizar sua compra</p>
             <h1 className="text-3xl font-headline font-bold text-primary">Acesse sua conta</h1>
             <p className="text-sm text-muted-foreground italic font-light">Entre ou crie sua conta Toda Bela para continuar</p>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm space-y-6 mx-4">
             <button
               onClick={handleGoogleAuth}
               disabled={authLoading}
@@ -461,16 +461,16 @@ function CheckoutContent() {
                 {authMode === 'register' && (
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={authForm.nome} onChange={e => setAuthForm({...authForm, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4" required />
+                    <Input value={authForm.nome} onChange={e => setAuthForm({...authForm, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
                   </div>
                 )}
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
-                  <Input type="email" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4" required />
+                  <Input type="email" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Senha</Label>
-                  <Input type="password" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4" required />
+                  <Input type="password" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
                 </div>
                 <Button disabled={authLoading} className="w-full h-12 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">
                   {authLoading ? <Loader2 className="animate-spin h-4 w-4" /> : authMode === 'register' ? 'Criar Minha Conta' : 'Entrar na Conta'}
@@ -493,25 +493,25 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30">
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50">
-        <div className="container mx-auto px-4 md:px-6 h-16 md:h-24 flex items-center justify-between">
-          <div className="flex-1 flex items-center">
-             <button onClick={() => router.back()} className="text-primary/40 hover:text-primary transition-colors flex items-center gap-1 md:gap-2 text-[9px] md:text-[10px] font-bold uppercase tracking-widest">
-                <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Voltar</span>
+        <div className="container mx-auto px-4 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex-1 flex items-center min-w-[80px]">
+             <button onClick={() => router.back()} className="text-primary/40 hover:text-primary transition-colors flex items-center gap-1 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest">
+                <ChevronLeft className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Voltar</span>
              </button>
           </div>
           
-          <Link href="/"><LogoMark className="scale-75 md:scale-100" /></Link>
+          <Link href="/" className="flex shrink-0"><LogoMark className="scale-75 md:scale-100" /></Link>
           
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex justify-end min-w-[80px]">
             <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                 <ShieldCheck className="h-4 w-4 md:h-5 md:w-5" />
-                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest hidden xs:inline">Seguro</span>
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest hidden xs:inline">Seguro</span>
             </div>
           </div>
         </div>
 
         <div className="bg-secondary/10 py-2 md:py-3">
-            <div className="max-w-md mx-auto flex items-center justify-between px-6">
+            <div className="max-w-md mx-auto flex items-center justify-between px-4 md:px-6">
                 {[
                     { id: 'identificacao', label: 'Dados' },
                     { id: 'entrega', label: 'Entrega' },
@@ -519,11 +519,11 @@ function CheckoutContent() {
                 ].map((s, idx) => (
                     <React.Fragment key={s.id}>
                         <div className={cn(
-                            "flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[9px] font-bold uppercase tracking-widest",
+                            "flex items-center gap-1.5 md:gap-2 text-[7px] md:text-[9px] font-bold uppercase tracking-widest",
                             currentStep === s.id ? "text-primary" : "text-primary/30"
                         )}>
                             <span className={cn(
-                                "h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center text-[9px] md:text-[10px]",
+                                "h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center text-[8px] md:text-[10px]",
                                 currentStep === s.id ? "bg-primary text-white" : "bg-primary/5"
                             )}>{idx + 1}</span>
                             <span className="hidden sm:inline">{s.label === 'Pague' ? 'Pagamento' : s.label}</span>
@@ -537,13 +537,13 @@ function CheckoutContent() {
       </header>
 
       <main className="container mx-auto px-4 py-6 md:py-16">
-        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto px-2 md:px-0">
           
           <div className="lg:col-span-8 space-y-4 md:space-y-6">
             
             {/* ETAPA 1: IDENTIFICAÇÃO */}
             <Card className={cn(
-              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
               currentStep === 'identificacao' ? "bg-white p-5 md:p-10 opacity-100" : "bg-white/40 p-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
@@ -555,19 +555,19 @@ function CheckoutContent() {
                 <div className="grid md:grid-cols-2 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2">
                   <div className="md:col-span-2 space-y-1.5">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" required />
+                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
-                    <Input type="email" value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" required />
+                    <Input type="email" value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">CPF</Label>
-                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" placeholder="000.000.000-00" required />
+                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" placeholder="000.000.000-00" required />
                   </div>
                   <div className="md:col-span-2 space-y-1.5">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Telefone / WhatsApp</Label>
-                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" placeholder="(00) 00000-0000" required />
+                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" placeholder="(00) 00000-0000" required />
                   </div>
                   <div className="md:col-span-2 pt-2 md:pt-4">
                     <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">Continuar para Entrega</Button>
@@ -578,7 +578,7 @@ function CheckoutContent() {
 
             {/* ETAPA 2: ENTREGA */}
             <Card className={cn(
-              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
               currentStep === 'entrega' ? "bg-white p-5 md:p-10 opacity-100" : "bg-white/40 p-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
@@ -591,34 +591,34 @@ function CheckoutContent() {
                   <div className="grid md:grid-cols-3 gap-4 md:gap-5">
                     <div className="space-y-1.5">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">CEP</Label>
-                      <Input value={entrega.cep} onChange={e => handleCepSearch(e.target.value)} maxLength={9} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
+                      <Input value={entrega.cep} onChange={e => handleCepSearch(e.target.value)} maxLength={9} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                     <div className="md:col-span-2 space-y-1.5">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Endereço</Label>
-                      <Input value={entrega.endereco} onChange={e => setEntrega({...entrega, endereco: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
+                      <Input value={entrega.endereco} onChange={e => setEntrega({...entrega, endereco: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Número</Label>
-                      <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
+                      <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Cidade</Label>
-                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
+                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">UF</Label>
-                      <Input value={entrega.estado} onChange={e => setEntrega({...entrega, estado: e.target.value.toUpperCase()})} maxLength={2} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4" />
+                      <Input value={entrega.estado} onChange={e => setEntrega({...entrega, estado: e.target.value.toUpperCase()})} maxLength={2} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                   </div>
 
                   <div className="space-y-3 pt-2">
                     <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Opção de Envio</Label>
                     <div className="grid gap-3">
-                      <button onClick={() => setShippingMethod('pac')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all", shippingMethod === 'pac' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
+                      <button onClick={() => setShippingMethod('pac')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all w-full", shippingMethod === 'pac' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
                         <div className="flex items-center gap-3"><Truck className="h-4 w-4 text-primary/40" /><div className="text-left"><p className="text-xs font-bold text-primary">PAC Econômico</p><p className="text-[9px] text-muted-foreground">15-20 dias úteis</p></div></div>
                         <span className="text-xs font-bold text-emerald-600">GRÁTIS</span>
                       </button>
-                      <button onClick={() => setShippingMethod('sedex')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all", shippingMethod === 'sedex' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
+                      <button onClick={() => setShippingMethod('sedex')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all w-full", shippingMethod === 'sedex' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
                         <div className="flex items-center gap-3"><Truck className="h-4 w-4 text-accent" /><div className="text-left"><p className="text-xs font-bold text-primary">SEDEX VIP</p><p className="text-[9px] text-muted-foreground">7-10 dias úteis</p></div></div>
                         <span className="text-xs font-bold text-primary">R$ 25,90</span>
                       </button>
@@ -626,8 +626,8 @@ function CheckoutContent() {
                   </div>
 
                   <div className="pt-2 md:pt-4 flex flex-col sm:flex-row gap-3">
-                    <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[10px] font-bold order-2 sm:order-1">Voltar</Button>
-                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] order-1 sm:order-2 shadow-lg">
+                    <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[10px] font-bold order-2 sm:order-1 w-full sm:w-auto">Voltar</Button>
+                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] order-1 sm:order-2 shadow-lg w-full">
                       {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Confirmar Entrega'}
                     </Button>
                   </div>
@@ -637,7 +637,7 @@ function CheckoutContent() {
 
             {/* ETAPA 3: PAGAMENTO (TRANSPARENTE) */}
             <Card className={cn(
-              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden",
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
               currentStep === 'pagamento' ? "bg-white p-5 md:p-10 opacity-100" : "bg-white/40 p-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
@@ -651,11 +651,11 @@ function CheckoutContent() {
                   {!pixData && (
                     <>
                       {/* Seletor de método */}
-                      <div className="grid grid-cols-3 gap-2 md:gap-3">
+                      <div className="grid grid-cols-3 gap-2 md:gap-3 px-1">
                         <button
                           onClick={() => setPaymentMethod('cartao')}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest",
+                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full",
                             paymentMethod === 'cartao' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40"
                           )}
                         >
@@ -665,7 +665,7 @@ function CheckoutContent() {
                         <button
                           onClick={() => setPaymentMethod('pix')}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest",
+                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full",
                             paymentMethod === 'pix' ? "border-accent bg-accent/5 text-accent shadow-sm" : "border-primary/10 text-primary/40"
                           )}
                         >
@@ -675,7 +675,7 @@ function CheckoutContent() {
                         <button
                           onClick={() => setPaymentMethod('boleto')}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest",
+                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full",
                             paymentMethod === 'boleto' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40"
                           )}
                         >
@@ -744,7 +744,7 @@ function CheckoutContent() {
 
                   {/* QR Code gerado */}
                   {pixData && (
-                    <div className="flex flex-col items-center gap-6 py-4 animate-in zoom-in-95">
+                    <div className="flex flex-col items-center gap-6 py-4 animate-in zoom-in-95 w-full">
                       <div className="bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-primary/5">
                         <img
                           src={`data:image/png;base64,${pixData.qr_code_base64}`}
@@ -754,13 +754,13 @@ function CheckoutContent() {
                       </div>
                       <div className="w-full max-w-md space-y-4 px-4">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">PIX Copia e Cola</p>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[10px] text-primary/60 font-mono truncate border border-primary/5">
+                        <div className="flex flex-col sm:flex-row gap-3 w-full">
+                          <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[10px] text-primary/60 font-mono truncate border border-primary/5 w-full">
                             {pixData.qr_code}
                           </div>
                           <button
                             onClick={handleCopyPix}
-                            className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md"
+                            className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto"
                           >
                             {copied ? <CheckCheck className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                             {copied ? 'Copiado!' : 'Copiar Código'}
@@ -784,8 +784,8 @@ function CheckoutContent() {
           </div>
 
           {/* RESUMO LATERAL */}
-          <aside className="lg:col-span-4 space-y-4 md:space-y-6 lg:sticky lg:top-24">
-            <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none bg-white shadow-premium p-6 md:p-8 space-y-6">
+          <aside className="lg:col-span-4 space-y-4 md:space-y-6 lg:sticky lg:top-24 px-2 md:px-0">
+            <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none bg-white shadow-premium p-6 md:p-8 space-y-6 w-full">
                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
                   <Package className="h-4 w-4" />
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]">Sua Escolha</h3>
@@ -819,7 +819,7 @@ function CheckoutContent() {
                </div>
             </Card>
 
-            <div className="p-5 md:p-6 bg-secondary/20 rounded-[1.5rem] md:rounded-[2rem] space-y-3 border border-primary/5">
+            <div className="p-5 md:p-6 bg-secondary/20 rounded-[1.5rem] md:rounded-[2rem] space-y-3 border border-primary/5 w-full">
                <div className="flex items-center gap-2 text-primary">
                   <Lock className="h-4 w-4 text-accent" />
                   <h4 className="text-[9px] font-bold uppercase tracking-widest">Tecnologia de Segurança</h4>
@@ -834,7 +834,7 @@ function CheckoutContent() {
       </main>
 
       <footer className="py-12 border-t border-primary/5 bg-white/40">
-        <div className="container mx-auto px-6 text-center space-y-4">
+        <div className="container mx-auto px-4 md:px-6 text-center space-y-4">
            <div className="flex justify-center mb-6 opacity-30"><LogoMark className="scale-75" /></div>
            <p className="text-[9px] text-primary/30 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
         </div>
