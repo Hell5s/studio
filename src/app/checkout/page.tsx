@@ -493,7 +493,7 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FDFCFD] selection:bg-accent/30 box-border">
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50 w-full max-w-full">
-        <div className="w-full px-3 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2 overflow-hidden">
+        <div className="w-full px-4 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2">
           <div className="flex-1 flex items-center min-w-[80px]">
              <button onClick={() => router.back()} className="text-primary/40 hover:text-primary transition-colors flex items-center gap-1 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest">
                 <ChevronLeft className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Voltar</span>
@@ -536,14 +536,14 @@ function CheckoutContent() {
         </div>
       </header>
 
-      <main className="w-full px-3 md:px-6 py-6 md:py-16 box-border overflow-x-hidden">
+      <main className="w-full px-4 md:px-6 py-6 md:py-16 box-border">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto w-full box-border">
           
           <div className="lg:col-span-8 space-y-4 md:space-y-6 w-full box-border overflow-hidden">
             
             {/* ETAPA 1: IDENTIFICAÇÃO */}
             <Card className={cn(
-              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full box-border",
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 w-full box-border",
               currentStep === 'identificacao' ? "bg-white px-3 py-5 md:p-10 opacity-100" : "bg-white/40 px-3 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
@@ -578,7 +578,7 @@ function CheckoutContent() {
 
             {/* ETAPA 2: ENTREGA */}
             <Card className={cn(
-              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full box-border",
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 w-full box-border",
               currentStep === 'entrega' ? "bg-white px-3 py-5 md:p-10 opacity-100" : "bg-white/40 px-3 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
@@ -637,7 +637,7 @@ function CheckoutContent() {
 
             {/* ETAPA 3: PAGAMENTO (TRANSPARENTE) */}
             <Card className={cn(
-              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full box-border",
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 w-full box-border",
               currentStep === 'pagamento' ? "bg-white px-3 py-5 md:p-10 opacity-100" : "bg-white/40 px-3 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
