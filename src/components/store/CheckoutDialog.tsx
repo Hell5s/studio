@@ -9,6 +9,12 @@ import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, si
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from '@/lib/utils';
 
 interface CheckoutDialogProps {
@@ -32,7 +38,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
   const [loading, setLoading] = useState(false);
   const [authForm, setAuthForm] = useState({ email: '', password: '', name: '' });
 
-  // Sincroniza o estado da view quando o drawer fecha
   useEffect(() => {
     if (!open) {
       const timer = setTimeout(() => setView('cart'), 300);
@@ -99,32 +104,9 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex justify-end">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
-        onClick={() => onOpenChange(false)}
-      />
-      
-      {/* Drawer Content - Custom Width Fixed */}
-      <div 
-        style={{ 
-          position: 'fixed', 
-          top: 0, 
-          right: 0, 
-          width: '100vw', 
-          maxWidth: '100vw',
-          height: '100vh', 
-          zIndex: 50, 
-          background: 'white', 
-          overflowY: 'auto' 
-        }}
-        className="flex flex-col shadow-2xl animate-in slide-in-from-right duration-500 md:w-[420px] no-scrollbar"
-      >
-        {/* Header Personalizado */}
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full md:w-[420px] md:max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 shrink-0">
           <div className="flex flex-col items-start space-y-0">
             {view === 'auth' && (
@@ -135,16 +117,12 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 <ChevronLeft className="h-3 w-3" /> Voltar para sacola
               </button>
             )}
-            <h2 className="text-xs font-bold text-primary uppercase tracking-[0.3em]">
+            <SheetTitle className="text-xs font-bold text-primary uppercase tracking-[0.3em]">
               {view === 'cart' ? 'MINHA SELEÇÃO' : 'ACESSO EXCLUSIVO'}
-            </h2>
+            </SheetTitle>
           </div>
-          <button onClick={() => onOpenChange(false)} className="text-primary/20 hover:text-primary transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
-        {/* Conteúdo Central */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar w-full">
           {view === 'cart' ? (
             cartItems.length === 0 ? (
@@ -260,7 +238,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           )}
         </div>
 
-        {/* Rodapé do Carrinho */}
         {cartItems.length > 0 && view === 'cart' && (
           <div className="shrink-0 border-t border-primary/5 bg-white p-6 w-full">
             <div className="flex justify-between items-center mb-6">
@@ -277,7 +254,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
             <p className="text-[8px] text-center text-muted-foreground uppercase mt-4 tracking-widest opacity-60">Frete e descontos calculados no checkout</p>
           </div>
         )}
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
