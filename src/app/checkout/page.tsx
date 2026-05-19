@@ -491,7 +491,7 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30 md:w-full md:max-w-full md:overflow-x-hidden md:box-border">
+    <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30" style={{ width: '100vw', overflowX: 'hidden', boxSizing: 'border-box' }}>
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50 w-full max-w-full">
         <div className="w-full px-4 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2">
           <div className="flex-1 flex items-center min-w-[80px]">
@@ -536,7 +536,7 @@ function CheckoutContent() {
         </div>
       </header>
 
-      <main className="w-full px-4 md:px-6 py-6 md:py-16 box-border">
+      <main className="w-full px-4 md:px-6 py-6 md:py-16" style={{ boxSizing: 'border-box', maxWidth: '100%' }}>
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto w-full box-border">
           
           <div className="lg:col-span-8 space-y-4 md:space-y-6 w-full box-border overflow-hidden">
