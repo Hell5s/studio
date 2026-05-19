@@ -106,7 +106,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     }}>
       <SheetContent
         side="right"
-        className="w-full max-w-full md:max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100 overflow-hidden"
+        className="w-[100vw] max-w-[100vw] md:w-[420px] md:max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100 overflow-hidden"
       >
         <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 shrink-0">
           <SheetHeader className="p-0 space-y-0">
