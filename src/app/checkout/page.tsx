@@ -491,16 +491,16 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen w-screen max-w-screen overflow-x-hidden bg-[#FDFCFD] selection:bg-accent/30">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FDFCFD] selection:bg-accent/30">
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50">
-        <div className="container mx-auto px-4 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2">
+        <div className="w-full px-3 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2">
           <div className="flex-1 flex items-center min-w-[80px]">
              <button onClick={() => router.back()} className="text-primary/40 hover:text-primary transition-colors flex items-center gap-1 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest">
                 <ChevronLeft className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Voltar</span>
              </button>
           </div>
           
-          <Link href="/" className="flex shrink-0"><LogoMark className="scale-75 md:scale-100" /></Link>
+          <Link href="/" className="flex shrink-0"><LogoMark className="md:scale-100 max-w-[140px]" /></Link>
           
           <div className="flex-1 flex justify-end min-w-[80px]">
             <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
@@ -536,15 +536,15 @@ function CheckoutContent() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 md:py-16">
-        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto px-2 md:px-0">
+      <main className="w-full px-3 md:px-6 py-6 md:py-16">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto w-full">
           
           <div className="lg:col-span-8 space-y-4 md:space-y-6">
             
             {/* ETAPA 1: IDENTIFICAÇÃO */}
             <Card className={cn(
               "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
-              currentStep === 'identificacao' ? "bg-white px-4 py-5 md:p-10 opacity-100" : "bg-white/40 px-4 py-5 opacity-60 pointer-events-none"
+              currentStep === 'identificacao' ? "bg-white px-3 py-5 md:p-10 opacity-100" : "bg-white/40 px-3 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                 <User className="h-5 w-5 text-accent" />
@@ -579,7 +579,7 @@ function CheckoutContent() {
             {/* ETAPA 2: ENTREGA */}
             <Card className={cn(
               "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
-              currentStep === 'entrega' ? "bg-white px-4 py-5 md:p-10 opacity-100" : "bg-white/40 px-4 py-5 opacity-60 pointer-events-none"
+              currentStep === 'entrega' ? "bg-white px-3 py-5 md:p-10 opacity-100" : "bg-white/40 px-3 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                 <MapPin className="h-5 w-5 text-accent" />
@@ -638,7 +638,7 @@ function CheckoutContent() {
             {/* ETAPA 3: PAGAMENTO (TRANSPARENTE) */}
             <Card className={cn(
               "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
-              currentStep === 'pagamento' ? "bg-white px-4 py-5 md:p-10 opacity-100" : "bg-white/40 px-4 py-5 opacity-60 pointer-events-none"
+              currentStep === 'pagamento' ? "bg-white px-3 py-5 md:p-10 opacity-100" : "bg-white/40 px-3 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                 <CreditCard className="h-5 w-5 text-accent" />
@@ -784,7 +784,7 @@ function CheckoutContent() {
           </div>
 
           {/* RESUMO LATERAL */}
-          <aside className="lg:col-span-4 space-y-4 md:space-y-6 lg:sticky lg:top-24 px-2 md:px-0">
+          <aside className="lg:col-span-4 space-y-4 md:space-y-6 lg:sticky lg:top-24">
             <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none bg-white shadow-premium p-6 md:p-8 space-y-6 w-full">
                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
                   <Package className="h-4 w-4" />
