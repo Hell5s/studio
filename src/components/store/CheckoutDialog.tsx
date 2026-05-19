@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -141,7 +142,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                   {cartItems.map((item, idx) => (
                     <div key={item.id} className="w-full">
                       <div className="flex gap-4 md:gap-6 py-6 group w-full">
-                        <div className="h-24 w-18 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm">
+                        <div className="h-24 w-20 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm">
                           <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
                         </div>
                         <div className="flex-1 min-w-0 space-y-2">
