@@ -106,7 +106,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full md:w-[420px] md:max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100 overflow-hidden">
+      <SheetContent className="w-full md:w-[420px] md:max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100">
         <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 shrink-0">
           <div className="flex flex-col items-start space-y-0">
             {view === 'auth' && (
@@ -140,7 +140,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 <div className="space-y-0 w-full">
                   {cartItems.map((item, idx) => (
                     <div key={item.id} className="w-full">
-                      <div className="flex gap-4 md:gap-6 py-6 group w-full overflow-hidden">
+                      <div className="flex gap-4 md:gap-6 py-6 group w-full">
                         <div className="h-24 w-18 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm">
                           <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
                         </div>
