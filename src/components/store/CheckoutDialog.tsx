@@ -1,14 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
-import { ShoppingBag, X, ArrowRight, Loader2, Mail, ChevronLeft } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ShoppingBag, X, ArrowRight, Loader2, ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useAuth } from '@/firebase';
 import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
@@ -38,6 +32,14 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
   const [loading, setLoading] = useState(false);
   const [authForm, setAuthForm] = useState({ email: '', password: '', name: '' });
 
+  // Sincroniza o estado da view quando o drawer fecha
+  useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => setView('cart'), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
@@ -57,8 +59,6 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
   const goToCheckout = () => {
     sessionStorage.setItem('checkout_items', JSON.stringify(cartItems));
     onOpenChange(false);
-    // Reset view for next time
-    setTimeout(() => setView('cart'), 500);
     router.push('/checkout');
   };
 
@@ -99,18 +99,34 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     }
   };
 
+  if (!open) return null;
+
   return (
-    <Sheet open={open} onOpenChange={(o) => {
-      onOpenChange(o);
-      if (!o) setTimeout(() => setView('cart'), 500);
-    }}>
-      <SheetContent
-        side="right"
-        style={{ width: '100vw', maxWidth: '100vw' }}
-        className="md:w-[420px] md:max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100 overflow-hidden"
+    <div className="fixed inset-0 z-[100] flex justify-end">
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={() => onOpenChange(false)}
+      />
+      
+      {/* Drawer Content - Custom Width Fixed */}
+      <div 
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          right: 0, 
+          width: '100vw', 
+          maxWidth: '100vw',
+          height: '100vh', 
+          zIndex: 50, 
+          background: 'white', 
+          overflowY: 'auto' 
+        }}
+        className="flex flex-col shadow-2xl animate-in slide-in-from-right duration-500 md:w-[420px] no-scrollbar"
       >
+        {/* Header Personalizado */}
         <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 shrink-0">
-          <SheetHeader className="p-0 space-y-0">
+          <div className="flex flex-col items-start space-y-0">
             {view === 'auth' && (
               <button 
                 onClick={() => setView('cart')}
@@ -119,16 +135,17 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 <ChevronLeft className="h-3 w-3" /> Voltar para sacola
               </button>
             )}
-            <SheetTitle className="text-xs font-bold text-primary uppercase tracking-[0.3em]">
+            <h2 className="text-xs font-bold text-primary uppercase tracking-[0.3em]">
               {view === 'cart' ? 'MINHA SELEÇÃO' : 'ACESSO EXCLUSIVO'}
-            </SheetTitle>
-          </SheetHeader>
+            </h2>
+          </div>
           <button onClick={() => onOpenChange(false)} className="text-primary/20 hover:text-primary transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar w-full max-w-full">
+        {/* Conteúdo Central */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar w-full">
           {view === 'cart' ? (
             cartItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full py-32 px-10 text-center space-y-6">
@@ -141,7 +158,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 </div>
               </div>
             ) : (
-              <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full max-w-full">
+              <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full">
                 <div className="space-y-0 w-full">
                   {cartItems.map((item, idx) => (
                     <div key={item.id} className="w-full">
@@ -170,7 +187,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               </div>
             )
           ) : (
-            <div className="p-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full max-w-full">
+            <div className="p-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full">
               <div className="space-y-2">
                 <h4 className="text-xl font-headline font-bold text-primary">Bem-vinda de volta</h4>
                 <p className="text-xs text-muted-foreground italic font-light leading-relaxed">
@@ -243,6 +260,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           )}
         </div>
 
+        {/* Rodapé do Carrinho */}
         {cartItems.length > 0 && view === 'cart' && (
           <div className="shrink-0 border-t border-primary/5 bg-white p-6 w-full">
             <div className="flex justify-between items-center mb-6">
@@ -259,7 +277,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
             <p className="text-[8px] text-center text-muted-foreground uppercase mt-4 tracking-widest opacity-60">Frete e descontos calculados no checkout</p>
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 }
