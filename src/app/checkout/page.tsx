@@ -491,7 +491,7 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30" style={{ width: '100vw', overflowX: 'hidden', boxSizing: 'border-box' }}>
+    <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30" style={{ width: '100%', overflowX: 'hidden', boxSizing: 'border-box' }}>
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50 w-full max-w-full">
         <div className="w-full px-4 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2">
           <div className="flex-1 flex items-center min-w-[80px]">
@@ -570,7 +570,7 @@ function CheckoutContent() {
                     <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" placeholder="(00) 00000-0000" required />
                   </div>
                   <div className="md:col-span-2 pt-2 md:pt-4 w-full">
-                    <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg box-border">Continuar para Entrega</Button>
+                    <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase whitespace-normal tracking-normal md:tracking-widest text-[10px] shadow-lg box-border">Continuar para Entrega</Button>
                   </div>
                 </div>
               )}
@@ -627,7 +627,7 @@ function CheckoutContent() {
 
                   <div className="pt-2 md:pt-4 flex flex-col sm:flex-row gap-3 w-full box-border">
                     <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[10px] font-bold order-2 sm:order-1 w-full sm:w-auto box-border">Voltar</Button>
-                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] order-1 sm:order-2 shadow-lg w-full box-border">
+                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase whitespace-normal tracking-normal md:tracking-widest text-[10px] order-1 sm:order-2 shadow-lg w-full box-border">
                       {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Confirmar Entrega'}
                     </Button>
                   </div>
@@ -762,7 +762,7 @@ function CheckoutContent() {
                             onClick={handleCopyPix}
                             className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto box-border"
                           >
-                            {copied ? <CheckCheck className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                            {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                             {copied ? 'Copiado!' : 'Copiar Código'}
                           </button>
                         </div>
