@@ -491,7 +491,7 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FDFCFD] selection:bg-accent/30 box-border">
+    <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30 md:w-full md:max-w-full md:overflow-x-hidden md:box-border">
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50 w-full max-w-full">
         <div className="w-full px-4 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2">
           <div className="flex-1 flex items-center min-w-[80px]">
@@ -603,7 +603,7 @@ function CheckoutContent() {
                     </div>
                     <div className="space-y-1.5 w-full">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Cidade</Label>
-                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" />
+                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, city: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" />
                     </div>
                     <div className="space-y-1.5 w-full">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">UF</Label>
