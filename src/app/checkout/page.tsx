@@ -491,7 +491,7 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFCFD] selection:bg-accent/30">
+    <div className="min-h-screen w-screen max-w-screen overflow-x-hidden bg-[#FDFCFD] selection:bg-accent/30">
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50">
         <div className="container mx-auto px-4 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2">
           <div className="flex-1 flex items-center min-w-[80px]">
@@ -544,7 +544,7 @@ function CheckoutContent() {
             {/* ETAPA 1: IDENTIFICAÇÃO */}
             <Card className={cn(
               "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
-              currentStep === 'identificacao' ? "bg-white p-5 md:p-10 opacity-100" : "bg-white/40 p-5 opacity-60 pointer-events-none"
+              currentStep === 'identificacao' ? "bg-white px-4 py-5 md:p-10 opacity-100" : "bg-white/40 px-4 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                 <User className="h-5 w-5 text-accent" />
@@ -579,7 +579,7 @@ function CheckoutContent() {
             {/* ETAPA 2: ENTREGA */}
             <Card className={cn(
               "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
-              currentStep === 'entrega' ? "bg-white p-5 md:p-10 opacity-100" : "bg-white/40 p-5 opacity-60 pointer-events-none"
+              currentStep === 'entrega' ? "bg-white px-4 py-5 md:p-10 opacity-100" : "bg-white/40 px-4 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                 <MapPin className="h-5 w-5 text-accent" />
@@ -638,7 +638,7 @@ function CheckoutContent() {
             {/* ETAPA 3: PAGAMENTO (TRANSPARENTE) */}
             <Card className={cn(
               "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
-              currentStep === 'pagamento' ? "bg-white p-5 md:p-10 opacity-100" : "bg-white/40 p-5 opacity-60 pointer-events-none"
+              currentStep === 'pagamento' ? "bg-white px-4 py-5 md:p-10 opacity-100" : "bg-white/40 px-4 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                 <CreditCard className="h-5 w-5 text-accent" />

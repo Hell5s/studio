@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -107,7 +106,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     }}>
       <SheetContent
         side="right"
-        className="w-full max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100 overflow-hidden"
+        className="w-full max-w-full md:max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100 overflow-hidden"
       >
         <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 shrink-0">
           <SheetHeader className="p-0 space-y-0">
@@ -147,7 +146,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                     <div key={item.id}>
                       <div className="flex gap-6 py-6 group">
                         <div className="h-24 w-18 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm">
-                          <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
+                          <img src={item.image} className="h-full w-full object-cover max-w-full" alt={item.name} />
                         </div>
                         <div className="flex-1 min-w-0 space-y-2">
                           <p className="text-[11px] font-bold text-primary leading-tight uppercase tracking-tight line-clamp-2">{item.name}</p>
