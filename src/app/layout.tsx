@@ -26,7 +26,7 @@ export default function RootLayout({
       </head>
       <body 
         className="font-sans antialiased bg-[#FFF9F7] text-[#2A1F22]" 
-        style={{ overflowX: 'hidden', maxWidth: '100vw' }}
+        style={{ overflowX: 'hidden' }}
       >
         <FirebaseClientProvider>
           {children}
