@@ -411,8 +411,8 @@ function CheckoutContent() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#FDFCFD] flex flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md space-y-8">
+      <div className="min-h-screen bg-[#FDFCFD] flex flex-col items-center justify-center px-4 py-12 w-full max-w-full overflow-x-hidden">
+        <div className="w-full max-w-md space-y-8 px-2">
           <div className="text-center space-y-3 px-4">
             <div className="flex justify-center mb-4"><LogoMark /></div>
             <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40">Para finalizar sua compra</p>
@@ -420,11 +420,11 @@ function CheckoutContent() {
             <p className="text-sm text-muted-foreground italic font-light">Entre ou crie sua conta Toda Bela para continuar</p>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm space-y-6 mx-4">
+          <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm space-y-6 w-full box-border">
             <button
               onClick={handleGoogleAuth}
               disabled={authLoading}
-              className="w-full h-14 flex items-center justify-center gap-3 border border-primary/10 rounded-full hover:bg-secondary/30 transition-all"
+              className="w-full h-14 flex items-center justify-center gap-3 border border-primary/10 rounded-full hover:bg-secondary/30 transition-all box-border"
             >
               {authLoading ? <Loader2 className="animate-spin h-4 w-4" /> : (
                 <>
@@ -446,36 +446,36 @@ function CheckoutContent() {
             </div>
 
             {!authMode && (
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => setAuthMode('login')} className="h-12 rounded-full border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all">
+              <div className="grid grid-cols-2 gap-3 w-full">
+                <button onClick={() => setAuthMode('login')} className="h-12 rounded-full border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all box-border">
                   Entrar
                 </button>
-                <button onClick={() => setAuthMode('register')} className="h-12 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all">
+                <button onClick={() => setAuthMode('register')} className="h-12 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all box-border">
                   Criar Conta
                 </button>
               </div>
             )}
 
             {authMode && (
-              <form onSubmit={handleEmailAuth} className="space-y-4">
+              <form onSubmit={handleEmailAuth} className="space-y-4 w-full box-border">
                 {authMode === 'register' && (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 w-full">
                     <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={authForm.nome} onChange={e => setAuthForm({...authForm, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
+                    <Input value={authForm.nome} onChange={e => setAuthForm({...authForm, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" required />
                   </div>
                 )}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 w-full">
                   <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
-                  <Input type="email" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
+                  <Input type="email" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" required />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 w-full">
                   <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Senha</Label>
-                  <Input type="password" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
+                  <Input type="password" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" required />
                 </div>
-                <Button disabled={authLoading} className="w-full h-12 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">
+                <Button disabled={authLoading} className="w-full h-12 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg box-border">
                   {authLoading ? <Loader2 className="animate-spin h-4 w-4" /> : authMode === 'register' ? 'Criar Minha Conta' : 'Entrar na Conta'}
                 </Button>
-                <button type="button" onClick={() => setAuthMode(null)} className="w-full text-center text-[9px] font-bold uppercase text-primary/30 hover:text-primary">
+                <button type="button" onClick={() => setAuthMode(null)} className="w-full text-center text-[9px] font-bold uppercase text-primary/30 hover:text-primary py-2">
                   Voltar para opções
                 </button>
               </form>
@@ -491,9 +491,9 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FDFCFD] selection:bg-accent/30">
-      <header className="bg-white border-b border-primary/5 sticky top-0 z-50">
-        <div className="w-full px-3 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FDFCFD] selection:bg-accent/30 box-border">
+      <header className="bg-white border-b border-primary/5 sticky top-0 z-50 w-full max-w-full">
+        <div className="w-full px-3 md:px-6 h-16 md:h-24 flex flex-wrap items-center justify-between gap-2 overflow-hidden">
           <div className="flex-1 flex items-center min-w-[80px]">
              <button onClick={() => router.back()} className="text-primary/40 hover:text-primary transition-colors flex items-center gap-1 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest">
                 <ChevronLeft className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Voltar</span>
@@ -510,8 +510,8 @@ function CheckoutContent() {
           </div>
         </div>
 
-        <div className="bg-secondary/10 py-2 md:py-3">
-            <div className="max-w-md mx-auto flex items-center justify-between px-4 md:px-6">
+        <div className="bg-secondary/10 py-2 md:py-3 w-full overflow-hidden">
+            <div className="max-w-md mx-auto flex items-center justify-between px-4 md:px-6 w-full">
                 {[
                     { id: 'identificacao', label: 'Dados' },
                     { id: 'entrega', label: 'Entrega' },
@@ -536,14 +536,14 @@ function CheckoutContent() {
         </div>
       </header>
 
-      <main className="w-full px-3 md:px-6 py-6 md:py-16">
-        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto w-full">
+      <main className="w-full px-3 md:px-6 py-6 md:py-16 box-border overflow-x-hidden">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start max-w-6xl mx-auto w-full box-border">
           
-          <div className="lg:col-span-8 space-y-4 md:space-y-6">
+          <div className="lg:col-span-8 space-y-4 md:space-y-6 w-full box-border overflow-hidden">
             
             {/* ETAPA 1: IDENTIFICAÇÃO */}
             <Card className={cn(
-              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full box-border",
               currentStep === 'identificacao' ? "bg-white px-3 py-5 md:p-10 opacity-100" : "bg-white/40 px-3 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
@@ -552,25 +552,25 @@ function CheckoutContent() {
               </div>
 
               {currentStep === 'identificacao' && (
-                <div className="grid md:grid-cols-2 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="md:col-span-2 space-y-1.5">
+                <div className="grid md:grid-cols-2 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2 w-full box-border">
+                  <div className="md:col-span-2 space-y-1.5 w-full">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
+                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" required />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 w-full">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
-                    <Input type="email" value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
+                    <Input type="email" value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" required />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 w-full">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">CPF</Label>
-                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" placeholder="000.000.000-00" required />
+                    <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" placeholder="000.000.000-00" required />
                   </div>
-                  <div className="md:col-span-2 space-y-1.5">
+                  <div className="md:col-span-2 space-y-1.5 w-full">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Telefone / WhatsApp</Label>
-                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" placeholder="(00) 00000-0000" required />
+                    <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" placeholder="(00) 00000-0000" required />
                   </div>
-                  <div className="md:col-span-2 pt-2 md:pt-4">
-                    <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">Continuar para Entrega</Button>
+                  <div className="md:col-span-2 pt-2 md:pt-4 w-full">
+                    <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg box-border">Continuar para Entrega</Button>
                   </div>
                 </div>
               )}
@@ -578,7 +578,7 @@ function CheckoutContent() {
 
             {/* ETAPA 2: ENTREGA */}
             <Card className={cn(
-              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full box-border",
               currentStep === 'entrega' ? "bg-white px-3 py-5 md:p-10 opacity-100" : "bg-white/40 px-3 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
@@ -587,47 +587,47 @@ function CheckoutContent() {
               </div>
 
               {currentStep === 'entrega' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="grid md:grid-cols-3 gap-4 md:gap-5">
-                    <div className="space-y-1.5">
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 w-full box-border">
+                  <div className="grid md:grid-cols-3 gap-4 md:gap-5 w-full box-border">
+                    <div className="space-y-1.5 w-full">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">CEP</Label>
-                      <Input value={entrega.cep} onChange={e => handleCepSearch(e.target.value)} maxLength={9} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
+                      <Input value={entrega.cep} onChange={e => handleCepSearch(e.target.value)} maxLength={9} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" />
                     </div>
-                    <div className="md:col-span-2 space-y-1.5">
+                    <div className="md:col-span-2 space-y-1.5 w-full">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Endereço</Label>
-                      <Input value={entrega.endereco} onChange={e => setEntrega({...entrega, endereco: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
+                      <Input value={entrega.endereco} onChange={e => setEntrega({...entrega, endereco: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 w-full">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Número</Label>
-                      <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
+                      <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 w-full">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Cidade</Label>
-                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
+                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 w-full">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">UF</Label>
-                      <Input value={entrega.estado} onChange={e => setEntrega({...entrega, estado: e.target.value.toUpperCase()})} maxLength={2} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
+                      <Input value={entrega.estado} onChange={e => setEntrega({...entrega, estado: e.target.value.toUpperCase()})} maxLength={2} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full box-border" />
                     </div>
                   </div>
 
-                  <div className="space-y-3 pt-2">
+                  <div className="space-y-3 pt-2 w-full box-border">
                     <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Opção de Envio</Label>
-                    <div className="grid gap-3">
-                      <button onClick={() => setShippingMethod('pac')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all w-full", shippingMethod === 'pac' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
+                    <div className="grid gap-3 w-full">
+                      <button onClick={() => setShippingMethod('pac')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all w-full box-border", shippingMethod === 'pac' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
                         <div className="flex items-center gap-3"><Truck className="h-4 w-4 text-primary/40" /><div className="text-left"><p className="text-xs font-bold text-primary">PAC Econômico</p><p className="text-[9px] text-muted-foreground">15-20 dias úteis</p></div></div>
                         <span className="text-xs font-bold text-emerald-600">GRÁTIS</span>
                       </button>
-                      <button onClick={() => setShippingMethod('sedex')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all w-full", shippingMethod === 'sedex' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
+                      <button onClick={() => setShippingMethod('sedex')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all w-full box-border", shippingMethod === 'sedex' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
                         <div className="flex items-center gap-3"><Truck className="h-4 w-4 text-accent" /><div className="text-left"><p className="text-xs font-bold text-primary">SEDEX VIP</p><p className="text-[9px] text-muted-foreground">7-10 dias úteis</p></div></div>
                         <span className="text-xs font-bold text-primary">R$ 25,90</span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="pt-2 md:pt-4 flex flex-col sm:flex-row gap-3">
-                    <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[10px] font-bold order-2 sm:order-1 w-full sm:w-auto">Voltar</Button>
-                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] order-1 sm:order-2 shadow-lg w-full">
+                  <div className="pt-2 md:pt-4 flex flex-col sm:flex-row gap-3 w-full box-border">
+                    <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[10px] font-bold order-2 sm:order-1 w-full sm:w-auto box-border">Voltar</Button>
+                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] order-1 sm:order-2 shadow-lg w-full box-border">
                       {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Confirmar Entrega'}
                     </Button>
                   </div>
@@ -637,7 +637,7 @@ function CheckoutContent() {
 
             {/* ETAPA 3: PAGAMENTO (TRANSPARENTE) */}
             <Card className={cn(
-              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full",
+              "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 overflow-hidden w-full box-border",
               currentStep === 'pagamento' ? "bg-white px-3 py-5 md:p-10 opacity-100" : "bg-white/40 px-3 py-5 opacity-60 pointer-events-none"
             )}>
               <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
@@ -646,16 +646,16 @@ function CheckoutContent() {
               </div>
 
               {currentStep === 'pagamento' && (
-                <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6">
+                <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 w-full box-border">
 
                   {!pixData && (
                     <>
                       {/* Seletor de método */}
-                      <div className="grid grid-cols-3 gap-2 md:gap-3 px-1">
+                      <div className="grid grid-cols-3 gap-2 md:gap-3 px-1 w-full box-border">
                         <button
                           onClick={() => setPaymentMethod('cartao')}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full",
+                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full box-border",
                             paymentMethod === 'cartao' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40"
                           )}
                         >
@@ -665,7 +665,7 @@ function CheckoutContent() {
                         <button
                           onClick={() => setPaymentMethod('pix')}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full",
+                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full box-border",
                             paymentMethod === 'pix' ? "border-accent bg-accent/5 text-accent shadow-sm" : "border-primary/10 text-primary/40"
                           )}
                         >
@@ -675,7 +675,7 @@ function CheckoutContent() {
                         <button
                           onClick={() => setPaymentMethod('boleto')}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full",
+                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full box-border",
                             paymentMethod === 'boleto' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40"
                           )}
                         >
@@ -686,7 +686,7 @@ function CheckoutContent() {
 
                       {/* PIX: botão direto */}
                       {paymentMethod === 'pix' && (
-                        <div className="flex flex-col items-center gap-6 py-6 md:py-8">
+                        <div className="flex flex-col items-center gap-6 py-6 md:py-8 w-full box-border">
                           <div className="h-16 w-16 md:h-20 md:w-20 bg-accent/10 rounded-full flex items-center justify-center">
                             <QrCode className="h-8 w-8 md:h-10 md:w-10 text-accent" />
                           </div>
@@ -697,7 +697,7 @@ function CheckoutContent() {
                           <Button
                             onClick={handlePixPayment}
                             disabled={isProcessing}
-                            className="h-14 px-12 rounded-full bg-accent text-white font-bold uppercase tracking-widest text-[10px] shadow-lg w-full max-w-xs"
+                            className="h-14 px-12 rounded-full bg-accent text-white font-bold uppercase tracking-widest text-[10px] shadow-lg w-full max-w-xs box-border"
                           >
                             {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Gerar QR Code PIX'}
                           </Button>
@@ -706,9 +706,9 @@ function CheckoutContent() {
 
                       {/* Cartão e Boleto: usa o Brick normalmente */}
                       {(paymentMethod === 'cartao' || paymentMethod === 'boleto') && (
-                        <div className="min-h-[400px]">
+                        <div className="min-h-[400px] w-full box-border">
                           {!isBrickReady && (
-                            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                            <div className="flex flex-col items-center justify-center py-20 space-y-4 w-full">
                               <Loader2 className="h-8 w-8 animate-spin text-accent/40" />
                               <p className="text-[9px] font-bold uppercase tracking-widest text-primary/20">Criptografando ambiente seguro...</p>
                             </div>
@@ -744,23 +744,23 @@ function CheckoutContent() {
 
                   {/* QR Code gerado */}
                   {pixData && (
-                    <div className="flex flex-col items-center gap-6 py-4 animate-in zoom-in-95 w-full">
-                      <div className="bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-primary/5">
+                    <div className="flex flex-col items-center gap-6 py-4 animate-in zoom-in-95 w-full box-border overflow-hidden">
+                      <div className="bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-primary/5 max-w-full">
                         <img
                           src={`data:image/png;base64,${pixData.qr_code_base64}`}
                           alt="QR Code PIX"
-                          className="w-52 h-56 md:w-64 md:h-64"
+                          className="w-52 h-56 md:w-64 md:h-64 max-w-full"
                         />
                       </div>
-                      <div className="w-full max-w-md space-y-4 px-4">
+                      <div className="w-full max-w-md space-y-4 px-4 box-border">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">PIX Copia e Cola</p>
-                        <div className="flex flex-col sm:flex-row gap-3 w-full">
-                          <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[10px] text-primary/60 font-mono truncate border border-primary/5 w-full">
+                        <div className="flex flex-col sm:flex-row gap-3 w-full box-border">
+                          <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[10px] text-primary/60 font-mono truncate border border-primary/5 w-full box-border">
                             {pixData.qr_code}
                           </div>
                           <button
                             onClick={handleCopyPix}
-                            className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto"
+                            className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto box-border"
                           >
                             {copied ? <CheckCheck className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                             {copied ? 'Copiado!' : 'Copiar Código'}
@@ -773,7 +773,7 @@ function CheckoutContent() {
                     </div>
                   )}
 
-                  <div className="pt-4 border-t border-primary/5">
+                  <div className="pt-4 border-t border-primary/5 w-full">
                     <button onClick={() => setCurrentStep('entrega')} className="text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary flex items-center gap-2 py-2">
                       <ChevronLeft className="h-3 w-3" /> Alterar Dados de Entrega
                     </button>
@@ -784,42 +784,42 @@ function CheckoutContent() {
           </div>
 
           {/* RESUMO LATERAL */}
-          <aside className="lg:col-span-4 space-y-4 md:space-y-6 lg:sticky lg:top-24">
-            <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none bg-white shadow-premium p-6 md:p-8 space-y-6 w-full">
+          <aside className="lg:col-span-4 space-y-4 md:space-y-6 lg:sticky lg:top-24 w-full box-border">
+            <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none bg-white shadow-premium p-6 md:p-8 space-y-6 w-full box-border">
                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
                   <Package className="h-4 w-4" />
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]">Sua Escolha</h3>
                </div>
 
-               <div className="space-y-4 max-h-[250px] md:max-h-[300px] overflow-y-auto no-scrollbar pr-1">
+               <div className="space-y-4 max-h-[250px] md:max-h-[300px] overflow-y-auto no-scrollbar pr-1 w-full box-border">
                   {sessionItems.map((item: any, i: number) => (
-                    <div key={i} className="flex gap-4 items-center">
+                    <div key={i} className="flex gap-4 items-center w-full overflow-hidden">
                        <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0 border border-primary/5">
                           <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
                        </div>
                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold text-primary uppercase truncate">{item.name}</p>
-                          <p className="text-[9px] text-muted-foreground italic">{item.quantity}un • {formatPrice(item.price)}</p>
+                          <p className="text-[10px] font-bold text-primary uppercase truncate w-full">{item.name}</p>
+                          <p className="text-[9px] text-muted-foreground italic truncate w-full">{item.quantity}un • {formatPrice(item.price)}</p>
                        </div>
-                       <p className="text-[11px] font-bold text-primary whitespace-nowrap">{formatPrice(item.price * item.quantity)}</p>
+                       <p className="text-[11px] font-bold text-primary whitespace-nowrap shrink-0">{formatPrice(item.price * item.quantity)}</p>
                     </div>
                   ))}
                </div>
 
-               <div className="space-y-2.5 pt-4 border-t border-primary/5">
+               <div className="space-y-2.5 pt-4 border-t border-primary/5 w-full">
                   <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
                   <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Envio Especial</span><span>{freteValor === 0 ? 'Grátis' : formatPrice(freteValor)}</span></div>
-                  <div className="flex justify-between items-end pt-4">
-                    <span className="text-xs font-black uppercase text-primary tracking-tighter">Total Geral</span>
-                    <div className="text-right">
-                       <span className="text-2xl md:text-3xl font-headline font-bold text-primary leading-none block">{formatPrice(totalGeral)}</span>
+                  <div className="flex justify-between items-end pt-4 w-full">
+                    <span className="text-xs font-black uppercase text-primary tracking-tighter shrink-0">Total</span>
+                    <div className="text-right min-w-0">
+                       <span className="text-2xl md:text-3xl font-headline font-bold text-primary leading-none block truncate">{formatPrice(totalGeral)}</span>
                        <span className="text-[9px] text-accent uppercase font-bold tracking-widest mt-1">10x sem juros no cartão</span>
                     </div>
                   </div>
                </div>
             </Card>
 
-            <div className="p-5 md:p-6 bg-secondary/20 rounded-[1.5rem] md:rounded-[2rem] space-y-3 border border-primary/5 w-full">
+            <div className="p-5 md:p-6 bg-secondary/20 rounded-[1.5rem] md:rounded-[2rem] space-y-3 border border-primary/5 w-full box-border">
                <div className="flex items-center gap-2 text-primary">
                   <Lock className="h-4 w-4 text-accent" />
                   <h4 className="text-[9px] font-bold uppercase tracking-widest">Tecnologia de Segurança</h4>
@@ -833,9 +833,9 @@ function CheckoutContent() {
         </div>
       </main>
 
-      <footer className="py-12 border-t border-primary/5 bg-white/40">
-        <div className="container mx-auto px-4 md:px-6 text-center space-y-4">
-           <div className="flex justify-center mb-6 opacity-30"><LogoMark className="scale-75" /></div>
+      <footer className="py-12 border-t border-primary/5 bg-white/40 w-full">
+        <div className="container mx-auto px-4 md:px-6 text-center space-y-4 w-full box-border">
+           <div className="flex justify-center mb-6 opacity-30"><LogoMark className="max-w-[140px]" /></div>
            <p className="text-[9px] text-primary/30 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
         </div>
       </footer>

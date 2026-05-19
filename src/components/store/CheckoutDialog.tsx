@@ -127,7 +127,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar w-full max-w-full">
           {view === 'cart' ? (
             cartItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full py-32 px-10 text-center space-y-6">
@@ -140,16 +140,16 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 </div>
               </div>
             ) : (
-              <div className="p-6 space-y-8 animate-in fade-in duration-500">
-                <div className="space-y-0">
+              <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full max-w-full">
+                <div className="space-y-0 w-full">
                   {cartItems.map((item, idx) => (
-                    <div key={item.id}>
-                      <div className="flex gap-6 py-6 group">
+                    <div key={item.id} className="w-full">
+                      <div className="flex gap-4 md:gap-6 py-6 group w-full overflow-hidden">
                         <div className="h-24 w-18 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm">
-                          <img src={item.image} className="h-full w-full object-cover max-w-full" alt={item.name} />
+                          <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
                         </div>
                         <div className="flex-1 min-w-0 space-y-2">
-                          <p className="text-[11px] font-bold text-primary leading-tight uppercase tracking-tight line-clamp-2">{item.name}</p>
+                          <p className="text-[11px] font-bold text-primary leading-tight uppercase tracking-tight truncate w-full">{item.name}</p>
                           <div className="flex flex-wrap gap-4 text-[9px] text-muted-foreground font-black uppercase tracking-widest">
                             {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
                             {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
@@ -160,7 +160,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                               <button onClick={() => onUpdateQuantity(item.id, 1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">+</button>
                           </div>
                         </div>
-                        <button onClick={() => onRemoveItem(item.id)} className="text-primary/10 hover:text-destructive self-start p-2"><X className="h-4 w-4" /></button>
+                        <button onClick={() => onRemoveItem(item.id)} className="text-primary/10 hover:text-destructive self-start p-2 shrink-0"><X className="h-4 w-4" /></button>
                       </div>
                       {idx < cartItems.length - 1 && <div className="h-px bg-primary/5" />}
                     </div>
@@ -169,7 +169,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               </div>
             )
           ) : (
-            <div className="p-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="p-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full max-w-full">
               <div className="space-y-2">
                 <h4 className="text-xl font-headline font-bold text-primary">Bem-vinda de volta</h4>
                 <p className="text-xs text-muted-foreground italic font-light leading-relaxed">
@@ -210,7 +210,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                       required
                       value={authForm.email}
                       onChange={e => setAuthForm({...authForm, email: e.target.value})}
-                      className="h-12 bg-secondary/10 border-none rounded-xl text-xs" 
+                      className="h-12 bg-secondary/10 border-none rounded-xl text-xs w-full" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -220,7 +220,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                       required
                       value={authForm.password}
                       onChange={e => setAuthForm({...authForm, password: e.target.value})}
-                      className="h-12 bg-secondary/10 border-none rounded-xl text-xs" 
+                      className="h-12 bg-secondary/10 border-none rounded-xl text-xs w-full" 
                     />
                   </div>
                   <Button 
@@ -243,7 +243,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
         </div>
 
         {cartItems.length > 0 && view === 'cart' && (
-          <div className="shrink-0 border-t border-primary/5 bg-white p-6">
+          <div className="shrink-0 border-t border-primary/5 bg-white p-6 w-full">
             <div className="flex justify-between items-center mb-6">
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">SUBTOTAL</span>
                 <span className="text-2xl font-bold text-primary">{formatCurrency(total)}</span>
