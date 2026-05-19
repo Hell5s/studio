@@ -24,7 +24,10 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-sans antialiased bg-[#FFF9F7] text-[#2A1F22]">
+      <body 
+        className="font-sans antialiased bg-[#FFF9F7] text-[#2A1F22]" 
+        style={{ overflowX: 'hidden', maxWidth: '100vw' }}
+      >
         <FirebaseClientProvider>
           {children}
           <Toaster />
