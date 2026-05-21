@@ -81,7 +81,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
   const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
-  const isAdmin = !!adminRole;
+  const isAdmin = !!adminRole || user?.uid === 'LXaJZDm6tNUQLh3ooghcg6EQgJ43';
 
   // Pending Reviews Count
   const pendingReviewsQuery = useMemoFirebase(() => query(collection(db, 'reviews'), where('status', '==', 'pending')), [db]);

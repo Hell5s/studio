@@ -46,7 +46,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
   const { data: adminRole } = useDoc(adminDocRef);
-  const isAdmin = !!adminRole;
+  const isAdmin = !!adminRole || user?.uid === 'LXaJZDm6tNUQLh3ooghcg6EQgJ43';
 
   const favoritesQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;

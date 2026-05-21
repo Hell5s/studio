@@ -41,7 +41,7 @@ export default function MeusPedidosPage() {
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
   const { data: adminRole } = useDoc(adminDocRef);
-  const isAdmin = !!adminRole;
+  const isAdmin = !!adminRole || user?.uid === 'LXaJZDm6tNUQLh3ooghcg6EQgJ43';
 
   // Consulta de Pedidos filtrada por userId
   const ordersQuery = useMemo(() => {

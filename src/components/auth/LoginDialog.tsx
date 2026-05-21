@@ -36,7 +36,7 @@ export function LoginDialog({
   open, 
   onOpenChange, 
   isTransparent, 
-  isAdmin,
+  isAdmin: isAdminProp,
   onOpenAdmin
 }: LoginDialogProps) {
   const auth = useAuth();
@@ -47,6 +47,8 @@ export function LoginDialog({
   const [isRegistering, setIsRegistering] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
+
+  const isAdmin = isAdminProp || user?.uid === 'LXaJZDm6tNUQLh3ooghcg6EQgJ43';
 
   const handleGoogleLogin = async () => {
     if (loading) return;

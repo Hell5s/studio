@@ -42,7 +42,7 @@ export default function AdminProductsPage() {
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
   const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
-  const isAdmin = !!adminRole;
+  const isAdmin = !!adminRole || user?.uid === 'LXaJZDm6tNUQLh3ooghcg6EQgJ43';
 
   // Consulta de Produtos
   const productsQuery = useMemoFirebase(() => {

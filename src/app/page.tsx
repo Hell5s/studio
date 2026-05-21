@@ -38,7 +38,7 @@ function StorefrontContent() {
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
   const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
-  const isAdmin = !!adminRole;
+  const isAdmin = !!adminRole || user?.uid === 'LXaJZDm6tNUQLh3ooghcg6EQgJ43';
 
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings } = useDoc(settingsRef);
