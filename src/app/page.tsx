@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
@@ -36,21 +37,25 @@ function StorefrontContent() {
   const adminDocRef = useMemoFirebase(() => {
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
-  const { data: adminRole } = useDoc(adminDocRef);
+  const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
   const isAdmin = !!adminRole;
 
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings } = useDoc(settingsRef);
 
   useEffect(() => {
+    if (isAdminLoading) return;
+
     if (searchParams.get('admin') === 'true') {
       if (isAdmin) {
         setIsAdminView(true);
       } else {
         router.replace('/');
       }
+    } else {
+      setIsAdminView(false);
     }
-  }, [searchParams, isAdmin, router]);
+  }, [searchParams, isAdmin, isAdminLoading, router]);
 
   const [cart, setCart] = useState<any[]>([]);
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
@@ -129,6 +134,10 @@ function StorefrontContent() {
     }
   }, []);
 
+  const handleOpenAdmin = useCallback(() => {
+    router.push('/?admin=true');
+  }, [router]);
+
   if (isAdminView && isAdmin) {
     return (
       <div className="h-screen bg-background">
@@ -137,7 +146,7 @@ function StorefrontContent() {
             productsCount={storeProducts?.length || 0}
             categoriesCount={categories?.length || 0}
             onOpenAI={() => setIsAIOpen(true)}
-            onExit={() => setIsAdminView(false)}
+            onExit={() => router.push('/')}
           />
           <AIProductGenerator open={isAIOpen} onOpenChange={setIsAIOpen} />
         </Suspense>
@@ -153,7 +162,7 @@ function StorefrontContent() {
         onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cartCount}
         isAdmin={isAdmin} 
-        onOpenAdmin={() => setIsAdminView(true)}
+        onOpenAdmin={handleOpenAdmin}
         onSearch={handleSearch}
       />
 

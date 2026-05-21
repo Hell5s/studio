@@ -161,6 +161,18 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
 
             <div className="flex items-center gap-0.5 flex-1 justify-end">
 
+              {isAdmin && (
+                <button
+                  onClick={() => onOpenAdmin?.()}
+                  className="p-2.5 transition-all flex items-center gap-1 text-accent hover:brightness-125 group"
+                >
+                  <div style={iconFilterStyle} className="flex items-center gap-1">
+                    <LayoutDashboard className="h-[18px] w-[18px] animate-pulse group-hover:animate-none" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest hidden sm:block" style={shadowStyle}>Painel</span>
+                  </div>
+                </button>
+              )}
+
               {showIcons.search && (
                 <div className="hidden lg:flex items-center">
                   {isSearchOpen ? (
