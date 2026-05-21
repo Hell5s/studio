@@ -26,7 +26,9 @@ import {
   Clock,
   Star,
   Megaphone,
-  ShieldCheck
+  ShieldCheck,
+  Menu as MenuIcon,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -71,6 +73,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Real-time Notifications State
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -210,20 +213,42 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'settings', label: 'Configurações', icon: <Settings className="h-4 w-4" /> },
   ];
 
+  const handleTabChange = (tab: AdminTab) => {
+    setActiveTab(tab);
+    setIsSidebarOpen(false);
+  };
+
   return (
     <div className="flex h-screen bg-[#F4F6F8] overflow-hidden font-sans">
+      {/* Overlay for mobile sidebar */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden animate-in fade-in duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-[#2A1F22] text-white flex flex-col shadow-2xl relative z-20">
-        <div className="p-8 border-b border-white/5">
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 bg-[#2A1F22] text-white flex flex-col shadow-2xl transition-transform duration-300 lg:relative lg:translate-x-0",
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-8 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
              <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center text-primary font-bold">TB</div>
-             <h3 className="text-lg font-headline font-bold text-white tracking-tight">Toda Bela Admin</h3>
+             <h3 className="text-lg font-headline font-bold text-white tracking-tight">Toda Bela</h3>
           </div>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-white/40 hover:text-white">
+            <X className="h-6 w-6" />
+          </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 no-scrollbar">
           <button 
-            onClick={() => setIsAddProductOpen(true)}
+            onClick={() => {
+              setIsAddProductOpen(true);
+              setIsSidebarOpen(false);
+            }}
             className="w-full mb-6 bg-accent text-primary font-bold text-[11px] px-4 py-3.5 rounded-xl shadow-lg uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-2"
           >
             <PlusCircle className="h-4 w-4" />
@@ -233,7 +258,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
           {menuItems.map((item) => (
             <button 
               key={item.id} 
-              onClick={() => setActiveTab(item.id as AdminTab)}
+              onClick={() => handleTabChange(item.id as AdminTab)}
               className={cn(
                 "w-full text-left px-4 py-3 rounded-xl text-[12px] font-medium transition-all flex items-center gap-3 relative",
                 activeTab === item.id 
@@ -265,67 +290,73 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="h-20 bg-white border-b border-gray-200 px-10 flex items-center justify-between z-10">
+        <header className="h-16 md:h-20 bg-white border-b border-gray-200 px-4 md:px-10 flex items-center justify-between z-10 shrink-0">
           <div className="flex items-center gap-4">
-             <h1 className="text-xl font-bold text-primary">
+             <button 
+               onClick={() => setIsSidebarOpen(true)}
+               className="lg:hidden p-2 -ml-2 text-primary/60 hover:text-primary transition-colors"
+             >
+               <MenuIcon className="h-6 w-6" />
+             </button>
+             <h1 className="text-base md:text-xl font-bold text-primary truncate max-w-[150px] md:max-w-none">
                {menuItems.find(i => i.id === activeTab)?.label}
              </h1>
           </div>
           
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-2 md:gap-4 items-center">
             <Button 
               onClick={onOpenAI} 
               variant="outline" 
-              className="rounded-full border-accent/20 text-accent hover:bg-accent/5 h-10 px-5 font-bold text-[10px] uppercase tracking-widest"
+              className="rounded-full border-accent/20 text-accent hover:bg-accent/5 h-9 md:h-10 px-3 md:px-5 font-bold text-[9px] md:text-[10px] uppercase tracking-widest"
             >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Redator IA
+              <Sparkles className="md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
+              <span className="hidden md:inline">Redator IA</span>
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="relative h-10 w-10 rounded-full bg-secondary flex items-center justify-center border border-primary/5 cursor-pointer hover:bg-accent/10 transition-colors">
+                <div className="relative h-9 w-9 md:h-10 md:w-10 rounded-full bg-secondary flex items-center justify-center border border-primary/5 cursor-pointer hover:bg-accent/10 transition-colors">
                   {unreadCount > 0 ? (
-                    <BellRing className="h-5 w-5 text-accent animate-bounce" />
+                    <BellRing className="h-4 w-4 md:h-5 md:w-5 text-accent animate-bounce" />
                   ) : (
-                    <Bell className="h-5 w-5 text-primary/40" />
+                    <Bell className="h-4 w-4 md:h-5 md:w-5 text-primary/40" />
                   )}
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center shadow-lg border-2 border-white">
+                    <span className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 rounded-full bg-red-500 text-white text-[8px] md:text-[9px] font-bold flex items-center justify-center shadow-lg border-2 border-white">
                       {unreadCount}
                     </span>
                   )}
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[320px] rounded-2xl border-none shadow-premium p-0 overflow-hidden bg-white mt-2">
-                <DropdownMenuLabel className="bg-primary p-5 text-white font-headline text-lg">
+              <DropdownMenuContent align="end" className="w-[280px] md:w-[320px] rounded-2xl border-none shadow-premium p-0 overflow-hidden bg-white mt-2">
+                <DropdownMenuLabel className="bg-primary p-4 md:p-5 text-white font-headline text-base md:text-lg">
                   Novidades da Boutique
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="m-0" />
-                <div className="max-h-[350px] overflow-y-auto py-2 no-scrollbar">
+                <div className="max-h-[300px] md:max-h-[350px] overflow-y-auto py-2 no-scrollbar">
                   {notifications.length > 0 ? (
                     notifications.map((order) => (
                       <DropdownMenuItem 
                         key={order.id} 
                         onClick={() => {
                           markAsRead(order.id);
-                          setActiveTab('orders');
+                          handleTabChange('orders');
                         }}
                         className={cn(
-                          "px-5 py-4 cursor-pointer flex gap-4 transition-colors",
+                          "px-4 md:px-5 py-3 md:py-4 cursor-pointer flex gap-3 md:gap-4 transition-colors",
                           !readIds.has(order.id) ? "bg-accent/5" : "opacity-60"
                         )}
                       >
-                        <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-primary font-bold shrink-0">
+                        <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-secondary flex items-center justify-center text-primary font-bold shrink-0 text-xs md:text-sm">
                           {order.customer?.name?.[0].toUpperCase() || '#'}
                         </div>
                         <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex justify-between items-start">
-                            <p className="text-[11px] font-bold text-primary truncate">#{order.orderNumber}</p>
-                            <p className="text-[10px] font-bold text-accent">R$ {order.total?.toFixed(2)}</p>
+                            <p className="text-[10px] md:text-[11px] font-bold text-primary truncate">#{order.orderNumber}</p>
+                            <p className="text-[9px] md:text-[10px] font-bold text-accent">R$ {order.total?.toFixed(2)}</p>
                           </div>
-                          <p className="text-[10px] text-muted-foreground truncate">{order.customer?.name}</p>
-                          <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground uppercase font-black tracking-tighter">
+                          <p className="text-[9px] md:text-[10px] text-muted-foreground truncate">{order.customer?.name}</p>
+                          <div className="flex items-center gap-1.5 text-[8px] md:text-[9px] text-muted-foreground uppercase font-black tracking-tighter">
                             <Clock className="h-2.5 w-2.5" /> 
                             {order.createdAt ? new Date(order.createdAt?.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                           </div>
@@ -336,31 +367,31 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
                       </DropdownMenuItem>
                     ))
                   ) : (
-                    <div className="py-12 text-center space-y-3">
-                       <ShoppingBag className="h-10 w-10 text-primary/5 mx-auto" />
-                       <p className="text-[10px] font-bold uppercase tracking-widest text-primary/20">Sem pedidos recentes</p>
+                    <div className="py-10 md:py-12 text-center space-y-3">
+                       <ShoppingBag className="h-8 w-8 md:h-10 md:w-10 text-primary/5 mx-auto" />
+                       <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-primary/20">Sem pedidos recentes</p>
                     </div>
                   )}
                 </div>
                 <DropdownMenuSeparator className="m-0" />
                 <button 
-                  onClick={() => setActiveTab('orders')}
-                  className="w-full py-4 text-[10px] font-bold uppercase tracking-widest text-accent hover:bg-accent/5 transition-colors flex items-center justify-center gap-2"
+                  onClick={() => handleTabChange('orders')}
+                  className="w-full py-3 md:py-4 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-accent hover:bg-accent/5 transition-colors flex items-center justify-center gap-2"
                 >
                   Ver todos os pedidos <ChevronRight className="h-3 w-3" />
                 </button>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center border border-primary/5 cursor-pointer hover:bg-accent/10 transition-colors">
-               <Users className="h-4 w-4 text-primary" />
+            <div className="h-9 w-9 md:h-10 md:w-10 rounded-full bg-secondary flex items-center justify-center border border-primary/5 cursor-pointer hover:bg-accent/10 transition-colors">
+               <Users className="h-4 w-4 md:h-4 md:w-4 text-primary" />
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-10">
-          <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {activeTab === 'overview' && <AdminOverview onNavigate={setActiveTab} />}
+        <div className="flex-1 overflow-y-auto p-4 md:p-10">
+          <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {activeTab === 'overview' && <AdminOverview onNavigate={handleTabChange} />}
             {activeTab === 'products' && <ProductManagement />}
             {activeTab === 'orders' && <OrderManagement />}
             {activeTab === 'marketing' && <AdminMarketing />}
