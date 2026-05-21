@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -24,7 +25,8 @@ import {
   ChevronRight,
   Clock,
   Star,
-  Megaphone
+  Megaphone,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -43,6 +45,7 @@ import { AddProductDialog } from './AddProductDialog';
 import { AdminHeaderSettings } from './AdminHeaderSettings';
 import { AdminReviews } from './AdminReviews';
 import { AdminMarketing } from './AdminMarketing';
+import { AdminTeam } from './AdminTeam';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -60,7 +63,7 @@ interface AdminDashboardProps {
   onExit?: () => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing';
+type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing' | 'team';
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const db = useFirestore();
@@ -172,7 +175,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
       isMounted = false;
       unsubscribe();
     };
-  }, [db, isAdmin, toast]); // toast can be here safely now due to better SDK handling
+  }, [db, isAdmin, toast]);
 
   const markAsRead = (id: string) => {
     const newReadIds = new Set(readIds);
@@ -197,6 +200,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'products', label: 'Produtos', icon: <Package className="h-4 w-4" /> },
     { id: 'categories', label: 'Categorias', icon: <Layers className="h-4 w-4" /> },
     { id: 'marketing', label: 'Marketing', icon: <Megaphone className="h-4 w-4" /> },
+    { id: 'team', label: 'Equipe', icon: <ShieldCheck className="h-4 w-4" /> },
     { id: 'reviews', label: 'Avaliações', icon: <Star className="h-4 w-4" />, badge: pendingReviewsCount },
     { id: 'header', label: 'Cabeçalho', icon: <Layout className="h-4 w-4" /> },
     { id: 'coupons', label: 'Cupons', icon: <Tag className="h-4 w-4" /> },
@@ -360,6 +364,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             {activeTab === 'products' && <ProductManagement />}
             {activeTab === 'orders' && <OrderManagement />}
             {activeTab === 'marketing' && <AdminMarketing />}
+            {activeTab === 'team' && <AdminTeam />}
             {activeTab === 'categories' && <AdminCategories />}
             {activeTab === 'reviews' && <AdminReviews />}
             {activeTab === 'header' && <AdminHeaderSettings />}

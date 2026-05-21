@@ -55,7 +55,8 @@ service cloud.firestore {
 
     match /roles_admin/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if false;
+      // Agora administradores podem gerenciar outros administradores
+      allow write: if isAdmin();
     }
 
     match /newsletter_subscribers/{s} {
