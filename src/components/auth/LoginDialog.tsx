@@ -52,12 +52,20 @@ export function LoginDialog({
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       await signInWithPopup(auth, provider);
       toast({ title: "Bem-vinda!", description: "Acesso realizado com sucesso." });
       setShowLoginForm(false);
       onOpenChange(false);
     } catch (error: any) {
-      toast({ title: "Erro no acesso", description: "Não foi possível entrar com Google.", variant: "destructive" });
+      console.error("Google Login Error:", error);
+      toast({ 
+        title: "Erro no Login Google", 
+        description: error.code === 'auth/unauthorized-domain' 
+          ? "Este domínio não está autorizado no Console do Firebase." 
+          : `Falha: ${error.code || error.message}`, 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(false);
     }

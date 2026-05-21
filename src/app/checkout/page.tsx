@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -24,7 +25,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import Link from 'next/link';
 import { LogoMark } from '@/components/store/LogoMark';
 import { cn } from '@/lib/utils';
@@ -121,10 +122,18 @@ function CheckoutContent() {
     setAuthLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       await signInWithPopup(auth, provider);
       toast({ title: "Bem-vinda!", description: "Conta verificada com sucesso." });
-    } catch (e) {
-      toast({ title: "Erro", description: "Não foi possível entrar com Google.", variant: "destructive" });
+    } catch (e: any) {
+      console.error("Google Auth Error:", e);
+      toast({ 
+        title: "Erro no Login Google", 
+        description: e.code === 'auth/unauthorized-domain' 
+          ? "Este domínio não está autorizado no Console do Firebase." 
+          : `Falha: ${e.code || e.message}`, 
+        variant: "destructive" 
+      });
     } finally {
       setAuthLoading(false);
     }
@@ -139,7 +148,6 @@ function CheckoutContent() {
         setIdentificacao(prev => ({ ...prev, email: authForm.email, nome: authForm.nome }));
         toast({ title: "Conta criada!", description: "Bem-vinda à Toda Bela." });
       } else {
-        const { signInWithEmailAndPassword } = await import('firebase/auth');
         await signInWithEmailAndPassword(auth, authForm.email, authForm.password);
         toast({ title: "Olá novamente!" });
       }
