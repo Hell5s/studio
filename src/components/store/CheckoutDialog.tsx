@@ -69,6 +69,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
   };
 
   const handleGoogleLogin = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -78,11 +79,19 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
       goToCheckout();
     } catch (error: any) {
       console.error("Google Checkout Login Error:", error);
+      let errorMsg = `Falha: ${error.code}`;
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        errorMsg = "Domínio não autorizado. Adicione a URL atual no Console do Firebase.";
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        errorMsg = "A janela de login foi fechada antes de concluir.";
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMsg = "Pop-up bloqueado. Por favor, autorize pop-ups para este site.";
+      }
+
       toast({ 
         title: "Erro no Login Google", 
-        description: error.code === 'auth/unauthorized-domain' 
-          ? "Este domínio não está autorizado no Console do Firebase." 
-          : `Falha: ${error.code || error.message}`, 
+        description: errorMsg, 
         variant: "destructive" 
       });
     } finally {
@@ -186,7 +195,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 <button
                   onClick={handleGoogleLogin}
                   disabled={loading}
-                  className="w-full h-14 flex items-center justify-center gap-3 border border-primary/10 rounded-full hover:bg-secondary/30 transition-all"
+                  className="w-full h-14 flex items-center justify-center gap-3 border border-primary/10 rounded-full hover:bg-secondary/30 transition-all disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin h-4 w-4" /> : (
                     <>

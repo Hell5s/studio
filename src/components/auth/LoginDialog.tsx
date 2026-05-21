@@ -49,6 +49,7 @@ export function LoginDialog({
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   const handleGoogleLogin = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -59,11 +60,19 @@ export function LoginDialog({
       onOpenChange(false);
     } catch (error: any) {
       console.error("Google Login Error:", error);
+      let errorMsg = `Falha: ${error.code}`;
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        errorMsg = "Este domínio não está autorizado no Console do Firebase.";
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        errorMsg = "A janela de login foi fechada antes de concluir.";
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMsg = "Pop-up bloqueado pelo navegador. Por favor, autorize pop-ups.";
+      }
+
       toast({ 
         title: "Erro no Login Google", 
-        description: error.code === 'auth/unauthorized-domain' 
-          ? "Este domínio não está autorizado no Console do Firebase." 
-          : `Falha: ${error.code || error.message}`, 
+        description: errorMsg, 
         variant: "destructive" 
       });
     } finally {
@@ -145,7 +154,7 @@ export function LoginDialog({
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full h-12 flex items-center justify-center gap-3 border border-primary/10 rounded-md hover:bg-secondary/30 transition-all"
+              className="w-full h-12 flex items-center justify-center gap-3 border border-primary/10 rounded-md hover:bg-secondary/30 transition-all disabled:opacity-50"
             >
               {loading ? <Loader2 className="animate-spin h-4 w-4" /> : (
                 <>
@@ -193,7 +202,7 @@ export function LoginDialog({
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full h-12 flex items-center justify-center gap-3 border border-primary/10 rounded-md hover:bg-secondary/30 transition-all"
+              className="w-full h-12 flex items-center justify-center gap-3 border border-primary/10 rounded-md hover:bg-secondary/30 transition-all disabled:opacity-50"
             >
               {loading ? <Loader2 className="animate-spin h-4 w-4" /> : (
                 <>

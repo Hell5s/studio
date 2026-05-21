@@ -119,6 +119,7 @@ function CheckoutContent() {
   }, [user]);
 
   const handleGoogleAuth = async () => {
+    if (authLoading) return;
     setAuthLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -127,11 +128,21 @@ function CheckoutContent() {
       toast({ title: "Bem-vinda!", description: "Conta verificada com sucesso." });
     } catch (e: any) {
       console.error("Google Auth Error:", e);
+      let errorMsg = `Falha no acesso: ${e.code}`;
+      
+      if (e.code === 'auth/unauthorized-domain') {
+        errorMsg = "Este domínio não está autorizado. Adicione a URL atual em: Console do Firebase > Auth > Settings > Authorized Domains.";
+      } else if (e.code === 'auth/popup-closed-by-user') {
+        errorMsg = "A janela de login foi fechada antes de concluir. Tente novamente.";
+      } else if (e.code === 'auth/popup-blocked') {
+        errorMsg = "O navegador bloqueou o pop-up de login. Por favor, autorize pop-ups para este site.";
+      } else if (e.code === 'auth/operation-not-allowed') {
+        errorMsg = "O login com Google não está habilitado no seu Console do Firebase.";
+      }
+
       toast({ 
         title: "Erro no Login Google", 
-        description: e.code === 'auth/unauthorized-domain' 
-          ? "Este domínio não está autorizado no Console do Firebase." 
-          : `Falha: ${e.code || e.message}`, 
+        description: errorMsg, 
         variant: "destructive" 
       });
     } finally {
@@ -423,7 +434,7 @@ function CheckoutContent() {
             <button
               onClick={handleGoogleAuth}
               disabled={authLoading}
-              className="w-full h-14 flex items-center justify-center gap-3 border border-primary/10 rounded-full hover:bg-secondary/30 transition-all"
+              className="w-full h-14 flex items-center justify-center gap-3 border border-primary/10 rounded-full hover:bg-secondary/30 transition-all disabled:opacity-50"
             >
               {authLoading ? <Loader2 className="animate-spin h-4 w-4" /> : (
                 <>
