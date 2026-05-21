@@ -3,7 +3,14 @@
 
 import React, { useState } from 'react';
 import { useAuth, useUser } from '@/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  GoogleAuthProvider, 
+  signInWithPopup,
+  sendPasswordResetEmail
+} from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,7 +26,8 @@ import {
   Package, 
   ChevronRight, 
   LogOut, 
-  LayoutDashboard
+  LayoutDashboard,
+  KeyRound
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -102,6 +110,38 @@ export function LoginDialog({
         title: "Erro no acesso", 
         description: "Verifique suas credenciais e tente novamente.", 
         variant: "destructive" 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      toast({
+        title: "E-mail necessário",
+        description: "Por favor, preencha o campo de e-mail para receber o link de redefinição.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, formData.email);
+      toast({
+        title: "E-mail enviado!",
+        description: "Enviamos um link para você redefinir sua senha. Verifique sua caixa de entrada e spam."
+      });
+    } catch (error: any) {
+      let errorMsg = "Não foi possível enviar o e-mail de recuperação.";
+      if (error.code === 'auth/user-not-found') {
+        errorMsg = "Não encontramos uma conta com este e-mail.";
+      }
+      toast({
+        title: "Erro na redefinição",
+        description: errorMsg,
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -236,16 +276,39 @@ export function LoginDialog({
                   required
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Senha</Label>
-                <Input 
-                  type="password" 
-                  className="h-10 text-xs rounded-lg border-gray-100 bg-secondary/20"
-                  value={formData.password}
-                  onChange={e => setFormData({ ...formData, password: e.target.value })}
-                  required
-                />
-              </div>
+              {!isRegistering && (
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Senha</Label>
+                    <button 
+                      type="button" 
+                      onClick={handleForgotPassword}
+                      className="text-[9px] font-bold uppercase text-accent hover:underline"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                  <Input 
+                    type="password" 
+                    className="h-10 text-xs rounded-lg border-gray-100 bg-secondary/20"
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                </div>
+              )}
+              {isRegistering && (
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Senha</Label>
+                  <Input 
+                    type="password" 
+                    className="h-10 text-xs rounded-lg border-gray-100 bg-secondary/20"
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                </div>
+              )}
               <Button className="w-full h-11 font-bold uppercase tracking-widest bg-primary text-white text-[10px]" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin h-4 w-4" /> : isRegistering ? "Cadastrar" : "Entrar"}
               </Button>
