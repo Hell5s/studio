@@ -55,12 +55,29 @@ const generateBannerTextFlow = ai.defineFlow(
     outputSchema: GenerateBannerTextOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    
-    if (!output) {
-      throw new Error('A IA não retornou um conteúdo válido.');
-    }
+    let lastError;
+    const maxAttempts = 3;
 
-    return output;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const { output } = await prompt(input);
+        
+        if (!output) {
+          throw new Error('A IA não retornou um conteúdo válido.');
+        }
+
+        return output;
+      } catch (error: any) {
+        lastError = error;
+        // Se for erro de sobrecarga (503) ou limite de cota (429), tenta novamente com delay
+        if (error.message?.includes('503') || error.message?.includes('429') || error.message?.includes('high demand')) {
+          await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+          continue;
+        }
+        throw error;
+      }
+    }
+    
+    throw lastError || new Error('Falha na geração de texto após múltiplas tentativas.');
   }
 );

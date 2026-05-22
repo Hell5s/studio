@@ -59,7 +59,23 @@ const adminGenerateProductDescriptionFlow = ai.defineFlow(
     outputSchema: AdminGenerateProductDescriptionOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    let lastError;
+    const maxAttempts = 3;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const { output } = await prompt(input);
+        if (!output) throw new Error('A IA não retornou um conteúdo válido.');
+        return output;
+      } catch (error: any) {
+        lastError = error;
+        if (error.message?.includes('503') || error.message?.includes('429') || error.message?.includes('high demand')) {
+          await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw lastError || new Error('Falha na geração de descrição após múltiplas tentativas.');
   }
 );
