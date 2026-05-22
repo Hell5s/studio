@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview Um agente de IA para gerar textos editoriais (Título, Subtítulo e CTA) para banners de moda usando a API do Groq.
- *
- * - generateBannerTexts - Função que gera os textos baseada em um conceito de campanha.
+ * @fileOverview Um agente de IA especializado em copywriting de moda de luxo para banners da Toda Bela.
+ * 
+ * - generateBannerTexts - Função que gera títulos, subtítulos e CTAs baseados na persona de luxo brasileira.
  */
 
 import { ai } from '@/ai/genkit';
@@ -17,15 +17,36 @@ const GenerateBannerTextInputSchema = z.object({
 export type GenerateBannerTextInput = z.infer<typeof GenerateBannerTextInputSchema>;
 
 const GenerateBannerTextOutputSchema = z.object({
-  title: z.string().describe('Um título curto e impactante para o banner.'),
-  subtitle: z.string().describe('Um subtítulo elegante e fluido.'),
-  ctaText: z.string().describe('Um texto curto para o botão de ação.'),
+  title: z.string().describe('Um título impactante em CAIXA ALTA (máximo 4 palavras).'),
+  subtitle: z.string().describe('Um subtítulo elegante e sofisticado (máximo 10 palavras).'),
+  ctaText: z.string().describe('Um texto de botão irresistível (máximo 2 palavras).'),
 });
 export type GenerateBannerTextOutput = z.infer<typeof GenerateBannerTextOutputSchema>;
 
 export async function generateBannerTexts(input: GenerateBannerTextInput): Promise<GenerateBannerTextOutput> {
   return generateBannerTextFlow(input);
 }
+
+const prompt = ai.definePrompt({
+  name: 'generateBannerTextPrompt',
+  input: { schema: GenerateBannerTextInputSchema },
+  output: { schema: GenerateBannerTextOutputSchema },
+  prompt: `Você é um copywriter especialista em moda feminina de luxo brasileira, com vasto conhecimento em marcas como Animale, Farm, Shoulder e Dress To. 
+A marca é a "Toda Bela - Moda Feminina", com cores vinho (#6E3C47) e dourado (#C7A17A), transmitindo elegância, sofisticação e empoderamento feminino.
+
+Com base no contexto da campanha: "{{#if concept}}{{concept}}{{else}}Moda Feminina Premium{{/if}}"
+Tags e Estilos: "{{#each tags}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}"
+Referência atual: Título: "{{currentTitle}}", Subtítulo: "{{currentSubtitle}}"
+
+Sua missão é criar um copy editorial de alto impacto.
+
+DIRETRIZES:
+1. TÍTULO: 1 título impactante obrigatoriamente em CAIXA ALTA (máximo 4 palavras, poético e poderoso). Inspire-se em frases como: "PRESENÇA QUE INSPIRA", "ELEGÂNCIA ATEMPORAL", "BRILHO PRÓPRIO".
+2. SUBTÍTULO: 1 subtítulo elegante e sofisticado (máximo 10 palavras).
+3. CTA: 1 texto irresistível para o botão de ação, curto e refinado (máximo 2 palavras).
+
+Gere os textos para o banner da Toda Bela.`,
+});
 
 const generateBannerTextFlow = ai.defineFlow(
   {
@@ -34,66 +55,12 @@ const generateBannerTextFlow = ai.defineFlow(
     outputSchema: GenerateBannerTextOutputSchema,
   },
   async (input) => {
-    const concept = input.concept || "Moda Feminina Premium";
-    const tags = (input.tags || []).join(", ");
+    const { output } = await prompt(input);
     
-    const promptMessage = `Você é um especialista em copywriting de moda feminina brasileira de alto padrão. 
-Sua marca chama-se 'Toda Bela', focada em sofisticação, confiança e elegância minimalista.
-
-Com base no contexto da campanha: "${concept}", 
-Tags e Estilos: "${tags}",
-Referência atual (se houver): Título: "${input.currentTitle || ''}", Subtítulo: "${input.currentSubtitle || ''}"
-
-Sua missão é criar um copy editorial de alto impacto.
-
-DIRETRIZES:
-1. TÍTULO: 1 título impactante obrigatoriamente em CAIXA ALTA (máximo 4 palavras).
-2. SUBTÍTULO: 1 subtítulo elegante, sofisticado e fluido (máximo 10 palavras).
-3. CTA: 1 texto para o botão de ação, curto e refinado (máximo 2 palavras).
-
-Responda APENAS em JSON no seguinte formato: { "title": "...", "subtitle": "...", "cta": "..." }`;
-
-    try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer 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',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
-          messages: [
-            { role: 'system', content: 'Você é um assistente de redação de moda de luxo que fala apenas JSON.' },
-            { role: 'user', content: promptMessage }
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.7,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erro na API Groq: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      let content = data.choices?.[0]?.message?.content;
-
-      if (!content) throw new Error('A IA não retornou um conteúdo válido.');
-
-      // Limpeza de possíveis blocos de código markdown
-      content = content.replace(/```json/g, '').replace(/```/g, '').trim();
-
-      const result = JSON.parse(content);
-      
-      return GenerateBannerTextOutputSchema.parse({
-        title: result.title || 'ESSÊNCIA TODA BELA',
-        subtitle: result.subtitle || 'Elegância em cada movimento.',
-        ctaText: result.cta || 'CONFIRA'
-      });
-    } catch (error: any) {
-      console.error('Erro Groq Flow:', error);
-      throw new Error(error.message || 'Erro inesperado no processamento da IA');
+    if (!output) {
+      throw new Error('A IA não retornou um conteúdo válido.');
     }
+
+    return output;
   }
 );
