@@ -10,23 +10,43 @@ export const enviarEmailPosCompra = onDocumentCreated(
     const order = event.data?.data();
     const orderId = event.params.orderId;
 
-    if (!order || !order.customerEmail) return;
+    if (!order) return;
+
+    // Suporta os dois formatos: customer.email ou customerEmail
+    const email = order.customerEmail || order.customer?.email;
+    const name = order.customerName || order.customer?.name;
+    const items = order.items || [];
+    const total = order.total;
+    const address = order.customerAddress || {
+      street: order.customer?.address || '',
+      number: '',
+      neighborhood: '',
+      city: order.customer?.city || '',
+      state: order.customer?.state || '',
+      zipCode: order.customer?.zip || '',
+    };
+
+    if (!email) {
+      console.log("Pedido sem email, pulando envio.");
+      return;
+    }
 
     const html = gerarEmailPosCompra({
       orderId,
-      customerName: order.customerName,
-      items: order.items,
-      total: order.total,
-      address: order.customerAddress,
+      customerName: name || 'Cliente',
+      items,
+      total,
+      address,
     });
 
     try {
       await resend.emails.send({
         from: "Toda Bela <onboarding@resend.dev>",
-        to: order.customerEmail,
-        subject: `✨ Pedido confirmado! Obrigada, ${order.customerName.split(" ")[0]} 💛`,
+        to: email,
+        subject: `✨ Pedido confirmado! Obrigada, ${(name || 'cliente').split(" ")[0]} 💛`,
         html,
       });
+      console.log(`Email enviado para ${email}`);
     } catch (error) {
       console.error("Erro ao enviar email:", error);
     }
