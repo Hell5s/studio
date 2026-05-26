@@ -359,6 +359,23 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 <div className="space-y-2">
                   <Label>Custo no Fornecedor (R$)</Label>
                   <Input value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} placeholder="Ex: 45.00" className="bg-gray-50/50" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const custo = parseFloat(formData.cost);
+                      if (!custo || isNaN(custo)) return;
+                      const preco = (Math.ceil(custo * 3) - 0.10).toFixed(2);
+                      const original = (Math.ceil(custo * 4) - 0.10).toFixed(2);
+                      setFormData({
+                        ...formData,
+                        price: preco,
+                        oldPrice: original
+                      });
+                    }}
+                    className="flex items-center gap-2 h-9 px-4 rounded-full bg-accent/10 text-accent text-[9px] font-bold uppercase tracking-widest border border-accent/20 hover:bg-accent hover:text-white transition-all mt-2"
+                  >
+                    ✦ Calcular Preço com IA
+                  </button>
                 </div>
                 <div className="space-y-2">
                   <Label>Nome do Fornecedor</Label>
