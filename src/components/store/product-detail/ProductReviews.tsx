@@ -295,7 +295,15 @@ export function ProductReviews({ product }: { product: any }) {
                     onChange={e => setNewReview({...newReview, size: e.target.value})}
                     className="w-full h-14 rounded-2xl bg-secondary/20 border-none px-6 text-sm outline-none font-medium appearance-none cursor-pointer"
                   >
-                    <option>P</option><option>M</option><option>G</option><option>GG</option>
+                    <option>PP</option>
+                    <option>P</option>
+                    <option>M</option>
+                    <option>G</option>
+                    <option>GG</option>
+                    <option>XG</option>
+                    <option>G1</option>
+                    <option>G2</option>
+                    <option>Único</option>
                   </select>
                 </div>
               </div>
