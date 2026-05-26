@@ -92,7 +92,9 @@ export const ProductCard = React.memo(function ProductCard({
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
         {isValidUrl && !hasError ? (
           <Image
-            src={image}
+            src={image?.includes('cloudinary.com') 
+              ? image.replace('/upload/', '/upload/q_auto,f_auto,w_600/') 
+              : image}
             alt={name}
             fill
             loading="lazy"
