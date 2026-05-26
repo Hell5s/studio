@@ -213,6 +213,27 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     }
   };
 
+  const handleCalculateIA = () => {
+    const cost = parseFloat(formData.cost);
+    if (isNaN(cost)) {
+      toast({ title: "Custo inválido", variant: "destructive" });
+      return;
+    }
+    
+    // Venda = custo * 3 arredondado para o ,90 mais próximo
+    const price = (Math.ceil(cost * 3) - 0.10).toFixed(2);
+    // De = custo * 4 arredondado para o ,90 mais próximo
+    const oldPrice = (Math.ceil(cost * 4) - 0.10).toFixed(2);
+    
+    setFormData({
+      ...formData,
+      price,
+      oldPrice
+    });
+    
+    toast({ title: "Preços calculados!", description: "Margem de 3x aplicada com sucesso." });
+  };
+
   const handleSave = async () => {
     const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
     if (!formData.name || !formData.price || !finalMainImage) {
@@ -384,9 +405,26 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
            <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-6">
             <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4"><TrendingUp className="h-4 w-4" /><h3 className="text-[10px] font-bold uppercase tracking-[0.3em]">Valores</h3></div>
             <div className="space-y-4">
-              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço de Venda (R$)</Label><Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none" /></div>
-              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço Original / "De" (R$)</Label><Input type="number" value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none" /></div>
-              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Estoque</Label><Input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none" /></div>
+              <div className="grid gap-2">
+                <Label className="ml-4 text-[9px] uppercase font-bold text-muted-foreground">Custo no Fornecedor (R$)</Label>
+                <Input type="number" value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none px-6" />
+                <Button 
+                  type="button"
+                  variant="ghost"
+                  onClick={handleCalculateIA}
+                  className="h-9 px-4 rounded-full bg-accent/10 text-accent text-[9px] font-bold uppercase tracking-widest hover:bg-accent hover:text-white transition-all w-fit ml-4"
+                >
+                  <Sparkles className="h-3.5 w-3.5 mr-2" /> Calcular com IA
+                </Button>
+                {formData.cost && formData.price && (
+                  <p className="text-[9px] text-emerald-600 font-bold uppercase italic ml-4">
+                    Lucro: R$ {(parseFloat(formData.price) - parseFloat(formData.cost)).toFixed(2)}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço de Venda (R$)</Label><Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none px-6" /></div>
+              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço Original / "De" (R$)</Label><Input type="number" value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none px-6" /></div>
+              <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Estoque</Label><Input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none px-6" /></div>
             </div>
           </Card>
 
