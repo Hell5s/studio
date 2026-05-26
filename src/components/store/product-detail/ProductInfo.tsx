@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Share2, Star, Minus, Plus, Ruler, ShoppingBag } from 'lucide-react';
+import { Share2, Star, Minus, Plus, Ruler, ShoppingBag, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -77,6 +77,8 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+  const isValidUrl = (url: any) => typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
+
   return (
     <div className="space-y-10">
       <div className="space-y-4">
@@ -121,34 +123,45 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
             Cor: <span className="text-primary font-black ml-2">{selectedColor || 'SELECIONE'}</span>
           </p>
           <div className="flex flex-wrap gap-3 md:gap-4">
-            {colorVariations.map((v: any, idx: number) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedColor(v.color)}
-                className={cn(
-                  "group flex flex-col items-center gap-3 transition-all min-h-[44px]",
-                  selectedColor === v.color ? "opacity-100" : "opacity-60 hover:opacity-100"
-                )}
-              >
-                <div className={cn(
-                  "relative h-20 md:h-24 w-16 md:w-20 overflow-hidden border-2 transition-all shadow-md",
-                  selectedColor === v.color ? "border-primary ring-4 ring-primary/5 scale-105" : "border-transparent"
-                )}>
-                  <Image 
-                    src={v.image || product.image} 
-                    alt={v.color} 
-                    fill 
-                    className="object-cover" 
-                  />
-                </div>
-                <span className={cn(
-                  "text-[9px] font-bold uppercase tracking-widest",
-                  selectedColor === v.color ? "text-primary" : "text-muted-foreground"
-                )}>
-                  {v.color}
-                </span>
-              </button>
-            ))}
+            {colorVariations.map((v: any, idx: number) => {
+              const imgUrl = v.image || product.image;
+              const hasValidImage = isValidUrl(imgUrl);
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedColor(v.color)}
+                  className={cn(
+                    "group flex flex-col items-center gap-3 transition-all min-h-[44px]",
+                    selectedColor === v.color ? "opacity-100" : "opacity-60 hover:opacity-100"
+                  )}
+                >
+                  <div className={cn(
+                    "relative h-20 md:h-24 w-16 md:w-20 overflow-hidden border-2 transition-all shadow-md bg-secondary/20",
+                    selectedColor === v.color ? "border-primary ring-4 ring-primary/5 scale-105" : "border-transparent"
+                  )}>
+                    {hasValidImage ? (
+                      <Image 
+                        src={imgUrl} 
+                        alt={v.color} 
+                        fill 
+                        className="object-cover" 
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Camera className="h-5 w-5 text-primary/10" />
+                      </div>
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-[9px] font-bold uppercase tracking-widest",
+                    selectedColor === v.color ? "text-primary" : "text-muted-foreground"
+                  )}>
+                    {v.color}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

@@ -59,8 +59,10 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
     setErrorImages(prev => ({ ...prev, [idx]: true }));
   };
 
+  const isValidUrl = (url: any) => typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
+
   const renderImage = (img: string, idx: number, isPriority = false) => {
-    if (errorImages[idx]) {
+    if (errorImages[idx] || !isValidUrl(img)) {
       return (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-300">
           <Camera className="h-12 w-12 mb-3 opacity-20" />

@@ -85,10 +85,12 @@ export const ProductCard = React.memo(function ProductCard({
     }
   };
 
+  const isValidUrl = image && typeof image === 'string' && image.length > 0 && (image.startsWith('http') || image.startsWith('/'));
+
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
-        {!hasError ? (
+        {isValidUrl && !hasError ? (
           <Image
             src={image}
             alt={name}
