@@ -77,7 +77,7 @@ export function AdminReviews() {
   const StarRating = ({ rating }: { rating: number }) => (
     <div className="flex gap-0.5">
       {[...Array(5)].map((_, i) => (
-        <Star key={i} className={cn("h-3 w-3", i < rating ? "fill-accent text-accent" : "text-gray-200 fill-current")} />
+        <Star key={i} className={cn("h-3 w-3", i < rating ? "fill-current text-accent" : "text-gray-200 fill-current")} />
       ))}
     </div>
   );
@@ -177,7 +177,6 @@ export function AdminReviews() {
                         <p className="text-sm font-bold text-primary uppercase tracking-tight">{review.user}</p>
                         <div className="flex items-center gap-2">
                            <StarRating rating={review.rating} />
-                           <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">TAM: {review.size}</span>
                         </div>
                       </div>
                     </div>
