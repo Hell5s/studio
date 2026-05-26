@@ -232,7 +232,7 @@ export function ProductReviews({ product }: { product: any }) {
                     <div className="flex items-center gap-3">
                        <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-[10px] font-black text-primary">{review.user[0]}</div>
                        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
-                        {review.user} <span className="mx-3 text-primary/10">|</span> <span className="text-accent">TAM: {review.size}</span>
+                        {review.user}
                       </p>
                     </div>
                     {review.recommended && (
