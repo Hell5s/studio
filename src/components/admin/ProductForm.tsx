@@ -220,9 +220,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       return;
     }
     
-    // Venda = custo * 3 arredondado para o ,90 mais próximo
     const price = (Math.ceil(cost * 3) - 0.10).toFixed(2);
-    // De = custo * 4 arredondado para o ,90 mais próximo
     const oldPrice = (Math.ceil(cost * 4) - 0.10).toFixed(2);
     
     setFormData({
@@ -296,32 +294,9 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4"><Box className="h-5 w-5" /><h2 className="text-[11px] font-bold uppercase tracking-[0.4em]">Informações Principais</h2></div>
               <div className="grid gap-6">
                 <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Nome do Produto</Label><Input value={formData.name} onChange={handleNameChange} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
-                <div className="grid md:grid-cols-2 gap-6">
-                   <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Coleção</Label><Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
-                   <div className="grid gap-2">
-                     <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos Disponíveis</Label>
-                     <div className="flex flex-wrap gap-2 p-4 bg-secondary/20 rounded-2xl">
-                       {['PP', 'P', 'M', 'G', 'GG', 'XG', 'Único'].map(size => { 
-                         const selected = formData.sizes.split(',').map((s: string) => s.trim()).includes(size); 
-                         return (
-                           <button 
-                             key={size} 
-                             type="button" 
-                             onClick={() => { 
-                               const current = formData.sizes.split(',').map((s: string) => s.trim()).filter(Boolean); 
-                               const updated = selected ? current.filter((s: string) => s !== size) : [...current, size]; 
-                               setFormData({...formData, sizes: updated.join(', ')}); 
-                             }} 
-                             className={`h-9 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${selected ? 'bg-primary text-white border-primary' : 'bg-white text-primary/40 border-primary/10'}`}
-                           >
-                             {size}
-                           </button>
-                         );
-                       })}
-                     </div>
-                     <p className="text-[9px] text-muted-foreground ml-4">Selecionados: {formData.sizes || 'nenhum'}</p>
-                   </div>
-                </div>
+                
+                <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Coleção</Label><Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
+                <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos Disponíveis</Label><div className="flex flex-wrap gap-2 p-4 bg-secondary/20 rounded-2xl">{['PP','P','M','G','GG','XG','Único'].map(size => { const selected = formData.sizes.split(',').map((s:string)=>s.trim()).includes(size); return (<button key={size} type="button" onClick={()=>{const current=formData.sizes.split(',').map((s:string)=>s.trim()).filter(Boolean);const updated=selected?current.filter((s:string)=>s!==size):[...current,size];setFormData({...formData,sizes:updated.join(', ')});}} className={`h-9 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${selected?'bg-primary text-white border-primary':'bg-white text-primary/40 border-primary/10'}`}>{size}</button>);})}</div><p className="text-[9px] text-muted-foreground ml-4 mt-1">Selecionados: {formData.sizes||'nenhum'}</p></div>
               </div>
             </div>
 
