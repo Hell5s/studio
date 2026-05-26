@@ -289,6 +289,33 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
                   </div>
                 </div>
+                
+                <div className="md:col-span-2 space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tamanhos Disponíveis</Label>
+                  <div className="flex flex-wrap gap-2 p-4 bg-white border border-gray-100 rounded-2xl">
+                    {['PP','P','M','G','GG','XG','Único'].map(size => {
+                      const selected = formData.sizes.split(',').map((s:string)=>s.trim()).includes(size);
+                      return (
+                        <button 
+                          key={size} 
+                          type="button" 
+                          onClick={()=>{
+                            const current = formData.sizes.split(',').map((s:string)=>s.trim()).filter(Boolean);
+                            const updated = selected ? current.filter((s:string)=>s!==size) : [...current, size];
+                            setFormData({...formData, sizes: updated.join(', ')});
+                          }} 
+                          className={cn(
+                            "h-9 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all",
+                            selected ? 'bg-primary text-white border-primary' : 'bg-white text-primary/40 border-primary/10'
+                          )}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[9px] text-muted-foreground ml-2">Selecionados: {formData.sizes || 'nenhum'}</p>
+                </div>
               </div>
             </section>
 
