@@ -277,7 +277,29 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                 <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Nome do Produto</Label><Input value={formData.name} onChange={handleNameChange} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
                 <div className="grid md:grid-cols-2 gap-6">
                    <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Coleção</Label><Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
-                   <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos</Label><Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
+                   <div className="grid gap-2">
+                     <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos Disponíveis</Label>
+                     <div className="flex flex-wrap gap-2 p-4 bg-secondary/20 rounded-2xl">
+                       {['PP', 'P', 'M', 'G', 'GG', 'XG', 'Único'].map(size => { 
+                         const selected = formData.sizes.split(',').map((s: string) => s.trim()).includes(size); 
+                         return (
+                           <button 
+                             key={size} 
+                             type="button" 
+                             onClick={() => { 
+                               const current = formData.sizes.split(',').map((s: string) => s.trim()).filter(Boolean); 
+                               const updated = selected ? current.filter((s: string) => s !== size) : [...current, size]; 
+                               setFormData({...formData, sizes: updated.join(', ')}); 
+                             }} 
+                             className={`h-9 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${selected ? 'bg-primary text-white border-primary' : 'bg-white text-primary/40 border-primary/10'}`}
+                           >
+                             {size}
+                           </button>
+                         );
+                       })}
+                     </div>
+                     <p className="text-[9px] text-muted-foreground ml-4">Selecionados: {formData.sizes || 'nenhum'}</p>
+                   </div>
                 </div>
               </div>
             </div>
