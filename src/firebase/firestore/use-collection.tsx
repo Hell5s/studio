@@ -37,6 +37,7 @@ export function useCollection<T = any>(
 
   useEffect(() => {
     let isMounted = true;
+    let unsubscribe: (() => void) | undefined;
 
     if (!targetRefOrQuery) {
       setData(null);
@@ -48,58 +49,67 @@ export function useCollection<T = any>(
     setIsLoading(true);
     setError(null);
 
-    const unsubscribe = onSnapshot(
-      targetRefOrQuery,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        if (!isMounted) return;
-
-        const results: WithId<T>[] = [];
-        snapshot.forEach((doc) => {
-          results.push({ ...(doc.data() as T), id: doc.id });
-        });
-        setData(results);
-        setError(null);
-        setIsLoading(false);
-      },
-      (serverError: FirestoreError) => {
-        if (!isMounted) return;
-
-        // CRITICAL: Defer the error handling to the next execution cycle.
-        // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK.
-        setTimeout(() => {
+    try {
+      unsubscribe = onSnapshot(
+        targetRefOrQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
           if (!isMounted) return;
 
-          let path = 'collection-query';
-          try {
-            if (targetRefOrQuery) {
-              if ('path' in targetRefOrQuery) {
-                path = (targetRefOrQuery as any).path;
-              } else if ((targetRefOrQuery as any)._query?.path?.toString()) {
-                path = (targetRefOrQuery as any)._query.path.toString();
-              }
-            }
-          } catch (e) {
-            // Silently fallback
-          }
-
-          const contextualError = new FirestorePermissionError({
-            operation: 'list',
-            path,
+          const results: WithId<T>[] = [];
+          snapshot.forEach((doc) => {
+            results.push({ ...(doc.data() as T), id: doc.id });
           });
-
-          errorEmitter.emit('permission-error', contextualError);
-          setError(contextualError);
-          setData(null);
+          setData(results);
+          setError(null);
           setIsLoading(false);
-        }, 0);
+        },
+        (serverError: FirestoreError) => {
+          if (!isMounted) return;
+
+          // CRITICAL: Defer the error handling to the next execution cycle.
+          // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK 11.9.0
+          // which occurs when state updates happen during the listener lifecycle.
+          setTimeout(() => {
+            if (!isMounted) return;
+
+            let path = 'collection-query';
+            try {
+              if (targetRefOrQuery) {
+                if ('path' in targetRefOrQuery) {
+                  path = (targetRefOrQuery as any).path;
+                } else if ((targetRefOrQuery as any)._query?.path?.toString()) {
+                  path = (targetRefOrQuery as any)._query.path.toString();
+                }
+              }
+            } catch (e) {
+              // Silently fallback
+            }
+
+            const contextualError = new FirestorePermissionError({
+              operation: 'list',
+              path,
+            });
+
+            errorEmitter.emit('permission-error', contextualError);
+            setError(contextualError);
+            setData(null);
+            setIsLoading(false);
+          }, 0);
+        }
+      );
+    } catch (e) {
+      // Catch synchronous subscription errors
+      if (isMounted) {
+        setIsLoading(false);
+        console.error("Firestore subscription failed:", e);
       }
-    );
+    }
 
     return () => {
       isMounted = false;
-      unsubscribe();
-      // Ensure loading state is cleaned up if the query changes rapidly
-      setIsLoading(false);
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
   }, [targetRefOrQuery]); 
   

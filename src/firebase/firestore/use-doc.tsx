@@ -36,6 +36,7 @@ export function useDoc<T = any>(
 
   useEffect(() => {
     let isMounted = true;
+    let unsubscribe: (() => void) | undefined;
 
     if (!memoizedDocRef) {
       setData(null);
@@ -47,44 +48,52 @@ export function useDoc<T = any>(
     setIsLoading(true);
     setError(null);
 
-    const unsubscribe = onSnapshot(
-      memoizedDocRef,
-      (snapshot: DocumentSnapshot<DocumentData>) => {
-        if (!isMounted) return;
-
-        if (snapshot.exists()) {
-          setData({ ...(snapshot.data() as T), id: snapshot.id });
-        } else {
-          setData(null);
-        }
-        setError(null);
-        setIsLoading(false);
-      },
-      (serverError: FirestoreError) => {
-        if (!isMounted) return;
-
-        // CRITICAL: Defer the error handling to the next execution cycle.
-        // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK.
-        setTimeout(() => {
+    try {
+      unsubscribe = onSnapshot(
+        memoizedDocRef,
+        (snapshot: DocumentSnapshot<DocumentData>) => {
           if (!isMounted) return;
 
-          const contextualError = new FirestorePermissionError({
-            operation: 'get',
-            path: memoizedDocRef ? memoizedDocRef.path : 'unknown-doc',
-          });
-
-          errorEmitter.emit('permission-error', contextualError);
-          setError(contextualError);
-          setData(null);
+          if (snapshot.exists()) {
+            setData({ ...(snapshot.data() as T), id: snapshot.id });
+          } else {
+            setData(null);
+          }
+          setError(null);
           setIsLoading(false);
-        }, 0);
+        },
+        (serverError: FirestoreError) => {
+          if (!isMounted) return;
+
+          // CRITICAL: Defer the error handling to the next execution cycle.
+          // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK 11.9.0.
+          setTimeout(() => {
+            if (!isMounted) return;
+
+            const contextualError = new FirestorePermissionError({
+              operation: 'get',
+              path: memoizedDocRef ? memoizedDocRef.path : 'unknown-doc',
+            });
+
+            errorEmitter.emit('permission-error', contextualError);
+            setError(contextualError);
+            setData(null);
+            setIsLoading(false);
+          }, 0);
+        }
+      );
+    } catch (e) {
+      if (isMounted) {
+        setIsLoading(false);
+        console.error("Firestore document subscription failed:", e);
       }
-    );
+    }
 
     return () => {
       isMounted = false;
-      unsubscribe();
-      setIsLoading(false);
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
   }, [memoizedDocRef]);
 

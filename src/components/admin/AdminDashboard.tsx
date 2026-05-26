@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -127,58 +126,67 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     }
   }, []);
 
-  // Sync real-time orders
+  // Sync real-time orders with churn protection
   useEffect(() => {
     let isMounted = true;
+    let unsubscribe: (() => void) | undefined;
+
     if (!db || !isAdmin) return;
 
     const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(10));
     
-    const unsubscribe = onSnapshot(q, 
-      (snapshot) => {
-        if (!isMounted) return;
-
-        const orders: any[] = [];
-        snapshot.forEach((doc) => {
-          orders.push({ id: doc.id, ...doc.data() });
-        });
-
-        if (!initialLoadRef.current) {
-          snapshot.docChanges().forEach((change) => {
-            if (change.type === 'added') {
-              const newOrder = change.doc.data();
-              toast({
-                title: "🛍️ Novo Pedido!",
-                description: `Pedido #${newOrder.orderNumber} - R$ ${newOrder.total?.toFixed(2)}`,
-                duration: 5000,
-              });
-              playNotificationSound();
-            }
-          });
-        }
-
-        setNotifications(orders);
-        initialLoadRef.current = false;
-      },
-      (error) => {
-        if (!isMounted) return;
-
-        setTimeout(() => {
+    try {
+      unsubscribe = onSnapshot(q, 
+        (snapshot) => {
           if (!isMounted) return;
-          const permissionError = new FirestorePermissionError({
-            path: 'orders',
-            operation: 'list',
+
+          const orders: any[] = [];
+          snapshot.forEach((doc) => {
+            orders.push({ id: doc.id, ...doc.data() });
           });
-          errorEmitter.emit('permission-error', permissionError);
-        }, 0);
-      }
-    );
+
+          if (!initialLoadRef.current) {
+            snapshot.docChanges().forEach((change) => {
+              if (change.type === 'added') {
+                const newOrder = change.doc.data();
+                toast({
+                  title: "🛍️ Novo Pedido!",
+                  description: `Pedido #${newOrder.orderNumber} - R$ ${newOrder.total?.toFixed(2)}`,
+                  duration: 5000,
+                });
+                playNotificationSound();
+              }
+            });
+          }
+
+          setNotifications(orders);
+          initialLoadRef.current = false;
+        },
+        (error) => {
+          if (!isMounted) return;
+
+          // Defer error updates to avoid assertion failures in Firebase v11.9.0
+          setTimeout(() => {
+            if (!isMounted) return;
+            const permissionError = new FirestorePermissionError({
+              path: 'orders',
+              operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+          }, 0);
+        }
+      );
+    } catch (e) {
+      console.error("Notifications listener failed:", e);
+    }
 
     return () => {
       isMounted = false;
-      unsubscribe();
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
-  }, [db, isAdmin, toast]);
+  }, [db, isAdmin]); // Removed 'toast' dependency to reduce listener churn
 
   const markAsRead = (id: string) => {
     const newReadIds = new Set(readIds);
