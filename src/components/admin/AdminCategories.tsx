@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -21,7 +20,6 @@ import {
 
 export function AdminCategories() {
   const db = useFirestore();
-  const { storage } = useFirebase();
   const { user } = useUser();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,25 +36,28 @@ export function AdminCategories() {
   const q = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('order', 'asc')), [db]);
   const { data: categories, isLoading } = useCollection(q);
 
+  const uploadToCloudinary = async (file: File) => {
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'todabela_upload');
+    
+    const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
+      method: 'POST',
+      body: data
+    });
+
+    if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
+    const result = await response.json();
+    return result.secure_url;
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    if (!user) {
-      toast({ title: "Acesso Negado", description: "Você precisa estar logada para enviar fotos.", variant: "destructive" });
-      return;
-    }
-
-    if (!storage) {
-      toast({ title: "Serviço Indisponível", description: "O serviço de imagens não foi inicializado.", variant: "destructive" });
-      return;
-    }
-    
     setUploading(true);
     try {
-      const storageRef = ref(storage, `categories/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
+      const url = await uploadToCloudinary(file);
       
       if (isEdit) {
         setEditImage(url);
@@ -64,14 +65,12 @@ export function AdminCategories() {
         setNewCatImage(url);
       }
       
-      toast({ title: "Imagem carregada com sucesso!" });
+      toast({ title: "Imagem carregada no Cloudinary!" });
     } catch (error: any) {
       console.error("Erro upload categoria:", error);
       toast({ 
         title: "Erro no upload", 
-        description: error.message?.includes('permission') 
-          ? "Sem permissão para salvar no servidor. Verifique se as regras de Storage foram aplicadas."
-          : "Verifique sua conexão e tente novamente.",
+        description: "Falha ao enviar para o Cloudinary. Verifique sua conexão.",
         variant: "destructive" 
       });
     } finally {
@@ -115,7 +114,6 @@ export function AdminCategories() {
   const handleDelete = (id: string, name: string) => {
     if (!id) return;
     
-    // Removido confirm() para evitar bloqueios no Studio e garantir funcionalidade direta
     try {
       const categoryRef = doc(db, 'categories', id);
       deleteDocumentNonBlocking(categoryRef);
