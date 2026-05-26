@@ -293,7 +293,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tamanhos Disponíveis</Label>
                   <div className="flex flex-wrap gap-2 p-4 bg-white border border-gray-100 rounded-2xl">
-                    {['PP','P','M','G','GG','XG','Único'].map(size => {
+                    {['PP','P','M','G','GG','XG','G1','G2','Único'].map(size => {
                       const selected = formData.sizes.split(',').map((s:string)=>s.trim()).includes(size);
                       return (
                         <button 
