@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -15,6 +14,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  'pending': { label: 'Pedido Recebido', color: 'bg-[#F7E8EA] text-[#6E3C47] border-[#E9C9CF]', icon: <Clock className="h-3 w-3" /> },
+  'paid': { label: 'Pagamento Confirmado', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
+  'processing': { label: 'Em Processamento', color: 'bg-orange-50 text-orange-700 border-orange-100', icon: <Tag className="h-3 w-3" /> },
+  'shipped': { label: 'Enviado', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: <Truck className="h-3 w-3" /> },
+  'delivered': { label: 'Entregue', color: 'bg-green-100 text-green-800 border-green-200', icon: <CheckCircle2 className="h-3 w-3" /> },
+  'canceled': { label: 'Cancelado', color: 'bg-red-50 text-red-700 border-red-100', icon: <XCircle className="h-3 w-3" /> },
+  'refunded': { label: 'Reembolsado', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <RefreshCw className="h-3 w-3" /> },
   'Pedido recebido': { label: 'Pedido Recebido', color: 'bg-[#F7E8EA] text-[#6E3C47] border-[#E9C9CF]', icon: <Clock className="h-3 w-3" /> },
   'Pago': { label: 'Pagamento Confirmado', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
   'Comprado na Shopee': { label: 'Em Processamento', color: 'bg-orange-50 text-orange-700 border-orange-100', icon: <Tag className="h-3 w-3" /> },
@@ -36,14 +42,12 @@ export default function MeusPedidosPage() {
     }
   }, [user, isUserLoading, router]);
 
-  // Verificação de Admin para a Navbar
   const adminDocRef = useMemoFirebase(() => {
     return user ? doc(db, 'roles_admin', user.uid) : null;
   }, [db, user]);
   const { data: adminRole } = useDoc(adminDocRef);
   const isAdmin = !!adminRole || user?.uid === 'LXaJZDm6tNUQLh3ooghcg6EQgJ43';
 
-  // Consulta de Pedidos filtrada por userId
   const ordersQuery = useMemo(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -147,11 +151,11 @@ export default function MeusPedidosPage() {
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Loja...</p>
             </div>
           ) : !user ? (
-            null // useEffect handles redirect
+            null
           ) : orders && orders.length > 0 ? (
             <div className="grid gap-12 max-w-5xl mx-auto">
               {orders.map((order: any) => {
-                const status = statusConfig[order.status] || statusConfig['Pedido recebido'];
+                const status = statusConfig[order.status] || statusConfig['pending'];
                 return (
                   <article key={order.id} className="bg-white rounded-[3rem] border border-primary/5 shadow-editorial overflow-hidden hover:shadow-premium transition-all duration-700">
                     <div className="p-8 md:p-12 border-b border-primary/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
@@ -200,30 +204,6 @@ export default function MeusPedidosPage() {
                                 ))}
                              </div>
                           </div>
-                          
-                          {order.trackingCode && order.trackingCode !== "Aguardando envio" && (
-                            <div className="p-8 rounded-[2.5rem] bg-primary text-primary-foreground space-y-6 relative overflow-hidden group">
-                               <div className="absolute right-0 top-0 p-8 opacity-10 -rotate-12 transform group-hover:scale-110 transition-transform duration-1000">
-                                  <Truck className="h-32 w-32" />
-                               </div>
-                               <div className="flex items-center gap-3 relative z-10">
-                                  <Truck className="h-6 w-6 text-accent" />
-                                  <p className="text-xs font-bold uppercase tracking-[0.3em] text-accent">Localizador de Entrega</p>
-                               </div>
-                               <div className="flex justify-between items-center relative z-10">
-                                  <p className="text-2xl font-mono font-medium tracking-tighter">{order.trackingCode}</p>
-                                  <button 
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(order.trackingCode);
-                                      toast({ title: "Localizador Copiado" });
-                                    }}
-                                    className="text-[10px] font-bold uppercase tracking-widest underline underline-offset-4 decoration-accent hover:text-accent transition-colors"
-                                  >
-                                    Copiar
-                                  </button>
-                               </div>
-                            </div>
-                          )}
                        </div>
 
                        <div className="lg:col-span-5 bg-secondary/20 p-8 md:p-12 space-y-12 border-l border-primary/5">

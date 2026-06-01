@@ -12,7 +12,6 @@ export const enviarEmailPosCompra = onDocumentCreated(
 
     if (!order) return;
 
-    // Suporta os dois formatos: customer.email ou customerEmail
     const email = order.customerEmail || order.customer?.email;
     const name = order.customerName || order.customer?.name;
     const items = order.items || [];
@@ -26,18 +25,9 @@ export const enviarEmailPosCompra = onDocumentCreated(
       zipCode: order.customer?.zip || '',
     };
 
-    if (!email) {
-      console.log("Pedido sem email, pulando envio.");
-      return;
-    }
+    if (!email) return;
 
-    const html = gerarEmailPosCompra({
-      orderId,
-      customerName: name || 'Cliente',
-      items,
-      total,
-      address,
-    });
+    const html = gerarEmailPosCompra({ orderId, customerName: name || 'Cliente', items, total, address });
 
     try {
       await resend.emails.send({
