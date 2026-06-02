@@ -25,6 +25,7 @@ export async function GET(request: Request) {
     if (!orderSnap.exists()) return NextResponse.json({ status: 'not_found' });
     return NextResponse.json({ status: orderSnap.data().status });
   } catch (error: any) {
+    console.error('Status API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

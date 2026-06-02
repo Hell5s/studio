@@ -1,20 +1,32 @@
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+
+function getDb() {
+  const config = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  };
+  const app = getApps().length > 0 ? getApp() : initializeApp(config);
+  return getFirestore(app);
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const { searchParams } = new URL(request.url);
-    
-    // MP envia tanto via query params quanto via body
+
     const type = searchParams.get('type') || body.type || body.action;
     const dataId = searchParams.get('data.id') || body.data?.id || searchParams.get('id');
 
-    console.log('Webhook recebido:', { type, dataId, body: JSON.stringify(body) });
+    console.log('Webhook recebido:', { type, dataId });
 
-    const isPayment = type === 'payment' || 
-                      body.action === 'payment.created' || 
+    const isPayment = type === 'payment' ||
+                      body.action === 'payment.created' ||
                       body.action === 'payment.updated';
 
     if (isPayment && dataId) {
@@ -36,9 +48,9 @@ export async function POST(request: Request) {
       console.log('Pagamento MP:', { orderId, status, paymentId: dataId });
 
       if (orderId) {
-        const { firestore } = initializeFirebase();
-        const orderRef = doc(firestore, 'orders', orderId);
-        
+        const db = getDb();
+        const orderRef = doc(db, 'orders', orderId);
+
         let newStatus = 'pending';
         if (status === 'approved') newStatus = 'paid';
         if (status === 'rejected' || status === 'cancelled') newStatus = 'canceled';
