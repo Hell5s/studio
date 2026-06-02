@@ -15,7 +15,8 @@ import {
   Image as ImageIcon,
   X,
   Palette,
-  Image as ImageIconLucide
+  Image as ImageIconLucide,
+  Link as LinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -295,6 +296,14 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               <div className="grid gap-6">
                 <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Nome do Produto</Label><Input value={formData.name} onChange={handleNameChange} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
                 
+                <div className="grid gap-2">
+                  <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Link do Produto (Fornecedor)</Label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40" />
+                    <Input value={formData.sourceUrl} onChange={e => setFormData({...formData, sourceUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 pl-12 bg-secondary/20 border-none" />
+                  </div>
+                </div>
+
                 <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Coleção</Label><Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
                 <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos Disponíveis</Label><div className="flex flex-wrap gap-2 p-4 bg-secondary/20 rounded-2xl">{['PP','P','M','G','GG','XG','G1','G2','Único'].map(size => { const selected = formData.sizes.split(',').map((s:string)=>s.trim()).includes(size); return (<button key={size} type="button" onClick={()=>{const current=formData.sizes.split(',').map((s:string)=>s.trim()).filter(Boolean);const updated=selected?current.filter((s:string)=>s!==size):[...current,size];setFormData({...formData,sizes:updated.join(', ')});}} className={`h-9 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${selected?'bg-primary text-white border-primary':'bg-white text-primary/40 border-primary/10'}`}>{size}</button>);})}</div><p className="text-[9px] text-muted-foreground ml-4 mt-1">Selecionados: {formData.sizes||'nenhum'}</p></div>
               </div>
