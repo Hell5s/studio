@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -6,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 
 function OrderPendingContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const metodo = searchParams.get('metodo');
   const [pixData, setPixData] = useState<any>(null);
   const [copied, setCopied] = useState(false);
@@ -28,6 +30,29 @@ function OrderPendingContent() {
       }
     }
   }, [metodo]);
+
+  // Polling para verificar confirmação de pagamento PIX
+  useEffect(() => {
+    const oId = pixData?.orderId;
+    if (!oId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/payments/status?orderId=${oId}`);
+        const data = await res.json();
+        if (data.status === 'paid' || data.status === 'approved') {
+          clearInterval(interval);
+          sessionStorage.removeItem('pix_data');
+          sessionStorage.removeItem('checkout_items');
+          router.push('/meus-pedidos');
+        }
+      } catch (e) {
+        // Silencioso para continuar tentando no próximo intervalo
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [pixData, router]);
 
   const handleCopy = () => {
     if (pixData?.qr_code) {
