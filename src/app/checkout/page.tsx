@@ -410,10 +410,15 @@ function CheckoutContent() {
       }
 
       if (result.point_of_interaction?.transaction_data) {
-        setPixData({
+        sessionStorage.removeItem('checkout_items');
+        sessionStorage.setItem('pix_data', JSON.stringify({
           qr_code: result.point_of_interaction.transaction_data.qr_code,
           qr_code_base64: result.point_of_interaction.transaction_data.qr_code_base64,
-        });
+          ticket_url: result.point_of_interaction.transaction_data.ticket_url,
+          orderId: result.external_reference || currentOrderId,
+          amount: result.transaction_amount || totalGeral,
+        }));
+        router.push('/pedido-pendente?metodo=pix');
       } else {
         throw new Error('QR Code não retornado pelo Mercado Pago');
       }
