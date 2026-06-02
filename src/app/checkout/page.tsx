@@ -461,6 +461,9 @@ function CheckoutContent() {
   const formatPrice = (val: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
+  const steps: Step[] = ['identificacao', 'entrega', 'pagamento'];
+  const currentIndex = steps.indexOf(currentStep);
+
   if (isCheckingSession) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-white space-y-6">
@@ -574,7 +577,7 @@ function CheckoutContent() {
              </button>
           </div>
           
-          <Link href="/" className="flex shrink-0"><LogoMark className="md:scale-100" /></Link>
+          <Link href="/" className="flex shrink-0"><LogoMark /></Link>
           
           <div className="flex-1 flex justify-end">
             <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
@@ -590,22 +593,30 @@ function CheckoutContent() {
                     { id: 'identificacao', label: 'Dados' },
                     { id: 'entrega', label: 'Entrega' },
                     { id: 'pagamento', label: 'Pague' }
-                ].map((s, idx) => (
-                    <React.Fragment key={s.id}>
-                        <div className={cn(
-                            "flex items-center gap-1.5 md:gap-2 text-[7px] md:text-[9px] font-bold uppercase tracking-widest",
-                            currentStep === s.id ? "text-primary" : "text-primary/30"
-                        )}>
-                            <span className={cn(
-                                "h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center text-[8px] md:text-[10px]",
-                                currentStep === s.id ? "bg-primary text-white" : "bg-primary/5"
-                            )}>{idx + 1}</span>
-                            <span className="hidden sm:inline">{s.label === 'Pague' ? 'Pagamento' : s.label}</span>
-                            <span className="sm:hidden">{s.label}</span>
-                        </div>
-                        {idx < 2 && <ChevronRight className="h-3 w-3 text-primary/10" />}
-                    </React.Fragment>
-                ))}
+                ].map((s, idx) => {
+                    const isClickable = idx < currentIndex;
+                    return (
+                        <React.Fragment key={s.id}>
+                            <button 
+                                onClick={() => isClickable && setCurrentStep(s.id as Step)}
+                                disabled={!isClickable && currentStep !== s.id}
+                                className={cn(
+                                    "flex items-center gap-1.5 md:gap-2 text-[7px] md:text-[9px] font-bold uppercase tracking-widest transition-all focus:outline-none",
+                                    currentStep === s.id ? "text-primary" : (isClickable ? "text-primary/60 hover:text-primary" : "text-primary/30"),
+                                    !isClickable && currentStep !== s.id && "cursor-default"
+                                )}
+                            >
+                                <span className={cn(
+                                    "h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center text-[8px] md:text-[10px] transition-colors",
+                                    currentStep === s.id ? "bg-primary text-white" : (isClickable ? "bg-primary/20 text-primary" : "bg-primary/5")
+                                )}>{idx + 1}</span>
+                                <span className="hidden sm:inline">{s.label === 'Pague' ? 'Pagamento' : s.label}</span>
+                                <span className="sm:hidden">{s.label}</span>
+                            </button>
+                            {idx < 2 && <ChevronRight className="h-3 w-3 text-primary/10" />}
+                        </React.Fragment>
+                    );
+                })}
             </div>
         </div>
       </header>
