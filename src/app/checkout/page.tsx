@@ -574,7 +574,7 @@ function CheckoutContent() {
              </button>
           </div>
           
-          <Link href="/" className="flex shrink-0"><LogoMark className="md:scale-100 max-w-[120px] md:max-w-[140px]" /></Link>
+          <Link href="/" className="flex shrink-0"><LogoMark className="md:scale-100" /></Link>
           
           <div className="flex-1 flex justify-end">
             <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
