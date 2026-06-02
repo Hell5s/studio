@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -168,18 +169,27 @@ function CheckoutContent() {
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    const email = authForm.email.trim();
+    if (!email || !authForm.password) return;
+
     setAuthLoading(true);
     try {
       if (authMode === 'register') {
-        await createUserWithEmailAndPassword(auth, authForm.email, authForm.password);
-        setIdentificacao(prev => ({ ...prev, email: authForm.email, nome: authForm.nome }));
+        await createUserWithEmailAndPassword(auth, email, authForm.password);
+        setIdentificacao(prev => ({ ...prev, email: email, nome: authForm.nome }));
         toast({ title: "Conta criada!", description: "Bem-vinda à Toda Bela." });
       } else {
-        await signInWithEmailAndPassword(auth, authForm.email, authForm.password);
+        await signInWithEmailAndPassword(auth, email, authForm.password);
         toast({ title: "Olá novamente!" });
       }
-    } catch (e: any) {
-      toast({ title: "Erro", description: "Verifique suas credenciais.", variant: "destructive" });
+    } catch (error: any) {
+      let errorMsg = "Verifique suas credenciais e tente novamente.";
+      if (error.code === 'auth/wrong-password') errorMsg = "Senha incorreta.";
+      if (error.code === 'auth/user-not-found') errorMsg = "E-mail não cadastrado.";
+      if (error.code === 'auth/invalid-credential') errorMsg = "E-mail ou senha incorretos.";
+      if (error.code === 'auth/too-many-requests') errorMsg = "Muitas tentativas falhas. Tente novamente mais tarde.";
+      
+      toast({ title: "Erro", description: errorMsg, variant: "destructive" });
     } finally {
       setAuthLoading(false);
     }

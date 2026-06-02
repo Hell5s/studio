@@ -92,23 +92,34 @@ export function LoginDialog({
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.password) return;
+    const email = formData.email.trim();
+    if (!email || !formData.password) return;
 
     setLoading(true);
     try {
       if (isRegistering) {
-        await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        await createUserWithEmailAndPassword(auth, email, formData.password);
         toast({ title: "Bem-vinda!", description: "Sua conta Toda Bela foi criada." });
       } else {
-        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        await signInWithEmailAndPassword(auth, email, formData.password);
         toast({ title: "Olá novamente!", description: "Acesso realizado com sucesso." });
       }
       setShowLoginForm(false);
       onOpenChange(false);
     } catch (error: any) {
+      console.error("Auth Error:", error.code, error.message);
+      let errorMsg = "Verifique suas credenciais e tente novamente.";
+      
+      if (error.code === 'auth/wrong-password') errorMsg = "Senha incorreta.";
+      if (error.code === 'auth/user-not-found') errorMsg = "E-mail não cadastrado.";
+      if (error.code === 'auth/invalid-email') errorMsg = "Formato de e-mail inválido.";
+      if (error.code === 'auth/too-many-requests') errorMsg = "Muitas tentativas falhas. Tente novamente mais tarde.";
+      if (error.code === 'auth/invalid-credential') errorMsg = "E-mail ou senha incorretos.";
+      if (error.code === 'auth/email-already-in-use') errorMsg = "Este e-mail já está em uso.";
+
       toast({ 
         title: "Erro no acesso", 
-        description: "Verifique suas credenciais e tente novamente.", 
+        description: errorMsg, 
         variant: "destructive" 
       });
     } finally {
@@ -117,7 +128,8 @@ export function LoginDialog({
   };
 
   const handleForgotPassword = async () => {
-    if (!formData.email) {
+    const email = formData.email.trim();
+    if (!email) {
       toast({
         title: "E-mail necessário",
         description: "Por favor, preencha o campo de e-mail para receber o link de redefinição.",
@@ -128,7 +140,7 @@ export function LoginDialog({
 
     setLoading(true);
     try {
-      await sendPasswordResetEmail(auth, formData.email);
+      await sendPasswordResetEmail(auth, email);
       toast({
         title: "E-mail enviado!",
         description: "Enviamos um link para você redefinir sua senha. Verifique sua caixa de entrada e spam."
