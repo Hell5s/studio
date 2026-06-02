@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -734,7 +733,7 @@ function CheckoutContent() {
                               paymentMethods: {
                                 creditCard: paymentMethod === 'cartao' ? 'all' : undefined,
                                 debitCard: paymentMethod === 'cartao' ? 'all' : undefined,
-                                ticket: paymentMethod === 'boleto' ? ['bolbradesco'] : undefined,
+                                ticket: paymentMethod === 'boleto' ? (['bolbradesco'] as any) : undefined,
                               },
                               visual: {
                                 style: {
@@ -742,7 +741,7 @@ function CheckoutContent() {
                                   customVariables: {
                                     formBackgroundColor: '#ffffff',
                                     baseColor: '#6E3C47',
-                                    buttonBackgroundColor: '#6E3C47',
+                                    inputBackgroundColor: '#ffffff',
                                     buttonTextColor: '#ffffff',
                                     borderRadiusLarge: '24px',
                                   }
