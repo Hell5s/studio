@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -58,12 +57,11 @@ function CheckoutContent() {
   const [paymentMethod, setPaymentMethod] = useState<'cartao' | 'pix' | 'boleto'>('cartao');
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
   const [copied, setCopied] = useState(false);
-
   useEffect(() => {
     if (!pixData || !orderId) return;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/orders/status?orderId=${orderId}`);
+        const res = await fetch(`/api/payments/status?orderId=${orderId}`);
         const data = await res.json();
         if (data.status === 'paid') {
           clearInterval(interval);
