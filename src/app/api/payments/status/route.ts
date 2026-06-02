@@ -18,12 +18,25 @@ function getDb() {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const orderId = searchParams.get('orderId');
-  if (!orderId) return NextResponse.json({ error: 'orderId obrigatório' }, { status: 400 });
+
+  if (!orderId) {
+    return NextResponse.json({ error: 'orderId obrigatório' }, { status: 400 });
+  }
+
   try {
     const db = getDb();
     const orderSnap = await getDoc(doc(db, 'orders', orderId));
-    if (!orderSnap.exists()) return NextResponse.json({ status: 'not_found' });
-    return NextResponse.json({ status: orderSnap.data().status });
+
+    if (!orderSnap.exists()) {
+      return NextResponse.json({ status: 'not_found' });
+    }
+
+    const data = orderSnap.data();
+    // Retorna tanto o status interno quanto o status do processador de pagamento
+    return NextResponse.json({ 
+      status: data.status || 'pending',
+      paymentStatus: data.paymentStatus || data.status
+    });
   } catch (error: any) {
     console.error('Status API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

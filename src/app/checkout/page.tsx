@@ -60,20 +60,35 @@ function CheckoutContent() {
 
   // Polling para verificar pagamento PIX
   useEffect(() => {
-    if (!pixData || !orderId) return;
+    if (!pixData || !orderId || currentStep !== 'pagamento') return;
+
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/payments/status?orderId=${orderId}`);
         const data = await res.json();
-        if (data.status === 'paid') {
+        
+        // Verifica status interno (paid) ou do Mercado Pago (approved)
+        if (data.status === 'paid' || data.status === 'Pago' || data.paymentStatus === 'approved') {
           clearInterval(interval);
+          toast({ 
+            title: "Pagamento confirmado! 🎉", 
+            description: "Sua reserva foi concluída com sucesso." 
+          });
+          
           sessionStorage.removeItem('checkout_items');
-          router.push('/meus-pedidos');
+          sessionStorage.removeItem('pix_data');
+          
+          setTimeout(() => {
+            router.push('/meus-pedidos');
+          }, 2000);
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Erro ao verificar status:', e);
+      }
     }, 5000);
+
     return () => clearInterval(interval);
-  }, [pixData, orderId, router]);
+  }, [pixData, orderId, currentStep, router, toast]);
 
   // Inicializa o SDK do Mercado Pago apenas quando necessário
   useEffect(() => {
