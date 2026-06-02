@@ -46,7 +46,7 @@ function CheckoutContent() {
   const [sessionItems, setSessionItems] = useState<any[]>([]);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isBrickReady, setIsBrickReady] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
 
   // Auth States
   const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null);
@@ -58,37 +58,33 @@ function CheckoutContent() {
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Polling para verificar pagamento PIX
+  // Polling para verificar pagamento PIX conforme solicitado
   useEffect(() => {
-    if (!pixData || !orderId || currentStep !== 'pagamento') return;
+    if (!currentOrderId || paymentMethod !== 'pix') return;
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/payments/status?orderId=${orderId}`);
-        const data = await res.json();
-        
-        // Verifica status interno (paid) ou do Mercado Pago (approved)
+        const response = await fetch(`/api/payments/status?orderId=${currentOrderId}`);
+        const data = await response.json();
+
         if (data.status === 'paid' || data.status === 'Pago' || data.paymentStatus === 'approved') {
           clearInterval(interval);
-          toast({ 
-            title: "Pagamento confirmado! 🎉", 
-            description: "Sua reserva foi concluída com sucesso." 
-          });
+          toast({ title: "Pagamento confirmado! 🎉" });
           
           sessionStorage.removeItem('checkout_items');
           sessionStorage.removeItem('pix_data');
           
           setTimeout(() => {
-            router.push('/meus-pedidos');
+            window.location.href = '/meus-pedidos';
           }, 2000);
         }
-      } catch (e) {
-        console.error('Erro ao verificar status:', e);
+      } catch (error) {
+        console.error('Erro ao verificar status:', error);
       }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [pixData, orderId, currentStep, router, toast]);
+  }, [currentOrderId, paymentMethod, toast]);
 
   // Inicializa o SDK do Mercado Pago apenas quando necessário
   useEffect(() => {
@@ -278,8 +274,8 @@ function CheckoutContent() {
       }
       
       setIsProcessing(true);
-      const finalId = orderId || `PED-${Date.now().toString().slice(-6)}`;
-      setOrderId(finalId);
+      const finalId = currentOrderId || `PED-${Date.now().toString().slice(-6)}`;
+      setCurrentOrderId(finalId);
       const orderRef = doc(db, 'orders', finalId);
 
       const orderData = {
@@ -335,8 +331,8 @@ function CheckoutContent() {
           formData: {
             ...formData,
             transaction_amount: totalGeral,
-            external_reference: orderId,
-            description: `Pedido Toda Bela #${orderId}`,
+            external_reference: currentOrderId,
+            description: `Pedido Toda Bela #${currentOrderId}`,
             payer: {
               ...formData.payer,
               email: formData.payer?.email || identificacao.email || user?.email || '',
@@ -390,8 +386,8 @@ function CheckoutContent() {
           formData: {
             payment_method_id: 'pix',
             transaction_amount: totalGeral,
-            external_reference: orderId,
-            description: `Pedido Toda Bela #${orderId}`,
+            external_reference: currentOrderId,
+            description: `Pedido Toda Bela #${currentOrderId}`,
             payer: {
               email: identificacao.email || user?.email || '',
               first_name: identificacao.nome.split(' ')[0],
@@ -413,7 +409,6 @@ function CheckoutContent() {
       }
 
       if (result.point_of_interaction?.transaction_data) {
-        sessionStorage.removeItem('checkout_items');
         setPixData({
           qr_code: result.point_of_interaction.transaction_data.qr_code,
           qr_code_base64: result.point_of_interaction.transaction_data.qr_code_base64,
