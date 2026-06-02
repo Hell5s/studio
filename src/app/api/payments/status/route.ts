@@ -1,37 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server';
 
+import { NextRequest, NextResponse } from 'next/server';
+import { initializeFirebase } from '@/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
+/**
+ * Consulta o status de um pedido no Firestore.
+ * Utiliza o SDK de cliente configurado para rodar no servidor.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get('orderId');
-    const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
     if (!orderId) {
       return NextResponse.json({ error: 'orderId obrigatório' }, { status: 400 });
     }
 
-    const response = await fetch(
-      `https://api.mercadopago.com/v1/payments/search?external_reference=${orderId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        }
-      }
-    );
+    // Inicializa os SDKs do projeto
+    const { firestore } = initializeFirebase();
+    
+    // Busca o documento do pedido
+    const orderRef = doc(firestore, 'orders', orderId);
+    const orderSnap = await getDoc(orderRef);
 
-    const data = await response.json();
-    const payment = data.results?.[0];
-
-    if (!payment) {
-      return NextResponse.json({ status: 'pending' });
+    if (!orderSnap.exists()) {
+      return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 });
     }
 
+    const order = orderSnap.data();
+
+    // Retorna os campos de status solicitados para o polling do frontend
     return NextResponse.json({
-      status: payment.status,
-      paymentStatus: payment.status
+      status: order?.status || 'pending',
+      paymentStatus: order?.paymentStatus || 'pending'
     });
 
   } catch (error: any) {
+    console.error('Status API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
