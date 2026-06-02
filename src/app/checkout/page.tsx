@@ -110,8 +110,8 @@ function CheckoutContent() {
     numero: '',
     complemento: '',
     bairro: '',
-    cidade: '',
-    estado: ''
+    city: '',
+    state: ''
   });
 
   // Carregar itens do sessionStorage
@@ -219,8 +219,8 @@ function CheckoutContent() {
             ...prev,
             endereco: data.logradouro,
             bairro: data.bairro,
-            cidade: data.localidade,
-            estado: data.uf
+            city: data.localidade,
+            state: data.uf
           }));
         }
       } catch (e) {
@@ -289,8 +289,8 @@ function CheckoutContent() {
           cpf: identificacao.cpf,
           phone: identificacao.telefone,
           address: `${entrega.endereco}, ${entrega.numero} ${entrega.complemento}`,
-          city: entrega.cidade,
-          state: entrega.estado,
+          city: entrega.city,
+          state: entrega.state,
           zip: entrega.cep
         },
         subtotal: subtotal,
@@ -659,11 +659,11 @@ function CheckoutContent() {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Cidade</Label>
-                      <Input value={entrega.cidade} onChange={e => setEntrega({...entrega, cidade: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
+                      <Input value={entrega.city} onChange={e => setEntrega({...entrega, city: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">UF</Label>
-                      <Input value={entrega.estado} onChange={e => setEntrega({...entrega, estado: e.target.value.toUpperCase()})} maxLength={2} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
+                      <Input value={entrega.state} onChange={e => setEntrega({...entrega, state: e.target.value.toUpperCase()})} maxLength={2} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                   </div>
 
