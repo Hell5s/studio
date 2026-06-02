@@ -57,6 +57,8 @@ function CheckoutContent() {
   const [paymentMethod, setPaymentMethod] = useState<'cartao' | 'pix' | 'boleto'>('cartao');
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Polling para verificar pagamento PIX
   useEffect(() => {
     if (!pixData || !orderId) return;
     const interval = setInterval(async () => {
@@ -213,7 +215,6 @@ function CheckoutContent() {
   const freteValor = shippingMethod === 'sedex' ? 25.90 : 0;
   const totalGeral = Number((subtotal + freteValor).toFixed(2));
 
-  // Memoização das configurações do Mercado Pago para evitar erros de inicialização
   const paymentInitialization = useMemo(() => {
     const cleanCpf = identificacao.cpf.replace(/\D/g, '');
     const names = identificacao.nome.trim().split(' ');
@@ -565,7 +566,6 @@ function CheckoutContent() {
           
           <div className="lg:col-span-8 space-y-6">
             
-            {/* ETAPA 1: IDENTIFICAÇÃO */}
             <Card className={cn(
               "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 w-full",
               currentStep === 'identificacao' ? "bg-white px-4 py-6 md:p-10 opacity-100" : "bg-white/40 px-4 py-6 md:p-10 opacity-60 pointer-events-none"
@@ -600,7 +600,6 @@ function CheckoutContent() {
               )}
             </Card>
 
-            {/* ETAPA 2: ENTREGA */}
             <Card className={cn(
               "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 w-full",
               currentStep === 'entrega' ? "bg-white px-4 py-6 md:p-10 opacity-100" : "bg-white/40 px-4 py-6 md:p-10 opacity-60 pointer-events-none"
@@ -659,7 +658,6 @@ function CheckoutContent() {
               )}
             </Card>
 
-            {/* ETAPA 3: PAGAMENTO (TRANSPARENTE) */}
             <Card className={cn(
               "rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-sm transition-all duration-500 w-full",
               currentStep === 'pagamento' ? "bg-white px-4 py-6 md:p-10 opacity-100" : "bg-white/40 px-4 py-6 md:p-10 opacity-60 pointer-events-none"
@@ -674,41 +672,21 @@ function CheckoutContent() {
 
                   {!pixData && (
                     <>
-                      {/* Seletor de método */}
                       <div className="grid grid-cols-3 gap-2 md:gap-3 px-1">
-                        <button
-                          onClick={() => setPaymentMethod('cartao')}
-                          className={cn(
-                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full",
-                            paymentMethod === 'cartao' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40"
-                          )}
-                        >
+                        <button onClick={() => setPaymentMethod('cartao')} className={cn("flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full", paymentMethod === 'cartao' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40")}>
                           <CreditCard className="h-5 w-5" />
                           <span className="text-center">Cartão</span>
                         </button>
-                        <button
-                          onClick={() => setPaymentMethod('pix')}
-                          className={cn(
-                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full",
-                            paymentMethod === 'pix' ? "border-accent bg-accent/5 text-accent shadow-sm" : "border-primary/10 text-primary/40"
-                          )}
-                        >
+                        <button onClick={() => setPaymentMethod('pix')} className={cn("flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full", paymentMethod === 'pix' ? "border-accent bg-accent/5 text-accent shadow-sm" : "border-primary/10 text-primary/40")}>
                           <QrCode className="h-5 w-5" />
                           <span className="text-center">PIX</span>
                         </button>
-                        <button
-                          onClick={() => setPaymentMethod('boleto')}
-                          className={cn(
-                            "flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full",
-                            paymentMethod === 'boleto' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40"
-                          )}
-                        >
+                        <button onClick={() => setPaymentMethod('boleto')} className={cn("flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full", paymentMethod === 'boleto' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40")}>
                           <Package className="h-5 w-5" />
                           <span className="text-center">Boleto</span>
                         </button>
                       </div>
 
-                      {/* PIX: botão direto */}
                       {paymentMethod === 'pix' && (
                         <div className="flex flex-col items-center gap-6 py-6 md:py-8">
                           <div className="h-16 w-16 md:h-20 md:w-20 bg-accent/10 rounded-full flex items-center justify-center">
@@ -718,17 +696,12 @@ function CheckoutContent() {
                             <p className="text-sm font-bold text-primary">Pague com PIX</p>
                             <p className="text-[11px] text-muted-foreground italic leading-relaxed">Clique abaixo para gerar o QR Code. O pagamento é confirmado em segundos e seu pedido entra em produção imediatamente.</p>
                           </div>
-                          <Button
-                            onClick={handlePixPayment}
-                            disabled={isProcessing}
-                            className="h-14 px-12 rounded-full bg-accent text-white font-bold uppercase tracking-widest text-[10px] shadow-lg w-full max-w-xs"
-                          >
+                          <Button onClick={handlePixPayment} disabled={isProcessing} className="h-14 px-12 rounded-full bg-accent text-white font-bold uppercase tracking-widest text-[10px] shadow-lg w-full max-w-xs">
                             {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Gerar QR Code PIX'}
                           </Button>
                         </div>
                       )}
 
-                      {/* Cartão e Boleto: usa o Brick normalmente */}
                       {(paymentMethod === 'cartao' || paymentMethod === 'boleto') && (
                         <div className="min-h-[400px] w-full">
                           {!isBrickReady && (
@@ -766,15 +739,10 @@ function CheckoutContent() {
                     </>
                   )}
 
-                  {/* QR Code gerado */}
                   {pixData && (
                     <div className="flex flex-col items-center gap-6 py-4 animate-in zoom-in-95 w-full">
                       <div className="bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-primary/5">
-                        <img
-                          src={`data:image/png;base64,${pixData.qr_code_base64}`}
-                          alt="QR Code PIX"
-                          className="w-52 h-56 md:w-64 md:h-64 max-w-full"
-                        />
+                        <img src={`data:image/png;base64,${pixData.qr_code_base64}`} alt="QR Code PIX" className="w-52 h-56 md:w-64 md:h-64 max-w-full" />
                       </div>
                       <div className="w-full max-w-md space-y-4 px-4">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">PIX Copia e Cola</p>
@@ -782,16 +750,16 @@ function CheckoutContent() {
                           <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[10px] text-primary/60 font-mono truncate border border-primary/5">
                             {pixData.qr_code}
                           </div>
-                          <button
-                            onClick={handleCopyPix}
-                            className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto"
-                          >
+                          <button onClick={handleCopyPix} className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto">
                             {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                             {copied ? 'Copiado!' : 'Copiar Código'}
                           </button>
                         </div>
                         <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest opacity-60">
                           QR Code válido por 30 minutos • Pagamento instantâneo
+                        </p>
+                        <p className="text-[9px] text-center text-accent font-bold uppercase tracking-widest animate-pulse">
+                          Aguardando confirmação do pagamento...
                         </p>
                       </div>
                     </div>
@@ -807,14 +775,12 @@ function CheckoutContent() {
             </Card>
           </div>
 
-          {/* RESUMO LATERAL */}
           <aside className="lg:col-span-4 space-y-4 md:space-y-6 lg:sticky lg:top-24 w-full">
             <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none bg-white shadow-premium p-6 md:p-8 space-y-6">
                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
                   <Package className="h-4 w-4" />
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]">Sua Escolha</h3>
                </div>
-
                <div className="space-y-4 max-h-[300px] overflow-y-auto no-scrollbar pr-1">
                   {sessionItems.map((item: any, i: number) => (
                     <div key={i} className="flex gap-4 items-center">
@@ -829,7 +795,6 @@ function CheckoutContent() {
                     </div>
                   ))}
                </div>
-
                <div className="space-y-2.5 pt-4 border-t border-primary/5 w-full">
                   <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
                   <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Envio Especial</span><span>{freteValor === 0 ? 'Grátis' : formatPrice(freteValor)}</span></div>
