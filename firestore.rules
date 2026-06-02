@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -47,7 +46,7 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      // Regra relaxada para permitir que o servidor (webhook/api) gerencie pedidos sem auth
+      // Regra permitindo leitura e escrita para o servidor e webhooks
       allow read, write: if true;
     }
 
