@@ -22,7 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
+import { useUser, useFirestore, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import Link from 'next/link';
@@ -233,7 +233,7 @@ function CheckoutContent() {
     };
   }, [totalGeral, identificacao, user?.email]);
 
-  const handleNextStep = async () => {
+  const handleNextStep = () => {
     if (currentStep === 'identificacao') {
       const cleanCpf = identificacao.cpf.replace(/\D/g, '');
       const cleanTelefone = identificacao.telefone.replace(/\D/g, '');
@@ -254,41 +254,49 @@ function CheckoutContent() {
       }
       
       setIsProcessing(true);
-      try {
-        const finalId = orderId || `PED-${Date.now().toString().slice(-6)}`;
-        setOrderId(finalId);
+      const finalId = orderId || `PED-${Date.now().toString().slice(-6)}`;
+      setOrderId(finalId);
+      const orderRef = doc(db, 'orders', finalId);
 
-        await setDoc(doc(db, 'orders', finalId), {
-          orderNumber: finalId,
-          userId: user?.uid || null,
-          items: sessionItems,
-          customer: {
-            name: identificacao.nome,
-            email: identificacao.email,
-            cpf: identificacao.cpf,
-            phone: identificacao.telefone,
-            address: `${entrega.endereco}, ${entrega.numero} ${entrega.complemento}`,
-            city: entrega.cidade,
-            state: entrega.estado,
-            zip: entrega.cep
-          },
-          subtotal: subtotal,
-          total: totalGeral,
-          status: 'pending',
-          shipping: {
-            method: shippingMethod === 'sedex' ? 'SEDEX' : 'PAC',
-            price: freteValor
-          },
-          updatedAt: serverTimestamp(),
-          createdAt: serverTimestamp()
-        }, { merge: true });
+      const orderData = {
+        orderNumber: finalId,
+        userId: user?.uid || null,
+        items: sessionItems,
+        customer: {
+          name: identificacao.nome,
+          email: identificacao.email,
+          cpf: identificacao.cpf,
+          phone: identificacao.telefone,
+          address: `${entrega.endereco}, ${entrega.numero} ${entrega.complemento}`,
+          city: entrega.cidade,
+          state: entrega.estado,
+          zip: entrega.cep
+        },
+        subtotal: subtotal,
+        total: totalGeral,
+        status: 'pending',
+        shipping: {
+          method: shippingMethod === 'sedex' ? 'SEDEX' : 'PAC',
+          price: freteValor
+        },
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      };
 
-        setCurrentStep('pagamento');
-      } catch (e) {
-        toast({ title: "Erro ao processar", description: "Não foi possível salvar seu pedido. Tente novamente.", variant: "destructive" });
-      } finally {
-        setIsProcessing(false);
-      }
+      // Gravação não-bloqueante
+      setDoc(orderRef, orderData, { merge: true })
+        .catch(async (serverError) => {
+          const permissionError = new FirestorePermissionError({
+            path: orderRef.path,
+            operation: 'write',
+            requestResourceData: orderData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        });
+
+      // Avança a UI imediatamente
+      setCurrentStep('pagamento');
+      setIsProcessing(false);
     }
   };
 
