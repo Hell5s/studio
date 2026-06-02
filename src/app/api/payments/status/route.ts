@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
+/**
+ * Inicializa o Firestore utilizando o SDK de cliente.
+ * Conforme as diretrizes do projeto, evitamos o 'firebase-admin' dentro do app Next.js
+ * para garantir consistência entre o ambiente de desenvolvimento e produção.
+ */
 function getDb() {
   const config = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,6 +16,7 @@ function getDb() {
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   };
+  
   const app = getApps().length > 0 ? getApp() : initializeApp(config);
   return getFirestore(app);
 }
@@ -25,14 +31,16 @@ export async function GET(request: Request) {
 
   try {
     const db = getDb();
-    const orderSnap = await getDoc(doc(db, 'orders', orderId));
+    const orderRef = doc(db, 'orders', orderId);
+    const orderSnap = await getDoc(orderRef);
 
     if (!orderSnap.exists()) {
       return NextResponse.json({ status: 'not_found' });
     }
 
     const data = orderSnap.data();
-    // Retorna tanto o status interno quanto o status do processador de pagamento
+    
+    // Retorna tanto o status interno da loja quanto o status bruto do Mercado Pago
     return NextResponse.json({ 
       status: data.status || 'pending',
       paymentStatus: data.paymentStatus || data.status
