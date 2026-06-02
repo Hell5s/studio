@@ -229,6 +229,7 @@ export function OrderManagement() {
                           <div>
                             <p className="text-lg font-bold text-primary">{selectedOrder.customer?.name}</p>
                             <p className="text-sm text-muted-foreground">{selectedOrder.customer?.email}</p>
+                            <p className="text-sm text-muted-foreground">{selectedOrder.customer?.phone}</p>
                           </div>
                           <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`${selectedOrder.customer?.name}\n${selectedOrder.customer?.address}\n${selectedOrder.customer?.city}-${selectedOrder.customer?.state}\nCEP: ${selectedOrder.customer?.zip}`, "Endereço Copiado!")} className="text-accent text-[9px] font-bold uppercase">Copiar Dados</Button>
                        </div>
