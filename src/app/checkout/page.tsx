@@ -42,7 +42,7 @@ function CheckoutContent() {
   
   const [currentStep, setCurrentStep] = useState<Step>('identificacao');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [shippingMethod, setShippingMethod] = useState<'pac' | 'sedex'>('pac');
+  const [shippingPrice, setShippingPrice] = useState(0);
   const [sessionItems, setSessionItems] = useState<any[]>([]);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isBrickReady, setIsBrickReady] = useState(false);
@@ -148,6 +148,41 @@ function CheckoutContent() {
     }
   }, [user]);
 
+  const subtotal = useMemo(() => {
+    return sessionItems.reduce((acc, it) => acc + ((it.price || 0) * (it.quantity || 1)), 0);
+  }, [sessionItems]);
+
+  const handleCepSearch = async (val: string) => {
+    const cep = val.replace(/\D/g, '');
+    setEntrega(prev => ({ ...prev, cep }));
+    
+    if (cep.length === 8) {
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          setEntrega(prev => ({
+            ...prev,
+            endereco: data.logradouro,
+            bairro: data.bairro,
+            city: data.localidade,
+            state: data.uf
+          }));
+
+          // Cálculo automático de frete
+          const SOUTH_SOUTHEAST = ['SP', 'RJ', 'MG', 'ES', 'PR', 'SC', 'RS'];
+          const isSouthSoutheast = SOUTH_SOUTHEAST.includes(data.uf.toUpperCase());
+          const price = subtotal >= 250 ? 0 : (isSouthSoutheast ? 10 : 12);
+          setShippingPrice(price);
+        }
+      } catch (e) {
+        console.error("Erro ao buscar CEP:", e);
+      }
+    }
+  };
+
+  const totalGeral = Number((subtotal + shippingPrice).toFixed(2));
+
   const handleGoogleAuth = async () => {
     if (authLoading) return;
     setAuthLoading(true);
@@ -207,36 +242,6 @@ function CheckoutContent() {
       setAuthLoading(false);
     }
   };
-
-  const handleCepSearch = async (val: string) => {
-    const cep = val.replace(/\D/g, '');
-    setEntrega(prev => ({ ...prev, cep }));
-    
-    if (cep.length === 8) {
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await res.json();
-        if (!data.erro) {
-          setEntrega(prev => ({
-            ...prev,
-            endereco: data.logradouro,
-            bairro: data.bairro,
-            city: data.localidade,
-            state: data.uf
-          }));
-        }
-      } catch (e) {
-        console.error("Erro ao buscar CEP:", e);
-      }
-    }
-  };
-
-  const subtotal = useMemo(() => {
-    return sessionItems.reduce((acc, it) => acc + ((it.price || 0) * (it.quantity || 1)), 0);
-  }, [sessionItems]);
-
-  const freteValor = shippingMethod === 'sedex' ? 25.90 : 0;
-  const totalGeral = Number((subtotal + freteValor).toFixed(2));
 
   const paymentInitialization = useMemo(() => {
     const cleanCpf = identificacao.cpf.replace(/\D/g, '');
@@ -299,8 +304,8 @@ function CheckoutContent() {
         total: totalGeral,
         status: 'pending',
         shipping: {
-          method: shippingMethod === 'sedex' ? 'SEDEX' : 'PAC',
-          price: freteValor
+          method: 'Entrega Padrão',
+          price: shippingPrice
         },
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp()
@@ -696,15 +701,17 @@ function CheckoutContent() {
 
                   <div className="space-y-3 pt-2">
                     <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Opção de Envio</Label>
-                    <div className="grid gap-3">
-                      <button onClick={() => setShippingMethod('pac')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all w-full", shippingMethod === 'pac' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
-                        <div className="flex items-center gap-3"><Truck className="h-4 w-4 text-primary/40" /><div className="text-left"><p className="text-xs font-bold text-primary">PAC Econômico</p><p className="text-[9px] text-muted-foreground">15-20 dias úteis</p></div></div>
-                        <span className="text-xs font-bold text-emerald-600">GRÁTIS</span>
-                      </button>
-                      <button onClick={() => setShippingMethod('sedex')} className={cn("flex items-center justify-between p-4 rounded-xl border transition-all w-full", shippingMethod === 'sedex' ? "border-primary bg-primary/5 shadow-sm" : "border-primary/5 bg-white")}>
-                        <div className="flex items-center gap-3"><Truck className="h-4 w-4 text-accent" /><div className="text-left"><p className="text-xs font-bold text-primary">SEDEX VIP</p><p className="text-[9px] text-muted-foreground">7-10 dias úteis</p></div></div>
-                        <span className="text-xs font-bold text-primary">R$ 25,90</span>
-                      </button>
+                    <div className="p-4 rounded-xl border border-primary bg-primary/5 shadow-sm w-full flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Truck className="h-4 w-4 text-primary/40" />
+                        <div className="text-left">
+                          <p className="text-xs font-bold text-primary">Entrega Padrão</p>
+                          <p className="text-[9px] text-muted-foreground">10-15 dias úteis</p>
+                        </div>
+                      </div>
+                      <span className={cn("text-xs font-bold", shippingPrice === 0 ? "text-emerald-600" : "text-primary")}>
+                        {shippingPrice === 0 ? 'GRÁTIS' : formatPrice(shippingPrice)}
+                      </span>
                     </div>
                   </div>
 
@@ -871,7 +878,7 @@ function CheckoutContent() {
                </div>
                <div className="space-y-2.5 pt-4 border-t border-primary/5 w-full">
                   <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
-                  <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Envio Especial</span><span>{freteValor === 0 ? 'Grátis' : formatPrice(freteValor)}</span></div>
+                  <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Envio Especial</span><span>{shippingPrice === 0 ? 'Grátis' : formatPrice(shippingPrice)}</span></div>
                   <div className="flex justify-between items-end pt-4">
                     <span className="text-xs font-black uppercase text-primary tracking-tighter shrink-0">Total</span>
                     <div className="text-right min-w-0">
@@ -898,7 +905,7 @@ function CheckoutContent() {
 
       <footer className="py-12 border-t border-primary/5 bg-white/40 w-full shrink-0">
         <div className="container mx-auto px-6 text-center space-y-4">
-           <div className="flex justify-center mb-6 opacity-30"><LogoMark className="max-w-[140px]" /></div>
+           <div className="flex justify-center mb-6 opacity-30"><LogoMark className="max-w-none" /></div>
            <p className="text-[9px] text-primary/30 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
         </div>
       </footer>
