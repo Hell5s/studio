@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -411,14 +412,23 @@ function CheckoutContent() {
 
       if (result.point_of_interaction?.transaction_data) {
         sessionStorage.removeItem('checkout_items');
-        sessionStorage.setItem('pix_data', JSON.stringify({
+        setPixData({
           qr_code: result.point_of_interaction.transaction_data.qr_code,
           qr_code_base64: result.point_of_interaction.transaction_data.qr_code_base64,
-          ticket_url: result.point_of_interaction.transaction_data.ticket_url,
-          orderId: result.external_reference || currentOrderId,
-          amount: result.transaction_amount || totalGeral,
-        }));
-        router.push('/pedido-pendente?metodo=pix');
+        });
+
+        // Polling: assim que o pagamento for confirmado, redireciona para meus-pedidos
+        const pollOrderId = result.external_reference || currentOrderId;
+        const interval = setInterval(async () => {
+          try {
+            const res = await fetch(`/api/payments/status?orderId=${pollOrderId}`);
+            const data = await res.json();
+            if (data.status === 'paid' || data.status === 'approved') {
+              clearInterval(interval);
+              router.push('/meus-pedidos');
+            }
+          } catch (e) {}
+        }, 5000);
       } else {
         throw new Error('QR Code não retornado pelo Mercado Pago');
       }
