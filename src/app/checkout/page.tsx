@@ -59,6 +59,22 @@ function CheckoutContent() {
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (!pixData || !orderId) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/orders/status?orderId=${orderId}`);
+        const data = await res.json();
+        if (data.status === 'paid') {
+          clearInterval(interval);
+          sessionStorage.removeItem('checkout_items');
+          router.push('/meus-pedidos');
+        }
+      } catch (e) {}
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [pixData, orderId, router]);
+
   // Inicializa o SDK do Mercado Pago apenas quando necessário
   useEffect(() => {
     if (currentStep === 'pagamento') {
