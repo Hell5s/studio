@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -58,10 +57,11 @@ function CheckoutContent() {
   const [paymentMethod, setPaymentMethod] = useState<'cartao' | 'pix' | 'boleto'>('cartao');
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isPaymentConfirmed, setIsPaymentConfirmed] = useState(false);
 
   // Polling para verificar pagamento PIX conforme solicitado
   useEffect(() => {
-    if (!currentOrderId || paymentMethod !== 'pix') return;
+    if (!currentOrderId || paymentMethod !== 'pix' || isPaymentConfirmed) return;
 
     const interval = setInterval(async () => {
       try {
@@ -71,14 +71,15 @@ function CheckoutContent() {
 
         if (data.status === 'approved' || data.status === 'paid' || data.status === 'Pago' || data.paymentStatus === 'approved') {
           clearInterval(interval);
+          setIsPaymentConfirmed(true);
           toast({ title: "Pagamento confirmado! 🎉" });
           
           sessionStorage.removeItem('checkout_items');
           sessionStorage.removeItem('pix_data');
           
           setTimeout(() => {
-            window.location.href = '/meus-pedidos';
-          }, 2000);
+            router.push('/meus-pedidos');
+          }, 3000);
         }
       } catch (error) {
         console.error('Erro ao verificar status:', error);
@@ -86,7 +87,7 @@ function CheckoutContent() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [currentOrderId, paymentMethod, toast]);
+  }, [currentOrderId, paymentMethod, toast, isPaymentConfirmed, router]);
 
   // Inicializa o SDK do Mercado Pago apenas quando necessário
   useEffect(() => {
@@ -425,7 +426,12 @@ function CheckoutContent() {
             const data = await res.json();
             if (data.status === 'paid' || data.status === 'approved') {
               clearInterval(interval);
-              router.push('/meus-pedidos');
+              setIsPaymentConfirmed(true);
+              toast({ title: "Pagamento confirmado! 🎉" });
+              
+              setTimeout(() => {
+                router.push('/meus-pedidos');
+              }, 3000);
             }
           } catch (e) {}
         }, 5000);
@@ -784,27 +790,41 @@ function CheckoutContent() {
 
                   {pixData && (
                     <div className="flex flex-col items-center gap-6 py-4 animate-in zoom-in-95 w-full">
-                      <div className="bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-primary/5">
-                        <img src={`data:image/png;base64,${pixData.qr_code_base64}`} alt="QR Code PIX" className="w-52 h-56 md:w-64 md:h-64 max-w-full" />
-                      </div>
-                      <div className="w-full max-w-md space-y-4 px-4">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">PIX Copia e Cola</p>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[10px] text-primary/60 font-mono truncate border border-primary/5">
-                            {pixData.qr_code}
+                      {isPaymentConfirmed ? (
+                        <div className="flex flex-col items-center justify-center space-y-6 py-10 animate-in fade-in zoom-in-95">
+                          <div className="h-24 w-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 shadow-lg shadow-emerald-100/50">
+                            <CheckCircle2 className="h-12 w-12" />
                           </div>
-                          <button onClick={handleCopyPix} className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto">
-                            {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            {copied ? 'Copiado!' : 'Copiar Código'}
-                          </button>
+                          <div className="text-center space-y-2">
+                             <h3 className="text-2xl font-headline font-bold text-primary">Pagamento Aprovado!</h3>
+                             <p className="text-sm text-muted-foreground italic">Redirecionando para seus pedidos...</p>
+                          </div>
                         </div>
-                        <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest opacity-60">
-                          QR Code válido por 30 minutos • Pagamento instantâneo
-                        </p>
-                        <p className="text-[9px] text-center text-accent font-bold uppercase tracking-widest animate-pulse">
-                          Aguardando confirmação do pagamento...
-                        </p>
-                      </div>
+                      ) : (
+                        <>
+                          <div className="bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-primary/5">
+                            <img src={`data:image/png;base64,${pixData.qr_code_base64}`} alt="QR Code PIX" className="w-52 h-56 md:w-64 md:h-64 max-w-full" />
+                          </div>
+                          <div className="w-full max-w-md space-y-4 px-4">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">PIX Copia e Cola</p>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[10px] text-primary/60 font-mono truncate border border-primary/5">
+                                {pixData.qr_code}
+                              </div>
+                              <button onClick={handleCopyPix} className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto">
+                                {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                {copied ? 'Copiado!' : 'Copiar Código'}
+                              </button>
+                            </div>
+                            <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest opacity-60">
+                              QR Code válido por 30 minutos • Pagamento instantâneo
+                            </p>
+                            <p className="text-[9px] text-center text-accent font-bold uppercase tracking-widest animate-pulse">
+                              Aguardando confirmação do pagamento...
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 
