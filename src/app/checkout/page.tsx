@@ -66,8 +66,9 @@ function CheckoutContent() {
       try {
         const response = await fetch(`/api/payments/status?orderId=${currentOrderId}`);
         const data = await response.json();
+        console.log('Status verificado:', data);
 
-        if (data.status === 'paid' || data.status === 'Pago' || data.paymentStatus === 'approved') {
+        if (data.status === 'approved' || data.status === 'paid' || data.status === 'Pago' || data.paymentStatus === 'approved') {
           clearInterval(interval);
           toast({ title: "Pagamento confirmado! 🎉" });
           
