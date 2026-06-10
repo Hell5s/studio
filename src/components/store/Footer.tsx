@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -7,6 +6,7 @@ import { LogoMark } from './LogoMark';
 import { OrderTrackingDialog } from './OrderTrackingDialog';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
