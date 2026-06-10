@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -206,11 +207,21 @@ export function Footer() {
         {/* Selos de Pagamento */}
         <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-10">
           <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700">
-             <img src="https://logodownload.org/wp-content/uploads/2020/02/pix-bc-logo-0.png" className="h-4 object-contain brightness-0 invert" alt="Pix" />
-             <img src="https://logodownload.org/wp-content/uploads/2014/07/visa-logo-1.png" className="h-3 object-contain brightness-0 invert" alt="Visa" />
-             <img src="https://logodownload.org/wp-content/uploads/2014/07/mastercard-logo-7.png" className="h-6 object-contain brightness-0 invert" alt="Mastercard" />
-             <img src="https://logodownload.org/wp-content/uploads/2015/05/elo-logo-1.png" className="h-5 object-contain brightness-0 invert" alt="Elo" />
-             <img src="https://logodownload.org/wp-content/uploads/2016/08/american-express-logo-1.png" className="h-4 object-contain brightness-0 invert" alt="Amex" />
+             {/* Pix */}
+             <svg viewBox="0 0 540 180" className="h-4 w-auto" fill="currentColor"><path d="M136.4 136.4c-4.1 4.1-10.7 4.1-14.8 0L62.5 77.3l59.1-59.1c4.1-4.1 10.7-4.1 14.8 0l25.8 25.8c4.1 4.1 4.1 10.7 0 14.8L129.1 92.1l33.3 33.3c4.1 4.1 4.1 10.7 0 14.8l-26 26.2zM12.7 77.3c-4.1 4.1-4.1 10.7 0 14.8l59.1 59.1c4.1 4.1 10.7 4.1 14.8 0l25.8-25.8c4.1-4.1 4.1-10.7 0-14.8L79.1 78.4 112.4 45c4.1-4.1 4.1-10.7 0-14.8l-26-26.2c-4.1-4.1-10.7-4.1-14.8 0L12.7 77.3zM228.6 136.3h-34.9V43.7h34.9v92.6zM228.6 30.1h-34.9V13.7h34.9v16.4zM327.9 43.7l-29.5 44.8 30.9 47.8h-39.7l-15.5-26.6-15.5 26.6h-39.7l30.9-47.8-29.5-44.8h39.7l14.1 23.6 14.1-23.6h39.7z"/></svg>
+             
+             {/* Visa */}
+             <svg viewBox="0 0 128 40" className="h-3 w-auto" fill="currentColor"><path d="M50.2 2.6l-6.8 26.8h-6.7L43.5 2.6h6.7zM18.8 2.6l-10.7 18.5L3.8 2.6H0l9 26.8h6.5l14.5-26.8h-11.2zm64.8 0l-5.3 26.8h-6.4l5.3-26.8h6.4zm34.3 0h-5.2c-1.6 0-2.8.5-3.5 2.1l-10.1 24.7h6.7l2-5.5h8.2l.8 5.5h6.6L117.9 2.6zm-5.1 18.2l3.4-9.3 1.9 9.3h-5.3z" /></svg>
+
+             {/* Mastercard */}
+             <svg viewBox="0 0 32 24" className="h-6 w-auto" fill="currentColor"><circle cx="11" cy="12" r="11" fill="currentColor" opacity="0.8" /><circle cx="21" cy="12" r="11" fill="currentColor" opacity="0.8" /></svg>
+
+             {/* Elo */}
+             <div className="font-black text-[12px] italic tracking-tighter text-white">ELO</div>
+
+             {/* Amex */}
+             <div className="font-black text-[11px] border border-white/40 px-1.5 py-0.5 rounded-sm text-white">AMEX</div>
+
              <div className="h-5 w-px bg-white/20 mx-2 hidden md:block" />
              <ShieldCheck className="h-5 w-5 text-white" />
           </div>
