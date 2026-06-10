@@ -267,7 +267,9 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Gestão de Produto</p>
-              <h3 className="text-2xl font-headline font-bold">{formData.name || 'Editando Peça'}</h3>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-headline font-bold text-left">{formData.name || 'Editando Peça'}</DialogTitle>
+              </DialogHeader>
             </div>
           </div>
         </div>
