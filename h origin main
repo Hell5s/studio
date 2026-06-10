@@ -1,0 +1,16 @@
+[33m1b4f794[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m No arquivo src/app/checkout/page.tsx, na seção de entrega, substitua as
+[33m0e9a867[m No arquivo src/components/admin/OrderManagement.tsx ou onde estiver o mo
+[33m06f1e98[m No arquivo src/app/checkout/page.tsx, os steps "DADOS", "ENTREGA" e "PAG
+[33m264fc94[m No arquivo src/components/admin/OrderManagement.tsx, no modal de detalhe
+[33md731534[m No arquivo src/app/checkout/page.tsx, o nome da loja no topo está aparec
+[33mdc36a10[m No arquivo src/app/checkout/page.tsx, na parte onde o QR Code PIX é exib
+[33me6b36bc[m Faça o deploy do arquivo firestore.rules atualizado para o projeto Fireb
+[33mb5931c7[m Existe um erro crítico nos logs do Vercel: a rota /api/payments/status e
+[33mf9015fb[m Corrija o bug no arquivo src/app/checkout/page.tsx na função handlePixPa
+[33mdb07a8a[m Após a correção, faça o deploy do projeto.
+[33mb41f62f[m Corrija o bug no arquivo src/app/checkout/page.tsx na função handlePixPa
+[33ma9e42a7[m No arquivo src/app/checkout/page.tsx, no useEffect do polling, corrija a
+[33m572b3de[m Substitua todo o conteúdo do arquivo src/app/api/payments/status/route.t
+[33mf3eead3[m No arquivo src/app/api/payments/status/route.ts, corrija a inicialização
+[33mc60106f[m Crie ou atualize o arquivo src/app/api/payments/status/route.ts com o se
+[33md7b4960[m Corrija o redirecionamento automático após pagamento PIX confirmado.

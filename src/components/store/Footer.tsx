@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Instagram, MessageCircle, Mail, ShieldCheck, Truck, RefreshCcw, CreditCard, Sparkles } from 'lucide-react';
+import { Instagram, MessageCircle, Mail, ShieldCheck, Truck, RefreshCcw, CreditCard, Sparkles, ChevronRight } from 'lucide-react';
 import { LogoMark } from './LogoMark';
 import { OrderTrackingDialog } from './OrderTrackingDialog';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -15,12 +15,27 @@ import {
 } from "@/components/ui/dialog";
 
 const INFO_CONTENT: Record<string, { title: string; content: React.ReactNode }> = {
+  'sobre-nos': {
+    title: 'Sobre Nós',
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
+        <p>A Toda Bela é mais que uma loja, é um manifesto de estilo para a mulher que reconhece sua própria luz. Nossa curadoria foca em peças que unem o conforto do dia a dia à sofisticação de momentos especiais.</p>
+      </div>
+    )
+  },
   'nossa-historia': {
     title: 'Nossa História',
     content: (
       <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
-        <p>A Toda Bela nasceu do desejo de celebrar a potência da mulher brasileira através da moda. Iniciamos nossa jornada como uma pequena marca e hoje somos um destino para mulheres que buscam expressar sua confiança com sofisticação.</p>
-        <p>Nossa essência reside no equilíbrio entre o clássico e o contemporâneo, criando peças que não apenas vestem, mas acompanham momentos de conquista e celebração.</p>
+        <p>Iniciamos nossa jornada com o propósito de democratizar a moda premium no Brasil. Hoje, celebramos milhares de clientes que encontraram na Toda Bela a expressão máxima de sua autenticidade.</p>
+      </div>
+    )
+  },
+  'trabalhe-conosco': {
+    title: 'Trabalhe Conosco',
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
+        <p>Quer fazer parte da equipe Toda Bela? Envie seu portfólio para nossa equipe de RH e venha construir o futuro da moda feminina conosco.</p>
       </div>
     )
   },
@@ -28,8 +43,7 @@ const INFO_CONTENT: Record<string, { title: string; content: React.ReactNode }> 
     title: 'Trocas e Devoluções',
     content: (
       <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
-        <p>Queremos que você ame cada peça. Caso precise realizar uma troca, você tem até 30 dias corridos após o recebimento para solicitar através do nosso WhatsApp VIP.</p>
-        <p>A primeira troca é por nossa conta, garantindo que sua experiência de compra seja livre de preocupações e totalmente focada no seu bem-estar.</p>
+        <p>Sua satisfação é nossa prioridade. Você tem até 30 dias após o recebimento para solicitar trocas através do nosso canal de atendimento VIP.</p>
       </div>
     )
   },
@@ -37,8 +51,7 @@ const INFO_CONTENT: Record<string, { title: string; content: React.ReactNode }> 
     title: 'Política de Privacidade',
     content: (
       <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
-        <p>Sua privacidade é nossa prioridade máxima. Na Toda Bela, utilizamos as tecnologias mais avançadas de criptografia para garantir que seus dados pessoais e de pagamento estejam 100% protegidos.</p>
-        <p>Coletamos apenas as informações necessárias para processar seus pedidos e oferecer uma experiência personalizada na loja.</p>
+        <p>Seus dados estão seguros conosco. Utilizamos criptografia SSL de ponta a ponta para garantir que sua experiência de compra seja privada e protegida.</p>
       </div>
     )
   },
@@ -46,8 +59,16 @@ const INFO_CONTENT: Record<string, { title: string; content: React.ReactNode }> 
     title: 'Termos de Uso',
     content: (
       <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
-        <p>Ao navegar em nossa loja, você concorda com os termos de excelência e respeito mútuo da nossa comunidade. Todos os preços e condições são válidos exclusivamente para compras realizadas no site.</p>
-        <p>As imagens dos produtos são produzidas em estúdio profissional para representar as cores e detalhes com a maior fidelidade possível.</p>
+        <p>Ao utilizar nosso site, você concorda com as diretrizes de navegação e comercialização da nossa plataforma, pautadas pela transparência e respeito ao consumidor.</p>
+      </div>
+    )
+  },
+  'faq': {
+    title: 'Perguntas Frequentes',
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed text-muted-foreground italic font-light">
+        <p><strong>Qual o prazo de entrega?</strong> De 10 a 20 dias úteis.</p>
+        <p><strong>Como rastreio meu pedido?</strong> Use a opção "Rastrear Pedido" no menu de Atendimento abaixo.</p>
       </div>
     )
   },
@@ -74,24 +95,23 @@ export function Footer() {
 
   return (
     <footer className="bg-primary text-white overflow-hidden relative">
-
       {/* Faixa de benefícios */}
       <div className="border-b border-white/5">
-        <div className="container mx-auto px-6 py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="container mx-auto px-6 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { icon: <Truck className="h-4 w-4" />, title: "Frete Grátis", desc: "Acima de R$ 249" },
-              { icon: <RefreshCcw className="h-4 w-4" />, title: "Troca Fácil", desc: "Até 30 dias" },
-              { icon: <CreditCard className="h-4 w-4" />, title: "10x Sem Juros", desc: "No cartão" },
-              { icon: <ShieldCheck className="h-4 w-4" />, title: "Compra Segura", desc: "SSL Certificado" },
+              { icon: <Truck className="h-5 w-5" />, title: "Frete Grátis", desc: "Acima de R$ 250" },
+              { icon: <RefreshCcw className="h-5 w-5" />, title: "Troca Fácil", desc: "Até 30 dias" },
+              { icon: <CreditCard className="h-5 w-5" />, title: "10x Sem Juros", desc: "No cartão" },
+              { icon: <ShieldCheck className="h-5 w-5" />, title: "Compra Segura", desc: "SSL Certificado" },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full border border-accent/30 flex items-center justify-center text-accent shrink-0">
+              <div key={i} className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-3">
+                <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-accent shrink-0">
                   {item.icon}
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-white">{item.title}</p>
-                  <p className="text-[10px] text-white/40 mt-0.5">{item.desc}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">{item.title}</p>
+                  <p className="text-[10px] text-white/40 mt-1 uppercase font-medium">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -100,118 +120,126 @@ export function Footer() {
       </div>
 
       {/* Conteúdo principal */}
-      <div className="container mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-
-          {/* Logo e redes sociais */}
-          <div className="space-y-6">
-            <div className="brightness-0 invert origin-left">
-              <LogoMark />
+      <div className="container mx-auto px-6 pt-16 pb-12">
+        <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 mb-16">
+          {/* Logo e Redes Sociais */}
+          <div className="lg:w-1/4 space-y-8">
+            <div className="brightness-0 invert">
+              <LogoMark className="[&_#logo-ball]:opacity-0 [&_#logo-ball]:w-0" />
             </div>
-            <p className="text-[12px] text-white/50 font-light italic leading-relaxed">
-              {settings?.tagline || 'Moda feminina com propósito, sofisticação e autenticidade.'}
+            <p className="text-[12px] text-white/50 font-light italic leading-relaxed max-w-xs">
+              {settings?.tagline || 'Celebrando a potência e a sofisticação da mulher moderna através de peças atemporais.'}
             </p>
-            <div className="flex gap-3">
-              <button onClick={handleOpenInstagram} className="h-9 w-9 rounded-full border border-white/10 flex items-center justify-center hover:border-accent hover:text-accent transition-all">
+            <div className="flex gap-4">
+              <button onClick={handleOpenInstagram} className="h-10 w-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
                 <Instagram className="h-4 w-4" />
               </button>
-              <button onClick={handleOpenWhatsApp} className="h-9 w-9 rounded-full border border-white/10 flex items-center justify-center hover:border-accent hover:text-accent transition-all">
+              <button onClick={handleOpenWhatsApp} className="h-10 w-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
                 <MessageCircle className="h-4 w-4" />
               </button>
-              <button onClick={() => window.location.href = `mailto:${settings?.contactEmail || 'contato@todabela.com.br'}`} className="h-9 w-9 rounded-full border border-white/10 flex items-center justify-center hover:border-accent hover:text-accent transition-all">
+              <button onClick={() => window.location.href = `mailto:${settings?.contactEmail || 'contato@todabela.com.br'}`} className="h-10 w-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
                 <Mail className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          {/* Links rápidos */}
-          <div className="space-y-4">
-            <h5 className="text-[11px] font-bold uppercase tracking-[0.3em] text-accent">Navegação</h5>
-            <ul className="space-y-3">
-              {[
-                { label: 'Início', href: '/' },
-                { label: 'Coleções', href: '/#colecoes' },
-                { label: 'Produtos', href: '/#vitrine' },
-                { label: 'Mais Vendidos', href: '/#mais-vendidos' },
-                { label: 'SALE', href: '/economize' },
-              ].map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="text-[11px] text-white/50 hover:text-white transition-colors uppercase tracking-wider">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Colunas de Links */}
+          <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-10">
+            {/* Coluna 1: A Toda Bela */}
+            <div className="space-y-6">
+              <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">A Toda Bela</h5>
+              <ul className="space-y-4">
+                <li><button onClick={() => setActiveInfo('sobre-nos')} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Sobre Nós</button></li>
+                <li><button onClick={() => setActiveInfo('nossa-historia')} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Nossa História</button></li>
+                <li><button onClick={() => setActiveInfo('trabalhe-conosco')} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Trabalhe Conosco</button></li>
+              </ul>
+            </div>
 
-          {/* Atendimento */}
-          <div className="space-y-4">
-            <h5 className="text-[11px] font-bold uppercase tracking-[0.3em] text-accent">Atendimento</h5>
-            <ul className="space-y-3">
-              <li><button onClick={() => setIsTrackOpen(true)} className="text-[11px] text-white/50 hover:text-white transition-colors uppercase tracking-wider text-left">Rastrear Pedido</button></li>
-              <li><button onClick={() => setActiveInfo('trocas')} className="text-[11px] text-white/50 hover:text-white transition-colors uppercase tracking-wider text-left">Trocas e Devoluções</button></li>
-              <li><button onClick={handleOpenWhatsApp} className="text-[11px] text-white/50 hover:text-white transition-colors uppercase tracking-wider text-left">Fale Conosco</button></li>
-              <li><button onClick={() => setActiveInfo('nossa-historia')} className="text-[11px] text-white/50 hover:text-white transition-colors uppercase tracking-wider text-left">Nossa História</button></li>
-            </ul>
-          </div>
+            {/* Coluna 2: Atendimento */}
+            <div className="space-y-6">
+              <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">Atendimento</h5>
+              <ul className="space-y-4">
+                <li><button onClick={() => setIsTrackOpen(true)} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Rastrear Pedido</button></li>
+                <li><button onClick={() => setActiveInfo('trocas')} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Trocas e Devoluções</button></li>
+                <li><button onClick={handleOpenWhatsApp} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Fale Conosco</button></li>
+                <li><button onClick={() => setActiveInfo('faq')} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Perguntas Frequentes</button></li>
+              </ul>
+            </div>
 
-          {/* Contato */}
-          <div className="space-y-4">
-            <h5 className="text-[11px] font-bold uppercase tracking-[0.3em] text-accent">Contato</h5>
-            <div className="space-y-4">
-              <button onClick={handleOpenWhatsApp} className="flex items-center gap-3 group text-left">
-                <MessageCircle className="h-4 w-4 text-accent shrink-0" />
-                <div>
-                  <p className="text-[9px] text-white/30 uppercase tracking-wider">WhatsApp</p>
-                  <p className="text-[12px] text-white/70 group-hover:text-white transition-colors">{settings?.whatsapp || '(11) 99999-9999'}</p>
-                </div>
-              </button>
-              <button onClick={() => window.location.href = `mailto:${settings?.contactEmail || 'contato@todabela.com.br'}`} className="flex items-center gap-3 group text-left">
-                <Mail className="h-4 w-4 text-accent shrink-0" />
-                <div>
-                  <p className="text-[9px] text-white/30 uppercase tracking-wider">E-mail</p>
-                  <p className="text-[12px] text-white/70 group-hover:text-white transition-colors">{settings?.contactEmail || 'contato@todabela.com.br'}</p>
-                </div>
-              </button>
+            {/* Coluna 3: Informações */}
+            <div className="space-y-6">
+              <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">Informações</h5>
+              <ul className="space-y-4">
+                <li><button onClick={() => setActiveInfo('termos')} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Termos de Uso</button></li>
+                <li><button onClick={() => setActiveInfo('privacidade')} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Política de Privacidade</button></li>
+                <li><button onClick={() => setActiveInfo('trocas')} className="text-[11px] text-white/40 hover:text-accent transition-colors uppercase tracking-widest text-left">Política de Reembolso</button></li>
+              </ul>
+            </div>
+
+            {/* Coluna 4: Contato */}
+            <div className="space-y-6">
+              <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">Contato</h5>
+              <div className="space-y-5">
+                <button onClick={handleOpenWhatsApp} className="flex items-center gap-3 group text-left">
+                  <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-accent/50 group-hover:bg-white group-hover:text-primary transition-all">
+                    <MessageCircle className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="text-[8px] text-white/30 uppercase font-black tracking-widest">WhatsApp</p>
+                    <p className="text-[10px] text-white/60 font-bold uppercase tracking-tight">{settings?.whatsapp || '(11) 99999-9999'}</p>
+                  </div>
+                </button>
+                <button onClick={() => window.location.href = `mailto:${settings?.contactEmail || 'contato@todabela.com.br'}`} className="flex items-center gap-3 group text-left">
+                  <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-accent/50 group-hover:bg-white group-hover:text-primary transition-all">
+                    <Mail className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="text-[8px] text-white/30 uppercase font-black tracking-widest">E-mail</p>
+                    <p className="text-[10px] text-white/60 font-bold uppercase tracking-tight truncate max-w-[150px]">{settings?.contactEmail || 'contato@todabela.com.br'}</p>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Rodapé inferior */}
-      <div className="border-t border-white/5">
-        <div className="container mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] text-white/30 uppercase tracking-widest">
-            © {currentYear} {settings?.storeName || 'Toda Bela'} • Todos os direitos reservados
-          </p>
-          <div className="flex gap-6">
-            <button onClick={() => setActiveInfo('termos')} className="text-[10px] text-white/30 hover:text-white/60 uppercase tracking-widest transition-colors">Termos</button>
-            <button onClick={() => setActiveInfo('privacidade')} className="text-[10px] text-white/30 hover:text-white/60 uppercase tracking-widest transition-colors">Privacidade</button>
+        {/* Selos de Pagamento */}
+        <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700">
+             <img src="https://logodownload.org/wp-content/uploads/2020/02/pix-bc-logo-0.png" className="h-4 object-contain brightness-0 invert" alt="Pix" />
+             <img src="https://logodownload.org/wp-content/uploads/2014/07/visa-logo-1.png" className="h-3 object-contain brightness-0 invert" alt="Visa" />
+             <img src="https://logodownload.org/wp-content/uploads/2014/07/mastercard-logo-7.png" className="h-6 object-contain brightness-0 invert" alt="Mastercard" />
+             <img src="https://logodownload.org/wp-content/uploads/2015/05/elo-logo-1.png" className="h-5 object-contain brightness-0 invert" alt="Elo" />
+             <img src="https://logodownload.org/wp-content/uploads/2016/08/american-express-logo-1.png" className="h-4 object-contain brightness-0 invert" alt="Amex" />
+             <div className="h-5 w-px bg-white/20 mx-2 hidden md:block" />
+             <ShieldCheck className="h-5 w-5 text-white" />
+          </div>
+          
+          <div className="text-center md:text-right">
+             <p className="text-[9px] text-white/30 uppercase tracking-[0.4em]">© {currentYear} {settings?.storeName || 'Toda Bela'} • Moda Feminina</p>
+             <p className="text-[8px] text-white/20 uppercase tracking-widest mt-1">CNPJ: {settings?.cnpj || '00.000.000/0001-00'}</p>
           </div>
         </div>
       </div>
 
-      <div className="absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
-      <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
-
       <Dialog open={!!activeInfo} onOpenChange={(o) => !o && setActiveInfo(null)}>
-        <DialogContent className="max-w-lg rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden bg-white">
-          <div className="bg-primary p-8 text-white relative">
+        <DialogContent className="max-w-lg rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-white">
+          <div className="bg-primary p-10 text-white relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Sparkles className="h-20 w-20" />
             </div>
             <DialogHeader className="relative z-10 text-left">
-              <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent mb-2">Toda Bela</p>
-              <DialogTitle className="text-2xl font-headline font-bold">
+              <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent mb-2">Institucional</p>
+              <DialogTitle className="text-3xl font-headline font-bold">
                 {activeInfo && INFO_CONTENT[activeInfo]?.title}
               </DialogTitle>
             </DialogHeader>
           </div>
-          <div className="p-8">
+          <div className="p-10">
             {activeInfo && INFO_CONTENT[activeInfo]?.content}
-            <button onClick={() => setActiveInfo(null)} className="mt-8 text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary transition-colors">
+            <Button onClick={() => setActiveInfo(null)} className="mt-8 rounded-full h-12 px-8 bg-primary text-white text-[10px] font-bold uppercase tracking-widest">
               Fechar
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
