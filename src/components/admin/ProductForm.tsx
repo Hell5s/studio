@@ -305,7 +305,17 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                 </div>
 
                 <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Coleção</Label><Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
-                <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos Disponíveis</Label><div className="flex flex-wrap gap-2 p-4 bg-secondary/20 rounded-2xl">{['PP','P','M','G','GG','XG','G1','G2','Único'].map(size => { const selected = formData.sizes.split(',').map((s:string)=>s.trim()).includes(size); return (<button key={size} type="button" onClick={()=>{const current=formData.sizes.split(',').map((s:string)=>s.trim()).filter(Boolean);const updated=selected?current.filter((s:string)=>s!==size):[...current,size];setFormData({...formData,sizes:updated.join(', ')});}} className={`h-9 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${selected?'bg-primary text-white border-primary':'bg-white text-primary/40 border-primary/10'}`}>{size}</button>);})}</div><p className="text-[9px] text-muted-foreground ml-4 mt-1">Selecionados: {formData.sizes||'nenhum'}</p></div>
+                
+                <div className="grid gap-2">
+                  <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos Disponíveis (separados por vírgula)</Label>
+                  <Input 
+                    value={formData.sizes} 
+                    onChange={e => setFormData({...formData, sizes: e.target.value})} 
+                    placeholder="Ex: P, M, G, GG ou 38, 40, 42"
+                    className="rounded-2xl h-14 bg-secondary/20 border-none px-6"
+                  />
+                  <p className="text-[9px] text-muted-foreground ml-4 mt-1 italic">Dica: Use vírgula para separar as opções de tamanho.</p>
+                </div>
               </div>
             </div>
 
@@ -390,7 +400,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
             <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4"><TrendingUp className="h-4 w-4" /><h3 className="text-[10px] font-bold uppercase tracking-[0.3em]">Valores</h3></div>
             <div className="space-y-4">
               <div className="grid gap-2">
-                <Label className="ml-4 text-[9px] uppercase font-bold text-muted-foreground">Custo no Fornecedor (R$)</Label>
+                <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Custo no Fornecedor (R$)</Label>
                 <Input type="number" value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none px-6" />
                 <Button 
                   type="button"

@@ -107,11 +107,21 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     setFormData({ ...formData, variations: newVars });
   };
 
-  const handleRemoveVariation = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      variations: prev.variations.filter((_, i) => i !== index)
-    }));
+  const handleVariationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || activeVariationIndex === null) return;
+    setUploading(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      handleVariationChange(activeVariationIndex, 'image', url);
+      toast({ title: "Foto da cor carregada!" });
+    } catch (error: any) {
+      toast({ title: "Erro no upload da cor", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      setActiveVariationIndex(null);
+      e.target.value = '';
+    }
   };
 
   const handleSave = () => {
@@ -203,23 +213,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     }
   };
 
-  const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || activeVariationIndex === null) return;
-    setUploading(true);
-    try {
-      const url = await uploadToCloudinary(file);
-      handleVariationChange(activeVariationIndex, 'image', url);
-      toast({ title: "Foto da cor carregada!" });
-    } catch (error: any) {
-      toast({ title: "Erro no upload da cor", variant: "destructive" });
-    } finally {
-      setUploading(false);
-      setActiveVariationIndex(null);
-      e.target.value = '';
-    }
-  };
-
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
       toast({ title: "Preencha nome e preço", variant: "destructive" });
@@ -240,6 +233,13 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     } finally {
       setGeneratingAI(false);
     }
+  };
+
+  const handleRemoveVariation = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variations: prev.variations.filter((_, i) => i !== index)
+    }));
   };
 
   return (
@@ -291,30 +291,14 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 </div>
                 
                 <div className="md:col-span-2 space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Tamanhos Disponíveis</Label>
-                  <div className="flex flex-wrap gap-2 p-4 bg-white border border-gray-100 rounded-2xl">
-                    {['PP','P','M','G','GG','XG','G1','G2','Único'].map(size => {
-                      const selected = formData.sizes.split(',').map((s:string)=>s.trim()).includes(size);
-                      return (
-                        <button 
-                          key={size} 
-                          type="button" 
-                          onClick={()=>{
-                            const current = formData.sizes.split(',').map((s:string)=>s.trim()).filter(Boolean);
-                            const updated = selected ? current.filter((s:string)=>s!==size) : [...current, size];
-                            setFormData({...formData, sizes: updated.join(', ')});
-                          }} 
-                          className={cn(
-                            "h-9 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all",
-                            selected ? 'bg-primary text-white border-primary' : 'bg-white text-primary/40 border-primary/10'
-                          )}
-                        >
-                          {size}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-[9px] text-muted-foreground ml-2">Selecionados: {formData.sizes || 'nenhum'}</p>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-accent ml-2">Tamanhos Disponíveis (separados por vírgula)</Label>
+                  <Input 
+                    value={formData.sizes} 
+                    onChange={e => setFormData({...formData, sizes: e.target.value})} 
+                    placeholder="Ex: P, M, G, GG ou 38, 40, 42"
+                    className="bg-white border-gray-200 h-12 rounded-xl"
+                  />
+                  <p className="text-[9px] text-muted-foreground ml-2 italic">Dica: Use vírgula para separar as opções de tamanho.</p>
                 </div>
               </div>
             </section>
@@ -389,7 +373,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             </section>
 
             <section className="space-y-6">
-              <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationFileUpload} />
+              <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationUpload} />
               <div className="flex justify-between items-center text-primary border-b border-gray-200 pb-3">
                 <div className="flex items-center gap-3"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Cores e Miniaturas</h4></div>
                 <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Cor</Button>
