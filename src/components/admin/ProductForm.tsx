@@ -453,7 +453,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
           <Card className="p-8 border-none bg-white shadow-premium rounded-[3rem] space-y-6">
             <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4"><ImageIcon className="h-5 w-5" /><h3 className="text-[10px] font-bold uppercase tracking-[0.3em]">Capa da Peça</h3></div>
-            <div className={cn("aspect-[3/4] rounded-[2rem] border-2 border-dashed border-primary/10 relative overflow-hidden group cursor-pointer", formData.image && "border-none")} onClick={() => fileInputRef.current?.click()}>
+            <div className={cn("aspect-[3/5] rounded-[2rem] border-2 border-dashed border-primary/10 relative overflow-hidden group cursor-pointer", formData.image && "border-none")} onClick={() => fileInputRef.current?.click()}>
                {formData.image ? <img src={formData.image} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center"><Upload className="h-10 w-10 text-accent/20" /></div>}
             </div>
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => handleUpload(e)} />

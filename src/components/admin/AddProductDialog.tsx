@@ -486,7 +486,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           <div className="space-y-8">
             <div className="sticky top-28 space-y-8">
               <Card className="rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-none">
-                <div className="aspect-[3/4] bg-gray-100 relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                <div className="aspect-[3/5] bg-gray-100 relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                   {formData.image ? <img src={formData.image} className="w-full h-full object-cover" alt="Product Preview" /> : <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30"><ImageIcon className="h-12 w-12" /><span className="text-[10px] font-bold mt-2">CAPA DO PRODUTO</span></div>}
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                   {uploading && !activeVariationIndex && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
