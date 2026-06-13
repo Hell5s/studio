@@ -29,16 +29,17 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { doc, serverTimestamp, collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { cn } from '@/lib/utils';
 
 interface AddProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  product?: any;
 }
 
-export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) {
+export function AddProductDialog({ open, onOpenChange, product }: AddProductDialogProps) {
   const db = useFirestore();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,6 +86,43 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     bestseller: false,
     variations: [] as { color: string; image: string }[]
   });
+
+  // Popula o formulário quando em modo de edição
+  useEffect(() => {
+    if (product && open) {
+      setFormData({
+        name: product.name || '',
+        price: product.price?.toString() || '',
+        oldPrice: product.oldPrice?.toString() || '',
+        cost: product.cost?.toString() || '',
+        supplierUrl: product.supplierUrl || product.sourceUrl || '',
+        supplierName: product.supplierName || product.vendorName || '',
+        internalNotes: product.internalNotes || '',
+        description: product.description || '',
+        longDescription: product.longDescription || '',
+        category: product.category || 'Vestidos',
+        collection: product.collection || 'Nova Coleção',
+        badge: product.badge || '',
+        image: product.image || '',
+        gallery: product.images || [],
+        stock: product.stock?.toString() || '10',
+        sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : (product.sizes || 'P, M, G, GG'),
+        colors: Array.isArray(product.colors) ? product.colors.join(', ') : (product.colors || ''),
+        published: product.published !== false,
+        featured: !!product.featured,
+        bestseller: !!product.bestseller,
+        variations: product.variations || []
+      });
+    } else if (!product && open) {
+      setFormData({
+        name: '', price: '', oldPrice: '', cost: '', supplierUrl: '', supplierName: '',
+        internalNotes: '', description: '', longDescription: '',
+        category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
+        gallery: [], stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
+        featured: false, bestseller: false, variations: []
+      });
+    }
+  }, [product, open]);
 
   const uploadToCloudinary = async (file: File) => {
     const data = new FormData();
@@ -148,7 +186,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     }
 
     setLoading(true);
-    const productId = `prod-${Date.now()}`;
+    const isEdit = !!product?.id;
+    const productId = isEdit ? product.id : `prod-${Date.now()}`;
     const productRef = doc(db, 'products', productId);
 
     const payload = {
@@ -162,26 +201,26 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
       image: finalMainImage,
       images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      ...(isEdit ? {} : { createdAt: serverTimestamp() })
     };
 
-    setDocumentNonBlocking(productRef, payload, { merge: true });
-
-    toast({
-      title: "Produto Cadastrado",
-      description: `${formData.name} foi adicionado à Loja.`,
-    });
+    if (isEdit) {
+      updateDocumentNonBlocking(productRef, payload);
+      toast({
+        title: "Produto Atualizado",
+        description: `${formData.name} foi atualizado com sucesso.`,
+      });
+    } else {
+      setDocumentNonBlocking(productRef, payload, { merge: true });
+      toast({
+        title: "Produto Cadastrado",
+        description: `${formData.name} foi adicionado à Loja.`,
+      });
+    }
     
     setLoading(false);
     onOpenChange(false);
-    setFormData({
-      name: '', price: '', oldPrice: '', cost: '', supplierUrl: '', supplierName: '',
-      internalNotes: '', description: '', longDescription: '',
-      category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
-      gallery: [], stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
-      featured: false, bestseller: false, variations: []
-    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -246,10 +285,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     }
   };
 
-  const handleAIBannerGenerate = () => {
-    // IA Banner Flow placeholder
-  };
-
   const handleRemoveVariation = (index: number) => {
     setFormData(prev => ({
       ...prev,
@@ -266,13 +301,17 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               <Package className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent/80">Novo Cadastro</p>
-              <DialogHeader><DialogTitle className="text-2xl font-bold">Peça Exclusiva</DialogTitle></DialogHeader>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent/80">
+                {product ? 'Gestão de Produto' : 'Novo Cadastro'}
+              </p>
+              <DialogHeader><DialogTitle className="text-2xl font-bold">
+                {product ? 'Editar Peça' : 'Peça Exclusiva'}
+              </DialogTitle></DialogHeader>
             </div>
           </div>
           <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-12 bg-accent text-primary hover:brightness-110 font-bold uppercase tracking-widest text-[10px] shadow-xl border-none">
             {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-            Publicar Produto
+            {product ? 'Salvar Alterações' : 'Publicar Produto'}
           </Button>
         </div>
 
@@ -393,7 +432,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationUpload} />
               <div className="flex justify-between items-center text-primary border-b border-gray-200 pb-3">
                 <div className="flex items-center gap-3"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Cores e Miniaturas</h4></div>
-                <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Cor</Button>
+                <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[9px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Cor</Button>
               </div>
               <div className="grid gap-4">
                 {formData.variations.map((v, i) => (

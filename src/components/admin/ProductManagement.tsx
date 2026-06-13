@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -21,7 +20,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { EditProductDialog } from './EditProductDialog';
+import { AddProductDialog } from './AddProductDialog';
 
 export function ProductManagement() {
   const db = useFirestore();
@@ -59,7 +58,6 @@ export function ProductManagement() {
 
   const handleDelete = (id: string, name: string) => {
     if (!id) return;
-    // Removido window.confirm por instabilidade no Studio
     try {
       deleteDocumentNonBlocking(doc(db, 'products', id));
       toast({ title: "Produto removido com sucesso" });
@@ -173,7 +171,7 @@ export function ProductManagement() {
       </Card>
 
       {editingProduct && (
-        <EditProductDialog 
+        <AddProductDialog 
           product={editingProduct} 
           open={!!editingProduct} 
           onOpenChange={o => !o && setEditingProduct(null)} 
