@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -82,7 +81,6 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
   return (
     <div className="space-y-10">
       <div className="space-y-4">
-        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em]">MARCA: TODA BELA</p>
         <div className="flex items-start justify-between gap-8">
           <h1 className="text-2xl md:text-3xl font-bold text-primary leading-tight uppercase tracking-tight">
             {product.name}
