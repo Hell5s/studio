@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Save, 
   Loader2, 
@@ -29,7 +28,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { cn } from '@/lib/utils';
@@ -50,6 +49,18 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
+  const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'categories'), orderBy('name')));
+        const names = snap.docs.map(d => d.data().name).filter(Boolean);
+        if (names.length > 0) setCategories(names);
+      } catch (e) {}
+    };
+    fetchCategories();
+  }, [db]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -235,6 +246,10 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     }
   };
 
+  const handleAIBannerGenerate = () => {
+    // IA Banner Flow placeholder
+  };
+
   const handleRemoveVariation = (index: number) => {
     setFormData(prev => ({
       ...prev,
@@ -276,7 +291,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 <div className="space-y-2">
                   <Label>Categoria</Label>
                   <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm">
-                    <option>Moda Fitness</option><option>Vestidos</option><option>Conjuntos</option><option>Plus Size</option><option>Casual Chic</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
