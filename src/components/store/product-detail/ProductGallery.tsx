@@ -76,7 +76,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         src={img}
         alt={`${name} - Imagem ${idx + 1}`}
         fill
-        className="object-contain transition-transform duration-2000 group-hover:scale-105"
+        className="object-cover transition-transform duration-2000 group-hover:scale-105"
         priority={isPriority}
         sizes="(max-width: 1200px) 100vw, 50vw"
         onError={() => handleImageError(idx)}
