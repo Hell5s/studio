@@ -12,7 +12,8 @@ import {
   Palette,
   X,
   Link as LinkIcon,
-  Plus
+  Plus,
+  Move
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -292,6 +293,25 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }));
   };
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('draggedIndex', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    const draggedIndex = parseInt(e.dataTransfer.getData('draggedIndex'));
+    if (draggedIndex === targetIndex || isNaN(draggedIndex)) return;
+
+    const newGallery = [...formData.gallery];
+    const [draggedItem] = newGallery.splice(draggedIndex, 1);
+    newGallery.splice(targetIndex, 0, draggedItem);
+
+    setFormData(prev => ({ ...prev, gallery: newGallery }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
@@ -361,15 +381,25 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
             <section className="space-y-6">
               <div className="flex items-center justify-between text-primary border-b border-gray-200 pb-3">
-                <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos</h4></div>
+                <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos (Arraste para reordenar)</h4></div>
                 <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Fotos</Button>
               </div>
               <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
               
               <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
                  {formData.gallery.map((img, idx) => (
-                   <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm">
-                      <img src={img} className="w-full h-full object-cover" />
+                   <div 
+                    key={idx} 
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, idx)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, idx)}
+                    className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
+                   >
+                      <img src={img} className="w-full h-full object-cover pointer-events-none" />
+                      <div className="absolute top-1 left-1 p-1 bg-white/80 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Move className="h-3 w-3 text-primary" />
+                      </div>
                       <button 
                         onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))}
                         className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
