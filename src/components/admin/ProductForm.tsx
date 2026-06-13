@@ -215,6 +215,16 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     }
   };
 
+  const parsePrice = (val: any) => {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    const str = String(val).trim();
+    if (str.includes(',')) {
+      return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    return parseFloat(str) || 0;
+  };
+
   const handleCalculateIA = () => {
     const cost = parseFloat(formData.cost);
     if (isNaN(cost)) {
@@ -249,9 +259,9 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       const payload = {
         ...formData,
         id,
-        price: parseFloat(formData.price),
-        oldPrice: formData.oldPrice ? parseFloat(formData.oldPrice) : null,
-        cost: parseFloat(formData.cost) || 0,
+        price: parsePrice(formData.price),
+        oldPrice: formData.oldPrice ? parsePrice(formData.oldPrice) : null,
+        cost: parsePrice(formData.cost),
         stock: parseInt(formData.stock),
         image: finalMainImage,
         images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],

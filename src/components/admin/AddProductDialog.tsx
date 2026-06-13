@@ -141,8 +141,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     return result.secure_url;
   };
 
-  const parsePrice = (val: string) => {
-    return Number(String(val).replace(/\./g, "").replace(",", ".")) || 0;
+  const parsePrice = (val: any) => {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    const str = String(val).trim();
+    // Se contém vírgula, assume que é o decimal e o ponto é milhar (ou não existe)
+    if (str.includes(',')) {
+      return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    // Se não tem vírgula, assume que o ponto já é o decimal
+    return parseFloat(str) || 0;
   };
 
   const handleAddVariation = () => {
