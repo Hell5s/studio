@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -315,6 +316,16 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               <div className="grid gap-6">
                 <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Nome do Produto</Label><Input value={formData.name} onChange={handleNameChange} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
                 
+                <div className="grid gap-2">
+                  <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Descrição do Produto</Label>
+                  <Textarea 
+                    value={formData.description} 
+                    onChange={e => setFormData({...formData, description: e.target.value})} 
+                    className="rounded-2xl h-32 bg-secondary/20 border-none p-6 italic" 
+                    placeholder="Breve descrição para a vitrine..."
+                  />
+                </div>
+
                 <div className="grid gap-2">
                   <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Link do Produto (Fornecedor)</Label>
                   <div className="relative">

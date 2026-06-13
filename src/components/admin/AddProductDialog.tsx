@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -346,6 +347,15 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <div className="md:col-span-2 space-y-2">
                   <Label>Nome da Peça</Label>
                   <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Descrição do Produto</Label>
+                  <Textarea 
+                    value={formData.description} 
+                    onChange={e => setFormData({...formData, description: e.target.value})} 
+                    className="bg-white border-gray-200 min-h-[100px] rounded-xl" 
+                    placeholder="Breve descrição para a vitrine..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Categoria</Label>

@@ -237,7 +237,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
             </AccordionTrigger>
             <AccordionContent className="pb-10 text-[13px] md:text-[14px] text-muted-foreground leading-relaxed italic font-light">
               <div className="space-y-4">
-                {product.longDescription || product.description}
+                {product.description || product.longDescription}
               </div>
             </AccordionContent>
           </AccordionItem>
