@@ -89,7 +89,7 @@ export const ProductCard = React.memo(function ProductCard({
 
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
-      <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
+      <div className="relative w-full aspect-[3/5] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
         {isValidUrl && !hasError ? (
           <Image
             src={image?.includes('cloudinary.com') 
@@ -98,7 +98,7 @@ export const ProductCard = React.memo(function ProductCard({
             alt={name}
             fill
             loading="lazy"
-            className="object-cover transition-transform duration-1500 group-hover:scale-105"
+            className="object-cover object-top transition-transform duration-1500 group-hover:scale-105"
             sizes="(max-width: 640px) 45vw, (max-width: 1024px) 33vw, 25vw"
             onError={() => setHasError(true)}
           />
