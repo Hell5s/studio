@@ -18,7 +18,7 @@ interface ProductCardProps {
   price: number;
   oldPrice?: number;
   badge?: string;
-  image: string;
+  image: any; // Pode ser string ou objeto com settings
   onAddToCart?: () => void;
 }
 
@@ -75,31 +75,40 @@ export const ProductCard = React.memo(function ProductCard({
       deleteDocumentNonBlocking(favoriteRef);
       toast({ title: "Removido dos favoritos" });
     } else {
+      const displayImg = typeof image === 'string' ? image : image?.url;
       setDocumentNonBlocking(favoriteRef, {
         productId: stringId,
         productName: name,
-        productImage: image,
+        productImage: displayImg,
         addedAt: serverTimestamp()
       }, { merge: true });
       toast({ title: "Salvo nos seus favoritos!" });
     }
   };
 
-  const isValidUrl = image && typeof image === 'string' && image.length > 0 && (image.startsWith('http') || image.startsWith('/'));
+  const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
+  const getImageSettings = (img: any) => typeof img === 'string' ? { objectPosition: 'top' } : {
+    objectPosition: img?.crop ? `${img.crop.x}% ${img.crop.y}%` : 'top',
+    transform: img?.zoom ? `scale(${img.zoom})` : 'none'
+  };
+
+  const url = getImageUrl(image);
+  const isValidUrl = url && typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
 
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
       <div className="relative w-full aspect-[3/5] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
         {isValidUrl && !hasError ? (
           <Image
-            src={image?.includes('cloudinary.com') 
-              ? image.replace('/upload/', '/upload/q_auto,f_auto/') 
-              : image}
+            src={url?.includes('cloudinary.com') 
+              ? url.replace('/upload/', '/upload/q_auto,f_auto/') 
+              : url}
             alt={name}
             fill
             loading="lazy"
             quality={90}
-            className="object-cover object-top transition-transform duration-1500 group-hover:scale-105"
+            className="object-cover transition-transform duration-1500 group-hover:scale-105"
+            style={getImageSettings(image)}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onError={() => setHasError(true)}
           />

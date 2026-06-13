@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { Heart, Camera } from 'lucide-react';
 
 interface ProductGalleryProps {
-  images: string[];
+  images: any[];
   name: string;
   productId: string;
 }
@@ -45,10 +45,11 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       deleteDocumentNonBlocking(favoriteRef);
       toast({ title: "Removido dos favoritos" });
     } else {
+      const firstImage = typeof images[0] === 'string' ? images[0] : images[0]?.url;
       setDocumentNonBlocking(favoriteRef, {
         productId,
         productName: name,
-        productImage: images[0],
+        productImage: firstImage,
         addedAt: serverTimestamp()
       }, { merge: true });
       toast({ title: "Salvo nos seus favoritos!" });
@@ -59,10 +60,17 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
     setErrorImages(prev => ({ ...prev, [idx]: true }));
   };
 
+  const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
+  const getImageSettings = (img: any) => typeof img === 'string' ? {} : {
+    objectPosition: img?.crop ? `${img.crop.x}% ${img.crop.y}%` : 'center',
+    transform: img?.zoom ? `scale(${img.zoom})` : 'none'
+  };
+
   const isValidUrl = (url: any) => typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
 
-  const renderImage = (img: string, idx: number, isPriority = false) => {
-    if (errorImages[idx] || !isValidUrl(img)) {
+  const renderImage = (img: any, idx: number, isPriority = false) => {
+    const url = getImageUrl(img);
+    if (errorImages[idx] || !isValidUrl(url)) {
       return (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-300">
           <Camera className="h-12 w-12 mb-3 opacity-20" />
@@ -71,12 +79,15 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       );
     }
 
+    const settings = getImageSettings(img);
+
     return (
       <Image
-        src={img}
+        src={url}
         alt={`${name} - Imagem ${idx + 1}`}
         fill
         className="object-cover transition-transform duration-2000 group-hover:scale-105"
+        style={settings}
         priority={isPriority}
         quality={90}
         sizes="(max-width: 768px) 100vw, 50vw"

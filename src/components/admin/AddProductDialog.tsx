@@ -14,7 +14,9 @@ import {
   X,
   Link as LinkIcon,
   Plus,
-  Move
+  Move,
+  Pencil,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +27,8 @@ import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle
+  DialogTitle,
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -34,6 +37,7 @@ import { doc, serverTimestamp, collection, getDocs, query, orderBy } from 'fireb
 import { useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { cn } from '@/lib/utils';
+import Cropper from 'react-easy-crop';
 
 interface AddProductDialogProps {
   open: boolean;
@@ -53,6 +57,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
   const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
+
+  // Editor de Recorte
+  const [editingImage, setEditingImage] = useState<{ index: number, field: 'gallery' | 'image' } | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -78,8 +87,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     category: 'Vestidos',
     collection: 'Nova Coleção',
     badge: 'Novo',
-    image: '',
-    gallery: [] as string[],
+    image: '', // Agora pode ser string ou objeto {url, crop, zoom}
+    gallery: [] as any[], // Agora pode conter objetos {url, crop, zoom}
     stock: '10',
     sizes: 'P, M, G, GG',
     colors: '',
@@ -89,7 +98,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     variations: [] as { color: string; image: string }[]
   });
 
-  // Popula o formulário quando em modo de edição
   useEffect(() => {
     if (product && open) {
       setFormData({
@@ -145,11 +153,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     if (typeof val === 'number') return val;
     if (!val) return 0;
     const str = String(val).trim();
-    // Se contém vírgula, assume que é o decimal e o ponto é milhar (ou não existe)
     if (str.includes(',')) {
       return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
     }
-    // Se não tem vírgula, assume que o ponto já é o decimal
     return parseFloat(str) || 0;
   };
 
@@ -239,8 +245,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     setUploading(true);
     try {
       const url = await uploadToCloudinary(file);
-      setFormData(prev => ({ ...prev, image: url }));
-      toast({ title: "Imagem carregada no Cloudinary!" });
+      setFormData(prev => ({ ...prev, image: { url, crop: { x: 0, y: 0 }, zoom: 1 } as any }));
+      toast({ title: "Imagem carregada! Clique no ícone de lápis para ajustar." });
     } catch (error: any) {
       toast({ title: "Erro no upload Cloudinary", variant: "destructive" });
     } finally {
@@ -254,17 +260,17 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     
     setUploading(true);
     try {
-      const newUrls: string[] = [];
+      const newItems: any[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const url = await uploadToCloudinary(file);
-        newUrls.push(url);
+        newItems.push({ url, crop: { x: 0, y: 0 }, zoom: 1 });
       }
       setFormData(prev => ({ 
         ...prev, 
-        gallery: [...prev.gallery, ...newUrls] 
+        gallery: [...prev.gallery, ...newItems] 
       }));
-      toast({ title: `${newUrls.length} imagens adicionadas ao Cloudinary!` });
+      toast({ title: `${newItems.length} imagens adicionadas! Clique no lápis para editar enquadramento.` });
     } catch (error: any) {
       toast({ title: "Erro no upload da galeria", variant: "destructive" });
     } finally {
@@ -321,220 +327,335 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     setFormData(prev => ({ ...prev, gallery: newGallery }));
   };
 
+  const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
+
+  const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
+    const img = field === 'image' ? formData.image : formData.gallery[index];
+    setEditingImage({ index, field });
+    setCrop(img?.crop || { x: 0, y: 0 });
+    setZoom(img?.zoom || 1);
+  };
+
+  const handleSaveCrop = () => {
+    if (!editingImage) return;
+    const { index, field } = editingImage;
+    
+    if (field === 'image') {
+      const current = typeof formData.image === 'string' ? { url: formData.image } : formData.image;
+      setFormData({ ...formData, image: { ...current, crop, zoom } as any });
+    } else {
+      const newGallery = [...formData.gallery];
+      const current = typeof newGallery[index] === 'string' ? { url: newGallery[index] } : newGallery[index];
+      newGallery[index] = { ...current, crop, zoom };
+      setFormData({ ...formData, gallery: newGallery });
+    }
+    
+    setEditingImage(null);
+    toast({ title: "Enquadramento salvo!" });
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
-        <div className="bg-[#2A1F22] p-8 text-white flex items-center justify-between sticky top-0 z-20 shadow-lg">
-          <div className="flex items-center gap-6">
-            <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
-              <Package className="h-6 w-6 text-primary" />
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
+          <div className="bg-[#2A1F22] p-8 text-white flex items-center justify-between sticky top-0 z-20 shadow-lg">
+            <div className="flex items-center gap-6">
+              <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
+                <Package className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent/80">
+                  {product ? 'Gestão de Produto' : 'Novo Cadastro'}
+                </p>
+                <DialogHeader><DialogTitle className="text-2xl font-bold">
+                  {product ? 'Editar Peça' : 'Peça Exclusiva'}
+                </DialogTitle></DialogHeader>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent/80">
-                {product ? 'Gestão de Produto' : 'Novo Cadastro'}
-              </p>
-              <DialogHeader><DialogTitle className="text-2xl font-bold">
-                {product ? 'Editar Peça' : 'Peça Exclusiva'}
-              </DialogTitle></DialogHeader>
-            </div>
+            <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-12 bg-accent text-primary hover:brightness-110 font-bold uppercase tracking-widest text-[10px] shadow-xl border-none">
+              {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+              {product ? 'Salvar Alterações' : 'Publicar Produto'}
+            </Button>
           </div>
-          <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-12 bg-accent text-primary hover:brightness-110 font-bold uppercase tracking-widest text-[10px] shadow-xl border-none">
-            {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-            {product ? 'Salvar Alterações' : 'Publicar Produto'}
-          </Button>
-        </div>
 
-        <div className="p-10 grid xl:grid-cols-[1fr_400px] gap-10">
-          <div className="space-y-10">
-            <section className="space-y-6">
-              <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3">
-                <Layers className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4>
-              </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="md:col-span-2 space-y-2">
-                  <Label>Nome da Peça</Label>
-                  <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+          <div className="p-10 grid xl:grid-cols-[1fr_400px] gap-10">
+            <div className="space-y-10">
+              <section className="space-y-6">
+                <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3">
+                  <Layers className="h-5 w-5" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4>
                 </div>
-                <div className="md:col-span-2 space-y-2">
-                  <Label>Descrição do Produto</Label>
-                  <Textarea 
-                    value={formData.description} 
-                    onChange={e => setFormData({...formData, description: e.target.value})} 
-                    className="bg-white border-gray-200 min-h-[100px] rounded-xl" 
-                    placeholder="Breve descrição para a vitrine..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Categoria</Label>
-                  <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm">
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Preço Venda (R$)</Label>
-                    <Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Nome da Peça</Label>
+                    <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Descrição do Produto</Label>
+                    <Textarea 
+                      value={formData.description} 
+                      onChange={e => setFormData({...formData, description: e.target.value})} 
+                      className="bg-white border-gray-200 min-h-[100px] rounded-xl" 
+                      placeholder="Breve descrição para a vitrine..."
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>Preço Original "De" (R$)</Label>
-                    <Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+                    <Label>Categoria</Label>
+                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm">
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
                   </div>
-                </div>
-                
-                <div className="md:col-span-2 space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-accent ml-2">Tamanhos Disponíveis (separados por vírgula)</Label>
-                  <Input 
-                    value={formData.sizes} 
-                    onChange={e => setFormData({...formData, sizes: e.target.value})} 
-                    placeholder="Ex: P, M, G, GG ou 38, 40, 42"
-                    className="bg-white border-gray-200 h-12 rounded-xl"
-                  />
-                  <p className="text-[9px] text-muted-foreground ml-2 italic">Dica: Use vírgula para separar as opções de tamanho.</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="space-y-6">
-              <div className="flex items-center justify-between text-primary border-b border-gray-200 pb-3">
-                <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos (Arraste para reordenar)</h4></div>
-                <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Fotos</Button>
-              </div>
-              <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
-              
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
-                 {formData.gallery.map((img, idx) => (
-                   <div 
-                    key={idx} 
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, idx)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, idx)}
-                    className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
-                   >
-                      <img src={img} className="w-full h-full object-cover pointer-events-none" />
-                      <div className="absolute top-1 left-1 p-1 bg-white/80 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Move className="h-3 w-3 text-primary" />
-                      </div>
-                      <button 
-                        onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))}
-                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                   </div>
-                 ))}
-                 {uploading && (
-                   <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20">
-                     <Loader2 className="h-5 w-5 animate-spin text-accent" />
-                   </div>
-                 )}
-              </div>
-            </section>
-
-            <section className="space-y-6 bg-white p-8 rounded-3xl border border-primary/5 shadow-sm">
-              <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-3">
-                <LinkIcon className="h-5 w-5" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest">Dados Operacionais (Apenas Admin)</h4>
-              </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="md:col-span-2 space-y-2">
-                  <Label>Link do Fornecedor (AliExpress, Shopee, etc)</Label>
-                  <Input value={formData.supplierUrl} onChange={e => setFormData({...formData, supplierUrl: e.target.value})} placeholder="https://..." className="bg-gray-50/50" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Custo no Fornecedor (R$)</Label>
-                  <Input value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} placeholder="Ex: 45.00" className="bg-gray-50/50" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const custo = parseFloat(formData.cost);
-                      if (!custo || isNaN(custo)) return;
-                      const preco = (Math.ceil(custo * 3) - 0.10).toFixed(2);
-                      const original = (Math.ceil(custo * 4) - 0.10).toFixed(2);
-                      setFormData({
-                        ...formData,
-                        price: preco,
-                        oldPrice: original
-                      });
-                    }}
-                    className="flex items-center gap-2 h-9 px-4 rounded-full bg-accent/10 text-accent text-[9px] font-bold uppercase tracking-widest border border-accent/20 hover:bg-accent hover:text-white transition-all mt-2"
-                  >
-                    ✦ Calcular Preço com IA
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  <Label>Nome do Fornecedor</Label>
-                  <Input value={formData.supplierName} onChange={e => setFormData({...formData, supplierName: e.target.value})} placeholder="Ex: Global Store" className="bg-gray-50/50" />
-                </div>
-                <div className="md:col-span-2 space-y-2">
-                   <Label>Observações Internas</Label>
-                   <Textarea value={formData.internalNotes} onChange={e => setFormData({...formData, internalNotes: e.target.value})} placeholder="Ex: Tamanho chinês é menor, pedir um número a mais." className="bg-gray-50/50" />
-                </div>
-              </div>
-            </section>
-
-            <section className="space-y-6">
-              <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationUpload} />
-              <div className="flex justify-between items-center text-primary border-b border-gray-200 pb-3">
-                <div className="flex items-center gap-3"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Cores e Miniaturas</h4></div>
-                <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[9px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Cor</Button>
-              </div>
-              <div className="grid gap-4">
-                {formData.variations.map((v, i) => (
-                  <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-gray-100 group">
-                    <div 
-                      className="h-16 w-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
-                    >
-                      {v.image ? <img src={v.image} className="h-full w-full object-cover" alt="Variation" /> : <div className="h-full w-full flex items-center justify-center opacity-30"><Upload className="h-4 w-4" /></div>}
-                      {uploading && activeVariationIndex === i && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Preço Venda (R$)</Label>
+                      <Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
                     </div>
-                    <Input placeholder="Cor (ex: Branco)" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 border-none bg-gray-50 rounded-xl" />
-                    <Input placeholder="URL da Foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-12 border-none bg-gray-50 rounded-xl flex-[2]" />
-                    <button onClick={() => handleRemoveVariation(i)} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
+                    <div className="space-y-2">
+                      <Label>Preço Original "De" (R$)</Label>
+                      <Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+                    </div>
                   </div>
-                ))}
+                  
+                  <div className="md:col-span-2 space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent ml-2">Tamanhos Disponíveis (separados por vírgula)</Label>
+                    <Input 
+                      value={formData.sizes} 
+                      onChange={e => setFormData({...formData, sizes: e.target.value})} 
+                      placeholder="Ex: P, M, G, GG ou 38, 40, 42"
+                      className="bg-white border-gray-200 h-12 rounded-xl"
+                    />
+                    <p className="text-[9px] text-muted-foreground ml-2 italic">Dica: Use vírgula para separar as opções de tamanho.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-6">
+                <div className="flex items-center justify-between text-primary border-b border-gray-200 pb-3">
+                  <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos (Arraste para reordenar)</h4></div>
+                  <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Fotos</Button>
+                </div>
+                <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
+                
+                <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
+                   {formData.gallery.map((img, idx) => (
+                     <div 
+                      key={idx} 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, idx)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, idx)}
+                      className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
+                     >
+                        <img 
+                          src={getImageUrl(img)} 
+                          className="w-full h-full object-cover pointer-events-none" 
+                          style={{
+                            objectPosition: img.crop ? `${img.crop.x}% ${img.crop.y}%` : 'center',
+                            transform: img.zoom ? `scale(${img.zoom})` : 'none'
+                          }}
+                        />
+                        <div className="absolute top-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="p-1 bg-white/80 rounded-md">
+                            <Move className="h-3 w-3 text-primary" />
+                          </div>
+                          <button 
+                            onClick={() => handleOpenEditor(idx, 'gallery')}
+                            className="p-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <button 
+                          onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))}
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                     </div>
+                   ))}
+                   {uploading && (
+                     <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20">
+                       <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                     </div>
+                   )}
+                </div>
+              </section>
+
+              <section className="space-y-6 bg-white p-8 rounded-3xl border border-primary/5 shadow-sm">
+                <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-3">
+                  <LinkIcon className="h-5 w-5" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Dados Operacionais (Apenas Admin)</h4>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Link do Fornecedor (AliExpress, Shopee, etc)</Label>
+                    <Input value={formData.supplierUrl} onChange={e => setFormData({...formData, supplierUrl: e.target.value})} placeholder="https://..." className="bg-gray-50/50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Custo no Fornecedor (R$)</Label>
+                    <Input value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} placeholder="Ex: 45.00" className="bg-gray-50/50" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const custo = parseFloat(formData.cost);
+                        if (!custo || isNaN(custo)) return;
+                        const preco = (Math.ceil(custo * 3) - 0.10).toFixed(2);
+                        const original = (Math.ceil(custo * 4) - 0.10).toFixed(2);
+                        setFormData({
+                          ...formData,
+                          price: preco,
+                          oldPrice: original
+                        });
+                      }}
+                      className="flex items-center gap-2 h-9 px-4 rounded-full bg-accent/10 text-accent text-[9px] font-bold uppercase tracking-widest border border-accent/20 hover:bg-accent hover:text-white transition-all mt-2"
+                    >
+                      ✦ Calcular Preço com IA
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nome do Fornecedor</Label>
+                    <Input value={formData.supplierName} onChange={e => setFormData({...formData, supplierName: e.target.value})} placeholder="Ex: Global Store" className="bg-gray-50/50" />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                     <Label>Observações Internas</Label>
+                     <Textarea value={formData.internalNotes} onChange={e => setFormData({...formData, internalNotes: e.target.value})} placeholder="Ex: Tamanho chinês é menor, pedir um número a mais." className="bg-gray-50/50" />
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-6">
+                <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationUpload} />
+                <div className="flex justify-between items-center text-primary border-b border-gray-200 pb-3">
+                  <div className="flex items-center gap-3"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Cores e Miniaturas</h4></div>
+                  <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[9px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Cor</Button>
+                </div>
+                <div className="grid gap-4">
+                  {formData.variations.map((v, i) => (
+                    <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-gray-100 group">
+                      <div 
+                        className="h-16 w-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
+                      >
+                        {v.image ? <img src={v.image} className="h-full w-full object-cover" alt="Variation" /> : <div className="h-full w-full flex items-center justify-center opacity-30"><Upload className="h-4 w-4" /></div>}
+                        {uploading && activeVariationIndex === i && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>}
+                      </div>
+                      <Input placeholder="Cor (ex: Branco)" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 border-none bg-gray-50 rounded-xl" />
+                      <Input placeholder="URL da Foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-12 border-none bg-gray-50 rounded-xl flex-[2]" />
+                      <button onClick={() => handleRemoveVariation(i)} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            <div className="space-y-8">
+              <div className="sticky top-28 space-y-8">
+                <Card className="rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-none">
+                  <div className="aspect-[3/5] bg-gray-100 relative group">
+                    {formData.image ? (
+                      <>
+                        <img 
+                          src={getImageUrl(formData.image)} 
+                          className="w-full h-full object-cover" 
+                          alt="Product Preview" 
+                          style={{
+                            objectPosition: (formData.image as any).crop ? `${(formData.image as any).crop.x}% ${(formData.image as any).crop.y}%` : 'center',
+                            transform: (formData.image as any).zoom ? `scale(${(formData.image as any).zoom})` : 'none'
+                          }}
+                        />
+                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => handleOpenEditor(0, 'image')}
+                            className="p-2 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="p-2 bg-white text-primary rounded-full shadow-lg hover:bg-gray-100"
+                          >
+                            <Upload className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                        <ImageIcon className="h-12 w-12" />
+                        <span className="text-[10px] font-bold mt-2">CAPA DO PRODUTO</span>
+                      </div>
+                    )}
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                    {uploading && !activeVariationIndex && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
+                  </div>
+                  <div className="p-8 text-center space-y-2">
+                    <h5 className="font-bold text-lg text-primary truncate">{formData.name || 'Nome da Peça'}</h5>
+                    <div className="flex items-center justify-center gap-3">
+                      <p className="text-2xl font-light text-primary">R$ {formData.price || '0,00'}</p>
+                      {formData.oldPrice && <p className="text-sm text-muted-foreground line-through italic">R$ {formData.oldPrice}</p>}
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-8 rounded-[2rem] bg-primary text-white space-y-6 shadow-xl border-none">
+                  <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent">Configurações</h6>
+                  <div className="space-y-4">
+                     <div className="flex items-center justify-between"><Label className="text-white text-xs">Publicado</Label><Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} /></div>
+                     <div className="flex items-center justify-between"><Label className="text-white text-xs">Destaque</Label><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
+                     <div className="flex items-center justify-between"><Label className="text-white text-xs">Mais Vendido</Label><Checkbox checked={formData.bestseller} onCheckedChange={v => setFormData({...formData, bestseller: !!v})} className="border-white" /></div>
+                  </div>
+                </Card>
+                
+                <Button variant="outline" onClick={handleAIGenerate} disabled={generatingAI} className="w-full h-14 rounded-2xl border-accent/20 text-accent hover:bg-accent/5 font-bold uppercase text-[10px] tracking-widest">
+                  {generatingAI ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  Gerar Editorial com IA
+                </Button>
               </div>
-            </section>
+            </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <div className="space-y-8">
-            <div className="sticky top-28 space-y-8">
-              <Card className="rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-none">
-                <div className="aspect-[3/5] bg-gray-100 relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                  {formData.image ? <img src={formData.image} className="w-full h-full object-cover" alt="Product Preview" /> : <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30"><ImageIcon className="h-12 w-12" /><span className="text-[10px] font-bold mt-2">CAPA DO PRODUTO</span></div>}
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-                  {uploading && !activeVariationIndex && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
-                </div>
-                <div className="p-8 text-center space-y-2">
-                  <h5 className="font-bold text-lg text-primary truncate">{formData.name || 'Nome da Peça'}</h5>
-                  <div className="flex items-center justify-center gap-3">
-                    <p className="text-2xl font-light text-primary">R$ {formData.price || '0,00'}</p>
-                    {formData.oldPrice && <p className="text-sm text-muted-foreground line-through italic">R$ {formData.oldPrice}</p>}
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-8 rounded-[2rem] bg-primary text-white space-y-6 shadow-xl border-none">
-                <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent">Configurações</h6>
-                <div className="space-y-4">
-                   <div className="flex items-center justify-between"><Label className="text-white text-xs">Publicado</Label><Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} /></div>
-                   <div className="flex items-center justify-between"><Label className="text-white text-xs">Destaque</Label><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
-                   <div className="flex items-center justify-between"><Label className="text-white text-xs">Mais Vendido</Label><Checkbox checked={formData.bestseller} onCheckedChange={v => setFormData({...formData, bestseller: !!v})} className="border-white" /></div>
-                </div>
-              </Card>
-              
-              <Button variant="outline" onClick={handleAIGenerate} disabled={generatingAI} className="w-full h-14 rounded-2xl border-accent/20 text-accent hover:bg-accent/5 font-bold uppercase text-[10px] tracking-widest">
-                {generatingAI ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                Gerar Editorial com IA
+      {/* Editor de Imagem (Crop/Zoom) */}
+      <Dialog open={!!editingImage} onOpenChange={(o) => !o && setEditingImage(null)}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none rounded-[2rem]">
+          <div className="relative h-[60vh] w-full">
+            <Cropper
+              image={getImageUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
+              crop={crop}
+              zoom={zoom}
+              aspect={3 / 5}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              showGrid={false}
+            />
+          </div>
+          <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
+            <div className="flex-1 space-y-4">
+              <div className="flex justify-between items-center text-white/60 text-[10px] font-bold uppercase tracking-widest">
+                <span>Zoom</span>
+                <span>{Math.round(zoom * 100)}%</span>
+              </div>
+              <input 
+                type="range" 
+                min={1} 
+                max={3} 
+                step={0.1} 
+                value={zoom} 
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full accent-accent"
+              />
+            </div>
+            <div className="flex gap-4">
+              <Button variant="ghost" onClick={() => setEditingImage(null)} className="text-white hover:bg-white/10 uppercase text-[10px] font-bold h-12 px-6">Cancelar</Button>
+              <Button onClick={handleSaveCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full hover:brightness-110 shadow-xl">
+                <Check className="mr-2 h-4 w-4" /> Salvar Enquadramento
               </Button>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
