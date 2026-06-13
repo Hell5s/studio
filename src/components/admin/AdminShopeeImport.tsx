@@ -253,6 +253,8 @@ export function AdminShopeeImport() {
                 src={product.images[0]} 
                 alt={product.title}
                 fill
+                quality={90}
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover transition-transform duration-1000 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent opacity-60" />

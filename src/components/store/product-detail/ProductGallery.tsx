@@ -78,7 +78,8 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         fill
         className="object-cover transition-transform duration-2000 group-hover:scale-105"
         priority={isPriority}
-        sizes="(max-width: 1200px) 100vw, 50vw"
+        quality={90}
+        sizes="(max-width: 768px) 100vw, 50vw"
         onError={() => handleImageError(idx)}
       />
     );

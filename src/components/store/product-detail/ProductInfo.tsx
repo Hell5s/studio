@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -144,6 +145,8 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
                         alt={v.color} 
                         fill 
                         className="object-cover" 
+                        quality={90}
+                        sizes="100px"
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
