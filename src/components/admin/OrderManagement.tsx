@@ -17,9 +17,10 @@ import {
   ExternalLink,
   Copy,
   ExternalLink as LinkIcon,
-  Tag
+  Tag,
+  Trash2
 } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc, limit } from 'firebase/firestore';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 
@@ -66,6 +77,7 @@ export function OrderManagement() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orderToDelete, setOrderToDelete] = useState<any>(null);
 
   const ordersQuery = useMemoFirebase(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100)), [db]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
@@ -83,6 +95,26 @@ export function OrderManagement() {
       updatedAt: new Date().toISOString()
     });
     toast({ title: "Status Atualizado", description: `Movido para ${statusLabels[newStatus]}` });
+  };
+
+  const handleDeleteOrder = () => {
+    if (!orderToDelete) return;
+
+    try {
+      deleteDocumentNonBlocking(doc(db, 'orders', orderToDelete.id));
+      toast({
+        title: "Pedido excluído",
+        description: `O pedido #${orderToDelete.orderNumber} foi removido com sucesso.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível remover o pedido no momento.",
+        variant: "destructive",
+      });
+    } finally {
+      setOrderToDelete(null);
+    }
   };
 
   const copyToClipboard = (text: string, msg: string) => {
@@ -147,14 +179,25 @@ export function OrderManagement() {
                   </td>
                   <td className="px-8 py-6 text-right font-bold text-primary">R$ {order.total?.toFixed(2)}</td>
                   <td className="px-8 py-6 text-right" onClick={e => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="rounded-xl p-2 border-none shadow-xl bg-white">
-                        {Object.keys(statusLabels).map(s => (
-                          <DropdownMenuItem key={s} onClick={() => updateStatus(order.id, s)} className="text-[11px] font-bold uppercase tracking-tight py-2 rounded-lg cursor-pointer hover:bg-secondary">Mover para {statusLabels[s]}</DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="rounded-full h-8 w-8 text-red-300 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => setOrderToDelete(order)}
+                        title="Excluir Pedido"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-xl p-2 border-none shadow-xl bg-white">
+                          {Object.keys(statusLabels).map(s => (
+                            <DropdownMenuItem key={s} onClick={() => updateStatus(order.id, s)} className="text-[11px] font-bold uppercase tracking-tight py-2 rounded-lg cursor-pointer hover:bg-secondary">Mover para {statusLabels[s]}</DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -267,6 +310,30 @@ export function OrderManagement() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!orderToDelete} onOpenChange={(o) => !o && setOrderToDelete(null)}>
+        <AlertDialogContent className="rounded-[2rem] bg-white border-none shadow-2xl p-8">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-headline font-bold text-primary">
+              Excluir Pedido
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground italic font-light">
+              Tem certeza que deseja excluir o pedido <span className="font-bold text-primary">#{orderToDelete?.orderNumber}</span>? Esta ação não pode ser desfeita e removerá permanentemente o histórico do banco de dados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-8 gap-3">
+            <AlertDialogCancel className="rounded-full h-12 px-8 border-primary/10 text-primary font-bold uppercase text-[10px] tracking-widest">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteOrder}
+              className="rounded-full h-12 px-8 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-[10px] tracking-widest"
+            >
+              Excluir Permanentemente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
