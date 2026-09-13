@@ -18,7 +18,8 @@ import {
   Copy,
   ExternalLink as LinkIcon,
   Tag,
-  Trash2
+  Trash2,
+  AlertCircle
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc, limit } from 'firebase/firestore';
@@ -53,6 +54,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const statusColors: Record<string, string> = {
   'pending': 'bg-amber-50 text-amber-700 border-amber-100',
@@ -78,16 +80,44 @@ export function OrderManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orderToDelete, setOrderToDelete] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('all');
 
   const ordersQuery = useMemoFirebase(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100)), [db]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
 
+  const pendingPurchaseCount = useMemo(() => {
+    return orders?.filter(o => o.status === 'paid' && !o.isOrderedSupplier).length || 0;
+  }, [orders]);
+
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
+    
+    let result = [...orders];
+
+    // Filtro por Aba
+    if (activeTab === 'pending_purchase') {
+      result = result.filter(o => o.status === 'paid' && !o.isOrderedSupplier);
+      // Ordenação: Mais antigo para o mais novo
+      result.sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+        return dateA.getTime() - dateB.getTime();
+      });
+    } else if (activeTab !== 'all') {
+      result = result.filter(o => o.status === activeTab);
+    }
+
+    // Filtro por Busca
     const s = searchTerm.toLowerCase().trim();
-    if (!s) return orders;
-    return orders.filter(o => o.orderNumber?.toLowerCase().includes(s) || o.customer?.name?.toLowerCase().includes(s));
-  }, [orders, searchTerm]);
+    if (s) {
+      result = result.filter(o => 
+        o.orderNumber?.toLowerCase().includes(s) || 
+        o.customer?.name?.toLowerCase().includes(s)
+      );
+    }
+
+    return result;
+  }, [orders, searchTerm, activeTab]);
 
   const updateStatus = (orderId: string, newStatus: string) => {
     updateDocumentNonBlocking(doc(db, 'orders', orderId), { 
@@ -124,14 +154,27 @@ export function OrderManagement() {
 
   return (
     <div className="space-y-8">
-      <div className="relative w-full md:w-96 group">
-        <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input 
-          placeholder="Buscar por Pedido ou Cliente..." 
-          className="pl-12 h-12 rounded-full border-none bg-white shadow-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+        <div className="relative w-full md:w-96 group">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Buscar por Pedido ou Cliente..." 
+            className="pl-12 h-12 rounded-full border-none bg-white shadow-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full xl:w-auto">
+          <TabsList className="bg-white border border-primary/5 rounded-full p-1 h-auto flex flex-wrap justify-start gap-1">
+            <TabsTrigger value="all" className="rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Todos</TabsTrigger>
+            <TabsTrigger value="pending" className="rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Pendente</TabsTrigger>
+            <TabsTrigger value="paid" className="rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Pago</TabsTrigger>
+            <TabsTrigger value="pending_purchase" className="rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-accent data-[state=active]:text-primary transition-all flex items-center gap-2">
+              Pendentes de Compra ({pendingPurchaseCount})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       <Card className="rounded-[1.5rem] border-none bg-white shadow-sm overflow-hidden">
@@ -150,57 +193,77 @@ export function OrderManagement() {
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr><td colSpan={6} className="py-20 text-center"><Loader2 className="h-10 w-10 animate-spin text-accent mx-auto" /></td></tr>
-              ) : filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer group" onClick={() => setSelectedOrder(order)}>
-                  <td className="px-8 py-6">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-primary">#{order.orderNumber}</span>
-                      <span className="text-[10px] text-muted-foreground uppercase">{new Date(order.createdAt?.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString('pt-BR')}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{order.customer?.name}</span>
-                      <span className="text-[10px] text-muted-foreground">{order.customer?.city}, {order.customer?.state}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 text-center">
-                    <div className="flex justify-center -space-x-2">
-                       {order.items?.slice(0, 3).map((it: any, idx: number) => (
-                         <div key={idx} className="h-8 w-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden"><img src={it.image} className="h-full w-full object-cover" /></div>
-                       ))}
-                       {order.items?.length > 3 && <div className="h-8 w-8 rounded-full bg-secondary text-[10px] font-bold flex items-center justify-center border-2 border-white">+{order.items.length - 3}</div>}
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <Badge className={`rounded-full px-3 py-1 border text-[9px] uppercase tracking-widest font-bold ${statusColors[order.status || 'pending']}`}>
-                      {statusLabels[order.status || 'pending']}
-                    </Badge>
-                  </td>
-                  <td className="px-8 py-6 text-right font-bold text-primary">R$ {order.total?.toFixed(2)}</td>
-                  <td className="px-8 py-6 text-right" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center justify-end gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="rounded-full h-8 w-8 text-red-300 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => setOrderToDelete(order)}
-                        title="Excluir Pedido"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-xl p-2 border-none shadow-xl bg-white">
-                          {Object.keys(statusLabels).map(s => (
-                            <DropdownMenuItem key={s} onClick={() => updateStatus(order.id, s)} className="text-[11px] font-bold uppercase tracking-tight py-2 rounded-lg cursor-pointer hover:bg-secondary">Mover para {statusLabels[s]}</DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+              ) : filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer group" onClick={() => setSelectedOrder(order)}>
+                    <td className="px-8 py-6">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-primary">#{order.orderNumber}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase">{new Date(order.createdAt?.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString('pt-BR')}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{order.customer?.name}</span>
+                        <span className="text-[10px] text-muted-foreground">{order.customer?.city}, {order.customer?.state}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 text-center">
+                      <div className="flex justify-center -space-x-2">
+                         {order.items?.slice(0, 3).map((it: any, idx: number) => (
+                           <div key={idx} className="h-8 w-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm"><img src={it.image} className="h-full w-full object-cover" /></div>
+                         ))}
+                         {order.items?.length > 3 && <div className="h-8 w-8 rounded-full bg-secondary text-[10px] font-bold flex items-center justify-center border-2 border-white">+{order.items.length - 3}</div>}
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <Badge className={`rounded-full px-3 py-1 border text-[9px] uppercase tracking-widest font-bold ${statusColors[order.status || 'pending']}`}>
+                        {statusLabels[order.status || 'pending']}
+                      </Badge>
+                    </td>
+                    <td className="px-8 py-6 text-right font-bold text-primary">R$ {order.total?.toFixed(2)}</td>
+                    <td className="px-8 py-6 text-right" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="rounded-full h-8 w-8 text-red-300 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => setOrderToDelete(order)}
+                          title="Excluir Pedido"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl p-2 border-none shadow-xl bg-white">
+                            {Object.keys(statusLabels).map(s => (
+                              <DropdownMenuItem key={s} onClick={() => updateStatus(order.id, s)} className="text-[11px] font-bold uppercase tracking-tight py-2 rounded-lg cursor-pointer hover:bg-secondary">Mover para {statusLabels[s]}</DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-32 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      {activeTab === 'pending_purchase' ? (
+                        <>
+                          <CheckCircle2 className="h-10 w-10 text-emerald-500/20" />
+                          <p className="text-sm text-muted-foreground italic font-light">Nenhum pedido pendente de compra no momento.</p>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag className="h-10 w-10 text-primary/10" />
+                          <p className="text-sm text-muted-foreground italic font-light">Nenhum pedido encontrado.</p>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
