@@ -83,6 +83,19 @@
         "announcementBar": { "type": "string" },
         "policies": { "type": "object" }
       }
+    },
+    "MovementSection": {
+      "title": "MovementSection",
+      "type": "object",
+      "properties": {
+        "eyebrow": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "buttonText": { "type": "string" },
+        "buttonLink": { "type": "string" },
+        "mediaType": { "type": "string", "enum": ["image", "video"] },
+        "mediaUrl": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -93,6 +106,7 @@
     "/orders/{orderId}": { "schema": { "$ref": "#/backend/entities/Order" }, "description": "Pedidos da loja" },
     "/coupons/{couponId}": { "schema": { "$ref": "#/backend/entities/Coupon" }, "description": "Cupons de desconto" },
     "/store_config/settings": { "schema": { "$ref": "#/backend/entities/StoreConfig" }, "description": "Configurações globais" },
+    "/settings/movementSection": { "schema": { "$ref": "#/backend/entities/MovementSection" }, "description": "Configurações da seção Movimento na Home" },
     "/roles_admin/{uid}": { "description": "Controle de acesso administrativo" }
   }
 }

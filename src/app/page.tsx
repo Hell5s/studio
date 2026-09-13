@@ -43,6 +43,9 @@ function StorefrontContent() {
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings } = useDoc(settingsRef);
 
+  const movementRef = useMemoFirebase(() => doc(db, 'settings', 'movementSection'), [db]);
+  const { data: movement } = useDoc(movementRef);
+
   useEffect(() => {
     if (isAdminLoading) return;
 
@@ -287,29 +290,41 @@ function StorefrontContent() {
             <div className="container mx-auto px-4 md:px-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-32 items-center">
                 <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[6rem] overflow-hidden shadow-premium group">
-                  <img 
-                    src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80" 
-                    className="object-cover w-full h-full transition-transform duration-2500 group-hover:scale-110" 
-                    alt="Essência Toda Bela" 
-                  />
+                  {movement?.mediaType === 'video' ? (
+                    <video 
+                      src={movement?.mediaUrl || "https://res.cloudinary.com/djtuzexfd/video/upload/v1711123456/sample.mp4"} 
+                      autoPlay 
+                      muted 
+                      loop 
+                      playsInline 
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <img 
+                      src={movement?.mediaUrl || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80"} 
+                      className="object-cover w-full h-full transition-transform duration-2500 group-hover:scale-110" 
+                      alt={movement?.title || "Essência Toda Bela"} 
+                    />
+                  )}
                   <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
                 </div>
                 <div className="space-y-8 md:space-y-12">
                   <div className="space-y-4 md:space-y-8">
-                    <span className="text-accent text-[10px] md:text-sm font-bold uppercase tracking-[0.8em]">Movimento Toda Bela</span>
+                    <span className="text-accent text-[10px] md:text-sm font-bold uppercase tracking-[0.8em]">
+                      {movement?.eyebrow || 'MOVIMENTO TODA BELA'}
+                    </span>
                     <h3 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-[0.9] tracking-tighter">
-                      {settings?.purposeTitle || 'Moda com Propósito'}
+                      {movement?.title || 'Moda com Propósito'}
                     </h3>
                     <p className="text-base md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
-                      {settings?.purposeText || 'Cada peça em nossa loja é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.'}
+                      {movement?.description || 'Cada peça em nossa loja é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.'}
                     </p>
                   </div>
-                  <button 
-                    onClick={() => document.getElementById('colecoes')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="w-full sm:w-auto rounded-full border-2 border-primary px-10 md:px-16 py-5 md:py-8 text-[10px] md:text-sm font-bold uppercase tracking-[0.5em] hover:bg-primary hover:text-white transition-all shadow-xl"
-                  >
-                    Conheça a Coleção
-                  </button>
+                  <Link href={movement?.buttonLink || "/#colecoes"}>
+                    <button className="w-full sm:w-auto rounded-full border-2 border-primary px-10 md:px-16 py-5 md:py-8 text-[10px] md:text-sm font-bold uppercase tracking-[0.5em] hover:bg-primary hover:text-white transition-all shadow-xl">
+                      {movement?.buttonText || 'CONHEÇA A COLEÇÃO'}
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>

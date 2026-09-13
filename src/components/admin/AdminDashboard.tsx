@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -27,7 +28,8 @@ import {
   Megaphone,
   ShieldCheck,
   Menu as MenuIcon,
-  X
+  X,
+  Move
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -48,6 +50,7 @@ import { AdminReviews } from './AdminReviews';
 import { AdminMarketing } from './AdminMarketing';
 import { AdminTeam } from './AdminTeam';
 import { AdminShipping } from './AdminShipping';
+import { AdminMovementSection } from './AdminMovementSection';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -65,7 +68,7 @@ interface AdminDashboardProps {
   onExit?: () => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing' | 'team' | 'shipping';
+type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing' | 'team' | 'shipping' | 'movement';
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const db = useFirestore();
@@ -216,6 +219,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'reviews', label: 'Avaliações', icon: <Star className="h-4 w-4" />, badge: pendingReviewsCount },
     { id: 'shipping', label: 'Frete', icon: <Truck className="h-4 w-4" /> },
     { id: 'header', label: 'Cabeçalho', icon: <Layout className="h-4 w-4" /> },
+    { id: 'movement', label: 'Movimento', icon: <Move className="h-4 w-4" /> },
     { id: 'coupons', label: 'Cupons', icon: <Tag className="h-4 w-4" /> },
     { id: 'customers', label: 'Clientes', icon: <Users className="h-4 w-4" /> },
     { id: 'appearance', label: 'Aparência', icon: <Palette className="h-4 w-4" /> },
@@ -409,6 +413,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             {activeTab === 'categories' && <AdminCategories />}
             {activeTab === 'reviews' && <AdminReviews />}
             {activeTab === 'shipping' && <AdminShipping />}
+            {activeTab === 'movement' && <AdminMovementSection />}
             {activeTab === 'header' && <AdminHeaderSettings />}
             {activeTab === 'coupons' && <AdminCoupons />}
             {activeTab === 'customers' && <AdminCustomers />}
