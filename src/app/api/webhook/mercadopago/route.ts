@@ -1,26 +1,42 @@
-
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+
+let adminDb: any = null;
+
+async function getAdminDb() {
+  if (adminDb) return adminDb;
+
+  const { initializeApp, getApps, cert } = await import('firebase-admin/app');
+  const { getFirestore } = await import('firebase-admin/firestore');
+
+  if (!getApps().length) {
+    initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID!,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')!,
+      })
+    });
+  }
+
+  adminDb = getFirestore();
+  return adminDb;
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const { searchParams } = new URL(request.url);
 
-    // O Mercado Pago pode enviar o ID de diferentes formas dependendo do evento
     const type = searchParams.get('type') || body.type || body.action;
     const dataId = searchParams.get('data.id') || body.data?.id || searchParams.get('id');
 
     console.log('Webhook recebido:', { type, dataId });
 
-    // Verifica se é uma notificação de pagamento
-    const isPayment = type === 'payment' || 
-                      body.action === 'payment.created' || 
+    const isPayment = type === 'payment' ||
+                      body.action === 'payment.created' ||
                       body.action === 'payment.updated';
 
     if (isPayment && dataId) {
-      // Busca detalhes do pagamento no Mercado Pago
       const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${dataId}`, {
         headers: {
           'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
@@ -39,8 +55,8 @@ export async function POST(request: Request) {
       console.log('Pagamento MP Detalhes:', { orderId, status, paymentId: dataId });
 
       if (orderId) {
-        const { firestore } = initializeFirebase();
-        const orderRef = doc(firestore, 'orders', orderId);
+        const db = await getAdminDb();
+        const orderRef = db.collection('orders').doc(orderId);
 
         let newStatus = 'pending';
         if (status === 'approved') newStatus = 'paid';
@@ -48,12 +64,11 @@ export async function POST(request: Request) {
         if (status === 'in_process') newStatus = 'pending';
         if (status === 'refunded') newStatus = 'refunded';
 
-        // Atualiza o Firestore. Com as novas Security Rules, esta operação será permitida.
-        await updateDoc(orderRef, {
+        await orderRef.update({
           status: newStatus,
           paymentId: String(dataId),
           paymentStatus: status,
-          updatedAt: serverTimestamp(),
+          updatedAt: new Date(),
         });
 
         console.log('Pedido atualizado no Firestore:', { orderId, newStatus });
