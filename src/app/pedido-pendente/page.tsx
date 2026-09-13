@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Clock, Copy, CheckCheck, ArrowRight, QrCode, Loader2 } from 'lucide-react';
+import { Clock, Copy, CheckCheck, ArrowRight, QrCode, Loader2, FileText, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
@@ -15,6 +14,7 @@ function OrderPendingContent() {
   const router = useRouter();
   const metodo = searchParams.get('metodo');
   const [pixData, setPixData] = useState<any>(null);
+  const [boletoData, setBoletoData] = useState<any>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -23,17 +23,25 @@ function OrderPendingContent() {
       if (raw) {
         try {
           setPixData(JSON.parse(raw));
-          // Mantemos os dados na sessão caso a cliente dê refresh, limpamos apenas ao sair
         } catch (e) {
           console.error("Erro ao carregar dados do PIX");
+        }
+      }
+    } else if (metodo === 'boleto') {
+      const raw = sessionStorage.getItem('boleto_data');
+      if (raw) {
+        try {
+          setBoletoData(JSON.parse(raw));
+        } catch (e) {
+          console.error("Erro ao carregar dados do boleto");
         }
       }
     }
   }, [metodo]);
 
-  // Polling para verificar confirmação de pagamento PIX
+  // Polling para verificar confirmação de pagamento PIX ou Boleto
   useEffect(() => {
-    const oId = pixData?.orderId;
+    const oId = pixData?.orderId || boletoData?.orderId;
     if (!oId) return;
 
     const interval = setInterval(async () => {
@@ -43,6 +51,7 @@ function OrderPendingContent() {
         if (data.status === 'paid' || data.status === 'approved') {
           clearInterval(interval);
           sessionStorage.removeItem('pix_data');
+          sessionStorage.removeItem('boleto_data');
           sessionStorage.removeItem('checkout_items');
           router.push('/meus-pedidos');
         }
@@ -52,7 +61,7 @@ function OrderPendingContent() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [pixData, router]);
+  }, [pixData, boletoData, router]);
 
   const handleCopy = () => {
     if (pixData?.qr_code) {
@@ -73,7 +82,7 @@ function OrderPendingContent() {
         <section className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center space-y-12">
 
-            {pixData ? (
+            {metodo === 'pix' && pixData ? (
               <>
                 <div className="h-32 w-32 md:h-48 md:w-48 bg-secondary rounded-full flex items-center justify-center mx-auto shadow-editorial">
                   <QrCode className="h-16 w-16 md:h-24 md:w-24 text-accent" />
@@ -132,6 +141,44 @@ function OrderPendingContent() {
                   </p>
                 </div>
               </>
+            ) : metodo === 'boleto' && boletoData ? (
+              <>
+                <div className="h-32 w-32 md:h-48 md:w-48 bg-secondary rounded-full flex items-center justify-center mx-auto shadow-editorial">
+                  <FileText className="h-16 w-16 md:h-24 md:w-24 text-accent" />
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="h-px w-12 bg-accent/30" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-accent">Pague com Boleto</span>
+                    <div className="h-px w-12 bg-accent/30" />
+                  </div>
+                  <h1 className="text-4xl md:text-7xl font-headline font-bold text-primary leading-[0.95] tracking-tighter">
+                    Boleto <br />
+                    <span className="italic font-light text-accent">Gerado.</span>
+                  </h1>
+                  <p className="text-base text-muted-foreground font-light italic max-w-xl mx-auto leading-relaxed">
+                    Clique no botão abaixo para visualizar e imprimir seu boleto bancário. Após o pagamento, o prazo de compensação é de 1 a 3 dias úteis.
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center gap-8">
+                  <Button 
+                    onClick={() => window.open(boletoData.ticket_url, '_blank')}
+                    className="h-16 px-12 rounded-full bg-primary text-white text-[12px] font-bold uppercase tracking-[0.2em] flex items-center gap-4 shadow-2xl hover:scale-105 transition-all"
+                  >
+                    Visualizar Boleto Bancário <ExternalLink className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                <div className="p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100 max-w-sm mx-auto shadow-sm">
+                  <p className="text-[12px] text-amber-700 font-medium leading-relaxed">
+                    ✓ Valor: <span className="font-bold">{formatCurrency(boletoData.amount)}</span><br/>
+                    ✓ Pagável em qualquer banco ou lotérica<br/>
+                    ✓ Reserva garantida por 3 dias
+                  </p>
+                </div>
+              </>
             ) : (
               <>
                 <div className="h-32 w-32 md:h-48 md:w-48 bg-secondary rounded-full flex items-center justify-center mx-auto shadow-editorial animate-pulse">
@@ -156,12 +203,12 @@ function OrderPendingContent() {
             )}
 
             <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-10">
-               <Link href="/meus-pedidos" className="w-full md:w-auto" onClick={() => sessionStorage.removeItem('pix_data')}>
+               <Link href="/meus-pedidos" className="w-full md:w-auto" onClick={() => { sessionStorage.removeItem('pix_data'); sessionStorage.removeItem('boleto_data'); }}>
                  <Button className="w-full md:w-auto rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[11px] h-16 px-12 shadow-2xl hover:scale-105 transition-all">
                     Acompanhar Pedidos
                  </Button>
                </Link>
-               <Link href="/" className="w-full md:w-auto" onClick={() => sessionStorage.removeItem('pix_data')}>
+               <Link href="/" className="w-full md:w-auto" onClick={() => { sessionStorage.removeItem('pix_data'); sessionStorage.removeItem('boleto_data'); }}>
                  <Button variant="outline" className="w-full md:w-auto rounded-full border-primary text-primary font-bold uppercase tracking-widest text-[11px] h-16 px-12 hover:bg-primary hover:text-white transition-all">
                     Continuar Navegando <ArrowRight className="ml-3 h-4 w-4" />
                  </Button>

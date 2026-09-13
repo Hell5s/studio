@@ -7,24 +7,43 @@ export async function POST(request: Request) {
     if (!formData) throw new Error('Dados do formulário são obrigatórios');
 
     const isPix = formData.payment_method_id === 'pix';
-    const isBoleto = formData.payment_method_id === 'bolbradesco' || formData.payment_method_id === 'pec';
+    const isBoleto = formData.payment_method_id === 'bolbradesco' || formData.payment_method_id === 'pec' || formData.payment_method_id === 'ticket';
+
+    // Normalização dos dados do pagador para a API do Mercado Pago
+    const payerEmail = formData.payer?.email || '';
+    const firstName = formData.payer?.first_name || formData.payer?.firstName || 'Cliente';
+    const lastName = formData.payer?.last_name || formData.payer?.lastName || 'Toda Bela';
+    const identificationType = formData.payer?.identification?.type || 'CPF';
+    const identificationNumber = (formData.payer?.identification?.number || '').replace(/\D/g, '');
 
     const paymentPayload: any = {
       transaction_amount: Number(formData.transaction_amount),
       description: formData.description || 'Compra na Toda Bela',
       payment_method_id: formData.payment_method_id,
       payer: {
-        email: formData.payer?.email || '',
-        first_name: formData.payer?.first_name || 'Cliente',
-        last_name: formData.payer?.last_name || 'Toda Bela',
+        email: payerEmail,
+        first_name: firstName,
+        last_name: lastName,
         identification: {
-          type: formData.payer?.identification?.type || 'CPF',
-          number: (formData.payer?.identification?.number || '').replace(/\D/g, ''),
+          type: identificationType,
+          number: identificationNumber,
         },
       },
       external_reference: String(formData.external_reference || `PED-${Date.now()}`),
       notification_url: 'https://studio-mocha-sigma-26.vercel.app/api/webhook/mercadopago',
     };
+
+    // Adiciona endereço se disponível (Muitas vezes obrigatório para boleto)
+    if (formData.payer?.address) {
+      paymentPayload.payer.address = {
+        zip_code: formData.payer.address.zip_code?.replace(/\D/g, ''),
+        street_name: formData.payer.address.street_name,
+        street_number: formData.payer.address.street_number,
+        neighborhood: formData.payer.address.neighborhood,
+        city: formData.payer.address.city,
+        federal_unit: formData.payer.address.federal_unit,
+      };
+    }
 
     if (!isPix && !isBoleto) {
       paymentPayload.token = formData.token;
@@ -34,8 +53,6 @@ export async function POST(request: Request) {
 
     console.log('==== PAYLOAD ENVIADO AO MP ====');
     console.log(JSON.stringify(paymentPayload, null, 2));
-    console.log('==== ACCESS TOKEN (primeiros 20 chars) ====');
-    console.log(process.env.MERCADOPAGO_ACCESS_TOKEN?.substring(0, 20));
 
     const response = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',

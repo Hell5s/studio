@@ -271,9 +271,17 @@ function CheckoutContent() {
           type: 'CPF', 
           number: cleanCpf 
         },
+        address: {
+          zip_code: entrega.cep,
+          street_name: entrega.endereco,
+          street_number: entrega.numero,
+          neighborhood: entrega.bairro,
+          city: entrega.city,
+          federal_unit: entrega.state,
+        }
       },
     };
-  }, [totalGeral, identificacao, user?.email]);
+  }, [totalGeral, identificacao, user?.email, entrega]);
 
   const handleNextStep = () => {
     if (currentStep === 'identificacao') {
@@ -364,6 +372,14 @@ function CheckoutContent() {
               first_name: formData.payer?.firstName || identificacao.nome.split(' ')[0],
               last_name: formData.payer?.lastName || identificacao.nome.split(' ').slice(1).join(' ') || 'Toda Bela',
               identification: formData.payer?.identification || { type: 'CPF', number: identificacao.cpf.replace(/\D/g, '') },
+              address: {
+                zip_code: entrega.cep,
+                street_name: entrega.endereco,
+                street_number: entrega.numero,
+                neighborhood: entrega.bairro,
+                city: entrega.city,
+                federal_unit: entrega.state,
+              }
             },
           }
         }),
@@ -378,6 +394,9 @@ function CheckoutContent() {
         router.push('/pedido-confirmado');
       } else if (paymentResult.status === 'in_process' || paymentResult.status === 'pending') {
         sessionStorage.removeItem('checkout_items');
+        
+        const isBoleto = paymentResult.payment_method_id === 'bolbradesco' || paymentResult.payment_method_id === 'ticket';
+        
         if (paymentResult.payment_method_id === 'pix' && paymentResult.point_of_interaction?.transaction_data) {
           sessionStorage.setItem('pix_data', JSON.stringify({
             qr_code: paymentResult.point_of_interaction.transaction_data.qr_code,
@@ -387,6 +406,13 @@ function CheckoutContent() {
             amount: paymentResult.transaction_amount,
           }));
           router.push('/pedido-pendente?metodo=pix');
+        } else if (isBoleto && paymentResult.transaction_details?.external_resource_url) {
+          sessionStorage.setItem('boleto_data', JSON.stringify({
+            ticket_url: paymentResult.transaction_details.external_resource_url,
+            orderId: paymentResult.external_reference,
+            amount: paymentResult.transaction_amount,
+          }));
+          router.push('/pedido-pendente?metodo=boleto');
         } else {
           router.push('/pedido-pendente');
         }
@@ -953,7 +979,7 @@ function CheckoutContent() {
       <footer className="py-12 border-t border-primary/5 bg-white/40 w-full shrink-0">
         <div className="container mx-auto px-6 text-center space-y-4">
            <div className="flex justify-center mb-6 opacity-30"><LogoMark className="max-w-none" /></div>
-           <p className="text-[9px] text-primary/30 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
+           <p className="text-[9px] text-white/30 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
         </div>
       </footer>
     </div>
