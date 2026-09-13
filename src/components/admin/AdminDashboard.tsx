@@ -47,6 +47,7 @@ import { AdminHeaderSettings } from './AdminHeaderSettings';
 import { AdminReviews } from './AdminReviews';
 import { AdminMarketing } from './AdminMarketing';
 import { AdminTeam } from './AdminTeam';
+import { AdminShipping } from './AdminShipping';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -64,7 +65,7 @@ interface AdminDashboardProps {
   onExit?: () => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing' | 'team';
+type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing' | 'team' | 'shipping';
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const db = useFirestore();
@@ -213,6 +214,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'marketing', label: 'Marketing', icon: <Megaphone className="h-4 w-4" /> },
     { id: 'team', label: 'Equipe', icon: <ShieldCheck className="h-4 w-4" /> },
     { id: 'reviews', label: 'Avaliações', icon: <Star className="h-4 w-4" />, badge: pendingReviewsCount },
+    { id: 'shipping', label: 'Frete', icon: <Truck className="h-4 w-4" /> },
     { id: 'header', label: 'Cabeçalho', icon: <Layout className="h-4 w-4" /> },
     { id: 'coupons', label: 'Cupons', icon: <Tag className="h-4 w-4" /> },
     { id: 'customers', label: 'Clientes', icon: <Users className="h-4 w-4" /> },
@@ -406,6 +408,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             {activeTab === 'team' && <AdminTeam />}
             {activeTab === 'categories' && <AdminCategories />}
             {activeTab === 'reviews' && <AdminReviews />}
+            {activeTab === 'shipping' && <AdminShipping />}
             {activeTab === 'header' && <AdminHeaderSettings />}
             {activeTab === 'coupons' && <AdminCoupons />}
             {activeTab === 'customers' && <AdminCustomers />}

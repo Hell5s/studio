@@ -15,14 +15,15 @@ import {
   Lock,
   QrCode,
   Copy,
-  CheckCircle2
+  CheckCircle2,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useUser, useFirestore, useMemoFirebase, useAuth, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import Link from 'next/link';
@@ -43,10 +44,14 @@ function CheckoutContent() {
   const [currentStep, setCurrentStep] = useState<Step>('identificacao');
   const [isProcessing, setIsProcessing] = useState(false);
   const [shippingPrice, setShippingPrice] = useState(0);
+  const [selectedShippingId, setSelectedShippingId] = useState<string | null>(null);
   const [sessionItems, setSessionItems] = useState<any[]>([]);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isBrickReady, setIsBrickReady] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+
+  const shippingSettingsRef = useMemoFirebase(() => doc(db, 'settings', 'shipping'), [db]);
+  const { data: shippingSettings } = useDoc(shippingSettingsRef);
 
   // Auth States
   const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null);
@@ -59,6 +64,44 @@ function CheckoutContent() {
   const [copied, setCopied] = useState(false);
   const [isPaymentConfirmed, setIsPaymentConfirmed] = useState(false);
 
+  // Form States
+  const [identificacao, setIdentificacao] = useState({
+    nome: '',
+    email: '',
+    cpf: '',
+    telefone: ''
+  });
+
+  const [entrega, setEntrega] = useState({
+    cep: '',
+    endereco: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    city: '',
+    state: ''
+  });
+
+  const subtotal = useMemo(() => {
+    return sessionItems.reduce((acc, it) => acc + ((it.price || 0) * (it.quantity || 1)), 0);
+  }, [sessionItems]);
+
+  // Atualização dinâmica do preço de frete baseado na seleção e estado
+  useEffect(() => {
+    if (shippingSettings?.options && entrega.state) {
+      const isSouthSoutheast = ['SP', 'RJ', 'MG', 'ES', 'PR', 'SC', 'RS'].includes(entrega.state.toUpperCase());
+      const activeId = selectedShippingId || shippingSettings.options[0]?.id;
+      const opt = shippingSettings.options.find((o: any) => o.id === activeId) || shippingSettings.options[0];
+      
+      if (opt) {
+        setSelectedShippingId(opt.id);
+        const basePrice = isSouthSoutheast ? opt.priceSoutheastSouth : opt.priceOtherRegions;
+        const finalPrice = subtotal >= (shippingSettings.freeShippingThreshold || 250) ? 0 : basePrice;
+        setShippingPrice(finalPrice);
+      }
+    }
+  }, [entrega.state, shippingSettings, subtotal, selectedShippingId]);
+
   // Polling para verificar pagamento PIX conforme solicitado
   useEffect(() => {
     if (!currentOrderId || paymentMethod !== 'pix' || isPaymentConfirmed) return;
@@ -67,7 +110,6 @@ function CheckoutContent() {
       try {
         const response = await fetch(`/api/payments/status?orderId=${currentOrderId}`);
         const data = await response.json();
-        console.log('Status verificado:', data);
 
         if (data.status === 'approved' || data.status === 'paid' || data.status === 'Pago' || data.paymentStatus === 'approved') {
           clearInterval(interval);
@@ -97,24 +139,6 @@ function CheckoutContent() {
       });
     }
   }, [currentStep]);
-
-  // Form States
-  const [identificacao, setIdentificacao] = useState({
-    nome: '',
-    email: '',
-    cpf: '',
-    telefone: ''
-  });
-
-  const [entrega, setEntrega] = useState({
-    cep: '',
-    endereco: '',
-    numero: '',
-    complemento: '',
-    bairro: '',
-    city: '',
-    state: ''
-  });
 
   // Carregar itens do sessionStorage
   useEffect(() => {
@@ -148,10 +172,6 @@ function CheckoutContent() {
     }
   }, [user]);
 
-  const subtotal = useMemo(() => {
-    return sessionItems.reduce((acc, it) => acc + ((it.price || 0) * (it.quantity || 1)), 0);
-  }, [sessionItems]);
-
   const handleCepSearch = async (val: string) => {
     const cep = val.replace(/\D/g, '');
     setEntrega(prev => ({ ...prev, cep }));
@@ -168,12 +188,6 @@ function CheckoutContent() {
             city: data.localidade,
             state: data.uf
           }));
-
-          // Cálculo automático de frete
-          const SOUTH_SOUTHEAST = ['SP', 'RJ', 'MG', 'ES', 'PR', 'SC', 'RS'];
-          const isSouthSoutheast = SOUTH_SOUTHEAST.includes(data.uf.toUpperCase());
-          const price = subtotal >= 250 ? 0 : (isSouthSoutheast ? 10 : 12);
-          setShippingPrice(price);
         }
       } catch (e) {
         console.error("Erro ao buscar CEP:", e);
@@ -286,6 +300,8 @@ function CheckoutContent() {
       setCurrentOrderId(finalId);
       const orderRef = doc(db, 'orders', finalId);
 
+      const selectedOpt = shippingSettings?.options?.find((o: any) => o.id === selectedShippingId);
+
       const orderData = {
         orderNumber: finalId,
         userId: user?.uid || null,
@@ -304,8 +320,9 @@ function CheckoutContent() {
         total: totalGeral,
         status: 'pending',
         shipping: {
-          method: 'Entrega Padrão',
-          price: shippingPrice
+          method: selectedOpt?.name || 'Entrega Padrão',
+          price: shippingPrice,
+          days: selectedOpt?.days || ''
         },
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp()
@@ -701,17 +718,47 @@ function CheckoutContent() {
 
                   <div className="space-y-3 pt-2">
                     <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Opção de Envio</Label>
-                    <div className="p-4 rounded-xl border border-primary bg-primary/5 shadow-sm w-full flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Truck className="h-4 w-4 text-primary/40" />
-                        <div className="text-left">
-                          <p className="text-xs font-bold text-primary">Entrega Padrão</p>
-                          <p className="text-[9px] text-muted-foreground">10-15 dias úteis</p>
+                    <div className="grid gap-3">
+                      {shippingSettings?.options?.map((opt: any) => {
+                        const isSouthSoutheast = ['SP', 'RJ', 'MG', 'ES', 'PR', 'SC', 'RS'].includes(entrega.state.toUpperCase());
+                        const basePrice = isSouthSoutheast ? opt.priceSoutheastSouth : opt.priceOtherRegions;
+                        const finalPrice = subtotal >= (shippingSettings.freeShippingThreshold || 250) ? 0 : basePrice;
+                        const isSelected = selectedShippingId === opt.id;
+
+                        return (
+                          <button
+                            key={opt.id}
+                            onClick={() => setSelectedShippingId(opt.id)}
+                            className={cn(
+                              "p-4 rounded-xl border transition-all flex items-center justify-between group",
+                              isSelected 
+                                ? "border-primary bg-primary/5 shadow-md" 
+                                : "border-primary/10 bg-white hover:bg-secondary/20"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                "h-10 w-10 rounded-lg flex items-center justify-center transition-colors",
+                                isSelected ? "bg-primary text-white" : "bg-secondary text-primary/40"
+                              )}>
+                                <Truck className="h-5 w-5" />
+                              </div>
+                              <div className="text-left">
+                                <p className={cn("text-xs font-bold", isSelected ? "text-primary" : "text-primary/60")}>{opt.name}</p>
+                                <p className="text-[9px] text-muted-foreground italic">{opt.days}</p>
+                              </div>
+                            </div>
+                            <span className={cn("text-xs font-bold", finalPrice === 0 ? "text-emerald-600" : "text-primary")}>
+                              {finalPrice === 0 ? 'GRÁTIS' : formatPrice(finalPrice)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                      {!shippingSettings?.options?.length && (
+                        <div className="p-4 text-center border-2 border-dashed border-primary/10 rounded-xl">
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Configure opções de frete no Admin</p>
                         </div>
-                      </div>
-                      <span className={cn("text-xs font-bold", shippingPrice === 0 ? "text-emerald-600" : "text-primary")}>
-                        {shippingPrice === 0 ? 'GRÁTIS' : formatPrice(shippingPrice)}
-                      </span>
+                      )}
                     </div>
                   </div>
 
