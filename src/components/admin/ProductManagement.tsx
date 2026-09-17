@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -66,6 +67,11 @@ export function ProductManagement() {
     }
   };
 
+  const getProductImage = (image: any) => {
+    if (typeof image === 'string') return image;
+    return image?.url || '';
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-center gap-6">
@@ -106,7 +112,7 @@ export function ProductManagement() {
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className="h-14 w-11 rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-50">
-                          <img src={p.image} className="h-full w-full object-cover" alt={p.name} />
+                          <img src={getProductImage(p.image)} className="h-full w-full object-cover" alt={p.name} />
                         </div>
                         <div className="flex flex-col">
                           <span className="font-bold text-primary line-clamp-1 max-w-[200px]">{p.name}</span>

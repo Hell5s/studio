@@ -72,6 +72,11 @@ export default function AdminProductsPage() {
     }
   };
 
+  const getProductImage = (image: any) => {
+    if (typeof image === 'string') return image;
+    return image?.url || '';
+  };
+
   if (isAdminLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#FFF9F7]">
@@ -187,7 +192,7 @@ export default function AdminProductsPage() {
                     <td className="px-10 py-6">
                       <div className="flex items-center gap-6">
                         <div className="h-20 w-16 rounded-2xl overflow-hidden bg-muted shadow-sm shrink-0">
-                          <img src={p.image} className="h-full w-full object-cover" alt={p.name} />
+                          <img src={getProductImage(p.image)} className="h-full w-full object-cover" alt={p.name} />
                         </div>
                         <div className="flex flex-col gap-1 min-w-0">
                           <span className="font-bold text-primary truncate max-w-[250px]">{p.name}</span>
