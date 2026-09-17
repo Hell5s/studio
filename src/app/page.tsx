@@ -8,7 +8,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
-import { ProductCard } from '@/components/store/ProductCard';
 import { ShowcaseSection } from '@/components/store/ShowcaseSection';
 import { Footer } from '@/components/store/Footer';
 import { LoginDialog } from '@/components/auth/LoginDialog';
@@ -41,19 +40,16 @@ function StorefrontContent() {
   const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
   const isAdmin = !!adminRole || user?.uid === 'LXaJZDm6tNUQLh3ooghcg6EQgJ43';
 
-  const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
-  const { data: settings } = useDoc(settingsRef);
-
   const movementRef = useMemoFirebase(() => doc(db, 'settings', 'movementSection'), [db]);
   const { data: movement } = useDoc(movementRef);
 
-  // Consulta de Vitrines Dinâmicas
+  // Consulta de Vitrines Dinâmicas (Incluindo as migradas)
   const showcasesQuery = useMemoFirebase(() => query(
     collection(db, 'homeShowcaseSections'), 
     where('active', '==', true), 
     orderBy('order', 'asc')
   ), [db]);
-  const { data: showcases } = useCollection(showcasesQuery);
+  const { data: showcases, isLoading: isShowcasesLoading } = useCollection(showcasesQuery);
 
   useEffect(() => {
     if (isAdminLoading) return;
@@ -73,16 +69,6 @@ function StorefrontContent() {
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
   const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
-  const addToCart = useCallback((product: any) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: (item.quantity || 0) + 1 } : item);
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  }, []);
-
   const updateQuantity = useCallback((id: string, delta: number) => {
     setCart(prev => prev.map(item => {
       if (item.id === id) {
@@ -99,44 +85,15 @@ function StorefrontContent() {
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'products'), limit(12));
+    return query(collection(db, 'products'), limit(20));
   }, [db]);
-  const { data: storeProducts, isLoading } = useCollection(productsQuery);
+  const { data: storeProducts } = useCollection(productsQuery);
 
   const categoriesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), limit(8));
   }, [db]);
   const { data: categories } = useCollection(categoriesQuery);
-
-  const filteredProducts = useMemo(() => {
-    if (!storeProducts) return [];
-    let result = [...storeProducts];
-    
-    const search = searchQuery.toLowerCase().trim();
-    if (search) {
-      result = result.filter(p => 
-        p.name?.toLowerCase().includes(search) || 
-        p.id?.toLowerCase().includes(search) ||
-        p.category?.toLowerCase().includes(search)
-      );
-    }
-
-    if (selectedCategory) {
-      result = result.filter(p => p.category === selectedCategory);
-    }
-    
-    return result;
-  }, [storeProducts, searchQuery, selectedCategory]);
-
-  const featuredProducts = useMemo(() => {
-    if (selectedCategory) return filteredProducts;
-    return filteredProducts.filter(p => p.featured || p.badge === 'Destaque' || p.badge === 'Lançamento').slice(0, 12);
-  }, [filteredProducts, selectedCategory]);
-
-  const latestProducts = useMemo(() => 
-    filteredProducts.filter(p => p.published !== false).slice(0, 12), 
-  [filteredProducts]);
 
   const handleSearch = useCallback((val: string) => {
     setSearchValue(val);
@@ -185,80 +142,30 @@ function StorefrontContent() {
           </section>
         )}
 
-        <section id="vitrine" className={cn(
-          "container mx-auto px-4 md:px-6 pb-12 md:pb-24 scroll-mt-24 transition-all duration-700",
-          selectedCategory ? "pt-24 md:pt-40" : "pt-12 md:pt-24"
-        )}>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="h-px w-12 bg-accent" />
-                <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.6em] text-accent">
-                  {selectedCategory ? 'Explorando Seleção' : (settings?.featuredSubtitle || 'Editorial de Estilo')}
-                </span>
-              </div>
-              <h2 className="text-3xl md:text-6xl font-headline font-bold text-primary uppercase tracking-tighter leading-none">
-                {selectedCategory || (settings?.featuredTitle || 'Novas Peças')}
-              </h2>
-            </div>
-            
-            {!selectedCategory && (
-              <Link href="/economize" className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary/60 underline underline-offset-8 hover:text-accent transition-colors">
-                Ver todas as peças
-              </Link>
-            )}
-            
-            {selectedCategory && (
-              <button 
-                onClick={() => setSelectedCategory(null)}
-                className="flex items-center gap-3 text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary hover:text-accent transition-all group"
-              >
-                <div className="h-10 w-10 rounded-full border border-primary/10 flex items-center justify-center group-hover:border-accent group-hover:bg-accent group-hover:text-white transition-all">
-                  <ArrowLeft className="h-4 w-4" />
-                </div>
-                Voltar ao Início
-              </button>
-            )}
-          </div>
+        <div id="vitrine" className="scroll-mt-24" />
 
-          {isLoading ? (
+        {/* Vitrines Dinâmicas (Controladas via Admin) */}
+        {!selectedCategory && (
+          isShowcasesLoading ? (
             <div className="flex flex-col items-center justify-center py-24 md:py-40 space-y-6">
               <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Loja...</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
           ) : (
-            <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 -mx-4 md:mx-0 items-start">
-              {featuredProducts.length > 0 ? (
-                featuredProducts.map((product) => (
-                  <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
-                    <ProductCard 
-                      {...product} 
-                    />
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full w-full py-32 text-center border-2 border-dashed border-primary/5 rounded-[3rem]">
-                  <Sparkles className="h-12 w-12 text-accent/20 mx-auto mb-6" />
-                  <p className="text-muted-foreground italic font-light text-lg">Nenhuma peça disponível para esta seleção no momento.</p>
-                  <button onClick={() => setSelectedCategory(null)} className="mt-8 text-xs font-bold uppercase text-accent underline underline-offset-8">Explorar outras seleções</button>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
+            showcases?.map((showcase) => (
+              <ShowcaseSection 
+                key={showcase.id}
+                eyebrow={showcase.eyebrow}
+                title={showcase.title}
+                linkText={showcase.linkText}
+                linkUrl={showcase.linkUrl}
+                productIds={showcase.productIds}
+              />
+            ))
+          )
+        )}
 
-        {/* Vitrines Dinâmicas Gerenciadas pelo Admin */}
-        {!selectedCategory && showcases?.map((showcase) => (
-          <ShowcaseSection 
-            key={showcase.id}
-            eyebrow={showcase.eyebrow}
-            title={showcase.title}
-            linkText={showcase.linkText}
-            linkUrl={showcase.linkUrl}
-            productIds={showcase.productIds}
-          />
-        ))}
-
+        {/* Categories Section */}
         <section id="colecoes" className="bg-secondary/5 py-16 md:py-32">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-12 md:mb-24 space-y-4">
@@ -305,6 +212,7 @@ function StorefrontContent() {
           </div>
         </section>
 
+        {/* Movement Section */}
         {!selectedCategory && (
           <section className="py-16 md:py-40">
             <div className="container mx-auto px-4 md:px-6">
@@ -312,7 +220,7 @@ function StorefrontContent() {
                 <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[6rem] overflow-hidden shadow-premium group">
                   {movement?.mediaType === 'video' ? (
                     <video 
-                      src={movement?.mediaUrl || "https://res.cloudinary.com/djtuzexfd/video/upload/v1711123456/sample.mp4"} 
+                      src={movement?.mediaUrl} 
                       autoPlay 
                       muted 
                       loop 
@@ -350,27 +258,6 @@ function StorefrontContent() {
             </div>
           </section>
         )}
-
-        <section id="mais-vendidos" className="container mx-auto px-4 md:px-6 py-16 md:py-32 bg-secondary/5 rounded-[2rem] md:rounded-[5rem] mb-12 md:mb-24">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-24 gap-6">
-            <div className="space-y-3">
-              <span className="text-[10px] md:sm font-bold uppercase tracking-[0.6em] text-accent">Destaques Absolutos</span>
-              <h3 className="text-3xl md:text-7xl font-headline font-bold text-primary uppercase">Mais Vendidos</h3>
-            </div>
-            <Link href="/economize" className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary/60 underline underline-offset-8 hover:text-accent transition-colors">
-              Explorar Ofertas
-            </Link>
-          </div>
-          <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-12 md:px-0 md:pb-0 -mx-4 md:mx-0 items-start">
-            {latestProducts.map((product) => (
-              <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
-                <ProductCard 
-                  {...product} 
-                />
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
 
       <Footer />

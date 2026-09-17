@@ -11,12 +11,12 @@ import {
   Search, 
   Save, 
   Layers,
-  ArrowUpDown,
   CheckCircle2,
   XCircle,
   Package,
   X,
-  PlusCircle
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ import {
   deleteDocumentNonBlocking, 
   updateDocumentNonBlocking 
 } from '@/firebase';
-import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, doc, serverTimestamp, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -50,14 +50,14 @@ export function AdminShowcaseSections() {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [productSearch, setProductSearch] = useState('');
+  const [isMigrating, setIsMigrating] = useState(false);
 
   const [formData, setFormData] = useState({
     eyebrow: 'EDITORIAL DE ESTILO',
     title: '',
     linkText: 'VER TODAS AS PEÇAS',
-    linkUrl: '/economize',
+    linkUrl: '/#vitrine',
     productIds: [] as string[],
     order: 1,
     active: true
@@ -68,7 +68,7 @@ export function AdminShowcaseSections() {
   const { data: sections, isLoading: loadingSections } = useCollection(sectionsQuery);
 
   // Consulta de Produtos para o seletor
-  const productsQuery = useMemoFirebase(() => query(collection(db, 'products'), orderBy('name', 'asc')), [db]);
+  const productsQuery = useMemoFirebase(() => query(collection(db, 'products'), orderBy('createdAt', 'desc')), [db]);
   const { data: allProducts, isLoading: loadingProducts } = useCollection(productsQuery);
 
   const filteredProducts = useMemo(() => {
@@ -85,7 +85,7 @@ export function AdminShowcaseSections() {
         eyebrow: section.eyebrow || 'EDITORIAL DE ESTILO',
         title: section.title || '',
         linkText: section.linkText || 'VER TODAS AS PEÇAS',
-        linkUrl: section.linkUrl || '/economize',
+        linkUrl: section.linkUrl || '/#vitrine',
         productIds: section.productIds || [],
         order: section.order || 1,
         active: section.active !== false
@@ -96,13 +96,68 @@ export function AdminShowcaseSections() {
         eyebrow: 'EDITORIAL DE ESTILO',
         title: '',
         linkText: 'VER TODAS AS PEÇAS',
-        linkUrl: '/economize',
+        linkUrl: '/#vitrine',
         productIds: [],
         order: (sections?.length || 0) + 1,
         active: true
       });
     }
     setIsDialogOpen(true);
+  };
+
+  const handleMigrateDefaults = async () => {
+    if (!allProducts || allProducts.length === 0) {
+      toast({ title: "Catálogo vazio", description: "Cadastre produtos antes de migrar as vitrines.", variant: "destructive" });
+      return;
+    }
+    
+    setIsMigrating(true);
+    try {
+      // 1. Vitrine "Novas Peças" (Editorial)
+      const featuredIds = allProducts
+        .filter(p => p.featured || p.badge === 'Destaque' || p.badge === 'Lançamento' || p.published !== false)
+        .slice(0, 12)
+        .map(p => p.id);
+
+      // 2. Vitrine "Mais Vendidos" (Destaques Absolutos)
+      const bestsellerIds = allProducts
+        .filter(p => p.bestseller || p.published !== false)
+        .reverse() // Lógica diferente para simular outra seleção
+        .slice(0, 12)
+        .map(p => p.id);
+
+      if (featuredIds.length > 0) {
+        await addDoc(collection(db, 'homeShowcaseSections'), {
+          eyebrow: 'EDITORIAL DE ESTILO',
+          title: 'Novas Peças',
+          linkText: 'VER TODAS AS PEÇAS',
+          linkUrl: '/#vitrine',
+          productIds: featuredIds,
+          order: 1,
+          active: true,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      if (bestsellerIds.length > 0) {
+        await addDoc(collection(db, 'homeShowcaseSections'), {
+          eyebrow: 'DESTAQUES ABSOLUTOS',
+          title: 'Mais Vendidos',
+          linkText: 'EXPLORAR OFERTAS',
+          linkUrl: '/economize',
+          productIds: bestsellerIds,
+          order: 10,
+          active: true,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      toast({ title: "Migração Concluída!", description: "As vitrines fixas agora são editáveis." });
+    } catch (e) {
+      toast({ title: "Erro na migração", variant: "destructive" });
+    } finally {
+      setIsMigrating(false);
+    }
   };
 
   const handleSave = () => {
@@ -153,12 +208,25 @@ export function AdminShowcaseSections() {
           </div>
           <h1 className="text-4xl font-headline font-bold text-primary tracking-tighter">Vitrines da Home</h1>
         </div>
-        <Button 
-          onClick={() => handleOpenDialog()}
-          className="rounded-full h-16 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px]"
-        >
-          <Plus className="mr-2 h-5 w-5" /> Criar Nova Seção
-        </Button>
+        <div className="flex gap-4">
+          {sections?.length === 0 && !isLoading && (
+            <Button 
+              onClick={handleMigrateDefaults}
+              disabled={isMigrating}
+              variant="outline"
+              className="rounded-full h-16 px-8 border-accent/20 text-accent hover:bg-accent/5 font-bold uppercase tracking-widest text-[10px]"
+            >
+              {isMigrating ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              Migrar Vitrines Padrão
+            </Button>
+          )}
+          <Button 
+            onClick={() => handleOpenDialog()}
+            className="rounded-full h-16 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px]"
+          >
+            <Plus className="mr-2 h-5 w-5" /> Criar Nova Seção
+          </Button>
+        </div>
       </header>
 
       <div className="grid gap-6">
@@ -200,9 +268,12 @@ export function AdminShowcaseSections() {
             </Card>
           ))
         ) : (
-          <div className="py-20 text-center bg-white/40 border-2 border-dashed border-primary/10 rounded-[4rem] space-y-4">
+          <div className="py-20 text-center bg-white/40 border-2 border-dashed border-primary/10 rounded-[4rem] space-y-6">
              <Presentation className="h-12 w-12 text-primary/10 mx-auto" />
-             <p className="text-sm text-muted-foreground italic">Nenhuma vitrine personalizada cadastrada.</p>
+             <div className="space-y-2">
+                <p className="text-sm text-muted-foreground italic">Nenhuma vitrine personalizada cadastrada.</p>
+                <p className="text-[10px] uppercase font-bold text-primary/40">Use o botão "Migrar Vitrines Padrão" para começar.</p>
+             </div>
           </div>
         )}
       </div>
@@ -325,7 +396,7 @@ export function AdminShowcaseSections() {
                       })
                     ) : (
                       <div className="py-20 text-center space-y-3 opacity-20">
-                         <PlusCircle className="h-10 w-10 mx-auto" />
+                         <Plus className="h-10 w-10 mx-auto" />
                          <p className="text-[10px] font-bold uppercase">Nenhum item selecionado</p>
                       </div>
                     )}
