@@ -59,16 +59,22 @@ export function useCollection<T = any>(
           snapshot.forEach((doc) => {
             results.push({ ...(doc.data() as T), id: doc.id });
           });
-          setData(results);
-          setError(null);
-          setIsLoading(false);
+          
+          // CRITICAL: Defer the state update to the next execution cycle.
+          // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK 11.9.0
+          // which occurs when state updates happen during the listener lifecycle.
+          setTimeout(() => {
+            if (!isMounted) return;
+            setData(results);
+            setError(null);
+            setIsLoading(false);
+          }, 0);
         },
         (serverError: FirestoreError) => {
           if (!isMounted) return;
 
           // CRITICAL: Defer the error handling to the next execution cycle.
           // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK 11.9.0
-          // which occurs when state updates happen during the listener lifecycle.
           setTimeout(() => {
             if (!isMounted) return;
 

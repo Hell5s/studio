@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -151,22 +150,28 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             orders.push({ id: doc.id, ...doc.data() });
           });
 
-          if (!initialLoadRef.current) {
-            snapshot.docChanges().forEach((change) => {
-              if (change.type === 'added') {
-                const newOrder = change.doc.data();
-                toast({
-                  title: "🛍️ Novo Pedido!",
-                  description: `Pedido #${newOrder.orderNumber} - R$ ${newOrder.total?.toFixed(2)}`,
-                  duration: 5000,
-                });
-                playNotificationSound();
-              }
-            });
-          }
+          // CRITICAL: Defer the state update to the next execution cycle.
+          // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK 11.9.0
+          setTimeout(() => {
+            if (!isMounted) return;
 
-          setNotifications(orders);
-          initialLoadRef.current = false;
+            if (!initialLoadRef.current) {
+              snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                  const newOrder = change.doc.data();
+                  toast({
+                    title: "🛍️ Novo Pedido!",
+                    description: `Pedido #${newOrder.orderNumber} - R$ ${newOrder.total?.toFixed(2)}`,
+                    duration: 5000,
+                  });
+                  playNotificationSound();
+                }
+              });
+            }
+
+            setNotifications(orders);
+            initialLoadRef.current = false;
+          }, 0);
         },
         (error) => {
           if (!isMounted) return;
@@ -192,7 +197,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
         unsubscribe();
       }
     };
-  }, [db, isAdmin]); // Removed 'toast' dependency to reduce listener churn
+  }, [db, isAdmin]); 
 
   const markAsRead = (id: string) => {
     const newReadIds = new Set(readIds);

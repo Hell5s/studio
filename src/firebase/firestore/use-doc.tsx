@@ -54,13 +54,18 @@ export function useDoc<T = any>(
         (snapshot: DocumentSnapshot<DocumentData>) => {
           if (!isMounted) return;
 
-          if (snapshot.exists()) {
-            setData({ ...(snapshot.data() as T), id: snapshot.id });
-          } else {
-            setData(null);
-          }
-          setError(null);
-          setIsLoading(false);
+          // CRITICAL: Defer the state update to the next execution cycle.
+          // This prevents the "Unexpected state (ID: ca9)" error in Firebase SDK 11.9.0
+          setTimeout(() => {
+            if (!isMounted) return;
+            if (snapshot.exists()) {
+              setData({ ...(snapshot.data() as T), id: snapshot.id });
+            } else {
+              setData(null);
+            }
+            setError(null);
+            setIsLoading(false);
+          }, 0);
         },
         (serverError: FirestoreError) => {
           if (!isMounted) return;
