@@ -209,17 +209,6 @@ export function AdminShowcaseSections() {
           <h1 className="text-4xl font-headline font-bold text-primary tracking-tighter">Vitrines da Home</h1>
         </div>
         <div className="flex gap-4">
-          {sections?.length === 0 && !isLoading && (
-            <Button 
-              onClick={handleMigrateDefaults}
-              disabled={isMigrating}
-              variant="outline"
-              className="rounded-full h-16 px-8 border-accent/20 text-accent hover:bg-accent/5 font-bold uppercase tracking-widest text-[10px]"
-            >
-              {isMigrating ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              Migrar Vitrines Padrão
-            </Button>
-          )}
           <Button 
             onClick={() => handleOpenDialog()}
             className="rounded-full h-16 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px]"
@@ -268,12 +257,21 @@ export function AdminShowcaseSections() {
             </Card>
           ))
         ) : (
-          <div className="py-20 text-center bg-white/40 border-2 border-dashed border-primary/10 rounded-[4rem] space-y-6">
-             <Presentation className="h-12 w-12 text-primary/10 mx-auto" />
+          <div className="py-20 text-center bg-white/40 border-2 border-dashed border-primary/10 rounded-[4rem] space-y-8 flex flex-col items-center">
+             <Presentation className="h-16 w-16 text-primary/10 mx-auto" />
              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground italic">Nenhuma vitrine personalizada cadastrada.</p>
-                <p className="text-[10px] uppercase font-bold text-primary/40">Use o botão "Migrar Vitrines Padrão" para começar.</p>
+                <h5 className="text-xl font-headline font-bold text-primary/40 uppercase tracking-widest">Sem Vitrines Ativas</h5>
+                <p className="text-sm text-muted-foreground max-w-xs mx-auto font-light italic">Comece criando suas seleções manuais ou restaure as vitrines padrão para o seu catálogo.</p>
              </div>
+             
+             <Button 
+                onClick={handleMigrateDefaults}
+                disabled={isMigrating}
+                className="rounded-full h-14 px-10 bg-accent text-primary hover:brightness-110 font-bold uppercase tracking-widest text-[10px] shadow-xl"
+              >
+                {isMigrating ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                Migrar Vitrines Padrão
+              </Button>
           </div>
         )}
       </div>
