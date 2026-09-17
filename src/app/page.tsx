@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
@@ -40,21 +39,23 @@ function StorefrontContent() {
   const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
   const isAdmin = !!adminRole || user?.uid === 'LXaJZDm6tNUQLh3ooghcg6EQgJ43';
 
+  // Configurações do Movimento
   const movementRef = useMemoFirebase(() => doc(db, 'settings', 'movementSection'), [db]);
   const { data: movement } = useDoc(movementRef);
 
-  // Consulta de Vitrines Dinâmicas (Simplificada para evitar necessidade de índices compostos manuais)
+  // Configurações do Layout da Home
+  const layoutRef = useMemoFirebase(() => doc(db, 'settings', 'homeLayout'), [db]);
+  const { data: layoutData, isLoading: isLayoutLoading } = useDoc(layoutRef);
+
+  // Consulta de Vitrines Dinâmicas
   const showcasesQuery = useMemoFirebase(() => query(
     collection(db, 'homeShowcaseSections')
   ), [db]);
   const { data: allShowcases, isLoading: isShowcasesLoading } = useCollection(showcasesQuery);
 
-  // Filtro e Ordenação em memória para garantir exibição sem erros de indexação do Firestore
   const activeShowcases = useMemo(() => {
     if (!allShowcases) return [];
-    return allShowcases
-      .filter(s => s.active !== false)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
+    return allShowcases.filter(s => s.active !== false);
   }, [allShowcases]);
 
   useEffect(() => {
@@ -113,6 +114,159 @@ function StorefrontContent() {
     router.push('/?admin=true');
   }, [router]);
 
+  // --- COMPONENTES DOS BLOCOS ---
+
+  const renderBanner = () => (
+    <section key="banner" className="pt-0">
+      <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
+      <div id="vitrine" className="scroll-mt-24" />
+    </section>
+  );
+
+  const renderCategories = () => (
+    <section key="categories" id="colecoes" className="bg-secondary/5 py-16 md:py-32">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="text-center mb-12 md:mb-24 space-y-4">
+          <div className="flex items-center justify-center gap-4">
+              <div className="h-px w-8 md:w-12 bg-accent/40" />
+              <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.6em] text-accent">Navegue por Estilo</span>
+              <div className="h-px w-8 md:w-12 bg-accent/40" />
+          </div>
+          <h2 className="text-3xl md:text-7xl font-headline font-bold text-primary uppercase">Categorias</h2>
+        </div>
+        
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10">
+          {categories && categories.length > 0 ? (
+            categories.map((col) => {
+              const slug = col.name.toLowerCase().trim().replace(/\s+/g, '-');
+              return (
+                <Link 
+                  key={col.id} 
+                  href={`/categoria/${slug}`}
+                  className={cn(
+                    "group relative aspect-[4/5] rounded-[1.5rem] md:rounded-[4rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-700",
+                    "border-transparent opacity-90 hover:opacity-100 hover:scale-[1.03]"
+                  )}
+                >
+                  <img 
+                    src={col.image || 'https://picsum.photos/seed/placeholder/400/500'} 
+                    className="w-full h-full object-cover transition-transform duration-2000 group-hover:scale-110" 
+                    alt={col.name} 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/20 to-transparent" />
+                  <div className="absolute bottom-6 left-6 right-6 md:bottom-12 md:left-12 md:right-12">
+                    <h3 className="text-lg md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-2 md:mb-4">{col.name}</h3>
+                    <div className="h-0.5 md:h-1 bg-accent transition-all duration-700 w-0 group-hover:w-full" />
+                  </div>
+                </Link>
+              );
+            })
+          ) : (
+            [1,2,3,4].map(i => (
+                <div key={i} className="aspect-[4/5] rounded-[1.5rem] md:rounded-[4rem] bg-secondary animate-pulse" />
+            ))
+          )}
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderMovement = () => (
+    <section key="movement" className="py-16 md:py-40">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-32 items-center">
+          <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[6rem] overflow-hidden shadow-premium group">
+            {movement?.mediaType === 'video' ? (
+              <video 
+                src={movement?.mediaUrl} 
+                autoPlay 
+                muted 
+                loop 
+                playsInline 
+                className="object-cover w-full h-full"
+              />
+            ) : (
+              <img 
+                src={movement?.mediaUrl || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80"} 
+                className="object-cover w-full h-full transition-transform duration-2500 group-hover:scale-110" 
+                alt={movement?.title || "Essência Toda Bela"} 
+              />
+            )}
+            <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
+          </div>
+          <div className="space-y-8 md:space-y-12">
+            <div className="space-y-4 md:space-y-8">
+              <span className="text-accent text-[10px] md:text-sm font-bold uppercase tracking-[0.8em]">
+                {movement?.eyebrow || 'MOVIMENTO TODA BELA'}
+              </span>
+              <h3 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-[0.9] tracking-tighter">
+                {movement?.title || 'Moda com Propósito'}
+              </h3>
+              <p className="text-base md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
+                {movement?.description || 'Cada peça em nossa loja é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.'}
+              </p>
+            </div>
+            <Link href={movement?.buttonLink || "/#colecoes"}>
+              <button className="w-full sm:w-auto rounded-full border-2 border-primary px-10 md:px-16 py-5 md:py-8 text-[10px] md:text-sm font-bold uppercase tracking-[0.5em] hover:bg-primary hover:text-white transition-all shadow-xl">
+                {movement?.buttonText || 'CONHEÇA A COLEÇÃO'}
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderShowcase = (refId: string) => {
+    const showcase = activeShowcases.find(s => s.id === refId);
+    if (!showcase) return null;
+    return (
+      <ShowcaseSection 
+        key={showcase.id}
+        eyebrow={showcase.eyebrow}
+        title={showcase.title}
+        linkText={showcase.linkText}
+        linkUrl={showcase.linkUrl}
+        productIds={showcase.productIds}
+      />
+    );
+  };
+
+  // --- LÓGICA DE MONTAGEM DO LAYOUT ---
+
+  const renderBlocks = () => {
+    if (isLayoutLoading || isShowcasesLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-40 space-y-6">
+          <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
+        </div>
+      );
+    }
+
+    if (layoutData?.blocks && layoutData.blocks.length > 0) {
+      return layoutData.blocks.map((block: any) => {
+        switch (block.type) {
+          case 'banner': return renderBanner();
+          case 'categories': return renderCategories();
+          case 'movement': return renderMovement();
+          case 'showcase': return renderShowcase(block.refId);
+          default: return null;
+        }
+      });
+    }
+
+    // Fallback: Banner -> Vitrines -> Categorias -> Movimento
+    return (
+      <>
+        {renderBanner()}
+        {activeShowcases.sort((a, b) => (a.order || 0) - (b.order || 0)).map(s => renderShowcase(s.id))}
+        {renderCategories()}
+        {renderMovement()}
+      </>
+    );
+  };
+
   if (isAdminView && isAdmin) {
     return (
       <div className="h-screen bg-background">
@@ -142,128 +296,7 @@ function StorefrontContent() {
       />
 
       <main>
-        {!selectedCategory && (
-          <section className="pt-0">
-            <Hero onShopNow={() => document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' })} />
-          </section>
-        )}
-
-        <div id="vitrine" className="scroll-mt-24" />
-
-        {/* Vitrines Dinâmicas (Controladas via Admin) */}
-        {!selectedCategory && (
-          isShowcasesLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 md:py-40 space-y-6">
-              <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
-            </div>
-          ) : (
-            activeShowcases?.map((showcase) => (
-              <ShowcaseSection 
-                key={showcase.id}
-                eyebrow={showcase.eyebrow}
-                title={showcase.title}
-                linkText={showcase.linkText}
-                linkUrl={showcase.linkUrl}
-                productIds={showcase.productIds}
-              />
-            ))
-          )
-        )}
-
-        {/* Categories Section */}
-        <section id="colecoes" className="bg-secondary/5 py-16 md:py-32">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-12 md:mb-24 space-y-4">
-              <div className="flex items-center justify-center gap-4">
-                 <div className="h-px w-8 md:w-12 bg-accent/40" />
-                 <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.6em] text-accent">Navegue por Estilo</span>
-                 <div className="h-px w-8 md:w-12 bg-accent/40" />
-              </div>
-              <h2 className="text-3xl md:text-7xl font-headline font-bold text-primary uppercase">Categorias</h2>
-            </div>
-            
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10">
-              {categories && categories.length > 0 ? (
-                categories.map((col) => {
-                  const slug = col.name.toLowerCase().trim().replace(/\s+/g, '-');
-                  return (
-                    <Link 
-                      key={col.id} 
-                      href={`/categoria/${slug}`}
-                      className={cn(
-                        "group relative aspect-[4/5] rounded-[1.5rem] md:rounded-[4rem] overflow-hidden cursor-pointer shadow-editorial border-2 transition-all duration-700",
-                        "border-transparent opacity-90 hover:opacity-100 hover:scale-[1.03]"
-                      )}
-                    >
-                      <img 
-                        src={col.image || 'https://picsum.photos/seed/placeholder/400/500'} 
-                        className="w-full h-full object-cover transition-transform duration-2000 group-hover:scale-110" 
-                        alt={col.name} 
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/20 to-transparent" />
-                      <div className="absolute bottom-6 left-6 right-6 md:bottom-12 md:left-12 md:right-12">
-                        <h3 className="text-lg md:text-3xl font-headline font-bold text-white uppercase tracking-tight leading-none mb-2 md:mb-4">{col.name}</h3>
-                        <div className="h-0.5 md:h-1 bg-accent transition-all duration-700 w-0 group-hover:w-full" />
-                      </div>
-                    </Link>
-                  );
-                })
-              ) : (
-                [1,2,3,4].map(i => (
-                   <div key={i} className="aspect-[4/5] rounded-[1.5rem] md:rounded-[4rem] bg-secondary animate-pulse" />
-                ))
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Movement Section */}
-        {!selectedCategory && (
-          <section className="py-16 md:py-40">
-            <div className="container mx-auto px-4 md:px-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-32 items-center">
-                <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[6rem] overflow-hidden shadow-premium group">
-                  {movement?.mediaType === 'video' ? (
-                    <video 
-                      src={movement?.mediaUrl} 
-                      autoPlay 
-                      muted 
-                      loop 
-                      playsInline 
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <img 
-                      src={movement?.mediaUrl || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80"} 
-                      className="object-cover w-full h-full transition-transform duration-2500 group-hover:scale-110" 
-                      alt={movement?.title || "Essência Toda Bela"} 
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
-                </div>
-                <div className="space-y-8 md:space-y-12">
-                  <div className="space-y-4 md:space-y-8">
-                    <span className="text-accent text-[10px] md:text-sm font-bold uppercase tracking-[0.8em]">
-                      {movement?.eyebrow || 'MOVIMENTO TODA BELA'}
-                    </span>
-                    <h3 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-[0.9] tracking-tighter">
-                      {movement?.title || 'Moda com Propósito'}
-                    </h3>
-                    <p className="text-base md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
-                      {movement?.description || 'Cada peça em nossa loja é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.'}
-                    </p>
-                  </div>
-                  <Link href={movement?.buttonLink || "/#colecoes"}>
-                    <button className="w-full sm:w-auto rounded-full border-2 border-primary px-10 md:px-16 py-5 md:py-8 text-[10px] md:text-sm font-bold uppercase tracking-[0.5em] hover:bg-primary hover:text-white transition-all shadow-xl">
-                      {movement?.buttonText || 'CONHEÇA A COLEÇÃO'}
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
+        {renderBlocks()}
       </main>
 
       <Footer />

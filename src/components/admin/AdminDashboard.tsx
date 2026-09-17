@@ -29,7 +29,8 @@ import {
   Menu as MenuIcon,
   X,
   Move,
-  Presentation
+  Presentation,
+  AlignJustify
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -52,6 +53,7 @@ import { AdminTeam } from './AdminTeam';
 import { AdminShipping } from './AdminShipping';
 import { AdminMovementSection } from './AdminMovementSection';
 import { AdminShowcaseSections } from './AdminShowcaseSections';
+import { AdminHomeLayout } from './AdminHomeLayout';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -69,7 +71,7 @@ interface AdminDashboardProps {
   onExit?: () => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'showcases' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing' | 'team' | 'shipping' | 'movement';
+type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'showcases' | 'layout' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing' | 'team' | 'shipping' | 'movement';
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const db = useFirestore();
@@ -222,6 +224,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'products', label: 'Produtos', icon: <Package className="h-4 w-4" /> },
     { id: 'categories', label: 'Categorias', icon: <Layers className="h-4 w-4" /> },
     { id: 'showcases', label: 'Vitrines', icon: <Presentation className="h-4 w-4" /> },
+    { id: 'layout', label: 'Layout Home', icon: <AlignJustify className="h-4 w-4" /> },
     { id: 'marketing', label: 'Marketing', icon: <Megaphone className="h-4 w-4" /> },
     { id: 'team', label: 'Equipe', icon: <ShieldCheck className="h-4 w-4" /> },
     { id: 'reviews', label: 'Avaliações', icon: <Star className="h-4 w-4" />, badge: pendingReviewsCount },
@@ -369,7 +372,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
                           !readIds.has(order.id) ? "bg-accent/5" : "opacity-60"
                         )}
                       >
-                        <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-secondary flex items-center justify-center text-primary font-bold shrink-0 text-xs md:text-sm">
+                        <div className="h-8 w-8 md:h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-primary font-bold shrink-0 text-xs md:text-sm">
                           {order.customer?.name?.[0].toUpperCase() || '#'}
                         </div>
                         <div className="flex-1 min-w-0 space-y-1">
@@ -420,6 +423,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             {activeTab === 'team' && <AdminTeam />}
             {activeTab === 'categories' && <AdminCategories />}
             {activeTab === 'showcases' && <AdminShowcaseSections />}
+            {activeTab === 'layout' && <AdminHomeLayout />}
             {activeTab === 'reviews' && <AdminReviews />}
             {activeTab === 'shipping' && <AdminShipping />}
             {activeTab === 'movement' && <AdminMovementSection />}
