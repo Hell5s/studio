@@ -43,13 +43,19 @@ function StorefrontContent() {
   const movementRef = useMemoFirebase(() => doc(db, 'settings', 'movementSection'), [db]);
   const { data: movement } = useDoc(movementRef);
 
-  // Consulta de Vitrines Dinâmicas (Incluindo as migradas)
+  // Consulta de Vitrines Dinâmicas (Simplificada para evitar necessidade de índices compostos manuais)
   const showcasesQuery = useMemoFirebase(() => query(
-    collection(db, 'homeShowcaseSections'), 
-    where('active', '==', true), 
-    orderBy('order', 'asc')
+    collection(db, 'homeShowcaseSections')
   ), [db]);
-  const { data: showcases, isLoading: isShowcasesLoading } = useCollection(showcasesQuery);
+  const { data: allShowcases, isLoading: isShowcasesLoading } = useCollection(showcasesQuery);
+
+  // Filtro e Ordenação em memória para garantir exibição sem erros de indexação do Firestore
+  const activeShowcases = useMemo(() => {
+    if (!allShowcases) return [];
+    return allShowcases
+      .filter(s => s.active !== false)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [allShowcases]);
 
   useEffect(() => {
     if (isAdminLoading) return;
@@ -152,7 +158,7 @@ function StorefrontContent() {
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
             </div>
           ) : (
-            showcases?.map((showcase) => (
+            activeShowcases?.map((showcase) => (
               <ShowcaseSection 
                 key={showcase.id}
                 eyebrow={showcase.eyebrow}
