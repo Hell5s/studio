@@ -16,7 +16,8 @@ import {
   Plus,
   Move,
   Pencil,
-  Check
+  Check,
+  Presentation
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,8 +34,8 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp, collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking, useMemoFirebase, useCollection } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { cn } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
@@ -57,6 +58,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
   const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
+
+  // Vitrines
+  const showcasesQuery = useMemoFirebase(() => query(collection(db, 'homeShowcaseSections'), where('active', '==', true)), [db]);
+  const { data: showcases } = useCollection(showcasesQuery);
+  const [selectedShowcaseIds, setSelectedShowcaseIds] = useState<Set<string>>(new Set());
 
   // Editor de Recorte
   const [editingImage, setEditingImage] = useState<{ index: number, field: 'gallery' | 'image' } | null>(null);
@@ -99,40 +105,54 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   });
 
   useEffect(() => {
-    if (product && open) {
-      setFormData({
-        name: product.name || '',
-        price: product.price?.toString() || '',
-        oldPrice: product.oldPrice?.toString() || '',
-        cost: product.cost?.toString() || '',
-        supplierUrl: product.supplierUrl || product.sourceUrl || '',
-        supplierName: product.supplierName || product.vendorName || '',
-        internalNotes: product.internalNotes || '',
-        description: product.description || '',
-        longDescription: product.longDescription || '',
-        category: product.category || 'Vestidos',
-        collection: product.collection || 'Nova Coleção',
-        badge: product.badge || '',
-        image: product.image || '',
-        gallery: product.images || [],
-        stock: product.stock?.toString() || '10',
-        sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : (product.sizes || 'P, M, G, GG'),
-        colors: Array.isArray(product.colors) ? product.colors.join(', ') : (product.colors || ''),
-        published: product.published !== false,
-        featured: !!product.featured,
-        bestseller: !!product.bestseller,
-        variations: product.variations || []
-      });
-    } else if (!product && open) {
-      setFormData({
-        name: '', price: '', oldPrice: '', cost: '', supplierUrl: '', supplierName: '',
-        internalNotes: '', description: '', longDescription: '',
-        category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
-        gallery: [], stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
-        featured: false, bestseller: false, variations: []
-      });
+    if (open) {
+      if (product) {
+        setFormData({
+          name: product.name || '',
+          price: product.price?.toString() || '',
+          oldPrice: product.oldPrice?.toString() || '',
+          cost: product.cost?.toString() || '',
+          supplierUrl: product.supplierUrl || product.sourceUrl || '',
+          supplierName: product.supplierName || product.vendorName || '',
+          internalNotes: product.internalNotes || '',
+          description: product.description || '',
+          longDescription: product.longDescription || '',
+          category: product.category || 'Vestidos',
+          collection: product.collection || 'Nova Coleção',
+          badge: product.badge || '',
+          image: product.image || '',
+          gallery: product.images || [],
+          stock: product.stock?.toString() || '10',
+          sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : (product.sizes || 'P, M, G, GG'),
+          colors: Array.isArray(product.colors) ? product.colors.join(', ') : (product.colors || ''),
+          published: product.published !== false,
+          featured: !!product.featured,
+          bestseller: !!product.bestseller,
+          variations: product.variations || []
+        });
+
+        // Inicializa vitrines selecionadas
+        if (showcases) {
+          const initial = new Set<string>();
+          showcases.forEach(s => {
+            if (s.productIds?.includes(product.id)) {
+              initial.add(s.id);
+            }
+          });
+          setSelectedShowcaseIds(initial);
+        }
+      } else {
+        setFormData({
+          name: '', price: '', oldPrice: '', cost: '', supplierUrl: '', supplierName: '',
+          internalNotes: '', description: '', longDescription: '',
+          category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
+          gallery: [], stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
+          featured: false, bestseller: false, variations: []
+        });
+        setSelectedShowcaseIds(new Set());
+      }
     }
-  }, [product, open]);
+  }, [product, open, showcases]);
 
   const uploadToCloudinary = async (file: File) => {
     const data = new FormData();
@@ -221,25 +241,33 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       ...(isEdit ? {} : { createdAt: serverTimestamp() })
     };
 
+    // Salva o produto
     if (isEdit) {
       updateDocumentNonBlocking(productRef, payload);
-      toast({
-        title: "Produto Atualizado",
-        description: `${formData.name} foi atualizado com sucesso.`,
-      });
     } else {
       setDocumentNonBlocking(productRef, payload, { merge: true });
-      toast({
-        title: "Produto Cadastrado",
-        description: `${formData.name} foi adicionado à Loja.`,
-      });
     }
+
+    // Atualiza as vitrines (homeShowcaseSections)
+    showcases?.forEach(showcase => {
+      const showcaseRef = doc(db, 'homeShowcaseSections', showcase.id);
+      if (selectedShowcaseIds.has(showcase.id)) {
+        updateDocumentNonBlocking(showcaseRef, { productIds: arrayUnion(productId) });
+      } else {
+        updateDocumentNonBlocking(showcaseRef, { productIds: arrayRemove(productId) });
+      }
+    });
+
+    toast({
+      title: isEdit ? "Produto Atualizado" : "Produto Cadastrado",
+      description: `${formData.name} foi ${isEdit ? 'atualizado' : 'adicionado'} com sucesso.`,
+    });
     
     setLoading(false);
     onOpenChange(false);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isReplace = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -352,6 +380,15 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     
     setEditingImage(null);
     toast({ title: "Enquadramento salvo!" });
+  };
+
+  const toggleShowcaseSelection = (id: string) => {
+    setSelectedShowcaseIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
   };
 
   return (
@@ -596,6 +633,29 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       {formData.oldPrice && <p className="text-sm text-muted-foreground line-through italic">R$ {formData.oldPrice}</p>}
                     </div>
                   </div>
+                </Card>
+
+                <Card className="p-8 rounded-[2rem] bg-white border-none shadow-premium space-y-6">
+                   <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
+                      <Presentation className="h-5 w-5" />
+                      <h6 className="text-[10px] font-bold uppercase tracking-widest">Vitrines da Home</h6>
+                   </div>
+                   <div className="space-y-4">
+                      {showcases && showcases.length > 0 ? (
+                        showcases.map((showcase) => (
+                          <div key={showcase.id} className="flex items-center gap-3">
+                            <Checkbox 
+                              id={`showcase-${showcase.id}`}
+                              checked={selectedShowcaseIds.has(showcase.id)}
+                              onCheckedChange={() => toggleShowcaseSelection(showcase.id)}
+                            />
+                            <Label htmlFor={`showcase-${showcase.id}`} className="text-[11px] font-medium text-primary/80 cursor-pointer">{showcase.title}</Label>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground italic">Nenhuma vitrine criada ainda.</p>
+                      )}
+                   </div>
                 </Card>
 
                 <Card className="p-8 rounded-[2rem] bg-primary text-white space-y-6 shadow-xl border-none">
