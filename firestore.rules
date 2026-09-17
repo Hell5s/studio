@@ -45,6 +45,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /homeShowcaseSections/{sectionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /orders/{orderId} {
       // Regra permitindo leitura e escrita para o servidor e webhooks
       allow read, write: if true;
