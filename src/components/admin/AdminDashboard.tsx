@@ -29,7 +29,8 @@ import {
   ShieldCheck,
   Menu as MenuIcon,
   X,
-  Move
+  Move,
+  Presentation
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -51,6 +52,7 @@ import { AdminMarketing } from './AdminMarketing';
 import { AdminTeam } from './AdminTeam';
 import { AdminShipping } from './AdminShipping';
 import { AdminMovementSection } from './AdminMovementSection';
+import { AdminShowcaseSections } from './AdminShowcaseSections';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -68,7 +70,7 @@ interface AdminDashboardProps {
   onExit?: () => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing' | 'team' | 'shipping' | 'movement';
+type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'showcases' | 'reviews' | 'coupons' | 'customers' | 'appearance' | 'reports' | 'settings' | 'header' | 'marketing' | 'team' | 'shipping' | 'movement';
 
 export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExit }: AdminDashboardProps) {
   const db = useFirestore();
@@ -214,6 +216,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
     { id: 'orders', label: 'Pedidos', icon: <Truck className="h-4 w-4" /> },
     { id: 'products', label: 'Produtos', icon: <Package className="h-4 w-4" /> },
     { id: 'categories', label: 'Categorias', icon: <Layers className="h-4 w-4" /> },
+    { id: 'showcases', label: 'Vitrines', icon: <Presentation className="h-4 w-4" /> },
     { id: 'marketing', label: 'Marketing', icon: <Megaphone className="h-4 w-4" /> },
     { id: 'team', label: 'Equipe', icon: <ShieldCheck className="h-4 w-4" /> },
     { id: 'reviews', label: 'Avaliações', icon: <Star className="h-4 w-4" />, badge: pendingReviewsCount },
@@ -336,7 +339,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
                     <Bell className="h-4 w-4 md:h-5 md:w-5 text-primary/40" />
                   )}
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 rounded-full bg-red-500 text-white text-[8px] md:text-[9px] font-bold flex items-center justify-center shadow-lg border-2 border-white">
+                    <span className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 rounded-full bg-red-50 text-white text-[8px] md:text-[9px] font-bold flex items-center justify-center shadow-lg border-2 border-white">
                       {unreadCount}
                     </span>
                   )}
@@ -411,6 +414,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
             {activeTab === 'marketing' && <AdminMarketing />}
             {activeTab === 'team' && <AdminTeam />}
             {activeTab === 'categories' && <AdminCategories />}
+            {activeTab === 'showcases' && <AdminShowcaseSections />}
             {activeTab === 'reviews' && <AdminReviews />}
             {activeTab === 'shipping' && <AdminShipping />}
             {activeTab === 'movement' && <AdminMovementSection />}

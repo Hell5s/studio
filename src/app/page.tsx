@@ -3,12 +3,13 @@
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, doc, limit } from 'firebase/firestore';
+import { collection, query, doc, limit, where, orderBy } from 'firebase/firestore';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ProductCard } from '@/components/store/ProductCard';
+import { ShowcaseSection } from '@/components/store/ShowcaseSection';
 import { Footer } from '@/components/store/Footer';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { Loader2, Sparkles, ArrowLeft } from 'lucide-react';
@@ -45,6 +46,14 @@ function StorefrontContent() {
 
   const movementRef = useMemoFirebase(() => doc(db, 'settings', 'movementSection'), [db]);
   const { data: movement } = useDoc(movementRef);
+
+  // Consulta de Vitrines Dinâmicas
+  const showcasesQuery = useMemoFirebase(() => query(
+    collection(db, 'homeShowcaseSections'), 
+    where('active', '==', true), 
+    orderBy('order', 'asc')
+  ), [db]);
+  const { data: showcases } = useCollection(showcasesQuery);
 
   useEffect(() => {
     if (isAdminLoading) return;
@@ -224,7 +233,6 @@ function StorefrontContent() {
                   <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
                     <ProductCard 
                       {...product} 
-                      onAddToCart={() => addToCart(product)}
                     />
                   </div>
                 ))
@@ -238,6 +246,18 @@ function StorefrontContent() {
             </div>
           )}
         </section>
+
+        {/* Vitrines Dinâmicas Gerenciadas pelo Admin */}
+        {!selectedCategory && showcases?.map((showcase) => (
+          <ShowcaseSection 
+            key={showcase.id}
+            eyebrow={showcase.eyebrow}
+            title={showcase.title}
+            linkText={showcase.linkText}
+            linkUrl={showcase.linkUrl}
+            productIds={showcase.productIds}
+          />
+        ))}
 
         <section id="colecoes" className="bg-secondary/5 py-16 md:py-32">
           <div className="container mx-auto px-4 md:px-6">
@@ -346,7 +366,6 @@ function StorefrontContent() {
               <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
                 <ProductCard 
                   {...product} 
-                  onAddToCart={() => addToCart(product)}
                 />
               </div>
             ))}

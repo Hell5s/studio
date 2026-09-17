@@ -96,6 +96,20 @@
         "mediaType": { "type": "string", "enum": ["image", "video"] },
         "mediaUrl": { "type": "string" }
       }
+    },
+    "HomeShowcaseSection": {
+      "title": "HomeShowcaseSection",
+      "type": "object",
+      "description": "Uma seção personalizada de produtos para a página inicial.",
+      "properties": {
+        "eyebrow": { "type": "string" },
+        "title": { "type": "string" },
+        "linkText": { "type": "string" },
+        "linkUrl": { "type": "string" },
+        "productIds": { "type": "array", "items": { "type": "string" } },
+        "order": { "type": "number" },
+        "active": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -107,6 +121,7 @@
     "/coupons/{couponId}": { "schema": { "$ref": "#/backend/entities/Coupon" }, "description": "Cupons de desconto" },
     "/store_config/settings": { "schema": { "$ref": "#/backend/entities/StoreConfig" }, "description": "Configurações globais" },
     "/settings/movementSection": { "schema": { "$ref": "#/backend/entities/MovementSection" }, "description": "Configurações da seção Movimento na Home" },
+    "/homeShowcaseSections/{sectionId}": { "schema": { "$ref": "#/backend/entities/HomeShowcaseSection" }, "description": "Vitrines personalizadas da home" },
     "/roles_admin/{uid}": { "description": "Controle de acesso administrativo" }
   }
 }
