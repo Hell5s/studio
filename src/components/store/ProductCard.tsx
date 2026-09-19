@@ -98,29 +98,42 @@ export const ProductCard = React.memo(function ProductCard({
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
       <div className="relative w-full aspect-[3/5] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
-        {isValidUrl && !hasError ? (
-          <Image
-            src={url?.includes('cloudinary.com') 
-              ? url.replace('/upload/', '/upload/q_auto,f_auto/') 
-              : url}
-            alt={name}
-            fill
-            loading="lazy"
-            quality={90}
-            className="object-cover transition-transform duration-1500 group-hover:scale-105"
-            style={getImageSettings(image)}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            onError={() => setHasError(true)}
-          />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-300">
-            <Camera className="h-8 w-8 mb-2 opacity-20" />
-            <span className="text-[8px] font-bold uppercase tracking-widest opacity-40">Imagem Indisponível</span>
+        {/* Link principal que cobre toda a área da imagem */}
+        <Link href={`/products/${id}`} className="absolute inset-0 z-10">
+          <span className="sr-only">Ver detalhes de {name}</span>
+          
+          {isValidUrl && !hasError ? (
+            <Image
+              src={url?.includes('cloudinary.com') 
+                ? url.replace('/upload/', '/upload/q_auto,f_auto/') 
+                : url}
+              alt={name}
+              fill
+              loading="lazy"
+              quality={90}
+              className="object-cover transition-transform duration-1500 group-hover:scale-105"
+              style={getImageSettings(image)}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              onError={() => setHasError(true)}
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-300">
+              <Camera className="h-8 w-8 mb-2 opacity-20" />
+              <span className="text-[8px] font-bold uppercase tracking-widest opacity-40">Imagem Indisponível</span>
+            </div>
+          )}
+
+          {/* Overlay visual de hover (apenas desktop) */}
+          <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center pointer-events-none">
+            <Button className="rounded-full bg-white text-primary font-bold uppercase text-[8px] md:text-[9px] tracking-widest px-6 md:px-8 py-4 md:py-6 shadow-2xl hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-700 hidden md:flex">
+              Ver Detalhes
+            </Button>
           </div>
-        )}
+        </Link>
         
+        {/* Elementos interativos e informativos fora do Link principal mas dentro do container relativo */}
         {badge && (
-          <Badge className="absolute top-2 md:top-4 left-2 md:left-4 bg-primary text-white border-none px-2 md:px-3 py-0.5 md:py-1 font-bold uppercase text-[7px] md:text-[9px] rounded-full tracking-widest z-10">
+          <Badge className="absolute top-2 md:top-4 left-2 md:left-4 bg-primary text-white border-none px-2 md:px-3 py-0.5 md:py-1 font-bold uppercase text-[7px] md:text-[9px] rounded-full tracking-widest z-20">
             {badge}
           </Badge>
         )}
@@ -136,14 +149,6 @@ export const ProductCard = React.memo(function ProductCard({
         >
           <Heart className={cn("h-4 md:h-5 w-4 md:w-5", isFavorited && "fill-current")} />
         </button>
-
-        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center z-10">
-          <Link href={`/products/${id}`}>
-            <Button className="rounded-full bg-white text-primary font-bold uppercase text-[8px] md:text-[9px] tracking-widest px-6 md:px-8 py-4 md:py-6 shadow-2xl hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-700 hidden md:flex">
-              Ver Detalhes
-            </Button>
-          </Link>
-        </div>
       </div>
 
       <div className="p-3 md:p-6 text-center flex flex-col flex-1 gap-2 md:gap-4">
