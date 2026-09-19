@@ -310,7 +310,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <p className="text-muted-foreground italic font-light">Gestão visual de cores e detalhes editoriais.</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onClick={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
+          <Button variant="outline" onSuccess={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
           <Button onClick={handleSave} disabled={loading} className="rounded-full h-12 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-transform uppercase text-[10px] font-bold tracking-widest">
             {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Produto
           </Button>
@@ -346,15 +346,25 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
                 <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Coleção</Label><Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
                 
-                <div className="grid gap-2">
-                  <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos Disponíveis (separados por vírgula)</Label>
-                  <Input 
-                    value={formData.sizes} 
-                    onChange={e => setFormData({...formData, sizes: e.target.value})} 
-                    placeholder="Ex: P, M, G, GG ou 38, 40, 42"
-                    className="rounded-2xl h-14 bg-secondary/20 border-none px-6"
-                  />
-                  <p className="text-[9px] text-muted-foreground ml-4 mt-1 italic">Dica: Use vírgula para separar as opções de tamanho.</p>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid gap-2">
+                    <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos (P, M, G...)</Label>
+                    <Input 
+                      value={formData.sizes} 
+                      onChange={e => setFormData({...formData, sizes: e.target.value})} 
+                      placeholder="Ex: P, M, G, GG"
+                      className="rounded-2xl h-14 bg-secondary/20 border-none px-6"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Cores (Rosa, Azul...)</Label>
+                    <Input 
+                      value={formData.colors} 
+                      onChange={e => setFormData({...formData, colors: e.target.value})} 
+                      placeholder="Ex: Off-White, Preto, Nude"
+                      className="rounded-2xl h-14 bg-secondary/20 border-none px-6"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

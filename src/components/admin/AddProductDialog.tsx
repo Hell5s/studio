@@ -263,7 +263,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         updateDocumentNonBlocking(productRef, payload);
       } else {
         setDocumentNonBlocking(productRef, payload, { merge: true });
-        // Se for novo, gera reviews demo se ativado
         const displayImg = typeof finalMainImage === 'string' ? finalMainImage : finalMainImage?.url;
         await generateDemoReviews(productId, formData.name, displayImg || '');
       }
@@ -326,6 +325,25 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }
   };
 
+  const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || activeVariationIndex === null) return;
+    
+    setUploading(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      const newVars = [...formData.variations];
+      newVars[activeVariationIndex] = { ...newVars[activeVariationIndex], image: url };
+      setFormData(prev => ({ ...prev, variations: newVars }));
+      toast({ title: "Variação salva!" });
+    } catch (error: any) {
+      toast({ title: "Erro no upload", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      setActiveVariationIndex(null);
+    }
+  };
+
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
       toast({ title: "Preencha nome e preço", variant: "destructive" });
@@ -346,10 +364,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     } finally {
       setGeneratingAI(false);
     }
-  };
-
-  const handleRemoveVariation = (index: number) => {
-    setFormData(prev => ({ ...prev, variations: prev.variations.filter((_, i) => i !== index) }));
   };
 
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
@@ -415,7 +429,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                     <div className="space-y-2"><Label>Preço (R$)</Label><Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                     <div className="space-y-2"><Label>Original (R$)</Label><Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                   </div>
-                  <div className="md:col-span-2 space-y-2"><Label>Tamanhos (P, M, G...)</Label><Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  <div className="space-y-2"><Label>Tamanhos (P, M, G...)</Label><Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  <div className="space-y-2"><Label>Cores (Rosa, Azul...)</Label><Input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                 </div>
               </section>
 
@@ -436,6 +451,33 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                      </div>
                    ))}
                    {uploading && <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20"><Loader2 className="h-5 w-5 animate-spin text-accent" /></div>}
+                </div>
+              </section>
+
+              <section className="space-y-6 bg-white p-8 rounded-[2rem] shadow-sm border border-primary/5">
+                <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationFileUpload} />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-accent"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Variações por Cor</h4></div>
+                  <Button variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, variations: [...prev.variations, { color: '', image: '' }] }))} className="text-accent text-[9px] font-bold uppercase">+ Nova Cor</Button>
+                </div>
+                <div className="grid gap-4">
+                  {formData.variations.map((v, i) => (
+                    <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5">
+                      <div 
+                        className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group"
+                        onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
+                      >
+                        {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
+                      </div>
+                      <Input placeholder="Nome da Cor" value={v.color} onChange={e => {
+                        const newVars = [...formData.variations];
+                        newVars[i].color = e.target.value;
+                        setFormData({...formData, variations: newVars});
+                      }} className="h-10 text-xs bg-white border-none rounded-xl px-4 flex-1" />
+                      <button onClick={() => setFormData(prev => ({ ...prev, variations: prev.variations.filter((_, idx) => idx !== i) }))} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
+                    </div>
+                  ))}
                 </div>
               </section>
             </div>
