@@ -419,6 +419,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                   <div className="md:col-span-2 space-y-2"><Label>Descrição</Label><Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-white border-gray-200 min-h-[100px] rounded-xl" /></div>
+                  
+                  <div className="space-y-2"><Label>Link do Fornecedor (Dropshipping)</Label><Input value={formData.supplierUrl} onChange={e => setFormData({...formData, supplierUrl: e.target.value})} placeholder="https://..." className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  <div className="space-y-2"><Label>Nome do Fornecedor</Label><Input value={formData.supplierName} onChange={e => setFormData({...formData, supplierName: e.target.value})} placeholder="Ex: Kaisan, Shopee..." className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+
                   <div className="space-y-2">
                     <Label>Categoria</Label>
                     <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm">
