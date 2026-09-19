@@ -41,33 +41,44 @@ export function AdminHomeLayout() {
   const showcasesQuery = useMemoFirebase(() => query(collection(db, 'homeShowcaseSections'), where('active', '==', true)), [db]);
   const { data: activeShowcases } = useCollection(showcasesQuery);
 
+  // Efeito principal de Reconciliação Dinâmica
   useEffect(() => {
-    if (layoutData?.blocks) {
-      setBlocks(layoutData.blocks);
-    } else if (activeShowcases) {
-      // Default order: Banner -> Showcases -> Categories -> Movement
-      const initial: HomeBlock[] = [
+    if (!activeShowcases) return;
+
+    let reconciledBlocks: HomeBlock[] = [];
+    const activeIds = new Set(activeShowcases.map(s => s.id));
+
+    if (layoutData?.blocks && Array.isArray(layoutData.blocks) && layoutData.blocks.length > 0) {
+      // 1. Filtrar blocos salvos: mantém fixos e showcases que ainda existem/estão ativos
+      reconciledBlocks = layoutData.blocks.filter((b: any) => {
+        if (b.type !== 'showcase') return true;
+        return activeIds.has(b.refId);
+      });
+
+      // 2. Identificar vitrines ativas que ainda não estão no layout
+      const existingRefIds = new Set(reconciledBlocks.filter(b => b.type === 'showcase').map(b => b.refId));
+      const newActiveShowcases = activeShowcases.filter(s => !existingRefIds.has(s.id));
+
+      // 3. Adicionar as novas vitrines ao final da lista
+      newActiveShowcases.forEach(s => {
+        reconciledBlocks.push({
+          type: 'showcase',
+          refId: s.id,
+          label: s.title
+        });
+      });
+    } else {
+      // Fallback: Ordem padrão se não houver layout salvo
+      reconciledBlocks = [
         { type: 'banner', label: 'Banner Principal' },
         ...activeShowcases.map(s => ({ type: 'showcase' as const, refId: s.id, label: s.title })),
         { type: 'categories', label: 'Grid de Categorias' },
         { type: 'movement', label: 'Movimento Toda Bela (Manifesto)' }
       ];
-      setBlocks(initial);
     }
+
+    setBlocks(reconciledBlocks);
   }, [layoutData, activeShowcases]);
-
-  // Sincroniza labels se novas vitrines forem ativadas mas não estiverem no layout
-  useEffect(() => {
-    if (!activeShowcases || blocks.length === 0) return;
-
-    const currentShowcaseIds = new Set(blocks.filter(b => b.type === 'showcase').map(b => b.refId));
-    const newShowcases = activeShowcases.filter(s => !currentShowcaseIds.has(s.id));
-
-    if (newShowcases.length > 0) {
-      const updated = [...blocks, ...newShowcases.map(s => ({ type: 'showcase' as const, refId: s.id, label: s.title }))];
-      setBlocks(updated);
-    }
-  }, [activeShowcases]);
 
   const moveBlock = (index: number, direction: 'up' | 'down') => {
     const newBlocks = [...blocks];
@@ -113,7 +124,7 @@ export function AdminHomeLayout() {
 
       <div className="space-y-4">
         {blocks.map((block, idx) => {
-          // Tenta encontrar o label atualizado para vitrines
+          // Garante que o label sempre reflita o título atual da vitrine no Firestore
           let displayLabel = block.label;
           if (block.type === 'showcase' && activeShowcases) {
             const sc = activeShowcases.find(s => s.id === block.refId);
