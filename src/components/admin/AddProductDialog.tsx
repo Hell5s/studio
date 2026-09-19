@@ -34,11 +34,33 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc } from 'firebase/firestore';
 import { useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking, useMemoFirebase, useCollection } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { cn } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
+
+// Pool de dados para avaliações demonstrativas
+const DEMO_REVIEWS_POOL = {
+  names: ["VALENTINA S.", "HELENA M.", "BEATRIZ R.", "ISABELA F.", "CAMILA G.", "LARISSA P.", "JULIANA B.", "MARIA CLARA T.", "SOPHIA V.", "ALICE L.", "GIOVANNA C.", "MANUELA D.", "LÍVIA H.", "LORENA K.", "MAYA P."],
+  headlines: [
+    "Simplesmente deslumbrante!", "Caimento impecável", "Qualidade surpreendente", 
+    "Superou as expectativas", "Elegância pura", "Minha nova peça favorita", 
+    "Acabamento de luxo", "Veste muito bem", "Amei cada detalhe", "Sofisticação garantida"
+  ],
+  comments: [
+    "O tecido é maravilhoso e o caimento valoriza muito o corpo. Recomendo demais!",
+    "A cor é ainda mais bonita pessoalmente. Entrega rápida e embalagem caprichada.",
+    "Fiquei impressionada com a qualidade do acabamento. Vale cada centavo.",
+    "Uma peça atemporal que toda mulher deveria ter no guarda-roupa. Sofisticação pura.",
+    "O atendimento foi ótimo e o produto é de altíssimo nível. Com certeza comprarei mais.",
+    "Tecido leve e confortável, perfeito para qualquer ocasião especial.",
+    "A modelagem é perfeita, seguiu exatamente a tabela de medidas.",
+    "Simplesmente apaixonada! O brilho do tecido é sutil e elegante.",
+    "Chegou super rápido. A Toda Bela realmente entende de moda feminina de luxo.",
+    "É difícil encontrar peças com esse nível de detalhe. Parabéns pela curadoria."
+  ]
+};
 
 interface AddProductDialogProps {
   open: boolean;
@@ -93,8 +115,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     category: 'Vestidos',
     collection: 'Nova Coleção',
     badge: 'Novo',
-    image: '', // Agora pode ser string ou objeto {url, crop, zoom}
-    gallery: [] as any[], // Agora pode conter objetos {url, crop, zoom}
+    image: '',
+    gallery: [] as any[],
     stock: '10',
     sizes: 'P, M, G, GG',
     colors: '',
@@ -131,7 +153,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           variations: product.variations || []
         });
 
-        // Inicializa vitrines selecionadas
         if (showcases) {
           const initial = new Set<string>();
           showcases.forEach(s => {
@@ -169,47 +190,43 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     return result.secure_url;
   };
 
-  const parsePrice = (val: any) => {
-    if (typeof val === 'number') return val;
-    if (!val) return 0;
-    const str = String(val).trim();
-    if (str.includes(',')) {
-      return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
-    }
-    return parseFloat(str) || 0;
-  };
+  const generateDemoReviews = async (productId: string, productName: string, productImage: string) => {
+    const settingsSnap = await getDoc(doc(db, 'settings', 'reviews'));
+    const settings = settingsSnap.data();
+    
+    if (settings?.demoEnabled === false) return;
 
-  const handleAddVariation = () => {
-    setFormData(prev => ({
-      ...prev,
-      variations: [...prev.variations, { color: '', image: '' }]
-    }));
-  };
+    const min = settings?.minQty || 4;
+    const max = settings?.maxQty || 12;
+    const qty = Math.floor(Math.random() * (max - min + 1)) + min;
 
-  const handleVariationChange = (index: number, field: string, value: string) => {
-    const newVars = [...formData.variations];
-    newVars[index] = { ...newVars[index], [field]: value };
-    setFormData({ ...formData, variations: newVars });
-  };
+    const shuffle = (array: any[]) => [...array].sort(() => 0.5 - Math.random());
+    const names = shuffle(DEMO_REVIEWS_POOL.names);
+    const headlines = shuffle(DEMO_REVIEWS_POOL.headlines);
+    const comments = shuffle(DEMO_REVIEWS_POOL.comments);
 
-  const handleVariationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || activeVariationIndex === null) return;
-    setUploading(true);
-    try {
-      const url = await uploadToCloudinary(file);
-      handleVariationChange(activeVariationIndex, 'image', url);
-      toast({ title: "Foto da cor carregada!" });
-    } catch (error: any) {
-      toast({ title: "Erro no upload da cor", variant: "destructive" });
-    } finally {
-      setUploading(false);
-      setActiveVariationIndex(null);
-      e.target.value = '';
+    const sizes = ["P", "M", "G", "GG"];
+
+    for (let i = 0; i < qty; i++) {
+      const review = {
+        productId,
+        productName,
+        productImage,
+        user: names[i % names.length],
+        headline: headlines[i % headlines.length],
+        comment: comments[i % comments.length],
+        rating: Math.random() > 0.3 ? 5 : 4,
+        size: sizes[Math.floor(Math.random() * sizes.length)],
+        recommended: true,
+        isDemo: true,
+        status: 'published',
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 15 * 24 * 60 * 60 * 1000)).toISOString()
+      };
+      await addDoc(collection(db, 'reviews'), review);
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
 
     if (!formData.name || !formData.price || !finalMainImage) {
@@ -229,9 +246,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const payload = {
       ...formData,
       id: productId,
-      price: parsePrice(formData.price),
-      oldPrice: formData.oldPrice ? parsePrice(formData.oldPrice) : null,
-      cost: parsePrice(formData.cost),
+      price: Number(formData.price.toString().replace(',', '.')),
+      oldPrice: formData.oldPrice ? Number(formData.oldPrice.toString().replace(',', '.')) : null,
+      cost: Number(formData.cost.toString().replace(',', '.')),
       stock: formData.stock ? Number(formData.stock) : 0,
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
@@ -241,42 +258,48 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       ...(isEdit ? {} : { createdAt: serverTimestamp() })
     };
 
-    // Salva o produto
-    if (isEdit) {
-      updateDocumentNonBlocking(productRef, payload);
-    } else {
-      setDocumentNonBlocking(productRef, payload, { merge: true });
-    }
-
-    // Atualiza as vitrines (homeShowcaseSections)
-    showcases?.forEach(showcase => {
-      const showcaseRef = doc(db, 'homeShowcaseSections', showcase.id);
-      if (selectedShowcaseIds.has(showcase.id)) {
-        updateDocumentNonBlocking(showcaseRef, { productIds: arrayUnion(productId) });
+    try {
+      if (isEdit) {
+        updateDocumentNonBlocking(productRef, payload);
       } else {
-        updateDocumentNonBlocking(showcaseRef, { productIds: arrayRemove(productId) });
+        setDocumentNonBlocking(productRef, payload, { merge: true });
+        // Se for novo, gera reviews demo se ativado
+        const displayImg = typeof finalMainImage === 'string' ? finalMainImage : finalMainImage?.url;
+        await generateDemoReviews(productId, formData.name, displayImg || '');
       }
-    });
 
-    toast({
-      title: isEdit ? "Produto Atualizado" : "Produto Cadastrado",
-      description: `${formData.name} foi ${isEdit ? 'atualizado' : 'adicionado'} com sucesso.`,
-    });
-    
-    setLoading(false);
-    onOpenChange(false);
+      showcases?.forEach(showcase => {
+        const showcaseRef = doc(db, 'homeShowcaseSections', showcase.id);
+        if (selectedShowcaseIds.has(showcase.id)) {
+          updateDocumentNonBlocking(showcaseRef, { productIds: arrayUnion(productId) });
+        } else {
+          updateDocumentNonBlocking(showcaseRef, { productIds: arrayRemove(productId) });
+        }
+      });
+
+      toast({
+        title: isEdit ? "Produto Atualizado" : "Produto Cadastrado",
+        description: `${formData.name} foi ${isEdit ? 'atualizado' : 'adicionado'} com sucesso.`,
+      });
+      
+      onOpenChange(false);
+    } catch (e) {
+      toast({ title: "Erro ao salvar", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isReplace = false) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     try {
       const url = await uploadToCloudinary(file);
       setFormData(prev => ({ ...prev, image: { url, crop: { x: 0, y: 0 }, zoom: 1 } as any }));
-      toast({ title: "Imagem carregada! Clique no ícone de lápis para ajustar." });
+      toast({ title: "Imagem carregada!" });
     } catch (error: any) {
-      toast({ title: "Erro no upload Cloudinary", variant: "destructive" });
+      toast({ title: "Erro no upload", variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -290,17 +313,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     try {
       const newItems: any[] = [];
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const url = await uploadToCloudinary(file);
+        const url = await uploadToCloudinary(files[i]);
         newItems.push({ url, crop: { x: 0, y: 0 }, zoom: 1 });
       }
-      setFormData(prev => ({ 
-        ...prev, 
-        gallery: [...prev.gallery, ...newItems] 
-      }));
-      toast({ title: `${newItems.length} imagens adicionadas! Clique no lápis para editar enquadramento.` });
+      setFormData(prev => ({ ...prev, gallery: [...prev.gallery, ...newItems] }));
+      toast({ title: "Galeria atualizada!" });
     } catch (error: any) {
-      toast({ title: "Erro no upload da galeria", variant: "destructive" });
+      toast({ title: "Erro na galeria", variant: "destructive" });
     } finally {
       setUploading(false);
       if (galleryInputRef.current) galleryInputRef.current.value = '';
@@ -321,7 +340,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         keyFeatures: ["Modelagem exclusiva", "Dropshipping Premium"]
       });
       setFormData(prev => ({ ...prev, longDescription: res.description, description: res.description.split('.')[0] + '.' }));
-      toast({ title: "IA: Editorial Gerado!" });
+      toast({ title: "Editorial Gerado!" });
     } catch (e) {
       toast({ title: "IA Indisponível", variant: "destructive" });
     } finally {
@@ -330,29 +349,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   };
 
   const handleRemoveVariation = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      variations: prev.variations.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    e.dataTransfer.setData('draggedIndex', index.toString());
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-    const draggedIndex = parseInt(e.dataTransfer.getData('draggedIndex'));
-    if (draggedIndex === targetIndex || isNaN(draggedIndex)) return;
-
-    const newGallery = [...formData.gallery];
-    const [draggedItem] = newGallery.splice(draggedIndex, 1);
-    newGallery.splice(targetIndex, 0, draggedItem);
-
-    setFormData(prev => ({ ...prev, gallery: newGallery }));
+    setFormData(prev => ({ ...prev, variations: prev.variations.filter((_, i) => i !== index) }));
   };
 
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
@@ -367,7 +364,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const handleSaveCrop = () => {
     if (!editingImage) return;
     const { index, field } = editingImage;
-    
     if (field === 'image') {
       const current = typeof formData.image === 'string' ? { url: formData.image } : formData.image;
       setFormData({ ...formData, image: { ...current, crop, zoom } as any });
@@ -377,16 +373,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       newGallery[index] = { ...current, crop, zoom };
       setFormData({ ...formData, gallery: newGallery });
     }
-    
     setEditingImage(null);
-    toast({ title: "Enquadramento salvo!" });
   };
 
   const toggleShowcaseSelection = (id: string) => {
     setSelectedShowcaseIds(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(id)) newSet.delete(id);
-      else newSet.add(id);
+      if (newSet.has(id)) newSet.delete(id); else newSet.add(id);
       return newSet;
     });
   };
@@ -397,192 +390,52 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
           <div className="bg-[#2A1F22] p-8 text-white flex items-center justify-between sticky top-0 z-20 shadow-lg">
             <div className="flex items-center gap-6">
-              <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
-                <Package className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent/80">
-                  {product ? 'Gestão de Produto' : 'Novo Cadastro'}
-                </p>
-                <DialogHeader><DialogTitle className="text-2xl font-bold">
-                  {product ? 'Editar Peça' : 'Peça Exclusiva'}
-                </DialogTitle></DialogHeader>
-              </div>
+              <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center"><Package className="h-6 w-6 text-primary" /></div>
+              <DialogHeader><DialogTitle className="text-2xl font-bold">{product ? 'Editar Peça' : 'Peça Exclusiva'}</DialogTitle></DialogHeader>
             </div>
             <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-12 bg-accent text-primary hover:brightness-110 font-bold uppercase tracking-widest text-[10px] shadow-xl border-none">
-              {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-              {product ? 'Salvar Alterações' : 'Publicar Produto'}
+              {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} {product ? 'Salvar Alterações' : 'Publicar Produto'}
             </Button>
           </div>
 
           <div className="p-10 grid xl:grid-cols-[1fr_400px] gap-10">
             <div className="space-y-10">
               <section className="space-y-6">
-                <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3">
-                  <Layers className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4>
-                </div>
+                <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3"><Layers className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4></div>
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="md:col-span-2 space-y-2">
-                    <Label>Nome da Peça</Label>
-                    <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
-                  </div>
-                  <div className="md:col-span-2 space-y-2">
-                    <Label>Descrição do Produto</Label>
-                    <Textarea 
-                      value={formData.description} 
-                      onChange={e => setFormData({...formData, description: e.target.value})} 
-                      className="bg-white border-gray-200 min-h-[100px] rounded-xl" 
-                      placeholder="Breve descrição para a vitrine..."
-                    />
-                  </div>
+                  <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  <div className="md:col-span-2 space-y-2"><Label>Descrição</Label><Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-white border-gray-200 min-h-[100px] rounded-xl" /></div>
                   <div className="space-y-2">
                     <Label>Categoria</Label>
                     <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm">
-                      {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
+                      {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Preço Venda (R$)</Label>
-                      <Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Preço Original "De" (R$)</Label>
-                      <Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
-                    </div>
+                    <div className="space-y-2"><Label>Preço (R$)</Label><Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                    <div className="space-y-2"><Label>Original (R$)</Label><Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                   </div>
-                  
-                  <div className="md:col-span-2 space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent ml-2">Tamanhos Disponíveis (separados por vírgula)</Label>
-                    <Input 
-                      value={formData.sizes} 
-                      onChange={e => setFormData({...formData, sizes: e.target.value})} 
-                      placeholder="Ex: P, M, G, GG ou 38, 40, 42"
-                      className="bg-white border-gray-200 h-12 rounded-xl"
-                    />
-                    <p className="text-[9px] text-muted-foreground ml-2 italic">Dica: Use vírgula para separar as opções de tamanho.</p>
-                  </div>
+                  <div className="md:col-span-2 space-y-2"><Label>Tamanhos (P, M, G...)</Label><Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                 </div>
               </section>
 
               <section className="space-y-6">
-                <div className="flex items-center justify-between text-primary border-b border-gray-200 pb-3">
-                  <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos (Arraste para reordenar)</h4></div>
-                  <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Fotos</Button>
+                <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                  <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5 text-primary" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria</h4></div>
+                  <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="text-accent text-[10px] font-bold uppercase">+ Fotos</Button>
                 </div>
                 <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
-                
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
                    {formData.gallery.map((img, idx) => (
-                     <div 
-                      key={idx} 
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, idx)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, idx)}
-                      className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
-                     >
-                        <img 
-                          src={getImageUrl(img)} 
-                          className="w-full h-full object-cover pointer-events-none" 
-                          style={{
-                            objectPosition: img.crop ? `${img.crop.x}% ${img.crop.y}%` : 'center',
-                            transform: img.zoom ? `scale(${img.zoom})` : 'none'
-                          }}
-                        />
-                        <div className="absolute top-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="p-1 bg-white/80 rounded-md">
-                            <Move className="h-3 w-3 text-primary" />
-                          </div>
-                          <button 
-                            onClick={() => handleOpenEditor(idx, 'gallery')}
-                            className="p-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </button>
+                     <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm">
+                        <img src={getImageUrl(img)} className="w-full h-full object-cover" style={{ objectPosition: img.crop ? `${img.crop.x}% ${img.crop.y}%` : 'center', transform: img.zoom ? `scale(${img.zoom})` : 'none' }} />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1">
+                           <button onClick={() => handleOpenEditor(idx, 'gallery')} className="p-1.5 bg-blue-500 text-white rounded-md"><Pencil className="h-3 w-3" /></button>
+                           <button onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))} className="p-1.5 bg-red-500 text-white rounded-md"><X className="h-3 w-3" /></button>
                         </div>
-                        <button 
-                          onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
                      </div>
                    ))}
-                   {uploading && (
-                     <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20">
-                       <Loader2 className="h-5 w-5 animate-spin text-accent" />
-                     </div>
-                   )}
-                </div>
-              </section>
-
-              <section className="space-y-6 bg-white p-8 rounded-3xl border border-primary/5 shadow-sm">
-                <div className="flex items-center gap-3 text-accent border-b border-gray-100 pb-3">
-                  <LinkIcon className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Dados Operacionais (Apenas Admin)</h4>
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="md:col-span-2 space-y-2">
-                    <Label>Link do Fornecedor (AliExpress, Shopee, etc)</Label>
-                    <Input value={formData.supplierUrl} onChange={e => setFormData({...formData, supplierUrl: e.target.value})} placeholder="https://..." className="bg-gray-50/50" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Custo no Fornecedor (R$)</Label>
-                    <Input value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} placeholder="Ex: 45.00" className="bg-gray-50/50" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const custo = parseFloat(formData.cost);
-                        if (!custo || isNaN(custo)) return;
-                        const preco = (Math.ceil(custo * 3) - 0.10).toFixed(2);
-                        const original = (Math.ceil(custo * 4) - 0.10).toFixed(2);
-                        setFormData({
-                          ...formData,
-                          price: preco,
-                          oldPrice: original
-                        });
-                      }}
-                      className="flex items-center gap-2 h-9 px-4 rounded-full bg-accent/10 text-accent text-[9px] font-bold uppercase tracking-widest border border-accent/20 hover:bg-accent hover:text-white transition-all mt-2"
-                    >
-                      ✦ Calcular Preço com IA
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Nome do Fornecedor</Label>
-                    <Input value={formData.supplierName} onChange={e => setFormData({...formData, supplierName: e.target.value})} placeholder="Ex: Global Store" className="bg-gray-50/50" />
-                  </div>
-                  <div className="md:col-span-2 space-y-2">
-                     <Label>Observações Internas</Label>
-                     <Textarea value={formData.internalNotes} onChange={e => setFormData({...formData, internalNotes: e.target.value})} placeholder="Ex: Tamanho chinês é menor, pedir um número a mais." className="bg-gray-50/50" />
-                  </div>
-                </div>
-              </section>
-
-              <section className="space-y-6">
-                <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationUpload} />
-                <div className="flex justify-between items-center text-primary border-b border-gray-200 pb-3">
-                  <div className="flex items-center gap-3"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Cores e Miniaturas</h4></div>
-                  <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-8 text-accent text-[9px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Cor</Button>
-                </div>
-                <div className="grid gap-4">
-                  {formData.variations.map((v, i) => (
-                    <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-gray-100 group">
-                      <div 
-                        className="h-16 w-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
-                      >
-                        {v.image ? <img src={v.image} className="h-full w-full object-cover" alt="Variation" /> : <div className="h-full w-full flex items-center justify-center opacity-30"><Upload className="h-4 w-4" /></div>}
-                        {uploading && activeVariationIndex === i && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>}
-                      </div>
-                      <Input placeholder="Cor (ex: Branco)" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 border-none bg-gray-50 rounded-xl" />
-                      <Input placeholder="URL da Foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-12 border-none bg-gray-50 rounded-xl flex-[2]" />
-                      <button onClick={() => handleRemoveVariation(i)} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
-                    </div>
-                  ))}
+                   {uploading && <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20"><Loader2 className="h-5 w-5 animate-spin text-accent" /></div>}
                 </div>
               </section>
             </div>
@@ -590,86 +443,41 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
             <div className="space-y-8">
               <div className="sticky top-28 space-y-8">
                 <Card className="rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-none">
-                  <div className="aspect-[3/5] bg-gray-100 relative group">
+                  <div className="aspect-[3/5] bg-gray-100 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                     {formData.image ? (
-                      <>
-                        <img 
-                          src={getImageUrl(formData.image)} 
-                          className="w-full h-full object-cover" 
-                          alt="Product Preview" 
-                          style={{
-                            objectPosition: (formData.image as any).crop ? `${(formData.image as any).crop.x}% ${(formData.image as any).crop.y}%` : 'center',
-                            transform: (formData.image as any).zoom ? `scale(${(formData.image as any).zoom})` : 'none'
-                          }}
-                        />
-                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => handleOpenEditor(0, 'image')}
-                            className="p-2 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="p-2 bg-white text-primary rounded-full shadow-lg hover:bg-gray-100"
-                          >
-                            <Upload className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </>
+                      <img src={getImageUrl(formData.image)} className="w-full h-full object-cover" style={{ objectPosition: (formData.image as any).crop ? `${(formData.image as any).crop.x}% ${(formData.image as any).crop.y}%` : 'center', transform: (formData.image as any).zoom ? `scale(${(formData.image as any).zoom})` : 'none' }} />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                        <ImageIcon className="h-12 w-12" />
-                        <span className="text-[10px] font-bold mt-2">CAPA DO PRODUTO</span>
-                      </div>
+                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30"><ImageIcon className="h-12 w-12" /><span className="text-[10px] font-bold mt-2">CAPA</span></div>
                     )}
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-                    {uploading && !activeVariationIndex && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
+                    {uploading && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
                   </div>
-                  <div className="p-8 text-center space-y-2">
-                    <h5 className="font-bold text-lg text-primary truncate">{formData.name || 'Nome da Peça'}</h5>
-                    <div className="flex items-center justify-center gap-3">
-                      <p className="text-2xl font-light text-primary">R$ {formData.price || '0,00'}</p>
-                      {formData.oldPrice && <p className="text-sm text-muted-foreground line-through italic">R$ {formData.oldPrice}</p>}
-                    </div>
-                  </div>
+                  <div className="p-6 text-center"><p className="font-bold text-primary truncate">{formData.name || 'Preview'}</p></div>
                 </Card>
 
-                <Card className="p-8 rounded-[2rem] bg-white border-none shadow-premium space-y-6">
-                   <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
-                      <Presentation className="h-5 w-5" />
-                      <h6 className="text-[10px] font-bold uppercase tracking-widest">Vitrines da Home</h6>
-                   </div>
-                   <div className="space-y-4">
-                      {showcases && showcases.length > 0 ? (
-                        showcases.map((showcase) => (
-                          <div key={showcase.id} className="flex items-center gap-3">
-                            <Checkbox 
-                              id={`showcase-${showcase.id}`}
-                              checked={selectedShowcaseIds.has(showcase.id)}
-                              onCheckedChange={() => toggleShowcaseSelection(showcase.id)}
-                            />
-                            <Label htmlFor={`showcase-${showcase.id}`} className="text-[11px] font-medium text-primary/80 cursor-pointer">{showcase.title}</Label>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-[10px] text-muted-foreground italic">Nenhuma vitrine criada ainda.</p>
-                      )}
+                <Card className="p-8 rounded-[2rem] bg-white border-none shadow-premium space-y-4">
+                   <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-primary/5 pb-2">Vitrines da Home</h6>
+                   <div className="space-y-3">
+                      {showcases?.map(s => (
+                        <div key={s.id} className="flex items-center gap-3">
+                          <Checkbox id={s.id} checked={selectedShowcaseIds.has(s.id)} onCheckedChange={() => toggleShowcaseSelection(s.id)} />
+                          <Label htmlFor={s.id} className="text-[11px] font-medium text-primary/80 cursor-pointer">{s.title}</Label>
+                        </div>
+                      ))}
+                      {!showcases?.length && <p className="text-[10px] italic text-muted-foreground">Nenhuma vitrine ativa.</p>}
                    </div>
                 </Card>
 
-                <Card className="p-8 rounded-[2rem] bg-primary text-white space-y-6 shadow-xl border-none">
+                <Card className="p-8 rounded-[2rem] bg-primary text-white space-y-4 shadow-xl border-none">
                   <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent">Configurações</h6>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                      <div className="flex items-center justify-between"><Label className="text-white text-xs">Publicado</Label><Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} /></div>
                      <div className="flex items-center justify-between"><Label className="text-white text-xs">Destaque</Label><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
-                     <div className="flex items-center justify-between"><Label className="text-white text-xs">Mais Vendido</Label><Checkbox checked={formData.bestseller} onCheckedChange={v => setFormData({...formData, bestseller: !!v})} className="border-white" /></div>
                   </div>
                 </Card>
                 
-                <Button variant="outline" onClick={handleAIGenerate} disabled={generatingAI} className="w-full h-14 rounded-2xl border-accent/20 text-accent hover:bg-accent/5 font-bold uppercase text-[10px] tracking-widest">
-                  {generatingAI ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Gerar Editorial com IA
+                <Button variant="outline" onClick={handleAIGenerate} disabled={generatingAI} className="w-full h-14 rounded-2xl border-accent/20 text-accent font-bold uppercase text-[10px] tracking-widest">
+                  {generatingAI ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />} IA Editorial
                 </Button>
               </div>
             </div>
@@ -677,41 +485,20 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         </DialogContent>
       </Dialog>
 
-      {/* Editor de Imagem (Crop/Zoom) */}
+      {/* Crop Editor */}
       <Dialog open={!!editingImage} onOpenChange={(o) => !o && setEditingImage(null)}>
         <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none rounded-[2rem]">
           <div className="relative h-[60vh] w-full">
             <Cropper
               image={getImageUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
-              crop={crop}
-              zoom={zoom}
-              aspect={3 / 5}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              showGrid={false}
+              crop={crop} zoom={zoom} aspect={3/5} onCropChange={setCrop} onZoomChange={setZoom} showGrid={false}
             />
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
-            <div className="flex-1 space-y-4">
-              <div className="flex justify-between items-center text-white/60 text-[10px] font-bold uppercase tracking-widest">
-                <span>Zoom</span>
-                <span>{Math.round(zoom * 100)}%</span>
-              </div>
-              <input 
-                type="range" 
-                min={1} 
-                max={3} 
-                step={0.1} 
-                value={zoom} 
-                onChange={(e) => setZoom(Number(e.target.value))}
-                className="w-full accent-accent"
-              />
-            </div>
+            <div className="flex-1"><input type="range" min={1} max={3} step={0.1} value={zoom} onChange={e => setZoom(Number(e.target.value))} className="w-full accent-accent" /></div>
             <div className="flex gap-4">
-              <Button variant="ghost" onClick={() => setEditingImage(null)} className="text-white hover:bg-white/10 uppercase text-[10px] font-bold h-12 px-6">Cancelar</Button>
-              <Button onClick={handleSaveCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full hover:brightness-110 shadow-xl">
-                <Check className="mr-2 h-4 w-4" /> Salvar Enquadramento
-              </Button>
+              <Button variant="ghost" onClick={() => setEditingImage(null)} className="text-white uppercase text-[10px] font-bold">Cancelar</Button>
+              <Button onClick={handleSaveCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full">Salvar Enquadramento</Button>
             </div>
           </div>
         </DialogContent>
