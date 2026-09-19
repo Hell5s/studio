@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
@@ -31,7 +32,6 @@ function StorefrontContent() {
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [searchQuery, setSearchValue] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const adminDocRef = useMemoFirebase(() => {
     return user ? doc(db, 'roles_admin', user.uid) : null;
@@ -235,36 +235,44 @@ function StorefrontContent() {
   // --- LÓGICA DE MONTAGEM DO LAYOUT ---
 
   const renderBlocks = () => {
-    if (isLayoutLoading || isShowcasesLoading) {
+    // Se o layout estiver carregando e não houver dados, mostramos o Banner (com cache) e skeletons para o resto
+    if (isLayoutLoading && !layoutData) {
       return (
-        <div className="flex flex-col items-center justify-center py-40 space-y-6">
-          <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Boutique...</p>
-        </div>
+        <>
+          {renderBanner()}
+          <div className="container mx-auto px-6 py-20 space-y-20 animate-pulse">
+            <div className="space-y-8">
+              <div className="h-px w-12 bg-accent/20" />
+              <div className="h-10 md:h-16 w-1/2 bg-secondary rounded" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="aspect-[3/5] bg-secondary/50 rounded-2xl" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
       );
     }
 
-    if (layoutData?.blocks && layoutData.blocks.length > 0) {
-      return layoutData.blocks.map((block: any) => {
-        switch (block.type) {
-          case 'banner': return renderBanner();
-          case 'categories': return renderCategories();
-          case 'movement': return renderMovement();
-          case 'showcase': return renderShowcase(block.refId);
-          default: return null;
-        }
-      });
-    }
+    const blocks = (layoutData?.blocks && layoutData.blocks.length > 0)
+      ? layoutData.blocks
+      : [
+          { type: 'banner' },
+          ...activeShowcases.sort((a, b) => (a.order || 0) - (b.order || 0)).map(s => ({ type: 'showcase', refId: s.id })),
+          { type: 'categories' },
+          { type: 'movement' }
+        ];
 
-    // Fallback: Banner -> Vitrines -> Categorias -> Movimento
-    return (
-      <>
-        {renderBanner()}
-        {activeShowcases.sort((a, b) => (a.order || 0) - (b.order || 0)).map(s => renderShowcase(s.id))}
-        {renderCategories()}
-        {renderMovement()}
-      </>
-    );
+    return blocks.map((block: any, idx: number) => {
+      switch (block.type) {
+        case 'banner': return renderBanner();
+        case 'categories': return renderCategories();
+        case 'movement': return renderMovement();
+        case 'showcase': return renderShowcase(block.refId);
+        default: return null;
+      }
+    });
   };
 
   if (isAdminView && isAdmin) {

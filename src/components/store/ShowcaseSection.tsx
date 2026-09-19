@@ -65,13 +65,14 @@ export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds 
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 md:py-40 space-y-6">
-          <Loader2 className="h-12 w-12 animate-spin text-accent/30" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Sincronizando Vitrine...</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-12 animate-pulse">
+           {[1, 2, 3, 4].map(i => (
+             <div key={i} className="aspect-[3/5] bg-secondary/50 rounded-2xl" />
+           ))}
         </div>
       ) : (
         <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 -mx-4 md:mx-0 items-start">
-          {products.map((product) => (
+          {products.map((product: any) => (
             <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
               <ProductCard {...product} />
             </div>
