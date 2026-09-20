@@ -799,7 +799,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onZoomChange={setZoom} 
               showGrid={false}
               cropShape="rect"
-              objectFit="cover"
+              objectFit="contain"
               minZoom={1}
               style={{
                 containerStyle: {
