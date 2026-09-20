@@ -324,6 +324,55 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }
   };
 
+  const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
+  const getOriginalUrl = (img: any) => typeof img === 'string' ? img : (img?.originalUrl || img?.url);
+
+  const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
+    const img = field === 'image' ? formData.image : formData.gallery[index];
+    const source = getOriginalUrl(img);
+    setEditingImage({ index, field });
+    
+    // Recupera o crop/zoom salvo ou usa os padrões
+    setCrop(img?.crop || { x: 0, y: 0 });
+    setZoom(img?.zoom || 1);
+    
+    setCroppedAreaPixels(null);
+    const tempImg = new window.Image();
+    tempImg.onload = () => setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
+    tempImg.src = source;
+  };
+
+  const handleSaveCrop = async () => {
+    if (!editingImage || !croppedAreaPixels) return;
+    setSavingCrop(true);
+    try {
+      const { index, field } = editingImage;
+      const imgObj = field === 'image' ? formData.image : formData.gallery[index];
+      const sourceUrl = getOriginalUrl(imgObj);
+      const originalUrl = typeof imgObj === 'string' ? imgObj : (imgObj?.originalUrl || imgObj?.url);
+      
+      const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
+      const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+      const newUrl = await uploadToCloudinary(file);
+
+      // Salva a nova URL recortada E o estado do recorte para persistência na UI
+      const updatedImageData = { url: newUrl, originalUrl, crop, zoom };
+
+      if (field === 'image') {
+        setFormData({ ...formData, image: updatedImageData });
+      } else {
+        const newGallery = [...formData.gallery];
+        newGallery[index] = updatedImageData;
+        setFormData({ ...formData, gallery: newGallery });
+      }
+      setEditingImage(null);
+    } catch (err) {
+      toast({ title: "Erro ao salvar recorte", variant: "destructive" });
+    } finally {
+      setSavingCrop(false);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -408,49 +457,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       toast({ title: "IA Indisponível", variant: "destructive" });
     } finally {
       setGeneratingAI(false);
-    }
-  };
-
-  const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
-  const getOriginalUrl = (img: any) => typeof img === 'string' ? img : (img?.originalUrl || img?.url);
-
-  const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
-    const img = field === 'image' ? formData.image : formData.gallery[index];
-    const source = getOriginalUrl(field === 'image' ? formData.image : formData.gallery[index]);
-    setEditingImage({ index, field });
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    setCroppedAreaPixels(null);
-    const tempImg = new window.Image();
-    tempImg.onload = () => setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
-    tempImg.src = source;
-  };
-
-  const handleSaveCrop = async () => {
-    if (!editingImage || !croppedAreaPixels) return;
-    setSavingCrop(true);
-    try {
-      const { index, field } = editingImage;
-      const imgObj = field === 'image' ? formData.image : formData.gallery[index];
-      const sourceUrl = getOriginalUrl(imgObj);
-      const originalUrl = typeof imgObj === 'string' ? imgObj : (imgObj?.originalUrl || imgObj?.url);
-      
-      const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
-      const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
-      const newUrl = await uploadToCloudinary(file);
-
-      if (field === 'image') {
-        setFormData({ ...formData, image: { url: newUrl, originalUrl } });
-      } else {
-        const newGallery = [...formData.gallery];
-        newGallery[index] = { url: newUrl, originalUrl };
-        setFormData({ ...formData, gallery: newGallery });
-      }
-      setEditingImage(null);
-    } catch (err) {
-      toast({ title: "Erro ao salvar recorte", variant: "destructive" });
-    } finally {
-      setSavingCrop(false);
     }
   };
 
