@@ -402,10 +402,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
 
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
-    const img = field === 'image' ? formData.image : formData.gallery[index];
     setEditingImage({ index, field });
-    setCrop(img?.crop || { x: 0, y: 0 });
-    setZoom(img?.zoom || 1);
+    // Resetando para o estado inicial de visualização total centralizada conforme solicitado:
+    // A imagem inteira deve aparecer TOTALMENTE VISÍVEL e CENTRALIZADA ao abrir, sem cortes.
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
   };
 
   const handleSaveCrop = () => {
@@ -799,7 +800,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onZoomChange={setZoom} 
               showGrid={false}
               cropShape="rect"
-              objectFit="contain"
+              objectFit="contain" // Garante que a imagem seja dimensionada para caber inteira no espaço disponível
               minZoom={1}
               style={{
                 containerStyle: {
@@ -811,6 +812,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   width: '100%',
                   height: '100%',
                 },
+                mediaStyle: {
+                  objectFit: 'contain', // Reforço técnico para centralização e visibilidade total
+                }
               }}
               classes={{
                 containerClassName: "bg-black",
