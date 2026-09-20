@@ -97,7 +97,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
         {images.map((img, idx) => (
           <div
             key={idx}
-            className="relative aspect-[9/16] overflow-hidden bg-[#F5F5F5] group rounded-sm"
+            className="relative aspect-[3/5] overflow-hidden bg-[#F5F5F5] group rounded-sm"
           >
             {renderImage(img, idx, idx === 0)}
           </div>
@@ -107,7 +107,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       {/* Mobile Stack */}
       <div className="flex flex-col md:hidden gap-2">
         {images.map((img, idx) => (
-          <div key={idx} className="relative aspect-[9/16] w-full overflow-hidden bg-[#F5F5F5] rounded-sm">
+          <div key={idx} className="relative aspect-[3/5] w-full overflow-hidden bg-[#F5F5F5] rounded-sm">
             {renderImage(img, idx, idx === 0)}
           </div>
         ))}
