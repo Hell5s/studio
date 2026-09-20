@@ -795,7 +795,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               image={getImageUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
               crop={crop} 
               zoom={zoom} 
-              aspect={3/5} 
+              aspect={editingImage?.field === 'image' ? 3/5 : 9/16} 
               onCropChange={setCrop} 
               onZoomChange={setZoom} 
               showGrid={false}
