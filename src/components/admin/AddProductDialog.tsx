@@ -19,7 +19,8 @@ import {
   Check,
   Presentation,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Minus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -119,7 +120,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     category: 'Vestidos',
     collection: 'Nova Coleção',
     badge: 'Novo',
-    image: '',
+    image: '' as any,
     gallery: [] as any[],
     stock: '10',
     sizes: 'P, M, G, GG',
@@ -602,9 +603,19 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
                      >
                         <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" style={{ objectPosition: img.crop ? `${img.crop.x}% ${img.crop.y}%` : 'center', transform: img.zoom ? `scale(${img.zoom})` : 'none' }} />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
-                           <button onClick={() => handleOpenEditor(idx, 'gallery')} className="p-1.5 bg-blue-500 text-white rounded-md"><Pencil className="h-3 w-3" /></button>
-                           <button onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))} className="p-1.5 bg-red-500 text-white rounded-md"><X className="h-3 w-3" /></button>
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity z-10">
+                           <button 
+                             onClick={(e) => { e.stopPropagation(); handleOpenEditor(idx, 'gallery'); }} 
+                             className="p-1.5 bg-blue-500 text-white rounded-md hover:scale-110 transition-transform"
+                           >
+                             <Pencil className="h-3 w-3" />
+                           </button>
+                           <button 
+                             onClick={(e) => { e.stopPropagation(); setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) })); }} 
+                             className="p-1.5 bg-red-500 text-white rounded-md hover:scale-110 transition-transform"
+                           >
+                             <X className="h-3 w-3" />
+                           </button>
                         </div>
                         <div className="absolute top-1 left-1 p-1 bg-white/80 rounded-md opacity-0 group-hover:opacity-100">
                           <Move className="h-2.5 w-2.5 text-primary" />
@@ -617,10 +628,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
               {/* Dados Operacionais */}
               <section className="space-y-6 bg-white p-8 rounded-[2rem] shadow-sm border border-primary/5">
-                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-3">
-                  <TrendingUp className="h-5 w-5" />
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Dados Operacionais (Apenas Admin)</h4>
-                </div>
+                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-3"><TrendingUp className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Dados Operacionais (Apenas Admin)</h4></div>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="md:col-span-2 space-y-2">
                     <Label>Link do Fornecedor (AliExpress, Shopee, etc)</Label>
@@ -680,6 +688,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         newVars[i].color = e.target.value;
                         setFormData({...formData, variations: newVars});
                       }} className="h-10 text-xs bg-white border-none rounded-xl px-4 flex-1" />
+                      <Input placeholder="Nome da Cor" value={v.image} onChange={e => {
+                        const newVars = [...formData.variations];
+                        newVars[i].image = e.target.value;
+                        setFormData({...formData, variations: newVars});
+                      }} className="h-10 text-xs bg-white border-none rounded-xl px-4 flex-[2]" />
                       <button onClick={() => setFormData(prev => ({ ...prev, variations: prev.variations.filter((_, idx) => idx !== i) }))} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
                     </div>
                   ))}
@@ -690,14 +703,45 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
             <div className="space-y-8">
               <div className="sticky top-28 space-y-8">
                 <Card className="rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-none">
-                  <div className="aspect-[3/5] bg-gray-100 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                  <div 
+                    className="aspect-[3/5] bg-gray-100 relative group cursor-pointer" 
+                    onClick={() => !formData.image && fileInputRef.current?.click()}
+                  >
                     {formData.image ? (
-                      <img src={getImageUrl(formData.image)} className="w-full h-full object-cover" style={{ objectPosition: (formData.image as any).crop ? `${(formData.image as any).crop.x}% ${(formData.image as any).crop.y}%` : 'center', transform: (formData.image as any).zoom ? `scale(${(formData.image as any).zoom})` : 'none' }} />
+                      <>
+                        <img 
+                          src={getImageUrl(formData.image)} 
+                          className="w-full h-full object-cover" 
+                          style={{ 
+                            objectPosition: (formData.image as any).crop ? `${(formData.image as any).crop.x}% ${(formData.image as any).crop.y}%` : 'center', 
+                            transform: (formData.image as any).zoom ? `scale(${(formData.image as any).zoom})` : 'none' 
+                          }} 
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                           <button 
+                             onClick={(e) => { e.stopPropagation(); handleOpenEditor(0, 'image'); }} 
+                             className="p-3 bg-blue-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"
+                             title="Editar Enquadramento"
+                           >
+                             <Pencil className="h-5 w-5" />
+                           </button>
+                           <button 
+                             onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} 
+                             className="p-3 bg-accent text-primary rounded-full hover:scale-110 transition-transform shadow-xl"
+                             title="Trocar Foto"
+                           >
+                             <Upload className="h-5 w-5" />
+                           </button>
+                        </div>
+                      </>
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30"><ImageIcon className="h-12 w-12" /><span className="text-[10px] font-bold mt-2">CAPA</span></div>
+                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30" onClick={() => fileInputRef.current?.click()}>
+                        <ImageIcon className="h-12 w-12" />
+                        <span className="text-[10px] font-bold mt-2">CAPA</span>
+                      </div>
                     )}
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-                    {uploading && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
+                    {uploading && <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-30"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
                   </div>
                   <div className="p-6 text-center">
                     <p className="font-bold text-primary truncate">{formData.name || 'Preview'}</p>
@@ -742,11 +786,28 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           <div className="relative h-[60vh] w-full">
             <Cropper
               image={getImageUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
-              crop={crop} zoom={zoom} aspect={3/5} onCropChange={setCrop} onZoomChange={setZoom} showGrid={false}
+              crop={crop} 
+              zoom={zoom} 
+              aspect={3/5} 
+              onCropChange={setCrop} 
+              onZoomChange={setZoom} 
+              showGrid={false}
             />
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
-            <div className="flex-1"><input type="range" min={1} max={3} step={0.1} value={zoom} onChange={e => setZoom(Number(e.target.value))} className="w-full accent-accent" /></div>
+            <div className="flex-1 flex items-center gap-4">
+              <button onClick={() => setZoom(z => Math.max(1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+              <input 
+                type="range" 
+                min={1} 
+                max={3} 
+                step={0.1} 
+                value={zoom} 
+                onChange={e => setZoom(Number(e.target.value))} 
+                className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent" 
+              />
+              <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Plus className="h-4 w-4" /></button>
+            </div>
             <div className="flex gap-4">
               <Button variant="ghost" onClick={() => setEditingImage(null)} className="text-white uppercase text-[10px] font-bold">Cancelar</Button>
               <Button onClick={handleSaveCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full">Salvar Enquadramento</Button>
