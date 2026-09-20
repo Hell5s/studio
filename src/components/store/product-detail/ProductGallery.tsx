@@ -76,7 +76,9 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
 
     return (
       <Image
-        src={url}
+        src={url?.includes('cloudinary.com') 
+          ? url.replace('/upload/', '/upload/q_auto:best,f_auto,dpr_auto/') 
+          : url}
         alt={`${name} - Imagem ${idx + 1}`}
         fill
         className="object-cover transition-transform duration-2000 group-hover:scale-105"

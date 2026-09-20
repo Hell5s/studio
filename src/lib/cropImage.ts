@@ -38,6 +38,6 @@ export async function getCroppedImgBlob(imageSrc: string, pixelCrop: PixelCrop):
     canvas.toBlob((blob) => {
       if (blob) resolve(blob);
       else reject(new Error('Falha ao gerar o blob da imagem recortada'));
-    }, 'image/jpeg', 0.92);
+    }, 'image/jpeg', 0.95);
   });
 }

@@ -100,7 +100,7 @@ export const ProductCard = React.memo(function ProductCard({
           {isValidUrl && !hasError ? (
             <Image
               src={url?.includes('cloudinary.com') 
-                ? url.replace('/upload/', '/upload/q_auto,f_auto/') 
+                ? url.replace('/upload/', '/upload/q_auto:best,f_auto,dpr_auto/') 
                 : url}
               alt={name}
               fill
