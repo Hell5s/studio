@@ -681,7 +681,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 </div>
                 <div className="grid gap-4">
                   {formData.variations.map((v, i) => (
-                    <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5">
+                    <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5 shadow-sm">
                       <div 
                         className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group"
                         onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
@@ -800,6 +800,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               showGrid={false}
               cropShape="rect"
               objectFit="contain"
+              minZoom={1}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -810,6 +811,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   width: '100%',
                   height: '100%',
                 },
+                mediaStyle: {
+                  objectFit: 'contain',
+                }
               }}
             />
           </div>
