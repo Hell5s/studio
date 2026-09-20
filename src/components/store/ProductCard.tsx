@@ -88,7 +88,7 @@ export const ProductCard = React.memo(function ProductCard({
 
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
   const getImageSettings = (img: any) => typeof img === 'string' ? { objectPosition: 'top' } : {
-    objectPosition: img?.crop ? `${img.crop.x}% ${img.crop.y}%` : 'top',
+    objectPosition: img?.crop ? `${50 - img.crop.x}% ${50 - img.crop.y}%` : 'top',
     transform: img?.zoom ? `scale(${img.zoom})` : 'none'
   };
 

@@ -62,7 +62,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
 
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
   const getImageSettings = (img: any) => typeof img === 'string' ? {} : {
-    objectPosition: img?.crop ? `${img.crop.x}% ${img.crop.y}%` : 'center',
+    objectPosition: img?.crop ? `${50 - img.crop.x}% ${50 - img.crop.y}%` : 'center',
     transform: img?.zoom ? `scale(${img.zoom})` : 'none'
   };
 

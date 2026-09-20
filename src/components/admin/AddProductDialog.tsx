@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -607,7 +608,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       onDrop={(e) => handleDrop(e, idx)}
                       className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
                      >
-                        <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" style={{ objectPosition: img.crop ? `${img.crop.x}% ${img.crop.y}%` : 'center', transform: img.zoom ? `scale(${img.zoom})` : 'none' }} />
+                        <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" style={{ objectPosition: img.crop ? `${50 - img.crop.x}% ${50 - img.crop.y}%` : 'center', transform: img.zoom ? `scale(${img.zoom})` : 'none' }} />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity z-10">
                            <button 
                              onClick={(e) => { e.stopPropagation(); handleOpenEditor(idx, 'gallery'); }} 
@@ -718,7 +719,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                           src={getImageUrl(formData.image)} 
                           className="w-full h-full object-cover" 
                           style={{ 
-                            objectPosition: (formData.image as any).crop ? `${(formData.image as any).crop.x}% ${(formData.image as any).crop.y}%` : 'center', 
+                            objectPosition: (formData.image as any).crop ? `${50 - (formData.image as any).crop.x}% ${50 - (formData.image as any).crop.y}%` : 'center', 
                             transform: (formData.image as any).zoom ? `scale(${(formData.image as any).zoom})` : 'none' 
                           }} 
                         />
@@ -798,7 +799,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onZoomChange={setZoom} 
               showGrid={false}
               cropShape="rect"
-              objectFit="contain"
+              objectFit="cover"
               minZoom={1}
               style={{
                 containerStyle: {
