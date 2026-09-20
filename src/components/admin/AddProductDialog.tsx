@@ -96,6 +96,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [editingImage, setEditingImage] = useState<{ index: number, field: 'gallery' | 'image' } | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [imageAspect, setImageAspect] = useState(1);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -402,10 +403,14 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const getOriginalUrl = (img: any) => typeof img === 'string' ? img : (img?.originalUrl || img?.url);
 
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
+    const source = getImageUrl(field === 'image' ? formData.image : formData.gallery[index]);
     setEditingImage({ index, field });
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setCroppedAreaPixels(null);
+    const tempImg = new window.Image();
+    tempImg.onload = () => setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
+    tempImg.src = source;
   };
 
   const handleSaveCrop = async () => {
@@ -804,7 +809,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               image={getOriginalUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
               crop={crop} 
               zoom={zoom} 
-              aspect={editingImage?.field === 'image' ? 3/5 : 9/16} 
+              aspect={imageAspect} 
               onCropChange={setCrop} 
               onZoomChange={setZoom} 
               onCropComplete={(_croppedArea, croppedAreaPixelsResult) => setCroppedAreaPixels(croppedAreaPixelsResult)}
