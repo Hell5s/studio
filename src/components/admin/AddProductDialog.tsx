@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -135,6 +136,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     variations: [] as { color: string; image: any }[]
   });
 
+  // Preenche o formulário apenas na abertura ou quando o produto muda (ID)
+  // para evitar resetar o estado se showcases ou outras queries atualizarem
   useEffect(() => {
     if (open) {
       if (product) {
@@ -182,7 +185,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         setSelectedShowcaseIds(new Set());
       }
     }
-  }, [product, open, showcases]);
+  }, [open, product?.id]); // Dependências reduzidas para estabilidade do formulário
 
   const uploadToCloudinary = async (file: File) => {
     const data = new FormData();
@@ -288,6 +291,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
       image: finalMainImage,
       images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
+      variations: formData.variations, // Inclusão explícita para garantir persistência
       updatedAt: serverTimestamp(),
       ...(isEdit ? {} : { createdAt: serverTimestamp() })
     };
@@ -332,7 +336,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const source = getOriginalUrl(img);
     setEditingImage({ index, field });
     
-    // Recupera o crop/zoom salvo ou usa os padrões
+    // Tenta carregar o crop/zoom anterior se existir
     setCrop(img?.crop || { x: 0, y: 0 });
     setZoom(img?.zoom || 1);
     
@@ -355,7 +359,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
       const newUrl = await uploadToCloudinary(file);
 
-      // Salva a nova URL recortada E o estado do recorte para persistência na UI
+      // Armazena tanto a URL cortada quanto a original para edições futuras
       const updatedImageData = { url: newUrl, originalUrl, crop, zoom };
 
       if (field === 'image') {
@@ -416,9 +420,14 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     setUploading(true);
     try {
       const url = await uploadToCloudinary(file);
-      const newVars = [...formData.variations];
-      newVars[activeVariationIndex] = { ...newVars[activeVariationIndex], image: { url, originalUrl: url } };
-      setFormData(prev => ({ ...prev, variations: newVars }));
+      setFormData(prev => {
+        const newVars = [...prev.variations];
+        newVars[activeVariationIndex] = { 
+          ...newVars[activeVariationIndex], 
+          image: { url, originalUrl: url } 
+        };
+        return { ...prev, variations: newVars };
+      });
       toast({ title: "Variação salva!" });
     } catch (error: any) {
       toast({ title: "Erro no upload", variant: "destructive" });
@@ -430,12 +439,29 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
   const handleSelectFromGallery = (img: any) => {
     if (activeVariationIndex === null) return;
-    const newVars = [...formData.variations];
-    newVars[activeVariationIndex] = { ...newVars[activeVariationIndex], image: img };
-    setFormData(prev => ({ ...prev, variations: newVars }));
+
+    // Normaliza a imagem para garantir que guardamos a estrutura correta
+    const imgData = typeof img === 'string' ? img : { 
+      url: img.url, 
+      originalUrl: img.originalUrl || img.url,
+      crop: img.crop || null,
+      zoom: img.zoom || 1
+    };
+
+    setFormData(prev => {
+      const newVars = [...prev.variations];
+      if (newVars[activeVariationIndex]) {
+        newVars[activeVariationIndex] = { 
+          ...newVars[activeVariationIndex], 
+          image: imgData 
+        };
+      }
+      return { ...prev, variations: newVars };
+    });
+
     setIsSelectorOpen(false);
     setActiveVariationIndex(null);
-    toast({ title: "Imagem da galeria aplicada!" });
+    toast({ title: "Imagem vinculada com sucesso!" });
   };
 
   const handleAIGenerate = async () => {
@@ -555,7 +581,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               <section className="space-y-6">
                 <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3"><Layers className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4></div>
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                   
                   <div className="md:col-span-2 space-y-2">
                     <div className="flex justify-between items-center">
@@ -718,24 +744,35 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 </div>
                 <div className="grid gap-4">
                   {formData.variations.map((v, i) => (
-                    <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5 shadow-sm">
+                    <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
                       <div 
-                        className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group"
+                        className="h-16 w-12 rounded-lg overflow-hidden bg-secondary/10 flex-shrink-0 relative cursor-pointer group"
                         onClick={() => { setActiveVariationIndex(i); setIsSelectorOpen(true); }}
                       >
                         {v.image ? <img src={getImageUrl(v.image)} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
                       </div>
                       <Input placeholder="Nome da Cor" value={v.color} onChange={e => {
-                        const newVars = [...formData.variations];
-                        newVars[i].color = e.target.value;
-                        setFormData({...formData, variations: newVars});
+                        const val = e.target.value;
+                        setFormData(prev => {
+                          const newVars = [...prev.variations];
+                          newVars[i].color = val;
+                          return { ...prev, variations: newVars };
+                        });
                       }} className="h-10 text-xs bg-white border-none rounded-xl px-4 flex-1" />
-                      <Input placeholder="Nome da Cor" value={v.image} onChange={e => {
-                        const newVars = [...formData.variations];
-                        newVars[i].image = e.target.value;
-                        setFormData({...formData, variations: newVars});
-                      }} className="h-10 text-xs bg-white border-none rounded-xl px-4 flex-[2]" />
+                      <Input 
+                        placeholder="Link da imagem" 
+                        value={typeof v.image === 'string' ? v.image : v.image?.url || ''} 
+                        onChange={e => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const newVars = [...prev.variations];
+                            newVars[i].image = val;
+                            return { ...prev, variations: newVars };
+                          });
+                        }} 
+                        className="h-10 text-xs bg-white border-none rounded-xl px-4 flex-[2]" 
+                      />
                       <button onClick={() => setFormData(prev => ({ ...prev, variations: prev.variations.filter((_, idx) => idx !== i) }))} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
                     </div>
                   ))}
