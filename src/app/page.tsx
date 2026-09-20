@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
@@ -184,12 +183,20 @@ function StorefrontContent() {
                 loop 
                 playsInline 
                 className="object-cover w-full h-full"
+                style={{
+                  transform: `scale(${movement?.mediaZoom ? movement.mediaZoom / 100 : 1})`,
+                  transformOrigin: movement?.mediaPosition ? `${movement.mediaPosition.x}% ${movement.mediaPosition.y}%` : 'center center'
+                }}
               />
             ) : (
               <img 
                 src={movement?.mediaUrl || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80"} 
                 className="object-cover w-full h-full transition-transform duration-2500 group-hover:scale-110" 
                 alt={movement?.title || "Essência Toda Bela"} 
+                style={{
+                  transform: `scale(${movement?.mediaZoom ? movement.mediaZoom / 100 : 1})`,
+                  transformOrigin: movement?.mediaPosition ? `${movement.mediaPosition.x}% ${movement.mediaPosition.y}%` : 'center center'
+                }}
               />
             )}
             <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />

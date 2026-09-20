@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -17,8 +16,10 @@ export function AdminMovementSection() {
   const db = useFirestore();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'movementSection'), [db]);
   const { data: movementSettings, isLoading } = useDoc(settingsRef);
@@ -30,7 +31,9 @@ export function AdminMovementSection() {
     buttonText: 'CONHEÇA A COLEÇÃO',
     buttonLink: '/#colecoes',
     mediaType: 'image' as 'image' | 'video',
-    mediaUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80'
+    mediaUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80',
+    mediaZoom: 100,
+    mediaPosition: { x: 50, y: 50 }
   });
 
   useEffect(() => {
@@ -38,6 +41,21 @@ export function AdminMovementSection() {
       setFormData(prev => ({ ...prev, ...movementSettings }));
     }
   }, [movementSettings]);
+
+  const handleDragStart = () => setIsDragging(true);
+  const handleDragEnd = () => setIsDragging(false);
+  const handleDragMove = (e: React.MouseEvent) => {
+    if (!isDragging || !previewRef.current) return;
+    const rect = previewRef.current.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
+    setFormData(prev => ({ ...prev, mediaPosition: { x: Math.round(x), y: Math.round(y) } }));
+  };
+  const handleWheelZoom = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 5 : -5;
+    setFormData(prev => ({ ...prev, mediaZoom: Math.min(300, Math.max(100, prev.mediaZoom + delta)) }));
+  };
 
   const uploadToCloudinary = async (file: File) => {
     const data = new FormData();
@@ -63,7 +81,13 @@ export function AdminMovementSection() {
     try {
       const url = await uploadToCloudinary(file);
       const type = file.type.startsWith('video/') ? 'video' : 'image';
-      setFormData(prev => ({ ...prev, mediaUrl: url, mediaType: type }));
+      setFormData(prev => ({ 
+        ...prev, 
+        mediaUrl: url, 
+        mediaType: type,
+        mediaZoom: 100,
+        mediaPosition: { x: 50, y: 50 }
+      }));
       toast({ title: "Arquivo carregado!" });
     } catch (error: any) {
       toast({ title: "Erro no upload", variant: "destructive" });
@@ -186,15 +210,35 @@ export function AdminMovementSection() {
             </div>
 
             <div 
-              onClick={() => fileInputRef.current?.click()}
               className="aspect-[4/5] rounded-[2rem] border-2 border-dashed border-primary/10 relative overflow-hidden group cursor-pointer bg-secondary/5"
+              onClick={() => !formData.mediaUrl && fileInputRef.current?.click()}
             >
               {formData.mediaUrl ? (
-                formData.mediaType === 'video' ? (
-                  <video src={formData.mediaUrl} autoPlay muted loop playsInline className="w-full h-full object-cover" />
-                ) : (
-                  <img src={formData.mediaUrl} className="w-full h-full object-cover" alt="Preview" />
-                )
+                <div 
+                  ref={previewRef}
+                  className="w-full h-full relative overflow-hidden cursor-move select-none"
+                  onMouseDown={handleDragStart}
+                  onMouseMove={handleDragMove}
+                  onMouseUp={handleDragEnd}
+                  onMouseLeave={handleDragEnd}
+                  onWheel={handleWheelZoom}
+                >
+                  {formData.mediaType === 'video' ? (
+                    <video 
+                      src={formData.mediaUrl} 
+                      autoPlay muted loop playsInline 
+                      className="w-full h-full object-cover pointer-events-none"
+                      style={{ transform: `scale(${formData.mediaZoom / 100})`, transformOrigin: `${formData.mediaPosition.x}% ${formData.mediaPosition.y}%` }}
+                    />
+                  ) : (
+                    <img 
+                      src={formData.mediaUrl} 
+                      className="w-full h-full object-cover pointer-events-none" 
+                      alt="Preview"
+                      style={{ transform: `scale(${formData.mediaZoom / 100})`, transformOrigin: `${formData.mediaPosition.x}% ${formData.mediaPosition.y}%` }}
+                    />
+                  )}
+                </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-primary/20 space-y-2">
                    <Upload className="h-10 w-10" />
@@ -202,15 +246,30 @@ export function AdminMovementSection() {
                 </div>
               )}
               
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                 {uploading ? <Loader2 className="animate-spin text-white" /> : <Upload className="text-white h-8 w-8" />}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 z-20">
+                 <Button 
+                    onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                    className="rounded-full bg-white text-primary text-[10px] font-bold uppercase tracking-widest px-6"
+                 >
+                    {uploading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+                    Trocar Arquivo
+                 </Button>
               </div>
             </div>
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/mp4" onChange={handleFileUpload} />
             
-            <p className="text-[9px] text-center text-muted-foreground italic px-4">
-              Dica: Use vídeos verticais em MP4 ou imagens em alta resolução (mínimo 1200x1500px).
-            </p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between pt-2">
+                <Label className="text-[9px] font-bold uppercase text-muted-foreground">Zoom: {formData.mediaZoom}%</Label>
+                <div className="flex items-center gap-2">
+                  <Button size="icon" variant="outline" type="button" onClick={() => setFormData(prev => ({...prev, mediaZoom: Math.max(100, prev.mediaZoom - 10)}))} className="h-8 w-8 rounded-full"><span className="text-xs">−</span></Button>
+                  <Button size="icon" variant="outline" type="button" onClick={() => setFormData(prev => ({...prev, mediaZoom: Math.min(300, prev.mediaZoom + 10)}))} className="h-8 w-8 rounded-full"><span className="text-xs">+</span></Button>
+                </div>
+              </div>
+              <p className="text-[9px] text-muted-foreground text-center leading-relaxed italic">
+                Arraste a imagem/vídeo para reposicionar, ou use a rodinha do mouse para dar zoom.
+              </p>
+            </div>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/mp4" onChange={handleFileUpload} />
           </Card>
 
           <div className="p-8 rounded-[2.5rem] bg-primary text-white space-y-4 shadow-xl">
