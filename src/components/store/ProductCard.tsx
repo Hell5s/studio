@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -87,10 +86,6 @@ export const ProductCard = React.memo(function ProductCard({
   };
 
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
-  const getImageSettings = (img: any) => typeof img === 'string' ? { objectPosition: 'top' } : {
-    objectPosition: img?.crop ? `${50 - img.crop.x}% ${50 - img.crop.y}%` : 'top',
-    transform: img?.zoom ? `scale(${img.zoom})` : 'none'
-  };
 
   const url = getImageUrl(image);
   const isValidUrl = url && typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
@@ -112,7 +107,6 @@ export const ProductCard = React.memo(function ProductCard({
               loading="lazy"
               quality={90}
               className="object-cover transition-transform duration-1500 group-hover:scale-105"
-              style={getImageSettings(image)}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               onError={() => setHasError(true)}
             />

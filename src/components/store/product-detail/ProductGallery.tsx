@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -61,10 +60,6 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
   };
 
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
-  const getImageSettings = (img: any) => typeof img === 'string' ? {} : {
-    objectPosition: img?.crop ? `${50 - img.crop.x}% ${50 - img.crop.y}%` : 'center',
-    transform: img?.zoom ? `scale(${img.zoom})` : 'none'
-  };
 
   const isValidUrl = (url: any) => typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
 
@@ -79,15 +74,12 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       );
     }
 
-    const settings = getImageSettings(img);
-
     return (
       <Image
         src={url}
         alt={`${name} - Imagem ${idx + 1}`}
         fill
         className="object-cover transition-transform duration-2000 group-hover:scale-105"
-        style={settings}
         priority={isPriority}
         quality={90}
         sizes="(max-width: 768px) 100vw, 50vw"

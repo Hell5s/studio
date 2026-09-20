@@ -16,9 +16,9 @@ import {
   Pencil,
   TrendingUp,
   Minus,
-  Link as LinkIcon,
   Check,
-  Presentation
+  Presentation,
+  Link as LinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,7 @@ import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-produ
 import { cn } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
 import { Badge } from '@/components/ui/badge';
+import { getCroppedImgBlob } from '@/lib/cropImage';
 
 // Pool de data para avaliações demonstrativas
 const DEMO_REVIEWS_POOL = {
@@ -83,6 +84,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
   const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
   const [colorInput, setColorInput] = useState('');
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [savingCrop, setSavingCrop] = useState(false);
 
   // Vitrines
   const showcasesQuery = useMemoFirebase(() => query(collection(db, 'homeShowcaseSections'), where('active', '==', true)), [db]);
@@ -327,7 +330,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     setUploading(true);
     try {
       const url = await uploadToCloudinary(file);
-      setFormData(prev => ({ ...prev, image: { url, crop: { x: 0, y: 0 }, zoom: 1 } as any }));
+      setFormData(prev => ({ ...prev, image: url as any }));
       toast({ title: "Imagem carregada!" });
     } catch (error: any) {
       toast({ title: "Erro no upload", variant: "destructive" });
@@ -345,7 +348,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       const newItems: any[] = [];
       for (let i = 0; i < files.length; i++) {
         const url = await uploadToCloudinary(files[i]);
-        newItems.push({ url, crop: { x: 0, y: 0 }, zoom: 1 });
+        newItems.push(url);
       }
       setFormData(prev => ({ ...prev, gallery: [...prev.gallery, ...newItems] }));
       toast({ title: "Galeria atualizada!" });
@@ -402,25 +405,34 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
     setEditingImage({ index, field });
-    // Resetando para o estado inicial de visualização total centralizada conforme solicitado:
-    // A imagem inteira deve aparecer TOTALMENTE VISÍVEL e CENTRALIZADA ao abrir, sem cortes.
     setCrop({ x: 0, y: 0 });
     setZoom(1);
+    setCroppedAreaPixels(null);
   };
 
-  const handleSaveCrop = () => {
-    if (!editingImage) return;
-    const { index, field } = editingImage;
-    if (field === 'image') {
-      const current = typeof formData.image === 'string' ? { url: formData.image } : formData.image;
-      setFormData({ ...formData, image: { ...current, crop, zoom } as any });
-    } else {
-      const newGallery = [...formData.gallery];
-      const current = typeof newGallery[index] === 'string' ? { url: newGallery[index] } : newGallery[index];
-      newGallery[index] = { ...current, crop, zoom };
-      setFormData({ ...formData, gallery: newGallery });
+  const handleSaveCrop = async () => {
+    if (!editingImage || !croppedAreaPixels) return;
+    setSavingCrop(true);
+    try {
+      const { index, field } = editingImage;
+      const sourceUrl = getImageUrl(field === 'image' ? formData.image : formData.gallery[index]);
+      const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
+      const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+      const newUrl = await uploadToCloudinary(file);
+
+      if (field === 'image') {
+        setFormData({ ...formData, image: newUrl });
+      } else {
+        const newGallery = [...formData.gallery];
+        newGallery[index] = newUrl;
+        setFormData({ ...formData, gallery: newGallery });
+      }
+      setEditingImage(null);
+    } catch (err) {
+      toast({ title: "Erro ao salvar recorte", variant: "destructive" });
+    } finally {
+      setSavingCrop(false);
     }
-    setEditingImage(null);
   };
 
   const toggleShowcaseSelection = (id: string) => {
@@ -495,6 +507,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const profit = priceNum - costNum;
   const margin = costNum > 0 ? (profit / costNum) * 100 : 0;
   const marginColor = margin > 50 ? "text-green-600" : margin > 20 ? "text-yellow-600" : "text-red-600";
+
+  const getImageSettings = (img: any) => typeof img === 'string' ? { objectPosition: 'top' } : {
+    objectPosition: img?.crop ? `${50 - img.crop.x}% ${50 - img.crop.y}%` : 'top',
+    transform: img?.zoom ? `scale(${img.zoom})` : 'none'
+  };
 
   return (
     <>
@@ -608,7 +625,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       onDrop={(e) => handleDrop(e, idx)}
                       className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
                      >
-                        <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" style={{ objectPosition: img.crop ? `${50 - img.crop.x}% ${50 - img.crop.y}%` : 'center', transform: img.zoom ? `scale(${img.zoom})` : 'none' }} />
+                        <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" style={getImageSettings(img)} />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity z-10">
                            <button 
                              onClick={(e) => { e.stopPropagation(); handleOpenEditor(idx, 'gallery'); }} 
@@ -718,10 +735,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         <img 
                           src={getImageUrl(formData.image)} 
                           className="w-full h-full object-cover" 
-                          style={{ 
-                            objectPosition: (formData.image as any).crop ? `${50 - (formData.image as any).crop.x}% ${50 - (formData.image as any).crop.y}%` : 'center', 
-                            transform: (formData.image as any).zoom ? `scale(${(formData.image as any).zoom})` : 'none' 
-                          }} 
+                          style={getImageSettings(formData.image)} 
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                            <button 
@@ -798,6 +812,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               aspect={editingImage?.field === 'image' ? 3/5 : 9/16} 
               onCropChange={setCrop} 
               onZoomChange={setZoom} 
+              onCropComplete={(_croppedArea, croppedAreaPixelsResult) => setCroppedAreaPixels(croppedAreaPixelsResult)}
               showGrid={false}
               cropShape="rect"
               objectFit="contain" 
@@ -835,7 +850,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
             </div>
             <div className="flex gap-4">
               <Button variant="ghost" onClick={() => setEditingImage(null)} className="text-white uppercase text-[10px] font-bold">Cancelar</Button>
-              <Button onClick={handleSaveCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full">Salvar Enquadramento</Button>
+              <Button onClick={handleSaveCrop} disabled={savingCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full">
+                {savingCrop ? 'Salvando...' : 'Salvar Enquadramento'}
+              </Button>
             </div>
           </div>
         </DialogContent>
