@@ -320,6 +320,16 @@ export function BannerManagement() {
     setIsDragging(false);
   };
 
+  const handleWheelZoom = (e: React.WheelEvent) => {
+    if (editingBanner?.mediaType === 'video') return;
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 5 : -5;
+    setEditData(prev => ({
+      ...prev,
+      imageZoom: Math.min(300, Math.max(100, prev.imageZoom + delta))
+    }));
+  };
+
   return (
     <div className="space-y-12 animate-in fade-in duration-1000">
       <div className="flex flex-col gap-2">
@@ -614,6 +624,7 @@ export function BannerManagement() {
                 onMouseMove={handleDragMove}
                 onMouseUp={handleDragEnd}
                 onMouseLeave={handleDragEnd}
+                onWheel={handleWheelZoom}
                >
                 {editingBanner?.mediaType === 'video' ? (
                   <video key={editData.imageUrl} muted loop playsInline className="w-full h-full object-cover">
@@ -642,6 +653,7 @@ export function BannerManagement() {
                    <input type="file" ref={replaceFileInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, true)} />
                 </div>
               </div>
+              <p className="text-[9px] text-muted-foreground italic px-1">Dica: use a rodinha do mouse sobre a imagem para dar zoom.</p>
             </div>
 
             <div className="space-y-3">
