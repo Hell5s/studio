@@ -30,6 +30,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle,
+  DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -82,6 +83,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
   const [colorInput, setColorInput] = useState('');
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
@@ -377,6 +379,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }
   };
 
+  const handleSelectFromGallery = (img: any) => {
+    if (activeVariationIndex === null) return;
+    const newVars = [...formData.variations];
+    newVars[activeVariationIndex] = { ...newVars[activeVariationIndex], image: img };
+    setFormData(prev => ({ ...prev, variations: newVars }));
+    setIsSelectorOpen(false);
+    setActiveVariationIndex(null);
+    toast({ title: "Imagem da galeria aplicada!" });
+  };
+
   const handleAIGenerate = async () => {
     if (!formData.name || !formData.price) {
       toast({ title: "Preencha nome e preço", variant: "destructive" });
@@ -407,7 +419,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const source = getOriginalUrl(field === 'image' ? formData.image : formData.gallery[index]);
     setEditingImage({ index, field });
     setCrop({ x: 0, y: 0 });
-    setZoom(img?.zoom || 1);
+    setZoom(1);
     setCroppedAreaPixels(null);
     const tempImg = new window.Image();
     tempImg.onload = () => setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
@@ -703,7 +715,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                     <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5 shadow-sm">
                       <div 
                         className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group"
-                        onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
+                        onClick={() => { setActiveVariationIndex(i); setIsSelectorOpen(true); }}
                       >
                         {v.image ? <img src={getImageUrl(v.image)} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
@@ -795,6 +807,58 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <Button variant="outline" onClick={handleAIGenerate} disabled={generatingAI} className="w-full h-14 rounded-2xl border-accent/20 text-accent font-bold uppercase text-[10px] tracking-widest">
                   {generatingAI ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />} Gerar Editorial com IA
                 </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Selector from Gallery Dialog */}
+      <Dialog open={isSelectorOpen} onOpenChange={setIsSelectorOpen}>
+        <DialogContent className="max-w-2xl rounded-[2rem] p-8 border-none shadow-2xl bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-primary">Vincular Imagem</DialogTitle>
+            <DialogDescription className="text-muted-foreground italic text-xs">Escolha uma foto existente ou envie um novo arquivo para esta variação.</DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-8 py-4">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Enviar do Computador</Label>
+              <Button 
+                variant="outline" 
+                className="w-full h-14 rounded-xl border-dashed border-2 border-primary/10 hover:border-primary/40 hover:bg-secondary/10 transition-all flex items-center justify-center gap-2 group"
+                onClick={() => {
+                  variationInputRef.current?.click();
+                  setIsSelectorOpen(false);
+                }}
+              >
+                <Upload className="h-5 w-5 text-accent group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold uppercase tracking-widest">Fazer Upload de Nova Foto</span>
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Escolher da Galeria Existente</Label>
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-[300px] overflow-y-auto no-scrollbar p-1">
+                {/* Capa */}
+                {formData.image && (
+                  <button 
+                    onClick={() => handleSelectFromGallery(formData.image)}
+                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-accent transition-all bg-gray-50 group"
+                  >
+                    <img src={getImageUrl(formData.image)} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Capa" />
+                  </button>
+                )}
+                {/* Galeria */}
+                {formData.gallery.map((img, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => handleSelectFromGallery(img)}
+                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-accent transition-all bg-gray-50 group"
+                  >
+                    <img src={getImageUrl(img)} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt={`Foto ${idx + 1}`} />
+                  </button>
+                ))}
               </div>
             </div>
           </div>
