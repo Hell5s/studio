@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -790,6 +789,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       {/* Crop Editor */}
       <Dialog open={!!editingImage} onOpenChange={(o) => !o && setEditingImage(null)}>
         <DialogContent className="max-w-6xl p-0 overflow-hidden bg-black border-none rounded-[2rem]">
+          <DialogTitle className="sr-only">Editar Enquadramento da Foto</DialogTitle>
           <div className="relative h-[85vh] w-full">
             <Cropper
               image={getImageUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
@@ -800,7 +800,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onZoomChange={setZoom} 
               showGrid={false}
               cropShape="rect"
-              objectFit="contain" // Garante que a imagem seja dimensionada para caber inteira no espaço disponível
+              objectFit="contain" 
               minZoom={1}
               style={{
                 containerStyle: {
@@ -811,9 +811,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   bottom: 0,
                   width: '100%',
                   height: '100%',
-                },
-                mediaStyle: {
-                  objectFit: 'contain', // Reforço técnico para centralização e visibilidade total
                 }
               }}
               classes={{
