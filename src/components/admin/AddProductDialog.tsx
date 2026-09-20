@@ -16,7 +16,8 @@ import {
   Move,
   Pencil,
   TrendingUp,
-  Minus
+  Minus,
+  Link as LinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
