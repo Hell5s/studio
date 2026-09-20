@@ -12,14 +12,10 @@ import {
   Image as ImageIcon,
   Palette,
   X,
-  Link as LinkIcon,
   Plus,
   Move,
   Pencil,
-  Check,
-  Presentation,
   TrendingUp,
-  DollarSign,
   Minus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -461,7 +457,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     e.dataTransfer.setData('draggedIndex', index.toString());
   };
 
-  const handleDragOver = (e: React.DragOverEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
@@ -799,6 +795,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onCropChange={setCrop} 
               onZoomChange={setZoom} 
               showGrid={false}
+              cropShape="rect"
+              classes={{
+                containerClassName: "h-full w-full",
+                mediaClassName: "max-w-none max-h-none object-none"
+              }}
             />
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
