@@ -17,7 +17,9 @@ import {
   Pencil,
   TrendingUp,
   Minus,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Check,
+  Presentation
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -516,7 +518,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               <section className="space-y-6">
                 <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3"><Layers className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4></div>
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={handleNameChange} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                   
                   <div className="md:col-span-2 space-y-2">
                     <div className="flex justify-between items-center">
@@ -797,9 +799,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onZoomChange={setZoom} 
               showGrid={false}
               cropShape="rect"
-              classes={{
-                containerClassName: "h-full w-full",
-                mediaClassName: "max-w-none max-h-none object-none"
+              style={{
+                containerStyle: {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: '100%',
+                  height: '100%',
+                },
               }}
             />
           </div>
