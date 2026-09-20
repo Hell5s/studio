@@ -234,9 +234,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const parseSafeNumber = (val: any) => {
     if (typeof val === 'number') return val;
     if (!val) return 0;
-    const str = String(val).trim();
-    const normalized = str.replace(/\./g, "").replace(",", ".");
-    const num = parseFloat(normalized);
+    let str = String(val).trim();
+    if (str.includes(',') && str.includes('.')) {
+      // Formato "1.234,56" -> remove separador de milhar, vírgula vira ponto decimal
+      str = str.replace(/\./g, '').replace(',', '.');
+    } else if (str.includes(',')) {
+      // Formato "129,90" -> só troca a vírgula por ponto
+      str = str.replace(',', '.');
+    }
+    // Se só tem ponto (ex: "129.90" vindo de toFixed), já está no formato certo, não mexe
+    const num = parseFloat(str);
     return isNaN(num) ? 0 : num;
   };
 
