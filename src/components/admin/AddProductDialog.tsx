@@ -294,7 +294,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       if (isEdit) {
         updateDocumentNonBlocking(productRef, payload);
       } else {
-        setDocumentNonBlocking(productRef, payload, { merge: true });
+        await setDoc(productRef, { ...payload, createdAt: serverTimestamp() }, { merge: true });
         const displayImg = typeof finalMainImage === 'string' ? finalMainImage : finalMainImage?.url;
         await generateDemoReviews(productId, formData.name, displayImg || '');
       }
@@ -309,8 +309,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       });
 
       toast({
-        title: isEdit ? "Produto Atualizado" : "Produto Cadastrado",
-        description: `${formData.name} foi ${isEdit ? 'atualizado' : 'adicionado'} com sucesso.`,
+        title: status === 'active' ? "Produto Publicado" : "Produto Salvo",
+        description: `${formData.name} foi processado com sucesso.`,
       });
       
       onOpenChange(false);
@@ -406,7 +406,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const source = getImageUrl(field === 'image' ? formData.image : formData.gallery[index]);
     setEditingImage({ index, field });
     setCrop({ x: 0, y: 0 });
-    setZoom(1);
+    setZoom(0.6);
     setCroppedAreaPixels(null);
     const tempImg = new window.Image();
     tempImg.onload = () => setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
@@ -816,7 +816,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               showGrid={false}
               cropShape="rect"
               objectFit="contain" 
-              minZoom={1}
+              minZoom={0.2}
+              restrictPosition={false}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -836,10 +837,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
             <div className="flex-1 flex items-center gap-4">
-              <button onClick={() => setZoom(z => Math.max(1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+              <button onClick={() => setZoom(z => Math.max(0.2, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
               <input 
                 type="range" 
-                min={1} 
+                min={0.2} 
                 max={3} 
                 step={0.1} 
                 value={zoom} 
