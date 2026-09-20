@@ -146,12 +146,12 @@ export const ProductCard = React.memo(function ProductCard({
       </div>
 
       <div className="p-3 md:p-6 text-center flex flex-col flex-1 gap-2 md:gap-4">
-        <h3 className="line-clamp-2 text-xs md:text-base font-headline leading-tight tracking-tight text-primary/80 min-h-[2.5em]">
+        <h3 className="line-clamp-2 text-sm md:text-lg font-headline font-bold leading-tight tracking-tight text-primary/80 min-h-[2.5em]">
           {name}
         </h3>
         
         <div className="mt-auto space-y-1 md:space-y-2">
-          <p className="text-base md:text-2xl font-headline font-bold text-primary leading-none">
+          <p className="text-lg md:text-3xl font-headline font-bold text-primary leading-none">
             {formatCurrency(price)}
           </p>
           {oldPrice && (
