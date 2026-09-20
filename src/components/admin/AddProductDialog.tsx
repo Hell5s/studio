@@ -407,21 +407,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const source = getImageUrl(img);
     setEditingImage({ index, field });
     setCrop({ x: 0, y: 0 });
+    setZoom(1);
     setCroppedAreaPixels(null);
-    
     const tempImg = new window.Image();
-    tempImg.onload = () => {
-      const naturalWidth = tempImg.naturalWidth;
-      const naturalHeight = tempImg.naturalHeight;
-      const currentImageAspect = naturalWidth / naturalHeight;
-      const frameAspect = 3 / 5;
-      
-      // Calculate initial zoom to fit image inside 3/5 frame
-      const initialZoom = Math.min(frameAspect / currentImageAspect, currentImageAspect / frameAspect);
-      
-      setZoom(img?.zoom || initialZoom);
-      setImageAspect(currentImageAspect);
-    };
+    tempImg.onload = () => setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
     tempImg.src = source;
   };
 
@@ -821,7 +810,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               image={getOriginalUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
               crop={crop} 
               zoom={zoom} 
-              aspect={3 / 5} 
+              aspect={imageAspect} 
               onCropChange={setCrop} 
               onZoomChange={setZoom} 
               onCropComplete={(_croppedArea, croppedAreaPixelsResult) => setCroppedAreaPixels(croppedAreaPixelsResult)}
