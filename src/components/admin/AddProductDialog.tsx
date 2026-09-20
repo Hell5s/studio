@@ -17,7 +17,8 @@ import {
   Move,
   Pencil,
   Check,
-  Presentation
+  Presentation,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -222,7 +223,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         status: 'published',
         createdAt: new Date(Date.now() - Math.floor(Math.random() * 15 * 24 * 60 * 60 * 1000)).toISOString()
       };
-      // Grava na subcoleção conforme as regras de segurança
       await addDoc(collection(db, 'products', productId, 'reviews'), review);
     }
   };
@@ -231,10 +231,21 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     if (typeof val === 'number') return val;
     if (!val) return 0;
     const str = String(val).trim();
-    // Remove pontos de milhar e converte vírgula decimal em ponto
     const normalized = str.replace(/\./g, "").replace(",", ".");
     const num = parseFloat(normalized);
     return isNaN(num) ? 0 : num;
+  };
+
+  const handleCalculateIA = () => {
+    const cost = parseSafeNumber(formData.cost);
+    if (!cost) {
+      toast({ title: "Custo inválido", variant: "destructive" });
+      return;
+    }
+    const price = (Math.ceil(cost * 3) - 0.10).toFixed(2);
+    const oldPrice = (Math.ceil(cost * 4) - 0.10).toFixed(2);
+    setFormData(prev => ({ ...prev, price, oldPrice }));
+    toast({ title: "Preços calculados!", description: "Margem de 3x aplicada com sucesso." });
   };
 
   const handleSave = async () => {
@@ -417,7 +428,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           <div className="bg-[#2A1F22] p-8 text-white flex items-center justify-between sticky top-0 z-20 shadow-lg">
             <div className="flex items-center gap-6">
               <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center"><Package className="h-6 w-6 text-primary" /></div>
-              <DialogHeader><DialogTitle className="text-2xl font-bold">{product ? 'Editar Peça' : 'Peça Exclusiva'}</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent/60 mb-1">NOVO CADASTRO</p>
+                <DialogTitle className="text-2xl font-bold">{product ? 'Editar Peça' : 'Peça Exclusiva'}</DialogTitle>
+              </DialogHeader>
             </div>
             <Button onClick={handleSave} disabled={loading} className="rounded-full px-10 h-12 bg-accent text-primary hover:brightness-110 font-bold uppercase tracking-widest text-[10px] shadow-xl border-none">
               {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} {product ? 'Salvar Alterações' : 'Publicar Produto'}
@@ -430,11 +444,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3"><Layers className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4></div>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
-                  <div className="md:col-span-2 space-y-2"><Label>Descrição</Label><Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-white border-gray-200 min-h-[100px] rounded-xl" /></div>
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Descrição do Produto</Label>
+                    <Textarea 
+                      value={formData.description} 
+                      onChange={e => setFormData({...formData, description: e.target.value})} 
+                      placeholder="Breve descrição para a vitrine..."
+                      className="bg-white border-gray-200 min-h-[100px] rounded-xl" 
+                    />
+                  </div>
                   
-                  <div className="space-y-2"><Label>Link do Fornecedor (Dropshipping)</Label><Input value={formData.supplierUrl} onChange={e => setFormData({...formData, supplierUrl: e.target.value})} placeholder="https://..." className="bg-white border-gray-200 h-12 rounded-xl" /></div>
-                  <div className="space-y-2"><Label>Nome do Fornecedor</Label><Input value={formData.supplierName} onChange={e => setFormData({...formData, supplierName: e.target.value})} placeholder="Ex: Kaisan, Shopee..." className="bg-white border-gray-200 h-12 rounded-xl" /></div>
-
                   <div className="space-y-2">
                     <Label>Categoria</Label>
                     <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm">
@@ -442,10 +461,14 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                     </select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><Label>Preço (R$)</Label><Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
-                    <div className="space-y-2"><Label>Original (R$)</Label><Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                    <div className="space-y-2"><Label>Preço Venda (R$)</Label><Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                    <div className="space-y-2"><Label>Preço Original "De" (R$)</Label><Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                   </div>
-                  <div className="space-y-2"><Label>Tamanhos (P, M, G...)</Label><Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  <div className="space-y-2">
+                    <Label>Tamanhos Disponíveis (separados por vírgula)</Label>
+                    <Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
+                    <p className="text-[9px] text-muted-foreground italic ml-2">Dica: Use vírgula para separar as opções de tamanho.</p>
+                  </div>
                   <div className="space-y-2"><Label>Cores (Rosa, Azul...)</Label><Input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                 </div>
               </section>
@@ -453,7 +476,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               <section className="space-y-6">
                 <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                   <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5 text-primary" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria</h4></div>
-                  <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="text-accent text-[10px] font-bold uppercase">+ Fotos</Button>
+                  <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 px-4 rounded-full">+ Fotos</Button>
                 </div>
                 <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
@@ -467,6 +490,45 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                      </div>
                    ))}
                    {uploading && <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20"><Loader2 className="h-5 w-5 animate-spin text-accent" /></div>}
+                </div>
+              </section>
+
+              {/* Dados Operacionais */}
+              <section className="space-y-6 bg-white p-8 rounded-[2rem] shadow-sm border border-primary/5">
+                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-3">
+                  <TrendingUp className="h-5 w-5" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">Dados Operacionais (Apenas Admin)</h4>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Link do Fornecedor (AliExpress, Shopee, etc)</Label>
+                    <div className="relative">
+                      <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input value={formData.supplierUrl} onChange={e => setFormData({...formData, supplierUrl: e.target.value})} placeholder="https://..." className="h-11 pl-12 bg-secondary/10 border-none rounded-xl" />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Custo no Fornecedor (R$)</Label>
+                      <Input value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} placeholder="Ex: 45.00" className="h-11 bg-secondary/10 border-none rounded-xl" />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleCalculateIA}
+                      className="h-8 text-accent text-[9px] font-bold uppercase bg-accent/10 hover:bg-accent hover:text-white rounded-full px-4"
+                    >
+                      <Sparkles className="h-3 w-3 mr-1" /> + Calcular Preço com IA
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nome do Fornecedor</Label>
+                    <Input value={formData.supplierName} onChange={e => setFormData({...formData, supplierName: e.target.value})} placeholder="Ex: Global Store" className="h-11 bg-secondary/10 border-none rounded-xl" />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Observações Internas</Label>
+                    <Textarea value={formData.internalNotes} onChange={e => setFormData({...formData, internalNotes: e.target.value})} placeholder="Ex: Tamanho chinês é menor, pedir um número a mais." className="bg-secondary/10 border-none min-h-[80px] rounded-xl p-4 text-xs italic" />
+                  </div>
                 </div>
               </section>
 
@@ -510,7 +572,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                     {uploading && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
                   </div>
-                  <div className="p-6 text-center"><p className="font-bold text-primary truncate">{formData.name || 'Preview'}</p></div>
+                  <div className="p-6 text-center">
+                    <p className="font-bold text-primary truncate">{formData.name || 'Preview'}</p>
+                    <p className="text-sm font-bold text-accent">R$ {formData.price || '0,00'}</p>
+                  </div>
                 </Card>
 
                 <Card className="p-8 rounded-[2rem] bg-white border-none shadow-premium space-y-4">
@@ -531,11 +596,12 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   <div className="space-y-3">
                      <div className="flex items-center justify-between"><Label className="text-white text-xs">Publicado</Label><Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} /></div>
                      <div className="flex items-center justify-between"><Label className="text-white text-xs">Destaque</Label><Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} /></div>
+                     <div className="flex items-center justify-between"><Label className="text-white text-xs">Mais Vendido</Label><Switch checked={formData.bestseller} onCheckedChange={v => setFormData({...formData, bestseller: v})} /></div>
                   </div>
                 </Card>
                 
                 <Button variant="outline" onClick={handleAIGenerate} disabled={generatingAI} className="w-full h-14 rounded-2xl border-accent/20 text-accent font-bold uppercase text-[10px] tracking-widest">
-                  {generatingAI ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />} IA Editorial
+                  {generatingAI ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />} Gerar Editorial com IA
                 </Button>
               </div>
             </div>
