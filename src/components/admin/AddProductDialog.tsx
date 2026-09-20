@@ -43,7 +43,7 @@ import { cn } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
 import { Badge } from '@/components/ui/badge';
 
-// Pool de dados para avaliações demonstrativas
+// Pool de data para avaliações demonstrativas
 const DEMO_REVIEWS_POOL = {
   names: ["VALENTINA S.", "HELENA M.", "BEATRIZ R.", "ISABELA F.", "CAMILA G.", "LARISSA P.", "JULIANA B.", "MARIA CLARA T.", "SOPHIA V.", "ALICE L.", "GIOVANNA C.", "MANUELA D.", "LÍVIA H.", "LORENA K.", "MAYA P."],
   headlines: [
@@ -235,13 +235,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     if (!val) return 0;
     let str = String(val).trim();
     if (str.includes(',') && str.includes('.')) {
-      // Formato "1.234,56" -> remove separador de milhar, vírgula vira ponto decimal
       str = str.replace(/\./g, '').replace(',', '.');
     } else if (str.includes(',')) {
-      // Formato "129,90" -> só troca a vírgula por ponto
       str = str.replace(',', '.');
     }
-    // Se só tem ponto (ex: "129.90" vindo de toFixed), já está no formato certo, não mexe
     const num = parseFloat(str);
     return isNaN(num) ? 0 : num;
   };
@@ -788,8 +785,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
       {/* Crop Editor */}
       <Dialog open={!!editingImage} onOpenChange={(o) => !o && setEditingImage(null)}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none rounded-[2rem]">
-          <div className="relative h-[60vh] w-full">
+        <DialogContent className="max-w-6xl p-0 overflow-hidden bg-black border-none rounded-[2rem]">
+          <div className="relative h-[85vh] w-full">
             <Cropper
               image={getImageUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
               crop={crop} 
