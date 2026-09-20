@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -235,10 +234,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     if (!val) return 0;
     let str = String(val).trim();
     if (str.includes(',') && str.includes('.')) {
+      // Formato "1.234,56" -> remove separador de milhar, vírgula vira ponto decimal
       str = str.replace(/\./g, '').replace(',', '.');
     } else if (str.includes(',')) {
+      // Formato "129,90" -> só troca a vírgula por ponto
       str = str.replace(',', '.');
     }
+    // Se só tem ponto (ex: "129.90" vindo de toFixed), já está no formato certo, não mexe
     const num = parseFloat(str);
     return isNaN(num) ? 0 : num;
   };
@@ -796,6 +798,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onZoomChange={setZoom} 
               showGrid={false}
               cropShape="rect"
+              objectFit="contain"
+              minZoom={1}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -815,10 +819,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
             <div className="flex-1 flex items-center gap-4">
-              <button onClick={() => setZoom(z => Math.max(0.1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+              <button onClick={() => setZoom(z => Math.max(1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
               <input 
                 type="range" 
-                min={0.1} 
+                min={1} 
                 max={3} 
                 step={0.1} 
                 value={zoom} 
