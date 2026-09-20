@@ -129,7 +129,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     published: true,
     featured: false,
     bestseller: false,
-    variations: [] as { color: string; image: string }[]
+    variations: [] as { color: string; image: any }[]
   });
 
   useEffect(() => {
@@ -237,13 +237,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     if (!val) return 0;
     let str = String(val).trim();
     if (str.includes(',') && str.includes('.')) {
-      // Formato "1.234,56" -> remove separador de milhar, vírgula vira ponto decimal
       str = str.replace(/\./g, '').replace(',', '.');
     } else if (str.includes(',')) {
-      // Formato "129,90" -> só troca a vírgula por ponto
       str = str.replace(',', '.');
     }
-    // Se só tem ponto (ex: "129.90" vindo de toFixed), já está no formato certo, não mexe
     const num = parseFloat(str);
     return isNaN(num) ? 0 : num;
   };
@@ -330,7 +327,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     setUploading(true);
     try {
       const url = await uploadToCloudinary(file);
-      setFormData(prev => ({ ...prev, image: url as any }));
+      setFormData(prev => ({ ...prev, image: { url, originalUrl: url } }));
       toast({ title: "Imagem carregada!" });
     } catch (error: any) {
       toast({ title: "Erro no upload", variant: "destructive" });
@@ -348,7 +345,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       const newItems: any[] = [];
       for (let i = 0; i < files.length; i++) {
         const url = await uploadToCloudinary(files[i]);
-        newItems.push(url);
+        newItems.push({ url, originalUrl: url });
       }
       setFormData(prev => ({ ...prev, gallery: [...prev.gallery, ...newItems] }));
       toast({ title: "Galeria atualizada!" });
@@ -368,7 +365,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     try {
       const url = await uploadToCloudinary(file);
       const newVars = [...formData.variations];
-      newVars[activeVariationIndex] = { ...newVars[activeVariationIndex], image: url };
+      newVars[activeVariationIndex] = { ...newVars[activeVariationIndex], image: { url, originalUrl: url } };
       setFormData(prev => ({ ...prev, variations: newVars }));
       toast({ title: "Variação salva!" });
     } catch (error: any) {
@@ -402,6 +399,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   };
 
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
+  const getOriginalUrl = (img: any) => typeof img === 'string' ? img : (img?.originalUrl || img?.url);
 
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
     setEditingImage({ index, field });
@@ -415,16 +413,19 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     setSavingCrop(true);
     try {
       const { index, field } = editingImage;
-      const sourceUrl = getImageUrl(field === 'image' ? formData.image : formData.gallery[index]);
+      const imgObj = field === 'image' ? formData.image : formData.gallery[index];
+      const sourceUrl = getOriginalUrl(imgObj);
+      const originalUrl = typeof imgObj === 'string' ? imgObj : (imgObj?.originalUrl || imgObj?.url);
+      
       const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
       const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
       const newUrl = await uploadToCloudinary(file);
 
       if (field === 'image') {
-        setFormData({ ...formData, image: newUrl });
+        setFormData({ ...formData, image: { url: newUrl, originalUrl } });
       } else {
         const newGallery = [...formData.gallery];
-        newGallery[index] = newUrl;
+        newGallery[index] = { url: newUrl, originalUrl };
         setFormData({ ...formData, gallery: newGallery });
       }
       setEditingImage(null);
@@ -507,11 +508,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const profit = priceNum - costNum;
   const margin = costNum > 0 ? (profit / costNum) * 100 : 0;
   const marginColor = margin > 50 ? "text-green-600" : margin > 20 ? "text-yellow-600" : "text-red-600";
-
-  const getImageSettings = (img: any) => typeof img === 'string' ? { objectPosition: 'top' } : {
-    objectPosition: img?.crop ? `${50 - img.crop.x}% ${50 - img.crop.y}%` : 'top',
-    transform: img?.zoom ? `scale(${img.zoom})` : 'none'
-  };
 
   return (
     <>
@@ -625,7 +621,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       onDrop={(e) => handleDrop(e, idx)}
                       className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
                      >
-                        <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" style={getImageSettings(img)} />
+                        <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity z-10">
                            <button 
                              onClick={(e) => { e.stopPropagation(); handleOpenEditor(idx, 'gallery'); }} 
@@ -671,7 +667,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       onClick={handleCalculateIA}
                       className="h-8 text-accent text-[9px] font-bold uppercase bg-accent/10 hover:bg-accent hover:text-white rounded-full px-4"
                     >
-                      <Sparkles className="h-3 w-3 mr-1" /> + Calcular Preço com IA
+                      <Sparkles className="h-3.5 w-3.5 mr-1" /> + Calcular Preço com IA
                     </Button>
                     {costNum > 0 && priceNum > 0 && (
                       <p className={cn("text-[9px] font-bold uppercase italic ml-2", marginColor)}>
@@ -703,7 +699,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group"
                         onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
                       >
-                        {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
+                        {v.image ? <img src={getImageUrl(v.image)} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
                       </div>
                       <Input placeholder="Nome da Cor" value={v.color} onChange={e => {
@@ -735,7 +731,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         <img 
                           src={getImageUrl(formData.image)} 
                           className="w-full h-full object-cover" 
-                          style={getImageSettings(formData.image)} 
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                            <button 
@@ -806,7 +801,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           <DialogTitle className="sr-only">Editar Enquadramento da Foto</DialogTitle>
           <div className="relative h-[85vh] w-full">
             <Cropper
-              image={getImageUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
+              image={getOriginalUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
               crop={crop} 
               zoom={zoom} 
               aspect={editingImage?.field === 'image' ? 3/5 : 9/16} 
