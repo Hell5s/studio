@@ -69,9 +69,9 @@ export function ProductReviews({ product }: { product: any }) {
 
   const reviewsQuery = useMemoFirebase(() => {
     if (!db || !product?.id) return null;
+    // Consulta correta na subcoleção conforme as regras de segurança
     return query(
-      collection(db, 'reviews'), 
-      where('productId', '==', product.id),
+      collection(db, 'products', product.id, 'reviews'), 
       where('status', '==', 'published'),
       orderBy('createdAt', 'desc')
     );
@@ -100,7 +100,8 @@ export function ProductReviews({ product }: { product: any }) {
     }
 
     setIsSubmitting(true);
-    addDocumentNonBlocking(collection(db, 'reviews'), {
+    // Grava na subcoleção correta do produto
+    addDocumentNonBlocking(collection(db, 'products', product.id, 'reviews'), {
       ...newReview,
       productId: product.id,
       productName: product.name,

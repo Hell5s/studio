@@ -222,8 +222,19 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         status: 'published',
         createdAt: new Date(Date.now() - Math.floor(Math.random() * 15 * 24 * 60 * 60 * 1000)).toISOString()
       };
-      await addDoc(collection(db, 'reviews'), review);
+      // Grava na subcoleção conforme as regras de segurança
+      await addDoc(collection(db, 'products', productId, 'reviews'), review);
     }
+  };
+
+  const parseSafeNumber = (val: any) => {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    const str = String(val).trim();
+    // Remove pontos de milhar e converte vírgula decimal em ponto
+    const normalized = str.replace(/\./g, "").replace(",", ".");
+    const num = parseFloat(normalized);
+    return isNaN(num) ? 0 : num;
   };
 
   const handleSave = async () => {
@@ -246,10 +257,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const payload = {
       ...formData,
       id: productId,
-      price: Number(formData.price.toString().replace(',', '.')),
-      oldPrice: formData.oldPrice ? Number(formData.oldPrice.toString().replace(',', '.')) : null,
-      cost: Number(formData.cost.toString().replace(',', '.')),
-      stock: formData.stock ? Number(formData.stock) : 0,
+      price: parseSafeNumber(formData.price),
+      oldPrice: formData.oldPrice ? parseSafeNumber(formData.oldPrice) : null,
+      cost: parseSafeNumber(formData.cost),
+      stock: parseSafeNumber(formData.stock),
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
       image: finalMainImage,
@@ -283,6 +294,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       
       onOpenChange(false);
     } catch (e) {
+      console.error("Erro ao salvar produto:", e);
       toast({ title: "Erro ao salvar", variant: "destructive" });
     } finally {
       setLoading(false);

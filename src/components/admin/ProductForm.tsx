@@ -215,19 +215,18 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     }
   };
 
-  const parsePrice = (val: any) => {
+  const parseSafeNumber = (val: any) => {
     if (typeof val === 'number') return val;
     if (!val) return 0;
     const str = String(val).trim();
-    if (str.includes(',')) {
-      return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
-    }
-    return parseFloat(str) || 0;
+    const normalized = str.replace(/\./g, "").replace(",", ".");
+    const num = parseFloat(normalized);
+    return isNaN(num) ? 0 : num;
   };
 
   const handleCalculateIA = () => {
-    const cost = parseFloat(formData.cost);
-    if (isNaN(cost)) {
+    const cost = parseSafeNumber(formData.cost);
+    if (!cost) {
       toast({ title: "Custo inválido", variant: "destructive" });
       return;
     }
@@ -259,10 +258,10 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       const payload = {
         ...formData,
         id,
-        price: parsePrice(formData.price),
-        oldPrice: formData.oldPrice ? parsePrice(formData.oldPrice) : null,
-        cost: parsePrice(formData.cost),
-        stock: parseInt(formData.stock),
+        price: parseSafeNumber(formData.price),
+        oldPrice: formData.oldPrice ? parseSafeNumber(formData.oldPrice) : null,
+        cost: parseSafeNumber(formData.cost),
+        stock: parseSafeNumber(formData.stock),
         image: finalMainImage,
         images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
         colors: formData.colors.split(',').map(c => c.trim()).filter(Boolean),
@@ -275,6 +274,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       toast({ title: "Produto salvo!" });
       onSuccess();
     } catch (e: any) {
+      console.error("Erro ao salvar produto:", e);
       toast({ title: "Erro ao salvar", variant: "destructive" });
     } finally {
       setLoading(false);
@@ -310,7 +310,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <p className="text-muted-foreground italic font-light">Gestão visual de cores e detalhes editoriais.</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onSuccess={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
+          <Button variant="outline" onClick={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
           <Button onClick={handleSave} disabled={loading} className="rounded-full h-12 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-transform uppercase text-[10px] font-bold tracking-widest">
             {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Produto
           </Button>
@@ -472,7 +472,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                 </Button>
                 {formData.cost && formData.price && (
                   <p className="text-[9px] text-emerald-600 font-bold uppercase italic ml-4">
-                    Lucro: R$ {(parseFloat(formData.price) - parseFloat(formData.cost)).toFixed(2)}
+                    Lucro: R$ {(parseSafeNumber(formData.price) - parseSafeNumber(formData.cost)).toFixed(2)}
                   </p>
                 )}
               </div>
