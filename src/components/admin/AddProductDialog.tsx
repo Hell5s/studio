@@ -18,7 +18,8 @@ import {
   Pencil,
   Check,
   Presentation,
-  TrendingUp
+  TrendingUp,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,7 @@ import { useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking, useMem
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { cn } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
+import { Badge } from '@/components/ui/badge';
 
 // Pool de dados para avaliações demonstrativas
 const DEMO_REVIEWS_POOL = {
@@ -81,6 +83,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
   const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
+  const [colorInput, setColorInput] = useState('');
 
   // Vitrines
   const showcasesQuery = useMemoFirebase(() => query(collection(db, 'homeShowcaseSections'), where('active', '==', true)), [db]);
@@ -421,9 +424,74 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     });
   };
 
+  const handleToggleSize = (size: string) => {
+    let sizesArr = formData.sizes.split(',').map(s => s.trim()).filter(Boolean);
+    if (sizesArr.includes(size)) {
+      sizesArr = sizesArr.filter(s => s !== size);
+    } else {
+      sizesArr.push(size);
+    }
+    setFormData({ ...formData, sizes: sizesArr.join(', ') });
+  };
+
+  const handleAddColor = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = e.currentTarget.value.trim();
+      if (val) {
+        let colorsArr = formData.colors.split(',').map(c => c.trim()).filter(Boolean);
+        if (!colorsArr.includes(val)) {
+          colorsArr.push(val);
+          setFormData({ ...formData, colors: colorsArr.join(', ') });
+        }
+        setColorInput('');
+      }
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('draggedIndex', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragOverEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    const draggedIndex = parseInt(e.dataTransfer.getData('draggedIndex'));
+    if (draggedIndex === targetIndex || isNaN(draggedIndex)) return;
+
+    const newGallery = [...formData.gallery];
+    const [draggedItem] = newGallery.splice(draggedIndex, 1);
+    newGallery.splice(targetIndex, 0, draggedItem);
+
+    setFormData(prev => ({ ...prev, gallery: newGallery }));
+  };
+
+  const handleOpenChangeAttempt = (open: boolean) => {
+    if (!open) {
+      const isDirty = formData.name || parseSafeNumber(formData.price) > 0 || formData.description;
+      if (isDirty) {
+        if (confirm("Você tem alterações não salvas. Deseja sair mesmo assim?")) {
+          onOpenChange(false);
+        }
+      } else {
+        onOpenChange(false);
+      }
+    } else {
+      onOpenChange(true);
+    }
+  };
+
+  const costNum = parseSafeNumber(formData.cost);
+  const priceNum = parseSafeNumber(formData.price);
+  const profit = priceNum - costNum;
+  const margin = costNum > 0 ? (profit / costNum) * 100 : 0;
+  const marginColor = margin > 50 ? "text-green-600" : margin > 20 ? "text-yellow-600" : "text-red-600";
+
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleOpenChangeAttempt}>
         <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
           <div className="bg-[#2A1F22] p-8 text-white flex items-center justify-between sticky top-0 z-20 shadow-lg">
             <div className="flex items-center gap-6">
@@ -444,8 +512,14 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3"><Layers className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4></div>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  
                   <div className="md:col-span-2 space-y-2">
-                    <Label>Descrição do Produto</Label>
+                    <div className="flex justify-between items-center">
+                      <Label>Descrição do Produto</Label>
+                      <span className={cn("text-[9px] font-bold uppercase", formData.description.length > 150 ? "text-red-500" : "text-primary/40")}>
+                        {formData.description.length}/150
+                      </span>
+                    </div>
                     <Textarea 
                       value={formData.description} 
                       onChange={e => setFormData({...formData, description: e.target.value})} 
@@ -460,32 +534,80 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2"><Label>Preço Venda (R$)</Label><Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                     <div className="space-y-2"><Label>Preço Original "De" (R$)</Label><Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Tamanhos Disponíveis (separados por vírgula)</Label>
-                    <Input value={formData.sizes} onChange={e => setFormData({...formData, sizes: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" />
-                    <p className="text-[9px] text-muted-foreground italic ml-2">Dica: Use vírgula para separar as opções de tamanho.</p>
+
+                  <div className="space-y-3">
+                    <Label>Tamanhos Disponíveis</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2'].map(size => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => handleToggleSize(size)}
+                          className={cn(
+                            "px-4 py-2 rounded-full text-[10px] font-bold border transition-all",
+                            formData.sizes.split(',').map(s => s.trim()).includes(size)
+                              ? "bg-primary text-white border-primary shadow-md"
+                              : "bg-white text-primary border-primary/10 hover:border-primary/40"
+                          )}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-2"><Label>Cores (Rosa, Azul...)</Label><Input value={formData.colors} onChange={e => setFormData({...formData, colors: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+
+                  <div className="space-y-3">
+                    <Label>Cores (Digite e aperte Enter)</Label>
+                    <div className="flex flex-wrap gap-2 p-3 bg-white border border-gray-200 rounded-xl min-h-[56px] items-center">
+                      {formData.colors.split(',').map(c => c.trim()).filter(Boolean).map((color, i) => (
+                        <Badge key={i} className="bg-secondary text-primary hover:bg-secondary flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/5">
+                          {color}
+                          <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => {
+                            const arr = formData.colors.split(',').map(c => c.trim()).filter(Boolean);
+                            setFormData({...formData, colors: arr.filter(c => c !== color).join(', ')});
+                          }} />
+                        </Badge>
+                      ))}
+                      <input
+                        value={colorInput}
+                        onChange={e => setColorInput(e.target.value)}
+                        onKeyDown={handleAddColor}
+                        placeholder={formData.colors ? "Adicionar..." : "Ex: Rose, Off-White..."}
+                        className="flex-1 bg-transparent border-none outline-none text-xs px-2 min-w-[120px]"
+                      />
+                    </div>
+                  </div>
                 </div>
               </section>
 
               <section className="space-y-6">
                 <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-                  <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5 text-primary" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria</h4></div>
+                  <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5 text-primary" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos</h4></div>
                   <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 px-4 rounded-full">+ Fotos</Button>
                 </div>
                 <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
                    {formData.gallery.map((img, idx) => (
-                     <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm">
-                        <img src={getImageUrl(img)} className="w-full h-full object-cover" style={{ objectPosition: img.crop ? `${img.crop.x}% ${img.crop.y}%` : 'center', transform: img.zoom ? `scale(${img.zoom})` : 'none' }} />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1">
+                     <div 
+                      key={idx} 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, idx)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, idx)}
+                      className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
+                     >
+                        <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" style={{ objectPosition: img.crop ? `${img.crop.x}% ${img.crop.y}%` : 'center', transform: img.zoom ? `scale(${img.zoom})` : 'none' }} />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
                            <button onClick={() => handleOpenEditor(idx, 'gallery')} className="p-1.5 bg-blue-500 text-white rounded-md"><Pencil className="h-3 w-3" /></button>
                            <button onClick={() => setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))} className="p-1.5 bg-red-500 text-white rounded-md"><X className="h-3 w-3" /></button>
+                        </div>
+                        <div className="absolute top-1 left-1 p-1 bg-white/80 rounded-md opacity-0 group-hover:opacity-100">
+                          <Move className="h-2.5 w-2.5 text-primary" />
                         </div>
                      </div>
                    ))}
@@ -520,6 +642,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                     >
                       <Sparkles className="h-3 w-3 mr-1" /> + Calcular Preço com IA
                     </Button>
+                    {costNum > 0 && priceNum > 0 && (
+                      <p className={cn("text-[9px] font-bold uppercase italic ml-2", marginColor)}>
+                        Lucro: R$ {profit.toFixed(2)} ({margin.toFixed(0)}%)
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Nome do Fornecedor</Label>

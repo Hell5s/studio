@@ -46,15 +46,13 @@ export function ProductManagement() {
     );
   }, [products, searchTerm]);
 
-  const handleDuplicate = async (p: any) => {
-    const newProduct = { 
+  const handleDuplicate = (p: any) => {
+    const duplicatedProduct = { 
       ...p, 
-      id: `prod-${Date.now()}`,
-      name: `${p.name} (Cópia)`, 
-      createdAt: new Date().toISOString() 
+      id: undefined, 
+      name: `${p.name} (Cópia)` 
     };
-    addDocumentNonBlocking(collection(db, 'products'), newProduct);
-    toast({ title: "Produto duplicado!" });
+    setEditingProduct(duplicatedProduct);
   };
 
   const handleDelete = (id: string, name: string) => {
