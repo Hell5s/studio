@@ -799,8 +799,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onZoomChange={setZoom} 
               showGrid={false}
               cropShape="rect"
-              objectFit="contain"
-              minZoom={1}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -811,18 +809,19 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   width: '100%',
                   height: '100%',
                 },
-                mediaStyle: {
-                  objectFit: 'contain',
-                }
+              }}
+              classes={{
+                containerClassName: "bg-black",
+                mediaClassName: "max-w-none max-h-none",
               }}
             />
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
             <div className="flex-1 flex items-center gap-4">
-              <button onClick={() => setZoom(z => Math.max(1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+              <button onClick={() => setZoom(z => Math.max(0.1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
               <input 
                 type="range" 
-                min={1} 
+                min={0.1} 
                 max={3} 
                 step={0.1} 
                 value={zoom} 
