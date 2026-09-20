@@ -404,10 +404,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
     const img = field === 'image' ? formData.image : formData.gallery[index];
-    const source = getImageUrl(img);
+    const source = getOriginalUrl(field === 'image' ? formData.image : formData.gallery[index]);
     setEditingImage({ index, field });
     setCrop({ x: 0, y: 0 });
-    setZoom(1);
+    setZoom(img?.zoom || 1);
     setCroppedAreaPixels(null);
     const tempImg = new window.Image();
     tempImg.onload = () => setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
@@ -816,9 +816,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onCropComplete={(_croppedArea, croppedAreaPixelsResult) => setCroppedAreaPixels(croppedAreaPixelsResult)}
               showGrid={false}
               cropShape="rect"
-              objectFit="contain" 
-              minZoom={0.2}
-              restrictPosition={false}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -838,10 +835,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
             <div className="flex-1 flex items-center gap-4">
-              <button onClick={() => setZoom(z => Math.max(0.2, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+              <button onClick={() => setZoom(z => Math.max(1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
               <input 
                 type="range" 
-                min={0.2} 
+                min={1} 
                 max={3} 
                 step={0.1} 
                 value={zoom} 
