@@ -35,8 +35,8 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc } from 'firebase/firestore';
-import { useFirestore, setDocumentNonBlocking, updateDocumentNonBlocking, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc } from 'firebase/firestore';
+import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { cn } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
@@ -292,7 +292,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
     try {
       if (isEdit) {
-        updateDocumentNonBlocking(productRef, payload);
+        await setDoc(productRef, payload, { merge: true });
       } else {
         await setDoc(productRef, { ...payload, createdAt: serverTimestamp() }, { merge: true });
         const displayImg = typeof finalMainImage === 'string' ? finalMainImage : finalMainImage?.url;
@@ -309,7 +309,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       });
 
       toast({
-        title: status === 'active' ? "Produto Publicado" : "Produto Salvo",
+        title: "Produto Salvo",
         description: `${formData.name} foi processado com sucesso.`,
       });
       
@@ -403,13 +403,25 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const getOriginalUrl = (img: any) => typeof img === 'string' ? img : (img?.originalUrl || img?.url);
 
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
-    const source = getImageUrl(field === 'image' ? formData.image : formData.gallery[index]);
+    const img = field === 'image' ? formData.image : formData.gallery[index];
+    const source = getImageUrl(img);
     setEditingImage({ index, field });
     setCrop({ x: 0, y: 0 });
-    setZoom(0.6);
     setCroppedAreaPixels(null);
+    
     const tempImg = new window.Image();
-    tempImg.onload = () => setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
+    tempImg.onload = () => {
+      const naturalWidth = tempImg.naturalWidth;
+      const naturalHeight = tempImg.naturalHeight;
+      const currentImageAspect = naturalWidth / naturalHeight;
+      const frameAspect = 3 / 5;
+      
+      // Calculate initial zoom to fit image inside 3/5 frame
+      const initialZoom = Math.min(frameAspect / currentImageAspect, currentImageAspect / frameAspect);
+      
+      setZoom(img?.zoom || initialZoom);
+      setImageAspect(currentImageAspect);
+    };
     tempImg.src = source;
   };
 
@@ -809,7 +821,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               image={getOriginalUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
               crop={crop} 
               zoom={zoom} 
-              aspect={imageAspect} 
+              aspect={3 / 5} 
               onCropChange={setCrop} 
               onZoomChange={setZoom} 
               onCropComplete={(_croppedArea, croppedAreaPixelsResult) => setCroppedAreaPixels(croppedAreaPixelsResult)}
