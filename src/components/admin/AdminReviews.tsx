@@ -51,6 +51,47 @@ const TEST_REVIEWS_DATA = [
   { user: "THAÍS B.", rating: 5, headline: "", comment: "Amei!", recommended: true, metrics: [5,5,5], daysAgo: 3, photos: 0 },
 ];
 
+const RANDOM_NOMES = ["Mariana", "Juliana", "Camila", "Patrícia", "Beatriz", "Fernanda", "Luana", "Rosângela", "Thaís", "Amanda", "Letícia", "Gabriela", "Larissa", "Vanessa", "Aline", "Bruna", "Carolina", "Daniela", "Eduarda", "Flávia", "Isabela", "Jéssica", "Karina", "Lívia", "Marcela", "Natália", "Priscila", "Raquel", "Simone", "Tatiane", "Viviane", "Cristina", "Débora", "Elaine", "Renata", "Sabrina", "Michele", "Paula", "Sandra", "Talita"];
+
+const NOTA_5_TITULOS = ["Perfeito, amei!", "Qualidade surpreendente", "Já é minha peça favorita", "Caimento incrível", "Superou minhas expectativas", "Lindo demais", "Entrega rápida e embalagem linda", "Recomendo de olhos fechados", "Vale cada centavo", "Chegou antes do prazo"];
+const NOTA_5_DEPOIMENTOS = [
+  "O tecido é encorpado, não marca e o caimento ficou lindo. Já quero em outra cor!",
+  "A peça é ainda mais bonita pessoalmente. O acabamento é de loja física de primeira.",
+  "Usei num jantar e recebi vários elogios. Confortável, não amassa e a cor é igual à das fotos.",
+  "Comprei meio desconfiada por ser online, mas me surpreendi. Qualidade excelente e a modelagem valoriza o corpo.",
+  "Tecido fresquinho e macio, ótimo para o calor. Serviu certinho no meu tamanho de sempre.",
+  "Cor exatamente como na foto e o caimento é maravilhoso. Estou apaixonada!",
+  "Peça linda, bem costurada e confortável. Já indiquei para minhas amigas.",
+  "Amei o corte e o toque do tecido. Fiquei muito bem servida e com certeza vou comprar mais."
+];
+
+const NOTA_4_TITULOS = ["Muito boa!", "Gostei bastante", "Lindo, com um pequeno detalhe", "Boa compra", "Bonito e confortável", "Chegou certinho"];
+const NOTA_4_DEPOIMENTOS = [
+  "A qualidade é ótima e o tecido é agradável. Só achei a modelagem um pouco justa, vale pedir um número acima se preferir mais folga.",
+  "Peça bonita e bem feita. A cor veio quase igual à foto, só um tom mais escuro.",
+  "Gostei bastante da qualidade pelo preço. Poderia ter mais opções de cores, porque amei o modelo.",
+  "Confortável e elegante. Demorou um pouquinho mais do que eu esperava para chegar, mas valeu a espera.",
+  "O caimento é bonito e o tecido é bom. Só não é tão fresquinho quanto imaginei, mas gostei do resultado.",
+  "Bonita e bem acabada. Recomendo, só pediria um pouco mais de atenção com fios soltos que vieram na costura."
+];
+
+const NOTA_3_TITULOS = ["Bonito, mas esperava mais", "Cumpre o que promete", "Bom, com ressalvas", "A cor ficou diferente"];
+const NOTA_3_DEPOIMENTOS = [
+  "A peça é bem feita e confortável, mas o tom veio mais escuro do que aparece nas fotos. Nada grave, só fica o aviso.",
+  "O modelo é bonito, mas o tecido é mais fino do que eu esperava. Para o preço, achei ok.",
+  "Gostei do caimento, porém a modelagem ficou maior do que o tamanho indica. Vale ter atenção na hora de escolher.",
+  "Chegou bem embalada e a peça é bonita, mas esperava um acabamento um pouco mais cuidadoso."
+];
+
+const NOTA_2_TITULOS = ["Não era o que eu esperava", "Deixou a desejar", "Tive problemas com o tamanho"];
+const NOTA_2_DEPOIMENTOS = [
+  "A cor e o tecido ficaram bem diferentes do que vi nas fotos. Entrei em contato com a loja para tentar a troca.",
+  "A peça ficou muito justa e o tecido é mais fino do que imaginei. Fiquei um pouco decepcionada.",
+  "O acabamento veio com alguns detalhes mal feitos. A entrega foi rápida, mas a peça não me agradou."
+];
+
+const EXTRAS_FRASES = ["A entrega foi rápida e veio tudo muito bem embalado.", "O atendimento da loja foi ótimo do começo ao fim.", "Chegou antes do prazo previsto.", "Embalagem caprichada, com carinho nos detalhes."];
+
 export function AdminReviews() {
   const db = useFirestore();
   const { toast } = useToast();
@@ -65,6 +106,7 @@ export function AdminReviews() {
   const [testProductId, setTestProductId] = useState<string>('');
   const [testQty, setTestQty] = useState(9);
   const [testInStats, setTestInStats] = useState('no');
+  const [randomMode, setRandomMode] = useState(true);
 
   // Consulta de Produtos para Seletor de Teste
   const productsQuery = useMemoFirebase(() => query(collection(db, 'products'), orderBy('name', 'asc')), [db]);
@@ -181,39 +223,140 @@ export function AdminReviews() {
     const now = new Date();
 
     try {
-      for (let i = 0; i < testQty; i++) {
-        const data = TEST_REVIEWS_DATA[i % TEST_REVIEWS_DATA.length];
-        const reviewRef = doc(collection(db, 'reviews'));
+      if (randomMode) {
+        const usedNames = new Set<string>();
+        const getShuffled = (arr: any[]) => [...arr].sort(() => Math.random() - 0.5);
         
-        const images: string[] = [];
-        for (let n = 1; n <= data.photos; n++) {
-          images.push(`https://picsum.photos/seed/tobabela-${i}-${n}/600/800`);
+        let pool5T = getShuffled(NOTA_5_TITULOS);
+        let pool5D = getShuffled(NOTA_5_DEPOIMENTOS);
+        let pool4T = getShuffled(NOTA_4_TITULOS);
+        let pool4D = getShuffled(NOTA_4_DEPOIMENTOS);
+        let pool3T = getShuffled(NOTA_3_TITULOS);
+        let pool3D = getShuffled(NOTA_3_DEPOIMENTOS);
+        let pool2T = getShuffled(NOTA_2_TITULOS);
+        let pool2D = getShuffled(NOTA_2_DEPOIMENTOS);
+
+        for (let i = 0; i < testQty; i++) {
+          let fullName = '';
+          do {
+            const firstName = RANDOM_NOMES[Math.floor(Math.random() * RANDOM_NOMES.length)];
+            const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+            fullName = `${firstName} ${letter}.`.toUpperCase();
+          } while (usedNames.has(fullName));
+          usedNames.add(fullName);
+
+          const r = Math.random() * 100;
+          let rating = 5;
+          if (r < 4) rating = 2;
+          else if (r < 14) rating = 3;
+          else if (r < 38) rating = 4;
+          else rating = 5;
+
+          let title = '';
+          let comment = '';
+          
+          if (rating === 5) {
+            if (pool5T.length === 0) pool5T = getShuffled(NOTA_5_TITULOS);
+            if (pool5D.length === 0) pool5D = getShuffled(NOTA_5_DEPOIMENTOS);
+            title = pool5T.pop();
+            comment = pool5D.pop();
+            if (Math.random() < 0.1) title = "";
+          } else if (rating === 4) {
+            if (pool4T.length === 0) pool4T = getShuffled(NOTA_4_TITULOS);
+            if (pool4D.length === 0) pool4D = getShuffled(NOTA_4_DEPOIMENTOS);
+            title = pool4T.pop();
+            comment = pool4D.pop();
+          } else if (rating === 3) {
+            if (pool3T.length === 0) pool3T = getShuffled(NOTA_3_TITULOS);
+            if (pool3D.length === 0) pool3D = getShuffled(NOTA_3_DEPOIMENTOS);
+            title = pool3T.pop();
+            comment = pool3D.pop();
+          } else {
+            if (pool2T.length === 0) pool2T = getShuffled(NOTA_2_TITULOS);
+            if (pool2D.length === 0) pool2D = getShuffled(NOTA_2_DEPOIMENTOS);
+            title = pool2T.pop();
+            comment = pool2D.pop();
+          }
+
+          if ((rating === 5 || rating === 4) && Math.random() < 0.4) {
+            comment += " " + EXTRAS_FRASES[Math.floor(Math.random() * EXTRAS_FRASES.length)];
+          }
+
+          let recommended = rating >= 4;
+          if (rating === 3) recommended = Math.random() < 0.4;
+          if (rating <= 2) recommended = false;
+
+          const getMetric = (val: number) => {
+            const shift = [-1, 0, 0, 0][Math.floor(Math.random() * 4)];
+            return Math.max(1, Math.min(5, val + shift));
+          };
+
+          const images: string[] = [];
+          if (rating >= 4 && Math.random() < 0.3) {
+            const qty = Math.floor(Math.random() * 3) + 1;
+            const seed = Math.floor(Math.random() * 1000000);
+            for (let n = 1; n <= qty; n++) {
+              images.push(`https://picsum.photos/seed/tb-${seed}-${n}/600/800`);
+            }
+          }
+
+          const reviewRef = doc(collection(db, 'reviews'));
+          const createdAtDate = new Date(now);
+          createdAtDate.setDate(now.getDate() - Math.floor(Math.random() * 61));
+
+          batch.set(reviewRef, {
+            productId: product.id,
+            productName: product.name,
+            productImage: typeof product.image === 'string' ? product.image : product.image?.url,
+            userId: 'demo',
+            user: fullName,
+            rating,
+            headline: title,
+            comment,
+            recommended,
+            qualityRating: getMetric(rating),
+            fitRating: getMetric(rating),
+            colorRating: getMetric(rating),
+            images,
+            status: 'published',
+            isDemo: testInStats === 'no',
+            isTest: testInStats === 'yes',
+            createdAt: Timestamp.fromDate(createdAtDate)
+          });
         }
+      } else {
+        for (let i = 0; i < testQty; i++) {
+          const data = TEST_REVIEWS_DATA[i % TEST_REVIEWS_DATA.length];
+          const reviewRef = doc(collection(db, 'reviews'));
+          
+          const images: string[] = [];
+          for (let n = 1; n <= data.photos; n++) {
+            images.push(`https://picsum.photos/seed/tobabela-${i}-${n}/600/800`);
+          }
 
-        const createdAtDate = new Date(now);
-        createdAtDate.setDate(now.getDate() - data.daysAgo);
+          const createdAtDate = new Date(now);
+          createdAtDate.setDate(now.getDate() - data.daysAgo);
 
-        const payload = {
-          productId: product.id,
-          productName: product.name,
-          productImage: typeof product.image === 'string' ? product.image : product.image?.url,
-          userId: 'demo',
-          user: data.user,
-          rating: data.rating,
-          headline: data.headline,
-          comment: data.comment,
-          recommended: data.recommended,
-          qualityRating: data.metrics[0],
-          fitRating: data.metrics[1],
-          colorRating: data.metrics[2],
-          images: images,
-          status: 'published',
-          isDemo: testInStats === 'no',
-          isTest: testInStats === 'yes',
-          createdAt: Timestamp.fromDate(createdAtDate)
-        };
-
-        batch.set(reviewRef, payload);
+          batch.set(reviewRef, {
+            productId: product.id,
+            productName: product.name,
+            productImage: typeof product.image === 'string' ? product.image : product.image?.url,
+            userId: 'demo',
+            user: data.user,
+            rating: data.rating,
+            headline: data.headline,
+            comment: data.comment,
+            recommended: data.recommended,
+            qualityRating: data.metrics[0],
+            fitRating: data.metrics[1],
+            colorRating: data.metrics[2],
+            images: images,
+            status: 'published',
+            isDemo: testInStats === 'no',
+            isTest: testInStats === 'yes',
+            createdAt: Timestamp.fromDate(createdAtDate)
+          });
+        }
       }
 
       await batch.commit();
@@ -323,15 +466,29 @@ export function AdminReviews() {
               </Select>
             </div>
 
+            <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-2xl border border-primary/5">
+              <div className="space-y-0.5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40">Nomes e depoimentos aleatórios</p>
+                <p className="text-[9px] text-muted-foreground italic">Desligado, usa os 9 exemplos fixos</p>
+              </div>
+              <Switch 
+                checked={randomMode} 
+                onCheckedChange={(v) => {
+                  setRandomMode(v);
+                  if (!v && testQty > 9) setTestQty(9);
+                }}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">Quantidade (1-9)</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">Quantidade ({randomMode ? '1-30' : '1-9'})</Label>
                 <Input 
                   type="number" 
                   min={1} 
-                  max={9} 
+                  max={randomMode ? 30 : 9} 
                   value={testQty} 
-                  onChange={e => setTestQty(Math.min(9, Math.max(1, Number(e.target.value))))}
+                  onChange={e => setTestQty(Math.min(randomMode ? 30 : 9, Math.max(1, Number(e.target.value))))}
                   className="h-12 rounded-xl border-primary/10 bg-secondary/10 px-4"
                 />
               </div>
@@ -354,41 +511,19 @@ export function AdminReviews() {
               disabled={isGeneratingTest || !testProductId}
               className="w-full h-14 bg-primary text-white font-bold uppercase tracking-widest text-[10px] rounded-full shadow-lg hover:bg-accent transition-all"
             >
-              {isGeneratingTest ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-              Gerar Avaliações de Teste
+              {isGeneratingTest ? (
+                <div className="flex items-center gap-3">
+                  <Loader2 className="animate-spin h-4 w-4" />
+                  <span>Sorteando Lote...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                   <Plus className="h-4 w-4" />
+                   <span>Gerar Avaliações de Teste</span>
+                </div>
+              )}
             </Button>
           </div>
-        </Card>
-      </div>
-
-      {/* Header & Stats */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <Card className="p-8 border-none shadow-sm bg-white rounded-[2rem] flex items-center gap-6">
-           <div className="h-14 w-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center">
-             <Star className="h-7 w-7 fill-current" />
-           </div>
-           <div>
-              <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-widest">Média Real</p>
-              <p className="text-3xl font-bold text-primary">{stats.avg} / 5.0</p>
-           </div>
-        </Card>
-        <Card className="p-8 border-none shadow-sm bg-white rounded-[2rem] flex items-center gap-6">
-           <div className="h-14 w-14 rounded-2xl bg-primary/5 text-primary flex items-center justify-center">
-             <MessageSquare className="h-7 w-7" />
-           </div>
-           <div>
-              <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-widest">Reviews Clientes</p>
-              <p className="text-3xl font-bold text-primary">{stats.total}</p>
-           </div>
-        </Card>
-        <Card className="p-8 border-none shadow-sm bg-primary text-white rounded-[2rem] flex items-center gap-6">
-           <div className="h-14 w-14 rounded-2xl bg-white/10 text-accent flex items-center justify-center">
-             <AlertTriangle className="h-7 w-7" />
-           </div>
-           <div>
-              <p className="text-[11px] font-bold uppercase text-accent tracking-widest">Demos/Testes Ativas</p>
-              <p className="text-3xl font-bold">{reviews?.filter(r => r.isDemo || r.isTest).length || 0}</p>
-           </div>
         </Card>
       </div>
 
