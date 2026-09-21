@@ -107,6 +107,7 @@ export function AdminReviews() {
   const [testQty, setTestQty] = useState(9);
   const [testInStats, setTestInStats] = useState('no');
   const [randomMode, setRandomMode] = useState(true);
+  const [testPhotosMode, setTestPhotosMode] = useState<'auto' | 'all' | 'none'>('auto');
 
   // Consulta de Produtos para Seletor de Teste
   const productsQuery = useMemoFirebase(() => query(collection(db, 'products'), orderBy('name', 'asc')), [db]);
@@ -291,11 +292,21 @@ export function AdminReviews() {
             return Math.max(1, Math.min(5, val + shift));
           };
 
+          let photosCount = 0;
+          if (testPhotosMode === 'all') {
+            photosCount = Math.floor(Math.random() * 3) + 1;
+          } else if (testPhotosMode === 'none') {
+            photosCount = 0;
+          } else {
+            if (rating >= 4 && Math.random() < 0.3) {
+              photosCount = Math.floor(Math.random() * 3) + 1;
+            }
+          }
+
           const images: string[] = [];
-          if (rating >= 4 && Math.random() < 0.3) {
-            const qty = Math.floor(Math.random() * 3) + 1;
-            const seed = Math.floor(Math.random() * 1000000);
-            for (let n = 1; n <= qty; n++) {
+          if (photosCount > 0) {
+            const seed = Math.floor(Math.random() * 1000000) + i;
+            for (let n = 1; n <= photosCount; n++) {
               images.push(`https://picsum.photos/seed/tb-${seed}-${n}/600/800`);
             }
           }
@@ -329,9 +340,21 @@ export function AdminReviews() {
           const data = TEST_REVIEWS_DATA[i % TEST_REVIEWS_DATA.length];
           const reviewRef = doc(collection(db, 'reviews'));
           
+          let photosCount = 0;
+          if (testPhotosMode === 'all') {
+            photosCount = Math.floor(Math.random() * 3) + 1;
+          } else if (testPhotosMode === 'none') {
+            photosCount = 0;
+          } else {
+            photosCount = data.photos;
+          }
+
           const images: string[] = [];
-          for (let n = 1; n <= data.photos; n++) {
-            images.push(`https://picsum.photos/seed/tobabela-${i}-${n}/600/800`);
+          if (photosCount > 0) {
+            const seed = Math.floor(Math.random() * 1000000) + i;
+            for (let n = 1; n <= photosCount; n++) {
+              images.push(`https://picsum.photos/seed/tb-${seed}-${n}/600/800`);
+            }
           }
 
           const createdAtDate = new Date(now);
@@ -504,6 +527,20 @@ export function AdminReviews() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">Fotos nos depoimentos</Label>
+              <Select value={testPhotosMode} onValueChange={(v: any) => setTestPhotosMode(v)}>
+                <SelectTrigger className="h-12 rounded-xl border-primary/10 bg-secondary/10 px-4">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Automático</SelectItem>
+                  <SelectItem value="all">Todos com foto</SelectItem>
+                  <SelectItem value="none">Nenhum com foto</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <Button 
