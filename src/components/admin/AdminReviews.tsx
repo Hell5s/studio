@@ -38,18 +38,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const TEST_REVIEWS_DATA = [
-  { user: "MARIANA S.", rating: 5, headline: "Perfeito, amei!", comment: "Chegou antes do prazo e a peça é ainda mais bonita pessoalmente. O tecido é encorpado, não marca e o caimento ficou lindo. Já quero em outra cor!", recommended: true, metrics: [5,5,5], daysAgo: 2, photos: 2 },
-  { user: "JULIANA R.", rating: 5, headline: "Qualidade surpreendente", comment: "Comprei meio desconfiada porque foi online, mas o acabamento é de loja física de primeira. Os botões dourados dão um charme a mais.", recommended: true, metrics: [5,5,4], daysAgo: 5, photos: 0 },
-  { user: "CAMILA F.", rating: 4, headline: "Lindo, mas pedi um tamanho acima", comment: "A modelagem é bem ajustada, então para quem gosta de mais folga vale pedir um número acima. O tecido é ótimo e a cor veio igualzinha à foto.", recommended: true, metrics: [5,3,5], daysAgo: 9, photos: 1 },
-  { user: "PATRÍCIA L.", rating: 5, headline: "Já é o meu conjunto favorito", comment: "Usei num jantar e recebi vários elogios. Confortável, não amassa e a cor é exatamente a das fotos. O atendimento também foi ótimo.", recommended: true, metrics: [5,5,5], daysAgo: 14, photos: 3 },
-  { user: "BEATRIZ M.", rating: 5, headline: "Entrega rápida e embalagem linda", comment: "Veio tudo muito bem embalado, com carinho nos detalhes. A peça é linda e valoriza o corpo. Recomendo de olhos fechados.", recommended: true, metrics: [5,4,5], daysAgo: 18, photos: 0 },
-  { user: "FERNANDA C.", rating: 3, headline: "Bonito, mas a cor ficou um pouco diferente", comment: "A peça é bem feita e confortável, mas o tom veio mais escuro do que aparece nas fotos. Nada grave, só fica o aviso.", recommended: false, metrics: [4,4,2], daysAgo: 25, photos: 0 },
-  { user: "LUANA P.", rating: 5, headline: "Caimento incrível", comment: "Sou alta e muitas vezes as peças ficam curtas, mas essa ficou na medida certa. O tecido é fresquinho e ótimo para o calor.", recommended: true, metrics: [5,5,5], daysAgo: 31, photos: 1 },
-  { user: "ROSANGELA T.", rating: 4, headline: "Muito boa, chegou certinho", comment: "Gostei bastante da qualidade e do preço. Só acho que poderia ter mais opções de cores, porque amei o modelo.", recommended: true, metrics: [4,4,5], daysAgo: 40, photos: 0 },
-  { user: "THAÍS B.", rating: 5, headline: "", comment: "Amei!", recommended: true, metrics: [5,5,5], daysAgo: 3, photos: 0 },
-];
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const RANDOM_NOMES = ["Mariana", "Juliana", "Camila", "Patrícia", "Beatriz", "Fernanda", "Luana", "Rosângela", "Thaís", "Amanda", "Letícia", "Gabriela", "Larissa", "Vanessa", "Aline", "Bruna", "Carolina", "Daniela", "Eduarda", "Flávia", "Isabela", "Jéssica", "Karina", "Lívia", "Marcela", "Natália", "Priscila", "Raquel", "Simone", "Tatiane", "Viviane", "Cristina", "Débora", "Elaine", "Renata", "Sabrina", "Michele", "Paula", "Sandra", "Talita"];
 
@@ -91,6 +90,18 @@ const NOTA_2_DEPOIMENTOS = [
 ];
 
 const EXTRAS_FRASES = ["A entrega foi rápida e veio tudo muito bem embalado.", "O atendimento da loja foi ótimo do começo ao fim.", "Chegou antes do prazo previsto.", "Embalagem caprichada, com carinho nos detalhes."];
+
+const TEST_REVIEWS_DATA = [
+  { user: "MARIANA S.", rating: 5, headline: "Perfeito, amei!", comment: "Chegou antes do prazo e a peça é ainda mais bonita pessoalmente. O tecido é encorpado, não marca e o caimento ficou lindo. Já quero em outra cor!", recommended: true, metrics: [5,5,5], daysAgo: 2, photos: 2 },
+  { user: "JULIANA R.", rating: 5, headline: "Qualidade surpreendente", comment: "Comprei meio desconfiada porque foi online, mas o acabamento é de loja física de primeira. Os botões dourados dão um charme a mais.", recommended: true, metrics: [5,5,4], daysAgo: 5, photos: 0 },
+  { user: "CAMILA F.", rating: 4, headline: "Lindo, mas pedi um tamanho acima", comment: "A modelagem é bem ajustada, então para quem gosta de mais folga vale pedir um número acima. O tecido é ótimo e a cor veio igualzinha à foto.", recommended: true, metrics: [5,3,5], daysAgo: 9, photos: 1 },
+  { user: "PATRÍCIA L.", rating: 5, headline: "Já é o meu conjunto favorito", comment: "Usei num jantar e recebi vários elogios. Confortável, não amassa e a cor é exatamente a das fotos. O atendimento também foi ótimo.", recommended: true, metrics: [5,5,5], daysAgo: 14, photos: 3 },
+  { user: "BEATRIZ M.", rating: 5, headline: "Entrega rápida e embalagem linda", comment: "Veio tudo muito bem embalado, com carinho nos detalhes. A peça é linda e valoriza o corpo. Recomendo de olhos fechados.", recommended: true, metrics: [5,4,5], daysAgo: 18, photos: 0 },
+  { user: "FERNANDA C.", rating: 3, headline: "Bonito, mas a cor ficou um pouco diferente", comment: "A peça é bem feita e confortável, mas o tom veio mais escuro do que aparece nas fotos. Nada grave, só fica o aviso.", recommended: false, metrics: [4,4,2], daysAgo: 25, photos: 0 },
+  { user: "LUANA P.", rating: 5, headline: "Caimento incrível", comment: "Sou alta e muitas vezes as peças ficam curtas, mas essa ficou na medida certa. O tecido é fresquinho e ótimo para o calor.", recommended: true, metrics: [5,5,5], daysAgo: 31, photos: 1 },
+  { user: "ROSANGELA T.", rating: 4, headline: "Muito boa, chegou certinho", comment: "Gostei bastante da qualidade e do preço. Só acho que poderia ter mais opções de cores, porque amei o modelo.", recommended: true, metrics: [4,4,5], daysAgo: 40, photos: 0 },
+  { user: "THAÍS B.", rating: 5, headline: "", comment: "Amei!", recommended: true, metrics: [5,5,5], daysAgo: 3, photos: 0 },
+];
 
 export function AdminReviews() {
   const db = useFirestore();
@@ -190,25 +201,65 @@ export function AdminReviews() {
   };
 
   const handleClearDemos = async () => {
-    if (!confirm("Isso removerá PERMANENTEMENTE todas as avaliações marcadas como demonstrativas ou de teste. As avaliações reais de clientes não serão afetadas. Continuar?")) return;
-    
     setIsCleaning(true);
     try {
-      const qDemo = query(collection(db, 'reviews'), where('isDemo', '==', true));
-      const qTest = query(collection(db, 'reviews'), where('isTest', '==', true));
+      const docRefs: any[] = [];
       
-      const [snapDemo, snapTest] = await Promise.all([getDocs(qDemo), getDocs(qTest)]);
-      const batch = writeBatch(db);
+      // 1. Consultas na coleção principal 'reviews'
+      const qTopDemo = query(collection(db, 'reviews'), where('isDemo', '==', true));
+      const qTopTest = query(collection(db, 'reviews'), where('isTest', '==', true));
       
-      snapDemo.docs.forEach((d) => batch.delete(d.ref));
-      snapTest.docs.forEach((d) => batch.delete(d.ref));
-      
-      await batch.commit();
-      
-      const totalRemoved = snapDemo.size + snapTest.size;
-      toast({ title: "Limpeza concluída!", description: `${totalRemoved} avaliações removidas.` });
-    } catch (e) {
-      toast({ title: "Erro na limpeza", variant: "destructive" });
+      try {
+        const [snap1, snap2] = await Promise.all([getDocs(qTopDemo), getDocs(qTopTest)]);
+        snap1.docs.forEach(d => docRefs.push(d.ref));
+        snap2.docs.forEach(d => docRefs.push(d.ref));
+      } catch (e) {
+        console.warn("Erro ao buscar reviews principais:", e);
+      }
+
+      // 2. Consultas em subcoleções legadas (products/{id}/reviews)
+      try {
+        const productsSnap = await getDocs(collection(db, 'products'));
+        const subPromises = productsSnap.docs.map(pDoc => 
+          getDocs(query(collection(db, 'products', pDoc.id, 'reviews'), where('isDemo', '==', true)))
+            .catch(() => null)
+        );
+        const subSnaps = await Promise.all(subPromises);
+        subSnaps.forEach(snap => {
+          if (snap) snap.docs.forEach(d => docRefs.push(d.ref));
+        });
+      } catch (e) {
+        console.warn("Erro ao buscar reviews em subcoleções:", e);
+      }
+
+      // Remover duplicatas por caminho do documento
+      const uniqueRefs = Array.from(new Map(docRefs.map(ref => [ref.path, ref])).values());
+      const totalRemoved = uniqueRefs.length;
+
+      if (totalRemoved === 0) {
+        toast({ title: "Nenhuma avaliação demonstrativa encontrada" });
+        return;
+      }
+
+      // Exclusão em lotes de no máximo 400 (limite do Firestore é 500)
+      for (let i = 0; i < uniqueRefs.length; i += 400) {
+        const batch = writeBatch(db);
+        const chunk = uniqueRefs.slice(i, i + 400);
+        chunk.forEach(ref => batch.delete(ref));
+        await batch.commit();
+      }
+
+      toast({ 
+        title: "Limpeza concluída!", 
+        description: `${totalRemoved} avaliações removidas.` 
+      });
+    } catch (error: any) {
+      console.error("Erro na limpeza:", error);
+      toast({ 
+        title: "Erro na limpeza", 
+        description: `${error?.code || 'Desconhecido'}: ${error?.message || 'Erro inesperado'}`, 
+        variant: "destructive" 
+      });
     } finally {
       setIsCleaning(false);
     }
@@ -453,15 +504,49 @@ export function AdminReviews() {
                   {isSavingSettings ? <Loader2 className="animate-spin h-4 w-4" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                   Salvar
                 </Button>
-                <Button 
-                  variant="outline"
-                  onClick={handleClearDemos}
-                  disabled={isCleaning}
-                  className="border-white/20 text-white hover:bg-white/10 font-bold uppercase text-[9px] tracking-widest rounded-full h-11"
-                >
-                  {isCleaning ? <Loader2 className="animate-spin h-4 w-4" /> : <Trash2 className="h-4 w-4 mr-2" />}
-                  Limpar Demos
-                </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      disabled={isCleaning}
+                      className="border-white/20 text-white hover:bg-white/10 font-bold uppercase text-[9px] tracking-widest rounded-full h-11"
+                    >
+                      {isCleaning ? (
+                        <>
+                          <Loader2 className="animate-spin h-4 w-4 mr-2" /> 
+                          Removendo...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Limpar Demos
+                        </>
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl bg-white">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-2xl font-headline font-bold text-primary">
+                        Remover avaliações demonstrativas e de teste?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="text-muted-foreground italic font-light">
+                        Isso apaga PERMANENTEMENTE todas as avaliações marcadas como demonstrativas ou de teste. As avaliações reais de clientes não são afetadas.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-8 gap-3">
+                      <AlertDialogCancel className="rounded-full h-12 px-8 text-[10px] font-bold uppercase tracking-widest">
+                        Cancelar
+                      </AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleClearDemos}
+                        className="rounded-full h-12 px-8 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest text-[10px] border-none"
+                      >
+                        Remover
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </div>
@@ -668,9 +753,9 @@ export function AdminReviews() {
                     )}
                     
                     <div className="flex gap-4 p-3 bg-secondary/10 rounded-xl w-fit">
-                       {review.qualityRating && <span className="text-[8px] font-black uppercase tracking-tighter opacity-40">Qualidade: {review.qualityRating}</span>}
-                       {review.fitRating && <span className="text-[8px] font-black uppercase tracking-tighter opacity-40">Caimento: {review.fitRating}</span>}
-                       {review.colorRating && <span className="text-[8px] font-black uppercase tracking-tighter opacity-40">Cor: {review.colorRating}</span>}
+                       {review.qualityRating && <span className="text-[8px] font-bold uppercase tracking-tighter opacity-40">Qualidade: {review.qualityRating}</span>}
+                       {review.fitRating && <span className="text-[8px] font-bold uppercase tracking-tighter opacity-40">Caimento: {review.fitRating}</span>}
+                       {review.colorRating && <span className="text-[8px] font-bold uppercase tracking-tighter opacity-40">Cor: {review.colorRating}</span>}
                     </div>
                   </div>
 
