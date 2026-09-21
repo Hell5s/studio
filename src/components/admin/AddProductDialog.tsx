@@ -41,6 +41,7 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc } from 'firebase/firestore';
 import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
+import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
 import { cn } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
 import { Badge } from '@/components/ui/badge';
@@ -79,8 +80,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const variationInputRef = useRef<HTMLInputElement>(null);
-  const activeVariationIndexRef = useRef<number | null>(null);
   
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -337,6 +336,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const source = getOriginalUrl(img);
     setEditingImage({ index, field });
     
+    // Carrega estados persistidos ou padrões
     setCrop(img?.crop || { x: 0, y: 0 });
     setZoom(img?.zoom || 1);
     
@@ -362,11 +362,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       const updatedImageData = { url: newUrl, originalUrl, crop, zoom };
 
       if (field === 'image') {
-        setFormData({ ...formData, image: updatedImageData });
+        setFormData(prev => ({ ...prev, image: updatedImageData }));
       } else {
-        const newGallery = [...formData.gallery];
-        newGallery[index] = updatedImageData;
-        setFormData({ ...formData, gallery: newGallery });
+        setFormData(prev => {
+          const newGallery = [...prev.gallery];
+          newGallery[index] = updatedImageData;
+          return { ...prev, gallery: newGallery };
+        });
       }
       setEditingImage(null);
     } catch (err) {
@@ -412,20 +414,18 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }
   };
 
-  const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
-    const index = activeVariationIndexRef.current;
-    if (!file || index === null) return;
+    if (!file) return;
     
     setUploading(true);
+    setActiveVariationIndex(index);
+    setVariationGalleryOpenIndex(null); 
     try {
       const url = await uploadToCloudinary(file);
       setFormData(prev => {
         const newVars = [...prev.variations];
-        newVars[index] = { 
-          ...newVars[index], 
-          image: url 
-        };
+        newVars[index] = { ...newVars[index], image: url };
         return { ...prev, variations: newVars };
       });
       toast({ title: "Variação salva!" });
@@ -434,18 +434,17 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     } finally {
       setUploading(false);
       setActiveVariationIndex(null);
-      activeVariationIndexRef.current = null;
       if (e.target) e.target.value = '';
     }
   };
 
-  const handleSelectFromGallery = (i: number, img: any) => {
+  const handleSelectFromGallery = (index: number, img: any) => {
     const url = typeof img === 'string' ? img : img?.url;
     if (!url) return;
 
     setFormData(prev => {
       const newVars = [...prev.variations];
-      newVars[i] = { ...newVars[i], image: url };
+      newVars[index] = { ...newVars[index], image: url };
       return { ...prev, variations: newVars };
     });
     
@@ -726,7 +725,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               </section>
 
               <section className="space-y-6 bg-white p-8 rounded-[2rem] shadow-sm border border-primary/5">
-                <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationFileUpload} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 text-accent"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Variações por Cor</h4></div>
                   <Button variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, variations: [...prev.variations, { color: '', image: '' }] }))} className="text-accent text-[9px] font-bold uppercase">+ Nova Cor</Button>
@@ -742,7 +740,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         }}
                       >
                         <PopoverTrigger asChild>
-                          <div className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group">
+                          <button type="button" className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group focus:outline-none">
                             {v.image ? (
                               <img src={getImageUrl(v.image)} className="h-full w-full object-cover" />
                             ) : (
@@ -751,22 +749,26 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                               </div>
                             )}
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
-                          </div>
+                          </button>
                         </PopoverTrigger>
                         <PopoverContent className="w-72 p-3" align="start">
                           {variationGalleryView === 'choice' ? (
                             <div className="flex flex-col gap-2">
-                              <Button type="button" variant="outline" size="sm" className="justify-start text-xs" onClick={() => setVariationGalleryView('gallery')}>
-                                Escolher da Galeria
+                              <Button type="button" variant="outline" size="sm" className="justify-start text-xs h-10" onClick={() => setVariationGalleryView('gallery')}>
+                                <ImageIcon className="h-3 w-3 mr-2" /> Escolher da Galeria
                               </Button>
-                              <Button type="button" variant="outline" size="sm" className="justify-start text-xs" onClick={() => {
-                                activeVariationIndexRef.current = i;
-                                setActiveVariationIndex(i);
-                                variationInputRef.current?.click();
-                                setVariationGalleryOpenIndex(null);
-                              }}>
-                                Enviar Nova Foto
-                              </Button>
+                              
+                              <label className="w-full">
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*" 
+                                  onChange={(e) => handleVariationFileUpload(e, i)} 
+                                />
+                                <div className="flex items-center justify-start px-3 h-10 w-full rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground text-xs font-medium cursor-pointer transition-colors">
+                                  <Upload className="h-3 w-3 mr-2" /> Enviar Nova Foto
+                                </div>
+                              </label>
                             </div>
                           ) : (
                             <div>

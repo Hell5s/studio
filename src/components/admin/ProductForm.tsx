@@ -41,8 +41,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const variationInputRef = useRef<HTMLInputElement>(null);
-  const activeVariationIndexRef = useRef<number | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -172,12 +170,12 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     }
   };
 
-  const handleVariationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVariationUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
-    const index = activeVariationIndexRef.current;
-    if (!file || index === null) return;
+    if (!file) return;
     
     setUploading(true);
+    setActiveVariationIndex(index);
     try {
       const url = await uploadToCloudinary(file);
       setFormData(prev => {
@@ -191,7 +189,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     } finally {
       setUploading(false);
       setActiveVariationIndex(null);
-      activeVariationIndexRef.current = null;
       if (e.target) e.target.value = '';
     }
   };
@@ -419,13 +416,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
             {/* 2. VARIAÇÕES DE CORES */}
             <div className="space-y-6 bg-[#FFF9F7] p-8 rounded-[2.5rem] border border-primary/5 shadow-sm">
-              <input 
-                type="file" 
-                ref={variationInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleVariationUpload} 
-              />
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-accent">
                   <Palette className="h-5 w-5" />
@@ -436,14 +426,13 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               <div className="grid gap-4">
                 {formData.variations.map((v, i) => (
                   <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
-                    <div 
-                      className="h-16 w-12 rounded-lg overflow-hidden bg-secondary/10 flex-shrink-0 relative cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => { 
-                        activeVariationIndexRef.current = i;
-                        setActiveVariationIndex(i); 
-                        variationInputRef.current?.click(); 
-                      }}
-                    >
+                    <label className="h-16 w-12 rounded-lg overflow-hidden bg-secondary/10 flex-shrink-0 relative cursor-pointer hover:opacity-80 transition-opacity">
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={(e) => handleVariationUpload(e, i)} 
+                      />
                       {v.image ? (
                         <img src={v.image} className="h-full w-full object-cover" />
                       ) : (
@@ -452,7 +441,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                           <span className="text-[6px] font-bold uppercase">Foto</span>
                         </div>
                       )}
-                    </div>
+                    </label>
                     <Input placeholder="Nome da Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-1" />
                     <Input placeholder="Link da imagem" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-12 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-[2]" />
                     <button onClick={() => handleRemoveVariation(i)} className="text-red-300 hover:text-red-500 transition-colors p-2"><X className="h-5 w-5" /></button>
