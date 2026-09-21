@@ -34,7 +34,6 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -80,13 +79,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const variationInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
-  const [variationGalleryOpenIndex, setVariationGalleryOpenIndex] = useState<number | null>(null);
-  const [variationGalleryView, setVariationGalleryView] = useState<'choice' | 'gallery'>('choice');
+  const [galleryPickerIndex, setGalleryPickerIndex] = useState<number | null>(null);
   const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
   const [colorInput, setColorInput] = useState('');
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
@@ -414,18 +413,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }
   };
 
-  const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || activeVariationIndex === null) return;
     
     setUploading(true);
-    setActiveVariationIndex(index);
-    setVariationGalleryOpenIndex(null); 
     try {
       const url = await uploadToCloudinary(file);
       setFormData(prev => {
         const newVars = [...prev.variations];
-        newVars[index] = { ...newVars[index], image: url };
+        newVars[activeVariationIndex!] = { ...newVars[activeVariationIndex!], image: url };
         return { ...prev, variations: newVars };
       });
       toast({ title: "Variação salva!" });
@@ -436,20 +433,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       setActiveVariationIndex(null);
       if (e.target) e.target.value = '';
     }
-  };
-
-  const handleSelectFromGallery = (index: number, img: any) => {
-    const url = typeof img === 'string' ? img : img?.url;
-    if (!url) return;
-
-    setFormData(prev => {
-      const newVars = [...prev.variations];
-      newVars[index] = { ...newVars[index], image: url };
-      return { ...prev, variations: newVars };
-    });
-    
-    setVariationGalleryOpenIndex(null);
-    toast({ title: "Imagem vinculada com sucesso!" });
   };
 
   const handleAIGenerate = async () => {
@@ -569,7 +552,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               <section className="space-y-6">
                 <div className="flex items-center gap-3 text-primary border-b border-gray-200 pb-3"><Layers className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Informações Vitrine</h4></div>
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  <div className="md:col-span-2 space-y-2"><Label>Nome da Peça</Label><Input value={formData.name} onChange={handleNameChange} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                   
                   <div className="md:col-span-2 space-y-2">
                     <div className="flex justify-between items-center">
@@ -725,77 +708,61 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               </section>
 
               <section className="space-y-6 bg-white p-8 rounded-[2rem] shadow-sm border border-primary/5">
+                <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationFileUpload} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 text-accent"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Variações por Cor</h4></div>
                   <Button variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, variations: [...prev.variations, { color: '', image: '' }] }))} className="text-accent text-[9px] font-bold uppercase">+ Nova Cor</Button>
                 </div>
                 <div className="grid gap-4">
                   {formData.variations.map((v, i) => (
-                    <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5">
-                      <Popover
-                        open={variationGalleryOpenIndex === i}
-                        onOpenChange={(open) => {
-                          setVariationGalleryOpenIndex(open ? i : null);
-                          setVariationGalleryView('choice');
-                        }}
+                    <div key={i} className="flex flex-wrap gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5">
+                      <div 
+                        className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group"
+                        onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
                       >
-                        <PopoverTrigger asChild>
-                          <button type="button" className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group focus:outline-none">
-                            {v.image ? (
-                              <img src={getImageUrl(v.image)} className="h-full w-full object-cover" alt={v.color} />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center opacity-20">
-                                {uploading && activeVariationIndex === i ? <Loader2 className="h-4 w-4 animate-spin text-accent" /> : <Upload className="h-4 w-4" />}
-                              </div>
-                            )}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-72 p-3" align="start">
-                          {variationGalleryView === 'choice' ? (
-                            <div className="flex flex-col gap-2">
-                              <Button type="button" variant="outline" size="sm" className="justify-start text-xs h-10" onClick={() => setVariationGalleryView('gallery')}>
-                                <ImageIcon className="h-3 w-3 mr-2" /> Escolher da Galeria
-                              </Button>
-                              
-                              <label className="w-full">
-                                <input 
-                                  type="file" 
-                                  className="hidden" 
-                                  accept="image/*" 
-                                  onChange={(e) => handleVariationFileUpload(e, i)} 
-                                />
-                                <div className="flex items-center justify-start px-3 h-10 w-full rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground text-xs font-medium cursor-pointer transition-colors">
-                                  <Upload className="h-3 w-3 mr-2" /> Enviar Nova Foto
-                                </div>
-                              </label>
-                            </div>
-                          ) : (
-                            <div>
-                              <button type="button" onClick={() => setVariationGalleryView('choice')} className="text-[10px] text-muted-foreground mb-2 underline">
-                                ← Voltar
-                              </button>
-                              <div className="grid grid-cols-4 gap-2 max-h-56 overflow-y-auto">
-                                {[formData.image, ...formData.gallery].filter(Boolean).map((img, imgIdx) => {
-                                  const url = getImageUrl(img);
-                                  if (!url) return null;
-                                  return (
-                                    <button key={imgIdx} type="button" onClick={() => handleSelectFromGallery(i, img)} className="aspect-square rounded-md overflow-hidden border border-primary/10 hover:border-accent transition-colors">
-                                      <img src={url} className="h-full w-full object-cover" alt="Source" />
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </PopoverContent>
-                      </Popover>
+                        {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setGalleryPickerIndex(galleryPickerIndex === i ? null : i)}
+                        className="text-[9px] font-bold uppercase text-accent underline whitespace-nowrap"
+                      >
+                        Usar foto já existente
+                      </button>
+
                       <Input placeholder="Nome da Cor" value={v.color} onChange={e => {
                         const newVars = [...formData.variations];
                         newVars[i].color = e.target.value;
                         setFormData({...formData, variations: newVars});
                       }} className="h-10 text-xs bg-white border-none rounded-xl px-4 flex-1" />
+
                       <button onClick={() => setFormData(prev => ({ ...prev, variations: prev.variations.filter((_, idx) => idx !== i) }))} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
+                      
+                      {galleryPickerIndex === i && (
+                        <div className="w-full grid grid-cols-6 gap-2 p-3 bg-white rounded-xl border border-primary/10">
+                          {[formData.image, ...formData.gallery].filter(Boolean).map((img, imgIdx) => {
+                            const url = typeof img === 'string' ? img : (img as any)?.url;
+                            if (!url) return null;
+                            return (
+                              <button
+                                key={imgIdx}
+                                type="button"
+                                onClick={() => {
+                                  const newVars = [...formData.variations];
+                                  newVars[i] = { ...newVars[i], image: url };
+                                  setFormData(prev => ({ ...prev, variations: newVars }));
+                                  setGalleryPickerIndex(null);
+                                }}
+                                className="aspect-square rounded-md overflow-hidden border border-primary/10 hover:border-accent transition-colors"
+                              >
+                                <img src={url} className="h-full w-full object-cover" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
