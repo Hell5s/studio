@@ -1,11 +1,10 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   PanelBottom, Save, Plus, Trash2, Image as ImageIcon, 
   Upload, Palette, Loader2, MousePointer2, ChevronUp, ChevronDown, 
-  Type, Link as LinkIcon, RefreshCcw, Truck, CreditCard, ShieldCheck, 
+  Type, Link as LinkIcon, RefreshCcw, RotateCcw, Truck, CreditCard, ShieldCheck, 
   Gift, Heart, Package, Clock, Star, Percent, X, Sparkles, 
   Instagram, Facebook, Youtube 
 } from 'lucide-react';
@@ -38,6 +37,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const ICON_MAP: Record<string, any> = {
   Truck, RefreshCcw, CreditCard, ShieldCheck, Gift, Heart, Package, Clock, Star, Percent
@@ -605,7 +610,7 @@ export function AdminFooterSettings() {
         </p>
       </div>
 
-      <Dialog open={!!activePage} onOpenChange={(o) => !o && setActivePage(null)}>
+      <Dialog open={!!(activePage as any)} onOpenChange={(o) => !o && (setActivePage as any)(null)}>
         <DialogContent className="max-w-lg rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-white">
           <div className="bg-primary p-10 text-white relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -614,15 +619,15 @@ export function AdminFooterSettings() {
             <DialogHeader className="relative z-10 text-left">
               <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent mb-2">Institucional</p>
               <DialogTitle className="text-3xl font-headline font-bold">
-                {activePage?.title}
+                {(activePage as any)?.title}
               </DialogTitle>
             </DialogHeader>
           </div>
           <div className="p-10">
             <div className="text-sm leading-relaxed text-muted-foreground italic font-light whitespace-pre-line">
-              {activePage?.content}
+              {(activePage as any)?.content}
             </div>
-            <Button onClick={() => setActivePage(null)} className="mt-8 rounded-full h-12 px-8 bg-primary text-white text-[10px] font-bold uppercase tracking-widest">
+            <Button onClick={() => (setActivePage as any)(null)} className="mt-8 rounded-full h-12 px-8 bg-primary text-white text-[10px] font-bold uppercase tracking-widest">
               Fechar
             </Button>
           </div>
