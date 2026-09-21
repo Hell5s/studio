@@ -185,7 +185,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         setSelectedShowcaseIds(new Set());
       }
     }
-  }, [open, product?.id]); 
+  }, [open, product?.id, showcases]); 
 
   const uploadToCloudinary = async (file: File) => {
     const data = new FormData();
@@ -659,7 +659,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       onDrop={(e) => handleDrop(e, idx)}
                       className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
                      >
-                        <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" />
+                        <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" alt="Gallery" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity z-10">
                            <button 
                              onClick={(e) => { e.stopPropagation(); handleOpenEditor(idx, 'gallery'); }} 
@@ -742,7 +742,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         <PopoverTrigger asChild>
                           <button type="button" className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group focus:outline-none">
                             {v.image ? (
-                              <img src={getImageUrl(v.image)} className="h-full w-full object-cover" />
+                              <img src={getImageUrl(v.image)} className="h-full w-full object-cover" alt={v.color} />
                             ) : (
                               <div className="h-full w-full flex items-center justify-center opacity-20">
                                 {uploading && activeVariationIndex === i ? <Loader2 className="h-4 w-4 animate-spin text-accent" /> : <Upload className="h-4 w-4" />}
@@ -781,7 +781,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                                   if (!url) return null;
                                   return (
                                     <button key={imgIdx} type="button" onClick={() => handleSelectFromGallery(i, img)} className="aspect-square rounded-md overflow-hidden border border-primary/10 hover:border-accent transition-colors">
-                                      <img src={url} className="h-full w-full object-cover" />
+                                      <img src={url} className="h-full w-full object-cover" alt="Source" />
                                     </button>
                                   );
                                 })}
@@ -814,6 +814,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         <img 
                           src={getImageUrl(formData.image)} 
                           className="w-full h-full object-cover" 
+                          alt="Cover"
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                            <button 
