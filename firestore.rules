@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -20,9 +21,27 @@ service cloud.firestore {
 
       match /reviews/{reviewId} {
         allow read: if true;
-        allow create: if isSignedIn();
-        allow delete: if isAdmin();
+        allow write: if isAdmin();
       }
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow create: if isAdmin() || (
+        isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.isDemo == false
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.user is string
+        && request.resource.data.user.size() > 0 && request.resource.data.user.size() <= 60
+        && request.resource.data.comment is string
+        && request.resource.data.comment.size() > 0 && request.resource.data.comment.size() <= 1000
+        && request.resource.data.images is list && request.resource.data.images.size() <= 4
+        && request.resource.data.createdAt == request.time
+      );
+      allow update, delete: if isAdmin();
     }
 
     match /categories/{categoryId} {
@@ -51,7 +70,6 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      // Regra permitindo leitura e escrita para o servidor e webhooks
       allow read, write: if true;
     }
 

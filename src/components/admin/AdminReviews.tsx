@@ -17,7 +17,8 @@ import {
   Sparkles,
   Settings,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  ExternalLink
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc, limit, getDocs, where, writeBatch, setDoc } from 'firebase/firestore';
@@ -321,6 +322,36 @@ export function AdminReviews() {
                   <div className="space-y-2">
                     <h5 className="font-bold text-primary italic leading-tight">"{review.headline}"</h5>
                     <p className="text-sm text-primary/60 leading-relaxed font-light italic">{review.comment}</p>
+                  </div>
+
+                  {/* Images & Metrics */}
+                  <div className="flex flex-col gap-6">
+                    {review.images && review.images.length > 0 && (
+                      <div className="flex gap-3">
+                        {review.images.map((img, i) => (
+                          <a 
+                            key={i} 
+                            href={img} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="h-20 w-16 rounded-lg overflow-hidden border border-primary/5 hover:scale-105 transition-transform group/img"
+                          >
+                             <img src={img} className="h-full w-full object-cover" />
+                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity">
+                                <ExternalLink className="h-3 w-3 text-white" />
+                             </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {(review.qualityRating || review.fitRating || review.colorRating) && (
+                      <div className="flex gap-4 p-3 bg-secondary/10 rounded-xl w-fit">
+                         {review.qualityRating && <span className="text-[8px] font-black uppercase tracking-tighter opacity-40">Qualidade: {review.qualityRating}</span>}
+                         {review.fitRating && <span className="text-[8px] font-black uppercase tracking-tighter opacity-40">Caimento: {review.fitRating}</span>}
+                         {review.colorRating && <span className="text-[8px] font-black uppercase tracking-tighter opacity-40">Cor: {review.colorRating}</span>}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-6 text-[9px] text-primary/30 font-bold uppercase tracking-[0.2em]">

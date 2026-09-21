@@ -37,7 +37,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -216,24 +216,26 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const headlines = shuffle(DEMO_REVIEWS_POOL.headlines);
     const comments = shuffle(DEMO_REVIEWS_POOL.comments);
 
-    const sizes = ["P", "M", "G", "GG"];
-
     for (let i = 0; i < qty; i++) {
       const review = {
         productId,
         productName,
         productImage,
+        userId: 'demo',
         user: names[i % names.length],
         headline: headlines[i % headlines.length],
         comment: comments[i % comments.length],
         rating: Math.random() > 0.3 ? 5 : 4,
-        size: sizes[Math.floor(Math.random() * sizes.length)],
         recommended: true,
+        qualityRating: 5,
+        fitRating: 5,
+        colorRating: 5,
+        images: [],
         isDemo: true,
         status: 'published',
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 15 * 24 * 60 * 60 * 1000)).toISOString()
+        createdAt: Timestamp.fromDate(new Date(Date.now() - Math.floor(Math.random() * 15 * 24 * 60 * 60 * 1000)))
       };
-      await addDoc(collection(db, 'products', productId, 'reviews'), review);
+      await addDoc(collection(db, 'reviews'), review);
     }
   };
 
