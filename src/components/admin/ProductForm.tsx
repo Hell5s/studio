@@ -42,6 +42,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const variationInputRef = useRef<HTMLInputElement>(null);
+  const activeVariationIndexRef = useRef<number | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -173,19 +174,25 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
   const handleVariationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || activeVariationIndex === null) return;
+    const index = activeVariationIndexRef.current;
+    if (!file || index === null) return;
     
     setUploading(true);
     try {
       const url = await uploadToCloudinary(file);
-      handleVariationChange(activeVariationIndex, 'image', url);
-      toast({ title: "Variação salva no Cloudinary!" });
+      setFormData(prev => {
+        const newVars = [...prev.variations];
+        newVars[index] = { ...newVars[index], image: url };
+        return { ...prev, variations: newVars };
+      });
+      toast({ title: "Variação salva!" });
     } catch (error: any) {
       toast({ title: "Erro no upload Cloudinary", variant: "destructive" });
     } finally {
       setUploading(false);
       setActiveVariationIndex(null);
-      e.target.value = '';
+      activeVariationIndexRef.current = null;
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -340,7 +347,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                   <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Link do Produto (Fornecedor)</Label>
                   <div className="relative">
                     <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40" />
-                    <Input value={formData.sourceUrl} onChange={e => setFormData({...formData, sourceUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 pl-12 bg-secondary/20 border-none" />
+                    <Input value={formData.sourceUrl} onChange={e => setFormData({...formData, sourceUrl: e.target.value})} placeholder="https://..." className="rounded-2xl h-14 pl-12 bg-secondary/10 border-none" />
                   </div>
                 </div>
 
@@ -402,7 +409,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                       </button>
                    </div>
                  ))}
-                 {uploading && (
+                 {uploading && !activeVariationIndex && (
                    <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20">
                      <Loader2 className="h-5 w-5 animate-spin text-accent" />
                    </div>
@@ -410,7 +417,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               </div>
             </div>
 
-            {/* 2. VARIAÇÕES DE CORES (LISTA VISÍVEL) */}
+            {/* 2. VARIAÇÕES DE CORES */}
             <div className="space-y-6 bg-[#FFF9F7] p-8 rounded-[2.5rem] border border-primary/5 shadow-sm">
               <input 
                 type="file" 
@@ -431,10 +438,20 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                   <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
                     <div 
                       className="h-16 w-12 rounded-lg overflow-hidden bg-secondary/10 flex-shrink-0 relative cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
+                      onClick={() => { 
+                        activeVariationIndexRef.current = i;
+                        setActiveVariationIndex(i); 
+                        variationInputRef.current?.click(); 
+                      }}
                     >
-                      {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex flex-col items-center justify-center opacity-30"><Upload className="h-4 w-4" /><span className="text-[6px] font-bold uppercase">Foto</span></div>}
-                      {uploading && activeVariationIndex === i && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>}
+                      {v.image ? (
+                        <img src={v.image} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex flex-col items-center justify-center opacity-30">
+                          {uploading && activeVariationIndex === i ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Upload className="h-4 w-4" />}
+                          <span className="text-[6px] font-bold uppercase">Foto</span>
+                        </div>
+                      )}
                     </div>
                     <Input placeholder="Nome da Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-1" />
                     <Input placeholder="Link da imagem" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-12 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-[2]" />

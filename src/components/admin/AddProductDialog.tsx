@@ -424,7 +424,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         const newVars = [...prev.variations];
         newVars[index] = { 
           ...newVars[index], 
-          image: { url, originalUrl: url } 
+          image: url 
         };
         return { ...prev, variations: newVars };
       });
@@ -435,6 +435,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       setUploading(false);
       setActiveVariationIndex(null);
       activeVariationIndexRef.current = null;
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -444,13 +445,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
     setFormData(prev => {
       const newVars = [...prev.variations];
-      const imgData = typeof img === 'string' ? { url: img, originalUrl: img } : { 
-        url: img.url, 
-        originalUrl: img.originalUrl || img.url,
-        crop: img.crop || null,
-        zoom: img.zoom || 1
-      };
-      newVars[i] = { ...newVars[i], image: imgData };
+      newVars[i] = { ...newVars[i], image: url };
       return { ...prev, variations: newVars };
     });
     
@@ -685,7 +680,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         </div>
                      </div>
                    ))}
-                   {uploading && <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20"><Loader2 className="h-5 w-5 animate-spin text-accent" /></div>}
+                   {uploading && activeVariationIndex === null && <div className="aspect-square rounded-xl bg-white flex items-center justify-center border-2 border-dashed border-accent/20"><Loader2 className="h-5 w-5 animate-spin text-accent" /></div>}
                 </div>
               </section>
 
@@ -748,7 +743,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       >
                         <PopoverTrigger asChild>
                           <div className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group">
-                            {v.image ? <img src={typeof v.image === 'string' ? v.image : v.image?.url} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
+                            {v.image ? (
+                              <img src={getImageUrl(v.image)} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center opacity-20">
+                                {uploading && activeVariationIndex === i ? <Loader2 className="h-4 w-4 animate-spin text-accent" /> : <Upload className="h-4 w-4" />}
+                              </div>
+                            )}
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
                           </div>
                         </PopoverTrigger>
@@ -774,7 +775,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                               </button>
                               <div className="grid grid-cols-4 gap-2 max-h-56 overflow-y-auto">
                                 {[formData.image, ...formData.gallery].filter(Boolean).map((img, imgIdx) => {
-                                  const url = typeof img === 'string' ? img : img?.url;
+                                  const url = getImageUrl(img);
                                   if (!url) return null;
                                   return (
                                     <button key={imgIdx} type="button" onClick={() => handleSelectFromGallery(i, img)} className="aspect-square rounded-md overflow-hidden border border-primary/10 hover:border-accent transition-colors">
