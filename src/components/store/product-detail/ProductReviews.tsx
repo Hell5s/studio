@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Star, CheckCircle2, Check, Loader2, Sparkles, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Star, CheckCircle2, Check, Loader2, Sparkles, MessageSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, where, serverTimestamp } from 'firebase/firestore';
@@ -26,7 +26,6 @@ interface Review {
   headline: string;
   rating: number;
   comment: string;
-  size: string;
   recommended: boolean;
   status?: 'pending' | 'published';
   productId: string;
@@ -57,19 +56,18 @@ export function ProductReviews({ product }: { product: any }) {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
 
   const [newReview, setNewReview] = useState({
     user: '',
     rating: 5,
     headline: '',
     comment: '',
-    size: 'M',
     recommended: true
   });
 
   const reviewsQuery = useMemoFirebase(() => {
     if (!db || !product?.id) return null;
-    // Consulta correta na subcoleção conforme as regras de segurança
     return query(
       collection(db, 'products', product.id, 'reviews'), 
       where('status', '==', 'published'),
@@ -80,7 +78,6 @@ export function ProductReviews({ product }: { product: any }) {
   const { data: allReviews, isLoading } = useCollection<Review>(reviewsQuery);
 
   const stats = useMemo(() => {
-    // IMPORTANTE: avaliações demonstrativas não entram nas estatísticas reais
     const realReviews = allReviews?.filter(r => !r.isDemo) || [];
     if (realReviews.length === 0) return { avg: 5.0, total: 0, recommendedPercent: 100 };
     const total = realReviews.length;
@@ -94,19 +91,15 @@ export function ProductReviews({ product }: { product: any }) {
   }, [allReviews]);
 
   const handleSubmit = () => {
-    if (!newReview.user || !newReview.comment) {
-      toast({ title: "Dados incompletos", variant: "destructive" });
-      return;
-    }
+    if (!newReview.user || !newReview.comment) return;
 
     setIsSubmitting(true);
-    // Grava na subcoleção correta do produto
     addDocumentNonBlocking(collection(db, 'products', product.id, 'reviews'), {
       ...newReview,
       productId: product.id,
       productName: product.name,
       productImage: product.image,
-      isDemo: false, // Avaliação de cliente real
+      isDemo: false,
       status: 'pending',
       createdAt: serverTimestamp()
     });
@@ -114,8 +107,18 @@ export function ProductReviews({ product }: { product: any }) {
     toast({ title: "Avaliação enviada!", description: "Obrigada! Publicaremos após moderação." });
     setIsSubmitting(false);
     setIsDialogOpen(false);
-    setNewReview({ user: '', rating: 5, headline: '', comment: '', size: 'M', recommended: true });
+    setNewReview({ user: '', rating: 5, headline: '', comment: '', recommended: true });
   };
+
+  const ratingLabels: Record<number, string> = {
+    1: "Precisa melhorar",
+    2: "Poderia ser melhor",
+    3: "Boa",
+    4: "Muito boa",
+    5: "Perfeita"
+  };
+
+  const currentRating = hoverRating || newReview.rating;
 
   return (
     <section id="avaliacoes" className="pt-20 md:pt-32 border-t border-gray-100 bg-white">
@@ -201,32 +204,99 @@ export function ProductReviews({ product }: { product: any }) {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[550px] rounded-[3rem] border-none shadow-2xl p-0 overflow-hidden bg-[#FFF9F7]">
-          <div className="bg-primary p-10 text-primary-foreground relative">
-            <div className="absolute top-0 right-0 p-8 opacity-10"><Sparkles className="h-24 w-24" /></div>
-            <DialogHeader className="relative z-10 text-left space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent">Editorial Feedback</p>
-              <DialogTitle className="text-3xl font-headline font-bold uppercase tracking-widest">Sua Experiência</DialogTitle>
-              <DialogDescription className="text-white/60 italic text-base">Compartilhe os detalhes que tornaram sua escolha especial.</DialogDescription>
+        <DialogContent className="sm:max-w-[480px] p-0 rounded-[2rem] border-none shadow-2xl bg-white flex flex-col max-h-[90vh] overflow-hidden [&>button]:text-white [&>button]:bg-white/10 [&>button]:hover:bg-white/20 [&>button]:rounded-full [&>button]:w-9 [&>button]:h-9 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:top-5 [&>button]:right-5 [&>button]:transition-all">
+          <div className="bg-gradient-to-br from-primary to-[#5a2e37] p-7 text-white relative shrink-0">
+            <div className="absolute top-4 right-12 p-4 opacity-10 pointer-events-none">
+              <Sparkles className="h-16 w-16" />
+            </div>
+            <DialogHeader className="relative z-10 text-left space-y-1">
+              <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-accent/80">Editorial Feedback</p>
+              <DialogTitle className="text-2xl font-headline font-bold uppercase tracking-widest leading-none">Sua Experiência</DialogTitle>
+              <DialogDescription className="text-white/60 italic text-sm mt-1">Compartilhe os detalhes que tornaram sua escolha especial.</DialogDescription>
             </DialogHeader>
           </div>
           
-          <div className="p-10 space-y-8">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <Label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-primary/40">Avalie sua peça</Label>
-                <div className="p-6 bg-secondary/30 rounded-3xl flex justify-center"><StarRating rating={newReview.rating} size="h-10 w-10" interactive onRate={r => setNewReview({...newReview, rating: r})} /></div>
+          <div className="p-7 space-y-5 overflow-y-auto no-scrollbar flex-1">
+            <div className="space-y-4">
+              <div className="space-y-3 text-center">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Avalie sua peça</Label>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        aria-label={`${star} estrelas`}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setNewReview(prev => ({ ...prev, rating: star }))}
+                        className="transition-transform hover:scale-125 focus:outline-none"
+                      >
+                        <Star 
+                          className={cn(
+                            "h-8 w-8 transition-colors",
+                            star <= currentRating ? "fill-current text-accent" : "text-gray-100 fill-current"
+                          )} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] font-bold uppercase text-accent tracking-widest animate-in fade-in duration-300">
+                    {ratingLabels[currentRating]}
+                  </p>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2"><Label className="text-[10px] font-bold uppercase ml-1 text-primary/40">Seu Nome</Label><Input value={newReview.user} onChange={e => setNewReview({...newReview, user: e.target.value.toUpperCase()})} className="rounded-2xl bg-secondary/20 border-none h-14" /></div>
-                <div className="space-y-2"><Label className="text-[10px] font-bold uppercase ml-1 text-primary/40">Tamanho</Label><select value={newReview.size} onChange={e => setNewReview({...newReview, size: e.target.value})} className="w-full h-14 rounded-2xl bg-secondary/20 border-none px-6 text-sm font-medium"><option>P</option><option>M</option><option>G</option><option>GG</option></select></div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-primary/60 ml-1">Seu Nome <span className="text-accent">*</span></Label>
+                <Input 
+                  value={newReview.user} 
+                  onChange={e => setNewReview({...newReview, user: e.target.value.toUpperCase()})} 
+                  placeholder="Como devemos te chamar?"
+                  className="rounded-2xl bg-white border border-primary/10 h-12 px-5 focus-visible:ring-2 focus-visible:ring-accent/30 focus-visible:border-accent transition-all placeholder:text-primary/30" 
+                />
               </div>
-              <div className="space-y-2"><Label className="text-[10px] font-bold uppercase ml-1 text-primary/40">Título</Label><Input value={newReview.headline} onChange={e => setNewReview({...newReview, headline: e.target.value})} className="rounded-2xl bg-secondary/20 border-none h-14" /></div>
-              <div className="space-y-2"><Label className="text-[10px] font-bold uppercase ml-1 text-primary/40">Depoimento</Label><Textarea value={newReview.comment} onChange={e => setNewReview({...newReview, comment: e.target.value})} className="rounded-[2rem] bg-secondary/20 border-none min-h-[140px] p-8 text-sm italic" /></div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-primary/60 ml-1">Título</Label>
+                <Input 
+                  value={newReview.headline} 
+                  maxLength={60}
+                  onChange={e => setNewReview({...newReview, headline: e.target.value})} 
+                  placeholder="Resuma em poucas palavras"
+                  className="rounded-2xl bg-white border border-primary/10 h-12 px-5 focus-visible:ring-2 focus-visible:ring-accent/30 focus-visible:border-accent transition-all placeholder:text-primary/30" 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-primary/60 ml-1">Depoimento <span className="text-accent">*</span></Label>
+                <div className="relative">
+                  <Textarea 
+                    value={newReview.comment} 
+                    onChange={e => setNewReview({...newReview, comment: e.target.value})} 
+                    maxLength={500}
+                    placeholder="Conte como foi o caimento, o tecido, a cor..."
+                    className="rounded-2xl bg-white border border-primary/10 min-h-[110px] p-4 text-sm focus-visible:ring-2 focus-visible:ring-accent/30 focus-visible:border-accent transition-all placeholder:text-primary/30 resize-none" 
+                  />
+                  <span className="absolute bottom-3 right-4 text-[9px] font-bold text-primary/20">
+                    {newReview.comment.length}/500
+                  </span>
+                </div>
+              </div>
             </div>
-            <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full rounded-full h-16 bg-primary text-white font-bold uppercase tracking-[0.3em] shadow-2xl">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Publicar minha experiência"}
-            </Button>
+
+            <div className="space-y-3 pt-2">
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isSubmitting || !newReview.user.trim() || !newReview.comment.trim()} 
+                className="w-full rounded-full h-12 bg-primary text-white font-bold uppercase tracking-[0.3em] text-[10px] shadow-xl hover:bg-accent transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Publicar minha experiência"}
+              </Button>
+              <p className="text-[9px] text-center text-primary/40 font-medium tracking-tight">
+                Sua avaliação será publicada após moderação.
+              </p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
