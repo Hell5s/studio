@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Share2, Star, Minus, Plus, Ruler, ShoppingBag, Camera } from 'lucide-react';
+import { Share2, Star, Minus, Plus, ShoppingBag, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -203,11 +202,6 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
             </button>
           </div>
         </div>
-
-        <button className="flex items-center gap-2 text-[10px] md:text-[11px] font-bold text-primary/60 uppercase tracking-widest hover:text-primary transition-colors pt-2 min-h-[44px]">
-          <Ruler className="h-4 w-4" />
-          TABELA DE MEDIDAS COMPLETA
-        </button>
       </div>
 
       <div className="space-y-4 pt-4">
