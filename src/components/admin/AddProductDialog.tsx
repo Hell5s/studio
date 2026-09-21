@@ -250,6 +250,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     return isNaN(num) ? 0 : num;
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, name: e.target.value }));
+  };
+
   const handleCalculateIA = () => {
     const cost = parseSafeNumber(formData.cost);
     if (!cost) {
