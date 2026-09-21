@@ -34,6 +34,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -84,6 +85,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
+  const [variationGalleryOpenIndex, setVariationGalleryOpenIndex] = useState<number | null>(null);
+  const [variationGalleryView, setVariationGalleryView] = useState<'choice' | 'gallery'>('choice');
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
   const [colorInput, setColorInput] = useState('');
@@ -185,7 +188,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         setSelectedShowcaseIds(new Set());
       }
     }
-  }, [open, product?.id]); // Dependências reduzidas para estabilidade do formulário
+  }, [open, product?.id]); 
 
   const uploadToCloudinary = async (file: File) => {
     const data = new FormData();
@@ -291,7 +294,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
       image: finalMainImage,
       images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
-      variations: formData.variations, // Inclusão explícita para garantir persistência
+      variations: formData.variations, 
       updatedAt: serverTimestamp(),
       ...(isEdit ? {} : { createdAt: serverTimestamp() })
     };
@@ -336,7 +339,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const source = getOriginalUrl(img);
     setEditingImage({ index, field });
     
-    // Tenta carregar o crop/zoom anterior se existir
     setCrop(img?.crop || { x: 0, y: 0 });
     setZoom(img?.zoom || 1);
     
@@ -359,7 +361,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
       const newUrl = await uploadToCloudinary(file);
 
-      // Armazena tanto a URL cortada quanto a original para edições futuras
       const updatedImageData = { url: newUrl, originalUrl, crop, zoom };
 
       if (field === 'image') {
@@ -440,7 +441,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const handleSelectFromGallery = (img: any) => {
     if (activeVariationIndex === null) return;
 
-    // Normaliza a imagem para garantir que guardamos a estrutura correta
     const imgData = typeof img === 'string' ? img : { 
       url: img.url, 
       originalUrl: img.originalUrl || img.url,
@@ -562,7 +562,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChangeAttempt}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
           <div className="bg-[#2A1F22] p-8 text-white flex items-center justify-between sticky top-0 z-20 shadow-lg">
             <div className="flex items-center gap-6">
               <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center"><Package className="h-6 w-6 text-primary" /></div>
@@ -744,35 +744,64 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 </div>
                 <div className="grid gap-4">
                   {formData.variations.map((v, i) => (
-                    <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
-                      <div 
-                        className="h-16 w-12 rounded-lg overflow-hidden bg-secondary/10 flex-shrink-0 relative cursor-pointer group"
-                        onClick={() => { setActiveVariationIndex(i); setIsSelectorOpen(true); }}
+                    <div key={i} className="flex gap-4 items-center bg-secondary/10 p-4 rounded-2xl border border-primary/5">
+                      <Popover
+                        open={variationGalleryOpenIndex === i}
+                        onOpenChange={(open) => {
+                          setVariationGalleryOpenIndex(open ? i : null);
+                          setVariationGalleryView('choice');
+                        }}
                       >
-                        {v.image ? <img src={getImageUrl(v.image)} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
-                      </div>
+                        <PopoverTrigger asChild>
+                          <div className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group">
+                            {v.image ? <img src={typeof v.image === 'string' ? v.image : v.image?.url} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-72 p-3" align="start">
+                          {variationGalleryView === 'choice' ? (
+                            <div className="flex flex-col gap-2">
+                              <Button type="button" variant="outline" size="sm" className="justify-start text-xs" onClick={() => setVariationGalleryView('gallery')}>
+                                Escolher da Galeria
+                              </Button>
+                              <Button type="button" variant="outline" size="sm" className="justify-start text-xs" onClick={() => {
+                                setActiveVariationIndex(i);
+                                variationInputRef.current?.click();
+                                setVariationGalleryOpenIndex(null);
+                              }}>
+                                Enviar Nova Foto
+                              </Button>
+                            </div>
+                          ) : (
+                            <div>
+                              <button type="button" onClick={() => setVariationGalleryView('choice')} className="text-[10px] text-muted-foreground mb-2 underline">
+                                ← Voltar
+                              </button>
+                              <div className="grid grid-cols-4 gap-2 max-h-56 overflow-y-auto">
+                                {[formData.image, ...formData.gallery].filter(Boolean).map((img, imgIdx) => {
+                                  const url = typeof img === 'string' ? img : img?.url;
+                                  if (!url) return null;
+                                  return (
+                                    <button key={imgIdx} type="button" onClick={() => {
+                                      const newVars = [...formData.variations];
+                                      newVars[i] = { ...newVars[i], image: url };
+                                      setFormData(prev => ({ ...prev, variations: newVars }));
+                                      setVariationGalleryOpenIndex(null);
+                                    }} className="aspect-square rounded-md overflow-hidden border border-primary/10 hover:border-accent transition-colors">
+                                      <img src={url} className="h-full w-full object-cover" />
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
                       <Input placeholder="Nome da Cor" value={v.color} onChange={e => {
-                        const val = e.target.value;
-                        setFormData(prev => {
-                          const newVars = [...prev.variations];
-                          newVars[i].color = val;
-                          return { ...prev, variations: newVars };
-                        });
+                        const newVars = [...formData.variations];
+                        newVars[i].color = e.target.value;
+                        setFormData({...formData, variations: newVars});
                       }} className="h-10 text-xs bg-white border-none rounded-xl px-4 flex-1" />
-                      <Input 
-                        placeholder="Link da imagem" 
-                        value={typeof v.image === 'string' ? v.image : v.image?.url || ''} 
-                        onChange={e => {
-                          const val = e.target.value;
-                          setFormData(prev => {
-                            const newVars = [...prev.variations];
-                            newVars[i].image = val;
-                            return { ...prev, variations: newVars };
-                          });
-                        }} 
-                        className="h-10 text-xs bg-white border-none rounded-xl px-4 flex-[2]" 
-                      />
                       <button onClick={() => setFormData(prev => ({ ...prev, variations: prev.variations.filter((_, idx) => idx !== i) }))} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
                     </div>
                   ))}
