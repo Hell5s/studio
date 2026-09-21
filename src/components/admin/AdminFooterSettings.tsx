@@ -6,7 +6,8 @@ import {
   PanelBottom, Save, Plus, Trash2, Image as ImageIcon, 
   Upload, Palette, Loader2, MousePointer2, ChevronUp, ChevronDown, 
   Type, Link as LinkIcon, RefreshCcw, Truck, CreditCard, ShieldCheck, 
-  Gift, Heart, Package, Clock, Star, Percent, Settings
+  Gift, Heart, Package, Clock, Star, Percent, X, Sparkles, 
+  Instagram, Facebook, Youtube 
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ const DEFAULT_FOOTER = {
     {
       title: 'A Toda Bela',
       links: [
-        { label: 'Sobre Nós', type: 'page', pageTitle: 'Sobre Nós', pageContent: 'A Toda Bela é mais que uma loja, é um manifesto de estilo para a mulher que reconhece sua própria luz. Nossa curadoria foca em peças que unem o conforto do dia a dia à sofisticação de momentos especiais.' },
+        { label: 'Sobre Nós', type: 'page', pageTitle: 'Sobre Nós', pageContent: 'A Toda Bela é mais que uma loja, é um manifesto de style para a mulher que reconhece sua própria luz. Nossa curadoria foca em peças que unem o conforto do dia a dia à sofisticação de momentos especiais.' },
         { label: 'Nossa História', type: 'page', pageTitle: 'Nossa História', pageContent: 'Iniciamos nossa jornada com o propósito de democratizar a moda premium no Brasil. Hoje, celebramos milhares de clientes que encontraram na Toda Bela a expressão máxima de sua autenticidade.' },
         { label: 'Trabalhe Conosco', type: 'page', pageTitle: 'Trabalhe Conosco', pageContent: 'Quer fazer parte da equipe Toda Bela? Envie seu portfólio para nossa equipe de RH e venha construir o futuro da moda feminina conosco.' }
       ]
@@ -603,6 +604,30 @@ export function AdminFooterSettings() {
           As configurações são salvas individualmente por seção para garantir a segurança dos seus dados.
         </p>
       </div>
+
+      <Dialog open={!!activePage} onOpenChange={(o) => !o && setActivePage(null)}>
+        <DialogContent className="max-w-lg rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-white">
+          <div className="bg-primary p-10 text-white relative">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <Sparkles className="h-20 w-20" />
+            </div>
+            <DialogHeader className="relative z-10 text-left">
+              <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent mb-2">Institucional</p>
+              <DialogTitle className="text-3xl font-headline font-bold">
+                {activePage?.title}
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="p-10">
+            <div className="text-sm leading-relaxed text-muted-foreground italic font-light whitespace-pre-line">
+              {activePage?.content}
+            </div>
+            <Button onClick={() => setActivePage(null)} className="mt-8 rounded-full h-12 px-8 bg-primary text-white text-[10px] font-bold uppercase tracking-widest">
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
