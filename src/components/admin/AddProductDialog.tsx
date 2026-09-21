@@ -140,7 +140,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   });
 
   // Preenche o formulário apenas na abertura ou quando o produto muda (ID)
-  // para evitar resetar o estado se showcases ou outras queries atualizarem
   useEffect(() => {
     if (open) {
       if (product) {
@@ -438,29 +437,22 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }
   };
 
-  const handleSelectFromGallery = (img: any) => {
-    if (activeVariationIndex === null) return;
+  const handleSelectFromGallery = (i: number, img: any) => {
+    const url = typeof img === 'string' ? img : img?.url;
+    if (!url) return;
 
-    const imgData = typeof img === 'string' ? img : { 
+    const newVars = [...formData.variations];
+    // Mantém a compatibilidade com o formato de objeto da galeria se necessário
+    const imgData = typeof img === 'string' ? { url: img, originalUrl: img } : { 
       url: img.url, 
       originalUrl: img.originalUrl || img.url,
       crop: img.crop || null,
       zoom: img.zoom || 1
     };
 
-    setFormData(prev => {
-      const newVars = [...prev.variations];
-      if (newVars[activeVariationIndex]) {
-        newVars[activeVariationIndex] = { 
-          ...newVars[activeVariationIndex], 
-          image: imgData 
-        };
-      }
-      return { ...prev, variations: newVars };
-    });
-
-    setIsSelectorOpen(false);
-    setActiveVariationIndex(null);
+    newVars[i] = { ...newVars[i], image: imgData };
+    setFormData(prev => ({ ...prev, variations: newVars }));
+    setVariationGalleryOpenIndex(null);
     toast({ title: "Imagem vinculada com sucesso!" });
   };
 
@@ -782,12 +774,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                                   const url = typeof img === 'string' ? img : img?.url;
                                   if (!url) return null;
                                   return (
-                                    <button key={imgIdx} type="button" onClick={() => {
-                                      const newVars = [...formData.variations];
-                                      newVars[i] = { ...newVars[i], image: url };
-                                      setFormData(prev => ({ ...prev, variations: newVars }));
-                                      setVariationGalleryOpenIndex(null);
-                                    }} className="aspect-square rounded-md overflow-hidden border border-primary/10 hover:border-accent transition-colors">
+                                    <button key={imgIdx} type="button" onClick={() => handleSelectFromGallery(i, img)} className="aspect-square rounded-md overflow-hidden border border-primary/10 hover:border-accent transition-colors">
                                       <img src={url} className="h-full w-full object-cover" />
                                     </button>
                                   );
@@ -885,7 +872,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         </DialogContent>
       </Dialog>
 
-      {/* Selector from Gallery Dialog */}
+      {/* Selector from Gallery Dialog - Mantido se houver outros gatilhos, mas as variações agora usam Popover */}
       <Dialog open={isSelectorOpen} onOpenChange={setIsSelectorOpen}>
         <DialogContent className="max-w-2xl rounded-[2rem] p-8 border-none shadow-2xl bg-white">
           <DialogHeader>
@@ -915,7 +902,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 {/* Capa */}
                 {formData.image && (
                   <button 
-                    onClick={() => handleSelectFromGallery(formData.image)}
+                    onClick={() => {
+                      if (activeVariationIndex !== null) handleSelectFromGallery(activeVariationIndex, formData.image);
+                      setIsSelectorOpen(false);
+                    }}
                     className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-accent transition-all bg-gray-50 group"
                   >
                     <img src={getImageUrl(formData.image)} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Capa" />
@@ -925,7 +915,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 {formData.gallery.map((img, idx) => (
                   <button 
                     key={idx}
-                    onClick={() => handleSelectFromGallery(img)}
+                    onClick={() => {
+                      if (activeVariationIndex !== null) handleSelectFromGallery(activeVariationIndex, img);
+                      setIsSelectorOpen(false);
+                    }}
                     className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-accent transition-all bg-gray-50 group"
                   >
                     <img src={getImageUrl(img)} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt={`Foto ${idx + 1}`} />
