@@ -80,6 +80,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const variationInputRef = useRef<HTMLInputElement>(null);
+  const activeVariationIndexRef = useRef<number | null>(null);
   
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -87,7 +88,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
   const [variationGalleryOpenIndex, setVariationGalleryOpenIndex] = useState<number | null>(null);
   const [variationGalleryView, setVariationGalleryView] = useState<'choice' | 'gallery'>('choice');
-  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
   const [colorInput, setColorInput] = useState('');
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
@@ -139,7 +139,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     variations: [] as { color: string; image: any }[]
   });
 
-  // Preenche o formulário apenas na abertura ou quando o produto muda (ID)
   useEffect(() => {
     if (open) {
       if (product) {
@@ -415,15 +414,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
   const handleVariationFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || activeVariationIndex === null) return;
+    const index = activeVariationIndexRef.current;
+    if (!file || index === null) return;
     
     setUploading(true);
     try {
       const url = await uploadToCloudinary(file);
       setFormData(prev => {
         const newVars = [...prev.variations];
-        newVars[activeVariationIndex] = { 
-          ...newVars[activeVariationIndex], 
+        newVars[index] = { 
+          ...newVars[index], 
           image: { url, originalUrl: url } 
         };
         return { ...prev, variations: newVars };
@@ -434,6 +434,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     } finally {
       setUploading(false);
       setActiveVariationIndex(null);
+      activeVariationIndexRef.current = null;
     }
   };
 
@@ -441,17 +442,18 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const url = typeof img === 'string' ? img : img?.url;
     if (!url) return;
 
-    const newVars = [...formData.variations];
-    // Mantém a compatibilidade com o formato de objeto da galeria se necessário
-    const imgData = typeof img === 'string' ? { url: img, originalUrl: img } : { 
-      url: img.url, 
-      originalUrl: img.originalUrl || img.url,
-      crop: img.crop || null,
-      zoom: img.zoom || 1
-    };
-
-    newVars[i] = { ...newVars[i], image: imgData };
-    setFormData(prev => ({ ...prev, variations: newVars }));
+    setFormData(prev => {
+      const newVars = [...prev.variations];
+      const imgData = typeof img === 'string' ? { url: img, originalUrl: img } : { 
+        url: img.url, 
+        originalUrl: img.originalUrl || img.url,
+        crop: img.crop || null,
+        zoom: img.zoom || 1
+      };
+      newVars[i] = { ...newVars[i], image: imgData };
+      return { ...prev, variations: newVars };
+    });
+    
     setVariationGalleryOpenIndex(null);
     toast({ title: "Imagem vinculada com sucesso!" });
   };
@@ -757,6 +759,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                                 Escolher da Galeria
                               </Button>
                               <Button type="button" variant="outline" size="sm" className="justify-start text-xs" onClick={() => {
+                                activeVariationIndexRef.current = i;
                                 setActiveVariationIndex(i);
                                 variationInputRef.current?.click();
                                 setVariationGalleryOpenIndex(null);
@@ -833,7 +836,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       </div>
                     )}
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-                    {uploading && <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-30"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
+                    {uploading && activeVariationIndex === null && <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-30"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
                   </div>
                   <div className="p-6 text-center">
                     <p className="font-bold text-primary truncate">{formData.name || 'Preview'}</p>
@@ -866,64 +869,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <Button variant="outline" onClick={handleAIGenerate} disabled={generatingAI} className="w-full h-14 rounded-2xl border-accent/20 text-accent font-bold uppercase text-[10px] tracking-widest">
                   {generatingAI ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />} Gerar Editorial com IA
                 </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Selector from Gallery Dialog - Mantido se houver outros gatilhos, mas as variações agora usam Popover */}
-      <Dialog open={isSelectorOpen} onOpenChange={setIsSelectorOpen}>
-        <DialogContent className="max-w-2xl rounded-[2rem] p-8 border-none shadow-2xl bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-primary">Vincular Imagem</DialogTitle>
-            <DialogDescription className="text-muted-foreground italic text-xs">Escolha uma foto existente ou envie um novo arquivo para esta variação.</DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-8 py-4">
-            <div className="space-y-4">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Enviar do Computador</Label>
-              <Button 
-                variant="outline" 
-                className="w-full h-14 rounded-xl border-dashed border-2 border-primary/10 hover:border-primary/40 hover:bg-secondary/10 transition-all flex items-center justify-center gap-2 group"
-                onClick={() => {
-                  variationInputRef.current?.click();
-                  setIsSelectorOpen(false);
-                }}
-              >
-                <Upload className="h-5 w-5 text-accent group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold uppercase tracking-widest">Fazer Upload de Nova Foto</span>
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Escolher da Galeria Existente</Label>
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-[300px] overflow-y-auto no-scrollbar p-1">
-                {/* Capa */}
-                {formData.image && (
-                  <button 
-                    onClick={() => {
-                      if (activeVariationIndex !== null) handleSelectFromGallery(activeVariationIndex, formData.image);
-                      setIsSelectorOpen(false);
-                    }}
-                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-accent transition-all bg-gray-50 group"
-                  >
-                    <img src={getImageUrl(formData.image)} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="Capa" />
-                  </button>
-                )}
-                {/* Galeria */}
-                {formData.gallery.map((img, idx) => (
-                  <button 
-                    key={idx}
-                    onClick={() => {
-                      if (activeVariationIndex !== null) handleSelectFromGallery(activeVariationIndex, img);
-                      setIsSelectorOpen(false);
-                    }}
-                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-accent transition-all bg-gray-50 group"
-                  >
-                    <img src={getImageUrl(img)} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt={`Foto ${idx + 1}`} />
-                  </button>
-                ))}
               </div>
             </div>
           </div>
