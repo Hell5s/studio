@@ -258,7 +258,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                         </span>
                       )}
                     </div>
-                    <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Bolsa</span>
+                    <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Carrinho</span>
                   </div>
                 </button>
               )}

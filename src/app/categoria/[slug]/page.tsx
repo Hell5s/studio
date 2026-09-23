@@ -13,16 +13,17 @@ import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { Loader2, Tag, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useCart } from '@/contexts/CartContext';
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const db = useFirestore();
+  const { cart, addToCart, updateQuantity, removeFromCart, cartCount, cartTotal } = useCart();
   
   // Estados de Interface
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
-  const [cart, setCart] = useState<any[]>([]);
 
   // 1. Descobrir o nome real da categoria a partir do slug
   const categoriesQuery = useMemoFirebase(() => query(collection(db, 'categories')), [db]);
@@ -46,34 +47,6 @@ export default function CategoryPage() {
   }, [db, categoryName]);
 
   const { data: products, isLoading } = useCollection(productsQuery);
-
-  // Lógica de Carrinho
-  const addToCart = (product: any) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: (item.quantity || 0) + 1 } : item);
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  };
-
-  const updateQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, (item.quantity || 1) + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
-  };
-
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  };
-
-  const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
-  const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
   return (
     <div className="min-h-screen bg-background selection:bg-accent/30 selection:text-primary overflow-x-hidden">
@@ -143,7 +116,7 @@ export default function CategoryPage() {
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeFromCart}
         total={cartTotal}
-        onSuccess={() => setCart([])}
+        onSuccess={() => {}}
       />
     </div>
   );

@@ -51,7 +51,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
 
   const handleFinalize = () => {
     if (cartItems.length === 0) {
-      toast({ title: "Sacola vazia", description: "Adicione peças antes de finalizar.", variant: "destructive" });
+      toast({ title: "Carrinho vazio", description: "Adicione peças antes de finalizar.", variant: "destructive" });
       return;
     }
 
@@ -132,7 +132,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 onClick={() => setView('cart')}
                 className="flex items-center gap-2 text-[9px] font-bold text-primary/40 uppercase tracking-widest hover:text-primary transition-colors mb-1"
               >
-                <ChevronLeft className="h-3 w-3" /> Voltar para sacola
+                <ChevronLeft className="h-3 w-3" /> Voltar para o carrinho
               </button>
             )}
             <SheetTitle className="text-xs font-bold text-primary uppercase tracking-[0.3em]">
@@ -149,7 +149,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                   <ShoppingBag className="h-10 w-10" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Sua bolsa está vazia</h3>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Seu carrinho está vazio</h3>
                   <p className="text-[12px] text-muted-foreground italic font-light">Inicie sua jornada editorial escolhendo peças exclusivas.</p>
                 </div>
               </div>
