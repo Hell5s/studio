@@ -54,7 +54,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getItemImageUrl } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
   'pending': 'bg-amber-50 text-amber-700 border-amber-100',
@@ -101,6 +101,18 @@ export function OrderManagement() {
 
   const pendingPurchaseCount = useMemo(() => {
     return orders?.filter(o => o.status === 'paid' && !o.isOrderedSupplier).length || 0;
+  }, [orders]);
+
+  const orderedCount = useMemo(() => {
+    return orders?.filter(o => o.status === 'ordered').length || 0;
+  }, [orders]);
+
+  const shippedCount = useMemo(() => {
+    return orders?.filter(o => o.status === 'shipped').length || 0;
+  }, [orders]);
+
+  const deliveredCount = useMemo(() => {
+    return orders?.filter(o => o.status === 'delivered').length || 0;
   }, [orders]);
 
   const filteredOrders = useMemo(() => {
@@ -199,6 +211,15 @@ export function OrderManagement() {
             <TabsTrigger value="paid" className="rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Pago</TabsTrigger>
             <TabsTrigger value="pending_purchase" className="rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-accent data-[state=active]:text-primary transition-all flex items-center gap-2">
               Pendentes de Compra ({pendingPurchaseCount})
+            </TabsTrigger>
+            <TabsTrigger value="ordered" className="rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all flex items-center gap-2">
+              Comprado ({orderedCount})
+            </TabsTrigger>
+            <TabsTrigger value="shipped" className="rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all flex items-center gap-2">
+              Enviado ({shippedCount})
+            </TabsTrigger>
+            <TabsTrigger value="delivered" className="rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all flex items-center gap-2">
+              Entregue ({deliveredCount})
             </TabsTrigger>
           </TabsList>
         </Tabs>
