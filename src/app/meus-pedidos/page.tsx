@@ -5,7 +5,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@
 import { collection, query, where, orderBy, limit, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
-import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, RefreshCw } from 'lucide-react';
+import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, RefreshCw, Copy } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { cn, getItemImageUrl } from '@/lib/utils';
@@ -221,10 +221,28 @@ export default function MeusPedidosPage() {
                                           {(() => {
                                             const itemStatus = itemStatusConfig[item.status || 'aguardando'];
                                             return (
-                                              <div className={cn("inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest", itemStatus.color)}>
-                                                {itemStatus.icon}
-                                                {itemStatus.label}
-                                                {item.trackingCode && <span className="opacity-60 normal-case font-normal">• {item.trackingCode}</span>}
+                                              <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest", itemStatus.color)}>
+                                                  {itemStatus.icon}
+                                                  {itemStatus.label}
+                                                </div>
+                                                {item.trackingCode && (
+                                                  <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-100")}>
+                                                    <span>Rastreio: {item.trackingCode}</span>
+                                                    <button 
+                                                      onClick={async () => {
+                                                        try {
+                                                          await navigator.clipboard.writeText(item.trackingCode);
+                                                          toast({ title: "Código copiado!" });
+                                                        } catch (e) {}
+                                                      }}
+                                                      className="p-1 hover:bg-blue-100 rounded-md transition-colors"
+                                                      title="Copiar código"
+                                                    >
+                                                      <Copy className="h-3 w-3" />
+                                                    </button>
+                                                  </div>
+                                                )}
                                               </div>
                                             );
                                           })()}
@@ -235,35 +253,35 @@ export default function MeusPedidosPage() {
                                 })}
                              </div>
                           </div>
+                       </div>
 
-                          <div className="lg:col-span-5 bg-secondary/20 p-8 md:p-12 space-y-12 border-l border-primary/5">
-                            <div className="space-y-6">
-                               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent flex items-center gap-3">
-                                  <MapPin className="h-4 w-4" /> Destino da Entrega
-                               </p>
-                               <div className="space-y-6 bg-white/60 p-8 rounded-[2.5rem] border border-primary/5 shadow-sm">
-                                  <div className="space-y-1">
-                                     <p className="text-lg font-bold text-primary">{order.customer?.name}</p>
-                                     <p className="text-xs text-muted-foreground italic font-light">{order.customer?.email}</p>
-                                  </div>
-                                  <Separator className="bg-primary/5" />
-                                  <div className="text-sm text-muted-foreground leading-relaxed italic space-y-1 font-light">
-                                     <p>{order.customer?.address}</p>
-                                     <p>{order.customer?.city} - {order.customer?.state}</p>
-                                     <p className="font-bold text-accent not-italic mt-2">CEP: {order.customer?.zip}</p>
-                                  </div>
-                               </div>
-                            </div>
+                       <div className="lg:col-span-5 bg-secondary/20 p-8 md:p-12 space-y-12 border-l border-primary/5">
+                          <div className="space-y-6">
+                             <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent flex items-center gap-3">
+                                <MapPin className="h-4 w-4" /> Destino da Entrega
+                             </p>
+                             <div className="space-y-6 bg-white/60 p-8 rounded-[2.5rem] border border-primary/5 shadow-sm">
+                                <div className="space-y-1">
+                                   <p className="text-lg font-bold text-primary">{order.customer?.name}</p>
+                                   <p className="text-xs text-muted-foreground italic font-light">{order.customer?.email}</p>
+                                </div>
+                                <Separator className="bg-primary/5" />
+                                <div className="text-sm text-muted-foreground leading-relaxed italic space-y-1 font-light">
+                                   <p>{order.customer?.address}</p>
+                                   <p>{order.customer?.city} - {order.customer?.state}</p>
+                                   <p className="font-bold text-accent not-italic mt-2">CEP: {order.customer?.zip}</p>
+                                </div>
+                             </div>
+                          </div>
 
-                            <div className="space-y-6">
-                               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent flex items-center gap-3">
-                                  <Truck className="h-4 w-4" /> Logística
-                               </p>
-                               <div className="p-6 rounded-[2rem] bg-white/40 border border-primary/5 italic text-sm text-primary/60">
-                                  <p className="font-bold not-italic text-primary mb-1">{order.shipping?.method}</p>
-                                  <p className="text-xs">Previsão: {order.shipping?.estimatedTime || '15-20 dias'}</p>
-                               </div>
-                            </div>
+                          <div className="space-y-6">
+                             <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent flex items-center gap-3">
+                                <Truck className="h-4 w-4" /> Logística
+                             </p>
+                             <div className="p-6 rounded-[2rem] bg-white/40 border border-primary/5 italic text-sm text-primary/60">
+                                <p className="font-bold not-italic text-primary mb-1">{order.shipping?.method}</p>
+                                <p className="text-xs">Previsão: {order.shipping?.estimatedTime || '15-20 dias'}</p>
+                             </div>
                           </div>
                        </div>
                     </div>
