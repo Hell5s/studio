@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -11,7 +10,7 @@ export async function POST(request: Request) {
       unit_price: Number(item.price),
       quantity: Number(item.quantity),
       currency_id: 'BRL',
-      picture_url: item.image,
+      picture_url: (typeof item.image === 'string' ? item.image : item.image?.url) || undefined,
     }));
 
     const preference = {

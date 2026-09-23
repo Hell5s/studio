@@ -8,7 +8,7 @@ import { Footer } from '@/components/store/Footer';
 import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, RefreshCw } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -35,11 +35,6 @@ const itemStatusConfig: Record<string, { label: string; color: string; icon: Rea
   'transito': { label: 'A Caminho', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <Truck className="h-3 w-3" /> },
   'entregue': { label: 'Entregue', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
 };
-
-function getItemImageUrl(image: any): string {
-  if (!image) return '';
-  return typeof image === 'string' ? image : (image?.url || '');
-}
 
 export default function MeusPedidosPage() {
   const db = useFirestore();
@@ -203,38 +198,41 @@ export default function MeusPedidosPage() {
                                 <Package className="h-4 w-4" /> Sua Seleção ({order.items?.length})
                              </p>
                              <div className="space-y-6">
-                                {order.items?.map((item: any, i: number) => (
-                                  <div key={i} className="flex gap-6 items-center p-6 rounded-[2.5rem] bg-secondary/10 border border-transparent hover:border-accent/10 transition-colors">
-                                     <div className="h-28 w-24 rounded-2xl overflow-hidden shadow-sm shrink-0 border border-white bg-secondary/20">
-                                        {getItemImageUrl(item.image) ? (
-                                          <img src={getItemImageUrl(item.image)} className="h-full w-full object-cover" alt={item.name} />
-                                        ) : (
-                                          <div className="w-full h-full flex items-center justify-center text-primary/10">
-                                            <Package className="h-8 w-8" />
-                                          </div>
-                                        )}
-                                     </div>
-                                     <div className="flex-1 min-w-0">
-                                        <h5 className="text-lg font-bold text-primary leading-tight line-clamp-1">{item.name}</h5>
-                                        <div className="flex gap-3 text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">
-                                           {item.selectedSize && <span>Tam: {item.selectedSize}</span>}
-                                           {item.selectedColor && <span className="text-accent">Cor: {item.selectedColor}</span>}
-                                        </div>
-                                        <p className="text-xs text-muted-foreground italic mt-1">{item.quantity} un • {formatPrice(item.price)}</p>
-                                        {(() => {
-                                          const itemStatus = itemStatusConfig[item.status || 'aguardando'];
-                                          return (
-                                            <div className={cn("inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest", itemStatus.color)}>
-                                              {itemStatus.icon}
-                                              {itemStatus.label}
-                                              {item.trackingCode && <span className="opacity-60 normal-case font-normal">• {item.trackingCode}</span>}
+                                {order.items?.map((item: any, i: number) => {
+                                  const imageUrl = getItemImageUrl(item.image);
+                                  return (
+                                    <div key={i} className="flex gap-6 items-center p-6 rounded-[2.5rem] bg-secondary/10 border border-transparent hover:border-accent/10 transition-colors">
+                                       <div className="h-28 w-24 rounded-2xl overflow-hidden shadow-sm shrink-0 border border-white bg-secondary/20">
+                                          {imageUrl ? (
+                                            <img src={imageUrl} className="h-full w-full object-cover" alt={item.name} />
+                                          ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-primary/10">
+                                              <Package className="h-8 w-8" />
                                             </div>
-                                          );
-                                        })()}
-                                     </div>
-                                     <p className="text-lg font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
-                                  </div>
-                                ))}
+                                          )}
+                                       </div>
+                                       <div className="flex-1 min-w-0">
+                                          <h5 className="text-lg font-bold text-primary leading-tight line-clamp-1">{item.name}</h5>
+                                          <div className="flex gap-3 text-[9px] text-muted-foreground uppercase font-bold tracking-widest mt-1">
+                                             {item.selectedSize && <span>Tam: {item.selectedSize}</span>}
+                                             {item.selectedColor && <span className="text-accent">Cor: {item.selectedColor}</span>}
+                                          </div>
+                                          <p className="text-xs text-muted-foreground italic mt-1">{item.quantity} un • {formatPrice(item.price)}</p>
+                                          {(() => {
+                                            const itemStatus = itemStatusConfig[item.status || 'aguardando'];
+                                            return (
+                                              <div className={cn("inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest", itemStatus.color)}>
+                                                {itemStatus.icon}
+                                                {itemStatus.label}
+                                                {item.trackingCode && <span className="opacity-60 normal-case font-normal">• {item.trackingCode}</span>}
+                                              </div>
+                                            );
+                                          })()}
+                                       </div>
+                                       <p className="text-lg font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
+                                    </div>
+                                  );
+                                })}
                              </div>
                           </div>
 

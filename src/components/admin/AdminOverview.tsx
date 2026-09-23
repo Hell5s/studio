@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -30,7 +29,7 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 
 export function AdminOverview({ onNavigate }: { onNavigate: (tab: any) => void }) {
   const db = useFirestore();
@@ -221,13 +220,14 @@ export function AdminOverview({ onNavigate }: { onNavigate: (tab: any) => void }
               <tbody className="divide-y divide-gray-50">
                 {recentOrders?.map((order) => {
                   const firstItem = order.items?.[0];
+                  const itemImg = getItemImageUrl(firstItem?.image);
                   const displayId = order.orderNumber || `PED-${order.id.slice(-6).toUpperCase()}`;
                   return (
                     <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-8 py-5">
                         <div className="h-12 w-10 rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-50">
-                          {firstItem?.image ? (
-                            <img src={firstItem.image} className="h-full w-full object-cover" alt={firstItem.name} />
+                          {itemImg ? (
+                            <img src={itemImg} className="h-full w-full object-cover" alt={firstItem.name} />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center text-primary/10">
                                <ImageIcon className="h-4 w-4" />

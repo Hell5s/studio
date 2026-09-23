@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -35,7 +34,7 @@ import {
 } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -344,26 +343,29 @@ export function AdminShowcaseSections() {
                   <div className="grid md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto no-scrollbar pr-2">
                     {loadingProducts ? (
                        <div className="col-span-full py-10 text-center"><Loader2 className="animate-spin h-6 w-6 text-accent mx-auto" /></div>
-                    ) : filteredProducts.map(p => (
-                      <div 
-                        key={p.id} 
-                        onClick={() => toggleProduct(p.id)}
-                        className={cn(
-                          "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer group",
-                          formData.productIds.includes(p.id) ? "bg-white border-primary shadow-md" : "bg-white/40 border-transparent hover:border-accent/30"
-                        )}
-                      >
-                         <div className="h-16 w-12 rounded-lg overflow-hidden bg-secondary shrink-0 border border-primary/5">
-                            <img src={p.image} className="w-full h-full object-cover" />
-                         </div>
-                         <div className="flex-1 min-w-0">
-                            <p className="text-[11px] font-bold text-primary truncate uppercase">{p.name}</p>
-                            <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">{p.category}</p>
-                            <p className="text-[10px] font-bold text-accent mt-1">R$ {p.price?.toFixed(2)}</p>
-                         </div>
-                         <Checkbox checked={formData.productIds.includes(p.id)} onCheckedChange={() => {}} className="pointer-events-none" />
-                      </div>
-                    ))}
+                    ) : filteredProducts.map(p => {
+                      const pImg = getItemImageUrl(p.image);
+                      return (
+                        <div 
+                          key={p.id} 
+                          onClick={() => toggleProduct(p.id)}
+                          className={cn(
+                            "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer group",
+                            formData.productIds.includes(p.id) ? "bg-white border-primary shadow-md" : "bg-white/40 border-transparent hover:border-accent/30"
+                          )}
+                        >
+                           <div className="h-16 w-12 rounded-lg overflow-hidden bg-secondary shrink-0 border border-primary/5">
+                              {pImg ? <img src={pImg} className="w-full h-full object-cover" alt="product" /> : <div className="h-full w-full bg-secondary/20" />}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <p className="text-[11px] font-bold text-primary truncate uppercase">{p.name}</p>
+                              <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">{p.category}</p>
+                              <p className="text-[10px] font-bold text-accent mt-1">R$ {p.price?.toFixed(2)}</p>
+                           </div>
+                           <Checkbox checked={formData.productIds.includes(p.id)} onCheckedChange={() => {}} className="pointer-events-none" />
+                        </div>
+                      );
+                    })}
                   </div>
                </section>
             </div>
@@ -376,9 +378,10 @@ export function AdminShowcaseSections() {
                       formData.productIds.map(id => {
                         const p = allProducts?.find(item => item.id === id);
                         if (!p) return null;
+                        const pImg = getItemImageUrl(p.image);
                         return (
                           <div key={id} className="flex items-center gap-4 p-3 bg-secondary/20 rounded-xl group relative">
-                             <img src={p.image} className="h-12 w-10 object-cover rounded-lg border border-primary/5" />
+                             {pImg ? <img src={pImg} className="h-12 w-10 object-cover rounded-lg border border-primary/5" alt="item" /> : <div className="h-12 w-10 rounded-lg bg-secondary/20" />}
                              <div className="flex-1 min-w-0">
                                 <p className="text-[10px] font-bold text-primary truncate uppercase">{p.name}</p>
                                 <p className="text-[9px] text-accent font-bold">R$ {p.price?.toFixed(2)}</p>

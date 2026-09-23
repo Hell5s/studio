@@ -29,15 +29,10 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import Link from 'next/link';
 import { LogoMark } from '@/components/store/LogoMark';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
 type Step = 'identificacao' | 'entrega' | 'pagamento';
-
-function getItemImageUrl(image: any): string {
-  if (!image) return '';
-  return typeof image === 'string' ? image : (image?.url || '');
-}
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
@@ -700,7 +695,7 @@ function CheckoutContent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2">
                   <div className="md:col-span-2 space-y-1.5">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, name: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
+                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
@@ -824,7 +819,7 @@ function CheckoutContent() {
                 <div className="flex items-start gap-3 bg-accent/5 border border-accent/15 rounded-2xl p-4 mb-6">
                   <Package className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
                   <p className="text-[11px] text-primary/70 leading-relaxed">
-                    Seu pedido tem mais de um produto. Como trabalhamos com fornecedores parceiros, cada peça pode ser enviada separadamente e chegar em dias diferentes — fique tranquila, é normal!
+                    Seu pedido tem mais de um product. Como trabalhamos com fornecedores parceiros, cada peça pode ser enviada separadamente e chegar em dias diferentes — fique tranquila, é normal!
                   </p>
                 </div>
               )}

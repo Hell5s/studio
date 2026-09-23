@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -29,7 +28,7 @@ import { Label } from '@/components/ui/label';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, doc, where, limit, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -202,11 +201,14 @@ export function AdminMarketing() {
                         </td>
                         <td className="px-8 py-6">
                           <div className="flex -space-x-2">
-                             {cart.items?.slice(0, 3).map((it: any, i: number) => (
-                               <div key={i} className="h-8 w-8 rounded-lg border-2 border-white bg-gray-100 overflow-hidden shadow-sm">
-                                 <img src={it.image} className="h-full w-full object-cover" />
-                               </div>
-                             ))}
+                             {cart.items?.slice(0, 3).map((it: any, i: number) => {
+                               const itImg = getItemImageUrl(it.image);
+                               return (
+                                 <div key={i} className="h-8 w-8 rounded-lg border-2 border-white bg-gray-100 overflow-hidden shadow-sm">
+                                   {itImg ? <img src={itImg} className="h-full w-full object-cover" alt="item" /> : <div className="h-full w-full bg-secondary/20" />}
+                                 </div>
+                               );
+                             })}
                              {cart.items?.length > 3 && <div className="h-8 w-8 rounded-lg bg-secondary text-[9px] font-bold flex items-center justify-center border-2 border-white">+{cart.items.length - 3}</div>}
                           </div>
                         </td>

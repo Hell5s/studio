@@ -1,6 +1,6 @@
 interface Item {
     name: string;
-    image: string;
+    image: any;
     price: number;
     quantity: number;
   }
@@ -34,6 +34,13 @@ interface Item {
     const complemento = address.complement ? `, ${address.complement}` : "";
     return `${address.street}, ${address.number}${complemento} — ${address.neighborhood}, ${address.city}/${address.state} — CEP ${address.zipCode}`;
   }
+
+  function getItemImageUrl(image: any): string {
+    if (!image) return '';
+    if (typeof image === 'string') return image;
+    if (typeof image === 'object' && typeof image.url === 'string') return image.url;
+    return '';
+  }
   
   export function gerarEmailPosCompra({ orderId, customerName, items, total, address }: EmailProps): string {
     const primeiroNome = customerName.split(" ")[0];
@@ -44,7 +51,7 @@ interface Item {
         <td style="padding:16px 0;border-bottom:1px solid #f0e8e0;">
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td width="72" style="vertical-align:top;">
-              <img src="${item.image}" width="64" height="64" style="border-radius:8px;object-fit:cover;display:block;" />
+              <img src="${getItemImageUrl(item.image) || 'https://placehold.co/64x64/f3e9df/8c6e5a?text=%20'}" width="64" height="64" style="border-radius:8px;object-fit:cover;display:block;" />
             </td>
             <td style="padding-left:16px;vertical-align:top;">
               <p style="margin:0 0 4px 0;font-family:Georgia,serif;font-size:15px;color:#3d1f27;font-weight:600;">${item.name}</p>

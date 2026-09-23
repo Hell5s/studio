@@ -54,6 +54,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getItemImageUrl } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
   'pending': 'bg-amber-50 text-amber-700 border-amber-100',
@@ -236,9 +237,14 @@ export function OrderManagement() {
                     </td>
                     <td className="px-8 py-6 text-center">
                       <div className="flex justify-center -space-x-2">
-                         {order.items?.slice(0, 3).map((it: any, idx: number) => (
-                           <div key={idx} className="h-8 w-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm"><img src={it.image} className="h-full w-full object-cover" /></div>
-                         ))}
+                         {order.items?.slice(0, 3).map((it: any, idx: number) => {
+                           const itImg = getItemImageUrl(it.image);
+                           return (
+                             <div key={idx} className="h-8 w-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm">
+                               {itImg ? <img src={itImg} className="h-full w-full object-cover" alt="item" /> : <div className="h-full w-full bg-secondary/20" />}
+                             </div>
+                           );
+                         })}
                          {order.items?.length > 3 && <div className="h-8 w-8 rounded-full bg-secondary text-[10px] font-bold flex items-center justify-center border-2 border-white">+{order.items.length - 3}</div>}
                       </div>
                     </td>
@@ -321,57 +327,64 @@ export function OrderManagement() {
                        <h4 className="text-[11px] font-bold uppercase tracking-widest">Itens e Fornecedores</h4>
                     </div>
                     <div className="space-y-4">
-                      {selectedOrder.items?.map((item: any, i: number) => (
-                        <Card key={i} className="p-6 border-none shadow-sm bg-white space-y-6">
-                           <div className="flex gap-6 items-center">
-                             <img src={item.image} className="h-20 w-16 object-cover rounded-xl" />
-                             <div className="flex-1">
-                               <h5 className="font-bold text-primary">{item.name}</h5>
-                               <p className="text-[10px] uppercase font-bold text-muted-foreground">{item.selectedSize} / {item.selectedColor}</p>
+                      {selectedOrder.items?.map((item: any, i: number) => {
+                        const itemImg = getItemImageUrl(item.image);
+                        return (
+                          <Card key={i} className="p-6 border-none shadow-sm bg-white space-y-6">
+                             <div className="flex gap-6 items-center">
+                               {itemImg ? (
+                                 <img src={itemImg} className="h-20 w-16 object-cover rounded-xl" alt={item.name} />
+                               ) : (
+                                 <div className="h-20 w-16 rounded-xl bg-secondary/20" />
+                               )}
+                               <div className="flex-1">
+                                 <h5 className="font-bold text-primary">{item.name}</h5>
+                                 <p className="text-[10px] uppercase font-bold text-muted-foreground">{item.selectedSize} / {item.selectedColor}</p>
+                               </div>
+                               <div className="text-right"><p className="font-bold text-primary">R$ {item.price?.toFixed(2)}</p><p className="text-[10px] text-muted-foreground">Qtd: {item.quantity}</p></div>
                              </div>
-                             <div className="text-right"><p className="font-bold text-primary">R$ {item.price?.toFixed(2)}</p><p className="text-[10px] text-muted-foreground">Qtd: {item.quantity}</p></div>
-                           </div>
-                           
-                           <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between">
-                              <div className="space-y-1">
-                                 <p className="text-[10px] font-bold uppercase text-accent tracking-widest">Fornecedor: {item.supplierName || 'Manual'}</p>
-                                 <p className="text-xs text-muted-foreground italic">Custo estimado: R$ {item.supplierCost || '0.00'}</p>
-                              </div>
-                              <div className="flex gap-2">
-                                 {item.supplierUrl && (
-                                   <Button size="sm" onClick={() => window.open(item.supplierUrl, '_blank')} className="h-8 bg-primary text-white text-[9px] uppercase font-bold rounded-lg px-4">
-                                     <LinkIcon className="h-3 w-3 mr-2" /> Abrir Site
-                                   </Button>
-                                 )}
-                                 <Button variant="outline" size="sm" onClick={() => copyToClipboard(item.supplierUrl, "Link copiado!")} className="h-8 text-[9px] font-bold uppercase rounded-lg border-gray-200"><Copy className="h-3 w-3" /></Button>
-                              </div>
-                           </div>
+                             
+                             <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between">
+                                <div className="space-y-1">
+                                   <p className="text-[10px] font-bold uppercase text-accent tracking-widest">Fornecedor: {item.supplierName || 'Manual'}</p>
+                                   <p className="text-xs text-muted-foreground italic">Custo estimado: R$ {item.supplierCost || '0.00'}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                   {item.supplierUrl && (
+                                     <Button size="sm" onClick={() => window.open(item.supplierUrl, '_blank')} className="h-8 bg-primary text-white text-[9px] uppercase font-bold rounded-lg px-4">
+                                       <LinkIcon className="h-3 w-3 mr-2" /> Abrir Site
+                                     </Button>
+                                   )}
+                                   <Button variant="outline" size="sm" onClick={() => copyToClipboard(item.supplierUrl, "Link copiado!")} className="h-8 text-[9px] font-bold uppercase rounded-lg border-gray-200"><Copy className="h-3 w-3" /></Button>
+                                </div>
+                             </div>
 
-                           <div className="p-4 rounded-2xl bg-secondary/10 border border-primary/5 grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <Label className="text-[9px] font-bold uppercase text-muted-foreground">Status do Envio</Label>
-                              <select
-                                value={item.status || 'aguardando'}
-                                onChange={(e) => updateItemField(selectedOrder.id, i, 'status', e.target.value)}
-                                className={`w-full h-9 rounded-lg border text-[10px] font-bold uppercase px-3 ${itemStatusColors[item.status || 'aguardando']}`}
-                              >
-                                {Object.keys(itemStatusLabels).map(s => (
-                                  <option key={s} value={s}>{itemStatusLabels[s]}</option>
-                                ))}
-                              </select>
+                             <div className="p-4 rounded-2xl bg-secondary/10 border border-primary/5 grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <Label className="text-[9px] font-bold uppercase text-muted-foreground">Status do Envio</Label>
+                                <select
+                                  value={item.status || 'aguardando'}
+                                  onChange={(e) => updateItemField(selectedOrder.id, i, 'status', e.target.value)}
+                                  className={`w-full h-9 rounded-lg border text-[10px] font-bold uppercase px-3 ${itemStatusColors[item.status || 'aguardando']}`}
+                                >
+                                  {Object.keys(itemStatusLabels).map(s => (
+                                    <option key={s} value={s}>{itemStatusLabels[s]}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[9px] font-bold uppercase text-muted-foreground">Código de Rastreio</Label>
+                                <Input
+                                  defaultValue={item.trackingCode || ''}
+                                  onBlur={(e) => updateItemField(selectedOrder.id, i, 'trackingCode', e.target.value)}
+                                  placeholder="Ex: BR123456789"
+                                  className="h-9 text-[10px] bg-white border-gray-200 rounded-lg"
+                                />
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <Label className="text-[9px] font-bold uppercase text-muted-foreground">Código de Rastreio</Label>
-                              <Input
-                                defaultValue={item.trackingCode || ''}
-                                onBlur={(e) => updateItemField(selectedOrder.id, i, 'trackingCode', e.target.value)}
-                                placeholder="Ex: BR123456789"
-                                className="h-9 text-[10px] bg-white border-gray-200 rounded-lg"
-                              />
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
+                          </Card>
+                        );
+                      })}
                     </div>
                   </section>
 

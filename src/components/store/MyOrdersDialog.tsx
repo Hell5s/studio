@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -12,7 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ShoppingBag, Loader2, Package, MapPin, Tag, Clock, CheckCircle2, Truck, XCircle, Info } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -119,22 +118,25 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                             <Package className="h-3 w-3" /> Sua Seleção ({order.items?.length || 0})
                           </p>
                           <div className="space-y-4">
-                            {order.items?.map((item: any, i: number) => (
-                              <div key={i} className="flex gap-6 items-center p-4 rounded-3xl bg-secondary/10 border border-transparent hover:border-accent/10 transition-colors">
-                                <div className="h-24 w-20 rounded-2xl overflow-hidden shadow-sm shrink-0">
-                                  <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h5 className="text-sm font-bold text-primary leading-tight line-clamp-1">{item.name}</h5>
-                                  <div className="flex gap-3 text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
-                                    {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
-                                    {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
+                            {order.items?.map((item: any, i: number) => {
+                              const itemImg = getItemImageUrl(item.image);
+                              return (
+                                <div key={i} className="flex gap-6 items-center p-4 rounded-3xl bg-secondary/10 border border-transparent hover:border-accent/10 transition-colors">
+                                  <div className="h-24 w-20 rounded-2xl overflow-hidden shadow-sm shrink-0">
+                                    {itemImg ? <img src={itemImg} className="h-full w-full object-cover" alt={item.name} /> : <div className="h-full w-full bg-secondary/20" />}
                                   </div>
-                                  <p className="mt-1 text-[11px] text-muted-foreground italic">Qtd: {item.quantity} • {formatPrice(item.price)}</p>
+                                  <div className="flex-1 min-w-0">
+                                    <h5 className="text-sm font-bold text-primary leading-tight line-clamp-1">{item.name}</h5>
+                                    <div className="flex gap-3 text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
+                                      {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
+                                      {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
+                                    </div>
+                                    <p className="mt-1 text-[11px] text-muted-foreground italic">Qtd: {item.quantity} • {formatPrice(item.price)}</p>
+                                  </div>
+                                  <p className="text-sm font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
                                 </div>
-                                <p className="text-sm font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       </div>

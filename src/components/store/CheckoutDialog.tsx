@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -16,7 +15,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 
 interface CheckoutDialogProps {
   open: boolean;
@@ -157,22 +156,26 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full">
                 <div className="space-y-0 w-full">
                   {cartItems.map((item, idx) => {
-                    const imageUrl = typeof item.image === 'string' ? item.image : item.image?.url;
+                    const imageUrl = getItemImageUrl(item.image);
                     const imageConfig = typeof item.image === 'object' ? item.image : null;
 
                     return (
                       <div key={item.id} className="w-full">
                         <div className="flex gap-4 md:gap-6 py-6 group w-full">
                           <div className="h-24 w-20 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm relative">
-                            <img 
-                              src={imageUrl} 
-                              className="h-full w-full object-cover" 
-                              alt={item.name} 
-                              style={imageConfig ? {
-                                objectPosition: imageConfig.crop ? `${imageConfig.crop.x}% ${imageConfig.crop.y}%` : 'center',
-                                transform: imageConfig.zoom ? `scale(${imageConfig.zoom / 100})` : 'none'
-                              } : undefined}
-                            />
+                            {imageUrl ? (
+                              <img 
+                                src={imageUrl} 
+                                className="h-full w-full object-cover" 
+                                alt={item.name} 
+                                style={imageConfig ? {
+                                  objectPosition: imageConfig.crop ? `${imageConfig.crop.x}% ${imageConfig.crop.y}%` : 'center',
+                                  transform: imageConfig.zoom ? `scale(${imageConfig.zoom / 100})` : 'none'
+                                } : undefined}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-secondary/20" />
+                            )}
                           </div>
                           <div className="flex-1 min-w-0 space-y-2">
                             <p className="text-[11px] font-bold text-primary leading-tight uppercase tracking-tight truncate w-full">{item.name}</p>
