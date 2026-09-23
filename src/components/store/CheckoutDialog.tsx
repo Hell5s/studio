@@ -156,29 +156,42 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
             ) : (
               <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full">
                 <div className="space-y-0 w-full">
-                  {cartItems.map((item, idx) => (
-                    <div key={item.id} className="w-full">
-                      <div className="flex gap-4 md:gap-6 py-6 group w-full">
-                        <div className="h-24 w-20 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm">
-                          <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
-                        </div>
-                        <div className="flex-1 min-w-0 space-y-2">
-                          <p className="text-[11px] font-bold text-primary leading-tight uppercase tracking-tight truncate w-full">{item.name}</p>
-                          <div className="flex flex-wrap gap-4 text-[9px] text-muted-foreground font-black uppercase tracking-widest">
-                            {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
-                            {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
+                  {cartItems.map((item, idx) => {
+                    const imageUrl = typeof item.image === 'string' ? item.image : item.image?.url;
+                    const imageConfig = typeof item.image === 'object' ? item.image : null;
+
+                    return (
+                      <div key={item.id} className="w-full">
+                        <div className="flex gap-4 md:gap-6 py-6 group w-full">
+                          <div className="h-24 w-20 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm relative">
+                            <img 
+                              src={imageUrl} 
+                              className="h-full w-full object-cover" 
+                              alt={item.name} 
+                              style={imageConfig ? {
+                                objectPosition: imageConfig.crop ? `${imageConfig.crop.x}% ${imageConfig.crop.y}%` : 'center',
+                                transform: imageConfig.zoom ? `scale(${imageConfig.zoom / 100})` : 'none'
+                              } : undefined}
+                            />
                           </div>
-                          <div className="flex items-center gap-3 pt-3">
-                              <button onClick={() => onUpdateQuantity(item.id, -1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">−</button>
-                              <span className="text-[11px] font-bold w-4 text-center">{item.quantity}</span>
-                              <button onClick={() => onUpdateQuantity(item.id, 1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">+</button>
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <p className="text-[11px] font-bold text-primary leading-tight uppercase tracking-tight truncate w-full">{item.name}</p>
+                            <div className="flex flex-wrap gap-4 text-[9px] text-muted-foreground font-black uppercase tracking-widest">
+                              {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
+                              {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
+                            </div>
+                            <div className="flex items-center gap-3 pt-3">
+                                <button onClick={() => onUpdateQuantity(item.id, -1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">−</button>
+                                <span className="text-[11px] font-bold w-4 text-center">{item.quantity}</span>
+                                <button onClick={() => onUpdateQuantity(item.id, 1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">+</button>
+                            </div>
                           </div>
+                          <button onClick={() => onRemoveItem(item.id)} className="text-primary/10 hover:text-destructive self-start p-2 shrink-0"><X className="h-4 w-4" /></button>
                         </div>
-                        <button onClick={() => onRemoveItem(item.id)} className="text-primary/10 hover:text-destructive self-start p-2 shrink-0"><X className="h-4 w-4" /></button>
+                        {idx < cartItems.length - 1 && <div className="h-px bg-primary/5" />}
                       </div>
-                      {idx < cartItems.length - 1 && <div className="h-px bg-primary/5" />}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )
