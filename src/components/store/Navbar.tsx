@@ -229,7 +229,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               {showIcons.orders && (
                 <Link
                   href="/meus-pedidos"
-                  className="p-2.5 transition-colors group flex items-center gap-0.5 hidden xs:flex"
+                  className="p-2.5 transition-colors group flex items-center gap-0.5"
                   style={{ color: iconColor }}
                 >
                   <div style={iconFilterStyle} className="flex items-center gap-0.5">
