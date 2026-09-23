@@ -16,7 +16,8 @@ import {
   QrCode,
   Copy,
   CheckCircle2,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -506,6 +507,13 @@ function CheckoutContent() {
     }
   };
 
+  const handleRemoveItem = (index: number) => {
+    const newItems = sessionItems.filter((_, i) => i !== index);
+    setSessionItems(newItems);
+    sessionStorage.setItem('checkout_items', JSON.stringify(newItems));
+    toast({ title: "Item removido" });
+  };
+
   const formatPrice = (val: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
@@ -919,6 +927,7 @@ function CheckoutContent() {
                     </div>
                   )}
 
+                  {/* Alterado para permitir trocar dados livremente no mobile */}
                   <div className="pt-4 border-t border-primary/5 w-full">
                     <button onClick={() => setCurrentStep('entrega')} className="text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary flex items-center gap-2 py-2">
                       <ChevronLeft className="h-3 w-3" /> Alterar Dados de Entrega
@@ -935,19 +944,31 @@ function CheckoutContent() {
                   <Package className="h-4 w-4" />
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]">Sua Escolha</h3>
                </div>
-               <div className="space-y-4 max-h-[300px] overflow-y-auto no-scrollbar pr-1">
-                  {sessionItems.map((item: any, i: number) => (
-                    <div key={i} className="flex gap-4 items-center">
-                       <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0 border border-primary/5">
-                          <img src={item.image} className="h-full w-full object-cover" alt={item.name} />
-                       </div>
-                       <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold text-primary uppercase truncate">{item.name}</p>
-                          <p className="text-[9px] text-muted-foreground italic truncate">{item.quantity}un • {formatPrice(item.price)}</p>
-                       </div>
-                       <p className="text-[11px] font-bold text-primary whitespace-nowrap">{formatPrice(item.price * item.quantity)}</p>
-                    </div>
-                  ))}
+               <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar pr-1">
+                  {sessionItems.map((item: any, i: number) => {
+                    const imageUrl = typeof item.image === 'string' ? item.image : item.image?.url;
+                    return (
+                      <div key={i} className="flex gap-4 items-center group relative">
+                         <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0 border border-primary/5">
+                            <img src={imageUrl} className="h-full w-full object-cover" alt={item.name} />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold text-primary uppercase truncate pr-4">{item.name}</p>
+                            <p className="text-[9px] text-muted-foreground italic truncate">{item.quantity}un • {formatPrice(item.price)}</p>
+                         </div>
+                         <div className="flex flex-col items-end gap-1 shrink-0">
+                           <p className="text-[11px] font-bold text-primary whitespace-nowrap">{formatPrice(item.price * item.quantity)}</p>
+                           <button 
+                             onClick={() => handleRemoveItem(i)}
+                             className="md:opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition-all p-1"
+                             title="Remover item"
+                           >
+                             <X className="h-3.5 w-3.5" />
+                           </button>
+                         </div>
+                      </div>
+                    );
+                  })}
                </div>
                <div className="space-y-2.5 pt-4 border-t border-primary/5 w-full">
                   <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
@@ -956,7 +977,7 @@ function CheckoutContent() {
                     <span className="text-xs font-black uppercase text-primary tracking-tighter shrink-0">Total</span>
                     <div className="text-right min-w-0">
                        <span className="text-2xl md:text-3xl font-headline font-bold text-primary leading-none block truncate">{formatPrice(totalGeral)}</span>
-                       <span className="text-[9px] text-accent uppercase font-bold tracking-widest mt-1">10x sem juros no cartão</span>
+                       <span className="text-[9px] text-accent uppercase font-bold tracking-widest mt-1">Até 10x sem juros no cartão</span>
                     </div>
                   </div>
                </div>
@@ -979,7 +1000,7 @@ function CheckoutContent() {
       <footer className="py-12 border-t border-primary/5 bg-white/40 w-full shrink-0">
         <div className="container mx-auto px-6 text-center space-y-4">
            <div className="flex justify-center mb-6 opacity-30"><LogoMark className="max-w-none" /></div>
-           <p className="text-[9px] text-white/30 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
+           <p className="text-[9px] text-primary/30 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
         </div>
       </footer>
     </div>
