@@ -129,11 +129,11 @@ export default function MeusPedidosPage() {
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                 <div>
                   <h1 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-[0.95] tracking-tighter">
-                    Histórico de <br />
-                    <span className="italic font-light text-accent">Conquistas</span>
+                    Meus <br />
+                    <span className="italic font-light text-accent">Pedidos</span>
                   </h1>
                   <p className="text-base md:text-2xl text-muted-foreground font-light italic mt-6 leading-relaxed max-w-2xl">
-                    Cada peça em sua lista representa um moment de sofisticação escolhido por você.
+                    Acompanhe aqui o status de todas as suas compras na Toda Bela.
                   </p>
                 </div>
                 {user && (
