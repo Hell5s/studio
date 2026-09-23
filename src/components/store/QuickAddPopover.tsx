@@ -101,28 +101,35 @@ export function QuickAddPopover({ product, onConfirm, trigger }: QuickAddPopover
                 Cor: <span className="text-primary font-black ml-1">{selectedColor || 'Selecione'}</span>
               </p>
               <div className="flex flex-wrap gap-2">
-                {colorVariations.map((v: any, idx: number) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedColor(v.color)}
-                    className={cn(
-                      "relative h-12 w-10 overflow-hidden border-2 transition-all bg-secondary/10 rounded-md",
-                      selectedColor === v.color ? "border-primary scale-105" : "border-transparent opacity-60 hover:opacity-100"
-                    )}
-                  >
-                    {getItemImageUrl(v.image || product.image) ? (
-                      <Image 
-                        src={getItemImageUrl(v.image || product.image)} 
-                        alt={v.color} 
-                        fill 
-                        className="object-cover" 
-                        sizes="40px" 
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"><Camera className="h-3 w-3 text-primary/10" /></div>
-                    )}
-                  </button>
-                ))}
+                {colorVariations.map((v: any, idx: number) => {
+                  const swatchImg = getItemImageUrl(v.image || product.image);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedColor(v.color);
+                      }}
+                      className={cn(
+                        "relative h-12 w-10 overflow-hidden border-2 transition-all bg-secondary/10 rounded-md",
+                        selectedColor === v.color ? "border-primary scale-105" : "border-transparent opacity-60 hover:opacity-100"
+                      )}
+                    >
+                      {swatchImg ? (
+                        <Image 
+                          src={swatchImg} 
+                          alt={v.color} 
+                          fill 
+                          className="object-cover" 
+                          sizes="40px" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"><Camera className="h-3 w-3 text-primary/10" /></div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -135,7 +142,11 @@ export function QuickAddPopover({ product, onConfirm, trigger }: QuickAddPopover
                 {product.sizes.map((size: string) => (
                   <button
                     key={size}
-                    onClick={() => setSelectedSize(size)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedSize(size);
+                    }}
                     className={cn(
                       "h-9 min-w-[42px] px-2 flex items-center justify-center text-[11px] font-bold transition-all border rounded-md uppercase",
                       selectedSize === size

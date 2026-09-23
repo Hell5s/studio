@@ -102,7 +102,8 @@ export const ProductCard = React.memo(function ProductCard({
     e.stopPropagation();
     
     if (onAddToCart) {
-      onAddToCart();
+      // Passa o objeto completo do produto para garantir que o carrinho receba os dados necessários
+      onAddToCart({ id, name, price, oldPrice, badge, image, sizes, colors, variations });
       toast({
         title: "Adicionado ao carrinho!",
         description: "O item foi reservado na sua sacola."
@@ -172,7 +173,6 @@ export const ProductCard = React.memo(function ProductCard({
               trigger={
                 <button 
                   className="h-8 md:h-10 w-8 md:w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all shadow-sm border border-black/5 text-primary hover:bg-primary hover:text-white focus:outline-none"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                   title="Adicionar ao carrinho"
                 >
                   <ShoppingBag className="h-4 md:h-5 w-4 md:w-5" />
