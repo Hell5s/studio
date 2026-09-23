@@ -30,9 +30,9 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 };
 
 const itemStatusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  'aguardando': { label: 'Aguardando Envio', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
-  'comprado': { label: 'Comprado no Fornecedor', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: <Tag className="h-3 w-3" /> },
-  'transito': { label: 'Em Trânsito', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <Truck className="h-3 w-3" /> },
+  'aguardando': { label: 'Preparando Pedido', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
+  'comprado': { label: 'Preparando Pedido', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
+  'transito': { label: 'A Caminho', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <Truck className="h-3 w-3" /> },
   'entregue': { label: 'Entregue', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
 };
 
@@ -133,7 +133,7 @@ export default function MeusPedidosPage() {
                     <span className="italic font-light text-accent">Conquistas</span>
                   </h1>
                   <p className="text-base md:text-2xl text-muted-foreground font-light italic mt-6 leading-relaxed max-w-2xl">
-                    Cada peça em sua lista representa um momento de sofisticação escolhido por você.
+                    Cada peça em sua lista representa um moment de sofisticação escolhido por você.
                   </p>
                 </div>
                 {user && (
@@ -226,7 +226,6 @@ export default function MeusPedidosPage() {
                                 ))}
                              </div>
                           </div>
-                       </div>
 
                        <div className="lg:col-span-5 bg-secondary/20 p-8 md:p-12 space-y-12 border-l border-primary/5">
                           <div className="space-y-6">
