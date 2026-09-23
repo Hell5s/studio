@@ -29,6 +29,13 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
   'Cancelado': { label: 'Cancelado', color: 'bg-red-50 text-red-700 border-red-100', icon: <XCircle className="h-3 w-3" /> },
 };
 
+const itemStatusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  'aguardando': { label: 'Aguardando Envio', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
+  'comprado': { label: 'Comprado no Fornecedor', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: <Tag className="h-3 w-3" /> },
+  'transito': { label: 'Em Trânsito', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <Truck className="h-3 w-3" /> },
+  'entregue': { label: 'Entregue', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
+};
+
 export default function MeusPedidosPage() {
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
@@ -182,6 +189,11 @@ export default function MeusPedidosPage() {
                     <div className="grid lg:grid-cols-12">
                        <div className="lg:col-span-7 p-8 md:p-12 space-y-10">
                           <div className="space-y-6">
+                             {order.items?.length > 1 && (
+                                <div className="flex items-center gap-2 text-[10px] text-accent font-bold uppercase tracking-widest bg-accent/5 border border-accent/15 rounded-full px-4 py-2 w-fit">
+                                  <Package className="h-3 w-3" /> Seu pedido será entregue em {order.items.length} pacotes
+                                </div>
+                              )}
                              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent flex items-center gap-3">
                                 <Package className="h-4 w-4" /> Sua Seleção ({order.items?.length})
                              </p>
@@ -198,6 +210,16 @@ export default function MeusPedidosPage() {
                                            {item.selectedColor && <span className="text-accent">Cor: {item.selectedColor}</span>}
                                         </div>
                                         <p className="text-xs text-muted-foreground italic mt-1">{item.quantity} un • {formatPrice(item.price)}</p>
+                                        {(() => {
+                                          const itemStatus = itemStatusConfig[item.status || 'aguardando'];
+                                          return (
+                                            <div className={cn("inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest", itemStatus.color)}>
+                                              {itemStatus.icon}
+                                              {itemStatus.label}
+                                              {item.trackingCode && <span className="opacity-60 normal-case font-normal">• {item.trackingCode}</span>}
+                                            </div>
+                                          );
+                                        })()}
                                      </div>
                                      <p className="text-lg font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
                                   </div>

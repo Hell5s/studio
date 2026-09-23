@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -22,7 +21,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, query, orderBy, doc, limit } from 'firebase/firestore';
+import { collection, query, orderBy, doc, limit, updateDoc } from 'firebase/firestore';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -72,6 +71,20 @@ const statusLabels: Record<string, string> = {
   'shipped': 'Enviado',
   'delivered': 'Entregue',
   'canceled': 'Cancelado',
+};
+
+const itemStatusLabels: Record<string, string> = {
+  'aguardando': 'Aguardando Envio',
+  'comprado': 'Comprado no Fornecedor',
+  'transito': 'Em Trânsito',
+  'entregue': 'Entregue',
+};
+
+const itemStatusColors: Record<string, string> = {
+  'aguardando': 'bg-amber-50 text-amber-700 border-amber-100',
+  'comprado': 'bg-blue-50 text-blue-700 border-blue-100',
+  'transito': 'bg-purple-50 text-purple-700 border-purple-100',
+  'entregue': 'bg-green-50 text-green-700 border-green-100',
 };
 
 export function OrderManagement() {
@@ -125,6 +138,19 @@ export function OrderManagement() {
       updatedAt: new Date().toISOString()
     });
     toast({ title: "Status Atualizado", description: `Movido para ${statusLabels[newStatus]}` });
+  };
+
+  const updateItemField = async (orderId: string, itemIndex: number, field: 'status' | 'trackingCode', value: string) => {
+    if (!selectedOrder) return;
+    const newItems = [...selectedOrder.items];
+    newItems[itemIndex] = { ...newItems[itemIndex], [field]: value };
+    try {
+      await updateDoc(doc(db, 'orders', orderId), { items: newItems });
+      setSelectedOrder({ ...selectedOrder, items: newItems });
+      toast({ title: "Item atualizado" });
+    } catch (e) {
+      toast({ title: "Erro ao atualizar item", variant: "destructive" });
+    }
   };
 
   const handleDeleteOrder = () => {
@@ -320,6 +346,30 @@ export function OrderManagement() {
                                  <Button variant="outline" size="sm" onClick={() => copyToClipboard(item.supplierUrl, "Link copiado!")} className="h-8 text-[9px] font-bold uppercase rounded-lg border-gray-200"><Copy className="h-3 w-3" /></Button>
                               </div>
                            </div>
+
+                           <div className="p-4 rounded-2xl bg-secondary/10 border border-primary/5 grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <Label className="text-[9px] font-bold uppercase text-muted-foreground">Status do Envio</Label>
+                              <select
+                                value={item.status || 'aguardando'}
+                                onChange={(e) => updateItemField(selectedOrder.id, i, 'status', e.target.value)}
+                                className={`w-full h-9 rounded-lg border text-[10px] font-bold uppercase px-3 ${itemStatusColors[item.status || 'aguardando']}`}
+                              >
+                                {Object.keys(itemStatusLabels).map(s => (
+                                  <option key={s} value={s}>{itemStatusLabels[s]}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[9px] font-bold uppercase text-muted-foreground">Código de Rastreio</Label>
+                              <Input
+                                defaultValue={item.trackingCode || ''}
+                                onBlur={(e) => updateItemField(selectedOrder.id, i, 'trackingCode', e.target.value)}
+                                placeholder="Ex: BR123456789"
+                                className="h-9 text-[10px] bg-white border-gray-200 rounded-lg"
+                              />
+                            </div>
+                          </div>
                         </Card>
                       ))}
                     </div>
@@ -350,7 +400,7 @@ export function OrderManagement() {
 
                 <div className="space-y-6">
                    <Card className="p-8 rounded-[2rem] bg-[#2A1F22] text-white space-y-6 shadow-xl border-none">
-                      <h5 className="text-[10px] font-bold uppercase tracking-widest text-accent">Resumo Financeiro</h5>
+                      <h5 className="text-10px] font-bold uppercase tracking-widest text-accent">Resumo Financeiro</h5>
                       <div className="space-y-4">
                         <div className="flex justify-between text-sm opacity-60"><span>Subtotal</span><span>R$ {selectedOrder.subtotal?.toFixed(2)}</span></div>
                         <div className="flex justify-between text-sm opacity-60"><span>Frete</span><span>R$ {selectedOrder.shipping?.price?.toFixed(2) || '0.00'}</span></div>
