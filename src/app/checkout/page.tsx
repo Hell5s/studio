@@ -34,6 +34,11 @@ import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
 type Step = 'identificacao' | 'entrega' | 'pagamento';
 
+function getItemImageUrl(image: any): string {
+  if (!image) return '';
+  return typeof image === 'string' ? image : (image?.url || '');
+}
+
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -695,7 +700,7 @@ function CheckoutContent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2">
                   <div className="md:col-span-2 space-y-1.5">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
-                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
+                    <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, name: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
@@ -955,11 +960,17 @@ function CheckoutContent() {
                </div>
                <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar pr-1">
                   {sessionItems.map((item: any, i: number) => {
-                    const imageUrl = typeof item.image === 'string' ? item.image : item.image?.url;
+                    const imageUrl = getItemImageUrl(item.image);
                     return (
                       <div key={i} className="flex gap-4 items-center group relative">
                          <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0 border border-primary/5">
-                            <img src={imageUrl} className="h-full w-full object-cover" alt={item.name} />
+                            {imageUrl ? (
+                              <img src={imageUrl} className="h-full w-full object-cover" alt={item.name} />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-primary/10">
+                                <Package className="h-6 w-6" />
+                              </div>
+                            )}
                          </div>
                          <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-bold text-primary uppercase truncate pr-4">{item.name}</p>
