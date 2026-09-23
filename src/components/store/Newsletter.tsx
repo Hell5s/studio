@@ -14,7 +14,6 @@ interface NewsletterProps {
 export function Newsletter({ onAddToCart }: NewsletterProps) {
   const db = useFirestore();
 
-  // Busca uma seleção de produtos para sugerir (os 4 mais recentes)
   const queryItems = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'products'), limit(4), orderBy('createdAt', 'desc'));
@@ -39,7 +38,7 @@ export function Newsletter({ onAddToCart }: NewsletterProps) {
              <ProductCard 
                 key={p.id} 
                 {...p} 
-                onAddToCart={() => onAddToCart?.(p)}
+                onAddToCart={(selectedP) => onAddToCart?.(selectedP || p)}
              />
            ))}
         </div>

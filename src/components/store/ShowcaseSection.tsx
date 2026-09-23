@@ -20,8 +20,6 @@ interface ShowcaseSectionProps {
 export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds, onAddToCart }: ShowcaseSectionProps) {
   const db = useFirestore();
 
-  // Firestore "in" query has a limit of 30 items. 
-  // Adicionado fallback de array vazio para evitar erros se productIds estiver undefined.
   const validProductIds = useMemo(() => (productIds || []).slice(0, 30), [productIds]);
 
   const productsQuery = useMemoFirebase(() => {
@@ -31,7 +29,6 @@ export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds,
 
   const { data: rawProducts, isLoading } = useCollection(productsQuery);
 
-  // Mantém a ordem exata escolhida no admin (o Firestore 'in' não garante ordem)
   const products = useMemo(() => {
     if (!rawProducts) return [];
     return validProductIds
@@ -39,7 +36,6 @@ export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds,
       .filter(Boolean);
   }, [rawProducts, validProductIds]);
 
-  // Se não estiver carregando e não houver produtos válidos, não renderiza a seção.
   if (!isLoading && products.length === 0) return null;
 
   return (
@@ -76,7 +72,7 @@ export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds,
             <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
               <ProductCard 
                 {...product} 
-                onAddToCart={() => onAddToCart?.(product)}
+                onAddToCart={(selectedP) => onAddToCart?.(selectedP || product)}
               />
             </div>
           ))}

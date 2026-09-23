@@ -26,7 +26,7 @@ export function RelatedProducts({ products, onAddToCart }: RelatedProductsProps)
           <ProductCard 
             key={product.id} 
             {...product} 
-            onAddToCart={() => onAddToCart?.(product)}
+            onAddToCart={(selectedP) => onAddToCart?.(selectedP || product)}
           />
         ))}
       </div>

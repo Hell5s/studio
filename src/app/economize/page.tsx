@@ -74,8 +74,8 @@ export default function EconomizePage() {
                 <ProductCard 
                   key={product.id}
                   {...product}
-                  onAddToCart={() => {
-                    addToCart(product);
+                  onAddToCart={(selectedP) => {
+                    addToCart(selectedP || product);
                     setIsCheckoutOpen(true);
                   }}
                 />

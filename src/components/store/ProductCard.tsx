@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
+import { QuickAddPopover } from './QuickAddPopover';
 
 interface ProductCardProps {
   id: string | number;
@@ -17,8 +18,11 @@ interface ProductCardProps {
   price: number;
   oldPrice?: number;
   badge?: string;
-  image: any; // Pode ser string ou objeto com settings
-  onAddToCart?: () => void;
+  image: any; 
+  onAddToCart?: (p?: any) => void;
+  sizes?: string[];
+  colors?: string[];
+  variations?: any[];
 }
 
 export const ProductCard = React.memo(function ProductCard({
@@ -29,6 +33,9 @@ export const ProductCard = React.memo(function ProductCard({
   badge,
   image,
   onAddToCart,
+  sizes,
+  colors,
+  variations
 }: ProductCardProps) {
   const { user } = useUser();
   const db = useFirestore();
@@ -48,6 +55,10 @@ export const ProductCard = React.memo(function ProductCard({
 
   const { data: favoriteData } = useDoc(favoriteRef);
   const isFavorited = !!favoriteData;
+
+  const hasVariations = useMemo(() => {
+    return (sizes && sizes.length > 0) || (variations && variations.length > 0) || (colors && colors.length > 0);
+  }, [sizes, variations, colors]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -75,7 +86,7 @@ export const ProductCard = React.memo(function ProductCard({
       deleteDocumentNonBlocking(favoriteRef);
       toast({ title: "Removido dos favoritos" });
     } else {
-      const displayImg = typeof image === 'string' ? image : image?.url;
+      const displayImg = getItemImageUrl(image);
       setDocumentNonBlocking(favoriteRef, {
         productId: stringId,
         productName: name,
@@ -99,15 +110,12 @@ export const ProductCard = React.memo(function ProductCard({
     }
   };
 
-  const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
-
-  const url = getImageUrl(image);
+  const url = getItemImageUrl(image);
   const isValidUrl = url && typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
 
   return (
     <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
       <div className="relative w-full aspect-[3/5] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
-        {/* Link principal que cobre toda a área da imagem */}
         <Link href={`/products/${id}`} className="absolute inset-0 z-10">
           <span className="sr-only">Ver detalhes de {name}</span>
           
@@ -131,7 +139,6 @@ export const ProductCard = React.memo(function ProductCard({
             </div>
           )}
 
-          {/* Overlay visual de hover (apenas desktop) */}
           <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center pointer-events-none">
             <Button className="rounded-full bg-white text-primary font-bold uppercase text-[8px] md:text-[9px] tracking-widest px-6 md:px-8 py-4 md:py-6 shadow-2xl hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-700 hidden md:flex">
               Ver Detalhes
@@ -139,7 +146,6 @@ export const ProductCard = React.memo(function ProductCard({
           </div>
         </Link>
         
-        {/* Elementos interativos e informativos fora do Link principal mas dentro do container relativo */}
         {badge && (
           <Badge className="absolute top-2 md:top-4 left-2 md:left-4 bg-primary text-white border-none px-2 md:px-3 py-0.5 md:py-1 font-bold uppercase text-[7px] md:text-[9px] rounded-full tracking-widest z-20">
             {badge}
@@ -159,13 +165,29 @@ export const ProductCard = React.memo(function ProductCard({
             <Heart className={cn("h-4 md:h-5 w-4 md:w-5", isFavorited && "fill-current")} />
           </button>
 
-          <button 
-            onClick={handleQuickAdd}
-            className="h-8 md:h-10 w-8 md:w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all shadow-sm border border-black/5 text-primary hover:bg-primary hover:text-white"
-            title="Adicionar ao carrinho"
-          >
-            <ShoppingBag className="h-4 md:h-5 w-4 md:w-5" />
-          </button>
+          {hasVariations ? (
+            <QuickAddPopover 
+              product={{ id, name, price, oldPrice, badge, image, sizes, colors, variations }}
+              onConfirm={(p) => onAddToCart?.(p)}
+              trigger={
+                <button 
+                  className="h-8 md:h-10 w-8 md:w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all shadow-sm border border-black/5 text-primary hover:bg-primary hover:text-white focus:outline-none"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  title="Adicionar ao carrinho"
+                >
+                  <ShoppingBag className="h-4 md:h-5 w-4 md:w-5" />
+                </button>
+              }
+            />
+          ) : (
+            <button 
+              onClick={handleQuickAdd}
+              className="h-8 md:h-10 w-8 md:w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all shadow-sm border border-black/5 text-primary hover:bg-primary hover:text-white"
+              title="Adicionar ao carrinho"
+            >
+              <ShoppingBag className="h-4 md:h-5 w-4 md:w-5" />
+            </button>
+          )}
         </div>
       </div>
 

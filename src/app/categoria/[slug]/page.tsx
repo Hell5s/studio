@@ -19,12 +19,10 @@ export default function CategoryPage() {
   const db = useFirestore();
   const { cart, addToCart, updateQuantity, removeFromCart, cartCount, cartTotal } = useCart();
   
-  // Estados de Interface
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
 
-  // 1. Descobrir o nome real da categoria a partir do slug
   const categoriesQuery = useMemoFirebase(() => query(collection(db, 'categories')), [db]);
   const { data: categories } = useCollection(categoriesQuery);
 
@@ -35,7 +33,6 @@ export default function CategoryPage() {
 
   const categoryName = category?.name || '';
 
-  // 2. Busca produtos filtrados pela categoria encontrada com limite de performance
   const productsQuery = useMemoFirebase(() => {
     if (!db || !categoryName) return null;
     return query(
@@ -87,8 +84,8 @@ export default function CategoryPage() {
                 <ProductCard 
                   key={product.id}
                   {...product}
-                  onAddToCart={() => {
-                    addToCart(product);
+                  onAddToCart={(selectedP) => {
+                    addToCart(selectedP || product);
                     setIsCheckoutOpen(true);
                   }}
                 />
