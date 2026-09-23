@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -192,19 +191,6 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 </div>
               )}
 
-              {showIcons.orders && (
-                <Link
-                  href="/meus-pedidos"
-                  className="p-2.5 transition-colors group flex items-center gap-0.5 hidden xs:flex"
-                  style={{ color: iconColor }}
-                >
-                  <div style={iconFilterStyle} className="flex items-center gap-0.5">
-                    <Package className="h-[18px] w-[18px]" />
-                    <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Pedidos</span>
-                  </div>
-                </Link>
-              )}
-
               {showIcons.account && (
                 <div style={iconFilterStyle}>
                   <LoginDialog 
@@ -238,6 +224,19 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                     <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Desejos</span>
                   </div>
                 </button>
+              )}
+
+              {showIcons.orders && (
+                <Link
+                  href="/meus-pedidos"
+                  className="p-2.5 transition-colors group flex items-center gap-0.5 hidden xs:flex"
+                  style={{ color: iconColor }}
+                >
+                  <div style={iconFilterStyle} className="flex items-center gap-0.5">
+                    <Package className="h-[18px] w-[18px]" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest hidden xl:block" style={shadowStyle}>Pedidos</span>
+                  </div>
+                </Link>
               )}
 
               {showIcons.cart && (
