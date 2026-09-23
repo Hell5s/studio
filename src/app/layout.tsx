@@ -1,8 +1,8 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
+import { CartProvider } from '@/contexts/CartContext';
 
 export const metadata: Metadata = {
   title: 'Toda Bela | Moda Feminina Moderna',
@@ -29,8 +29,10 @@ export default function RootLayout({
         style={{ overflowX: 'hidden' }}
       >
         <FirebaseClientProvider>
-          {children}
-          <Toaster />
+          <CartProvider>
+            {children}
+            <Toaster />
+          </CartProvider>
         </FirebaseClientProvider>
       </body>
     </html>

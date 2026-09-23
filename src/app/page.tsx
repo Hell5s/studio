@@ -12,6 +12,7 @@ import { Footer } from '@/components/store/Footer';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCart } from '@/contexts/CartContext';
 
 // Lazy loading de componentes pesados e dialogs para performance
 const AdminDashboard = React.lazy(() => import('@/components/admin/AdminDashboard').then(mod => ({ default: mod.AdminDashboard })));
@@ -24,6 +25,7 @@ function StorefrontContent() {
   const { user } = useUser();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { cart, updateQuantity, removeFromCart, clearCart, cartCount, cartTotal } = useCart();
   
   const [isAdminView, setIsAdminView] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -70,24 +72,6 @@ function StorefrontContent() {
       setIsAdminView(false);
     }
   }, [searchParams, isAdmin, isAdminLoading, router]);
-
-  const [cart, setCart] = useState<any[]>([]);
-  const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
-  const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
-
-  const updateQuantity = useCallback((id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, (item.quantity || 1) + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
-  }, []);
-
-  const removeFromCart = useCallback((id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  }, []);
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -328,7 +312,7 @@ function StorefrontContent() {
             onUpdateQuantity={updateQuantity}
             onRemoveItem={removeFromCart}
             total={cartTotal}
-            onSuccess={() => setCart([])}
+            onSuccess={clearCart}
           />
         )}
       </Suspense>
