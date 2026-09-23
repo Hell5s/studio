@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -13,15 +12,17 @@ import { MyOrdersDialog } from '@/components/store/MyOrdersDialog';
 import { CheckoutDialog } from '@/components/store/CheckoutDialog';
 import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { Loader2, Tag } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
 
 export default function EconomizePage() {
   const db = useFirestore();
+  const { cart, addToCart, updateQuantity, removeFromCart, cartCount, cartTotal } = useCart();
+  
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [cart, setCart] = useState<any[]>([]);
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -34,33 +35,6 @@ export default function EconomizePage() {
     if (!allProducts) return [];
     return allProducts.filter(p => p.oldPrice && p.oldPrice > p.price);
   }, [allProducts]);
-
-  const addToCart = (product: any) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: (item.quantity || 0) + 1 } : item);
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  };
-
-  const updateQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, (item.quantity || 1) + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
-  };
-
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  };
-
-  const cartCount = useMemo(() => cart.reduce((acc, item) => acc + (item.quantity || 0), 0), [cart]);
-  const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
   return (
     <div className="min-h-screen bg-background selection:bg-accent/30 selection:text-primary overflow-x-hidden">
@@ -100,7 +74,10 @@ export default function EconomizePage() {
                 <ProductCard 
                   key={product.id}
                   {...product}
-                  onAddToCart={() => addToCart(product)}
+                  onAddToCart={() => {
+                    addToCart(product);
+                    setIsCheckoutOpen(true);
+                  }}
                 />
               ))}
             </div>
@@ -127,7 +104,7 @@ export default function EconomizePage() {
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeFromCart}
         total={cartTotal}
-        onSuccess={() => setCart([])}
+        onSuccess={() => {}}
       />
     </div>
   );

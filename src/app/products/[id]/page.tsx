@@ -119,7 +119,7 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="mt-24 md:mt-40">
-            <Newsletter />
+            <Newsletter onAddToCart={(p) => addToCart(p, true)} />
           </div>
         </div>
       </main>

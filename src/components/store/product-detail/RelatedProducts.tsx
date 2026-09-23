@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -6,9 +5,10 @@ import { ProductCard } from '@/components/store/ProductCard';
 
 interface RelatedProductsProps {
   products: any[];
+  onAddToCart?: (product: any) => void;
 }
 
-export function RelatedProducts({ products }: RelatedProductsProps) {
+export function RelatedProducts({ products, onAddToCart }: RelatedProductsProps) {
   return (
     <section className="space-y-20">
       <div className="flex flex-col items-center text-center space-y-6">
@@ -23,7 +23,11 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12">
         {products.map((product) => (
-          <ProductCard key={product.id} {...product} />
+          <ProductCard 
+            key={product.id} 
+            {...product} 
+            onAddToCart={() => onAddToCart?.(product)}
+          />
         ))}
       </div>
     </section>

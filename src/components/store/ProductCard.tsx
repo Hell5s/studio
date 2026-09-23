@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Camera } from 'lucide-react';
+import { Heart, Camera, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
@@ -28,6 +28,7 @@ export const ProductCard = React.memo(function ProductCard({
   oldPrice,
   badge,
   image,
+  onAddToCart,
 }: ProductCardProps) {
   const { user } = useUser();
   const db = useFirestore();
@@ -85,6 +86,19 @@ export const ProductCard = React.memo(function ProductCard({
     }
   };
 
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (onAddToCart) {
+      onAddToCart();
+      toast({
+        title: "Adicionado ao carrinho!",
+        description: "O item foi reservado na sua sacola."
+      });
+    }
+  };
+
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
 
   const url = getImageUrl(image);
@@ -132,17 +146,27 @@ export const ProductCard = React.memo(function ProductCard({
           </Badge>
         )}
         
-        <button 
-          onClick={handleToggleFavorite}
-          className={cn(
-            "absolute right-2 md:right-4 top-2 md:top-4 h-8 md:h-10 w-8 md:w-10 rounded-full backdrop-blur-sm flex items-center justify-center transition-all z-20 shadow-sm border border-black/5",
-            isFavorited 
-              ? "bg-primary text-white" 
-              : "bg-white/90 text-primary hover:bg-primary hover:text-white"
-          )}
-        >
-          <Heart className={cn("h-4 md:h-5 w-4 md:w-5", isFavorited && "fill-current")} />
-        </button>
+        <div className="absolute right-2 md:right-4 top-2 md:top-4 flex flex-col gap-2 z-20">
+          <button 
+            onClick={handleToggleFavorite}
+            className={cn(
+              "h-8 md:h-10 w-8 md:w-10 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-sm border border-black/5",
+              isFavorited 
+                ? "bg-primary text-white" 
+                : "bg-white/90 text-primary hover:bg-primary hover:text-white"
+            )}
+          >
+            <Heart className={cn("h-4 md:h-5 w-4 md:w-5", isFavorited && "fill-current")} />
+          </button>
+
+          <button 
+            onClick={handleQuickAdd}
+            className="h-8 md:h-10 w-8 md:w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all shadow-sm border border-black/5 text-primary hover:bg-primary hover:text-white"
+            title="Adicionar ao carrinho"
+          >
+            <ShoppingBag className="h-4 md:h-5 w-4 md:w-5" />
+          </button>
+        </div>
       </div>
 
       <div className="p-3 md:p-6 text-center flex flex-col flex-1 gap-2 md:gap-4">

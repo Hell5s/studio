@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo } from 'react';
@@ -15,9 +14,10 @@ interface ShowcaseSectionProps {
   linkText: string;
   linkUrl: string;
   productIds: string[];
+  onAddToCart?: (product: any) => void;
 }
 
-export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds }: ShowcaseSectionProps) {
+export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds, onAddToCart }: ShowcaseSectionProps) {
   const db = useFirestore();
 
   // Firestore "in" query has a limit of 30 items. 
@@ -74,7 +74,10 @@ export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds 
         <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 -mx-4 md:mx-0 items-start">
           {products.map((product: any) => (
             <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
-              <ProductCard {...product} />
+              <ProductCard 
+                {...product} 
+                onAddToCart={() => onAddToCart?.(product)}
+              />
             </div>
           ))}
         </div>

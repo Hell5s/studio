@@ -25,7 +25,7 @@ function StorefrontContent() {
   const { user } = useUser();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { cart, updateQuantity, removeFromCart, clearCart, cartCount, cartTotal } = useCart();
+  const { cart, addToCart, updateQuantity, removeFromCart, clearCart, cartCount, cartTotal } = useCart();
   
   const [isAdminView, setIsAdminView] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -219,6 +219,10 @@ function StorefrontContent() {
         linkText={showcase.linkText}
         linkUrl={showcase.linkUrl}
         productIds={showcase.productIds}
+        onAddToCart={(p) => {
+          addToCart(p);
+          setIsCheckoutOpen(true);
+        }}
       />
     );
   };

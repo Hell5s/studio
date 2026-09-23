@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -88,7 +87,10 @@ export default function CategoryPage() {
                 <ProductCard 
                   key={product.id}
                   {...product}
-                  onAddToCart={() => addToCart(product)}
+                  onAddToCart={() => {
+                    addToCart(product);
+                    setIsCheckoutOpen(true);
+                  }}
                 />
               ))}
             </div>

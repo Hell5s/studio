@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -8,7 +7,11 @@ import { ProductCard } from './ProductCard';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-export function Newsletter() {
+interface NewsletterProps {
+  onAddToCart?: (product: any) => void;
+}
+
+export function Newsletter({ onAddToCart }: NewsletterProps) {
   const db = useFirestore();
 
   // Busca uma seleção de produtos para sugerir (os 4 mais recentes)
@@ -33,7 +36,11 @@ export function Newsletter() {
       {!isLoading && products && products.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12">
            {products.map((p) => (
-             <ProductCard key={p.id} {...p} />
+             <ProductCard 
+                key={p.id} 
+                {...p} 
+                onAddToCart={() => onAddToCart?.(p)}
+             />
            ))}
         </div>
       ) : isLoading ? (
