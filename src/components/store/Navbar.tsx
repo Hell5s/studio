@@ -110,7 +110,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
         <div className="w-full transition-all duration-500">
           <nav className="max-w-[1400px] mx-auto px-4 md:px-12 h-16 md:h-[72px] flex items-center justify-between relative">
 
-            <div className="flex-1 lg:hidden">
+            <div className="flex-1 lg:hidden flex items-center gap-1">
               <button
                 className="p-2 -ml-2 transition-colors focus:outline-none"
                 style={{ color: iconColor }}
@@ -119,6 +119,39 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               >
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
+
+              {/* Mobile Only: Orders & Favorites */}
+              {showIcons.orders && (
+                <Link
+                  href="/meus-pedidos"
+                  className="p-2 transition-colors flex items-center"
+                  style={{ color: iconColor }}
+                >
+                  <div style={iconFilterStyle}>
+                    <Package className="h-[18px] w-[18px]" />
+                  </div>
+                </Link>
+              )}
+
+              {showIcons.favorites && (
+                <button
+                  onClick={onOpenFavorites}
+                  className="relative p-2 transition-colors flex items-center"
+                  style={{ color: isTransparent ? (favoritesCount > 0 ? "hsl(var(--accent))" : "#ffffff") : iconColor }}
+                >
+                  <div style={iconFilterStyle} className="relative">
+                    <Heart className={cn("h-[18px] w-[18px]", favoritesCount > 0 && "fill-current text-accent")} />
+                    {favoritesCount > 0 && (
+                      <span className={cn(
+                        "absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full text-white text-[7px] font-bold flex items-center justify-center",
+                        isTransparent ? "bg-primary" : "bg-accent"
+                      )}>
+                        {favoritesCount}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              )}
             </div>
 
             <div className="hidden lg:flex items-center gap-10 flex-1">
@@ -206,7 +239,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               {showIcons.favorites && (
                 <button
                   onClick={onOpenFavorites}
-                  className="relative p-2.5 transition-colors flex items-center gap-0.5"
+                  className="relative p-2.5 transition-colors hidden lg:flex items-center gap-0.5"
                   style={{ color: isTransparent ? (favoritesCount > 0 ? "hsl(var(--accent))" : "#ffffff") : iconColor }}
                 >
                   <div style={iconFilterStyle} className="flex items-center gap-0.5">
@@ -229,7 +262,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               {showIcons.orders && (
                 <Link
                   href="/meus-pedidos"
-                  className="p-2.5 transition-colors group flex items-center gap-0.5"
+                  className="p-2.5 transition-colors group hidden lg:flex items-center gap-0.5"
                   style={{ color: iconColor }}
                 >
                   <div style={iconFilterStyle} className="flex items-center gap-0.5">
