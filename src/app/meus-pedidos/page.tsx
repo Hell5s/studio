@@ -226,6 +226,7 @@ export default function MeusPedidosPage() {
                                 ))}
                              </div>
                           </div>
+                       </div>
 
                        <div className="lg:col-span-5 bg-secondary/20 p-8 md:p-12 space-y-12 border-l border-primary/5">
                           <div className="space-y-6">
