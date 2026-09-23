@@ -815,6 +815,15 @@ function CheckoutContent() {
                 <h2 className="text-base md:text-lg font-headline font-bold text-primary uppercase tracking-tight">Pagamento Seguro</h2>
               </div>
 
+              {sessionItems.length >= 2 && (
+                <div className="flex items-start gap-3 bg-accent/5 border border-accent/15 rounded-2xl p-4 mb-6">
+                  <Package className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-primary/70 leading-relaxed">
+                    Seu pedido tem mais de um produto. Como trabalhamos com fornecedores parceiros, cada peça pode ser enviada separadamente e chegar em dias diferentes — fique tranquila, é normal!
+                  </p>
+                </div>
+              )}
+
               {currentStep === 'pagamento' && (
                 <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 w-full">
 
