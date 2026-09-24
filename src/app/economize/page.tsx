@@ -76,7 +76,6 @@ export default function EconomizePage() {
                   {...product}
                   onAddToCart={(selectedP) => {
                     addToCart(selectedP || product);
-                    setIsCheckoutOpen(true);
                   }}
                 />
               ))}

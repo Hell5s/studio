@@ -221,7 +221,6 @@ function StorefrontContent() {
         productIds={showcase.productIds}
         onAddToCart={(p) => {
           addToCart(p);
-          setIsCheckoutOpen(true);
         }}
       />
     );

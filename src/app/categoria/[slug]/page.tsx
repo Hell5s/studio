@@ -86,7 +86,6 @@ export default function CategoryPage() {
                   {...product}
                   onAddToCart={(selectedP) => {
                     addToCart(selectedP || product);
-                    setIsCheckoutOpen(true);
                   }}
                 />
               ))}
