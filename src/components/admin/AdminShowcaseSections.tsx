@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -44,6 +45,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function AdminShowcaseSections() {
   const db = useFirestore();
@@ -68,6 +76,10 @@ export function AdminShowcaseSections() {
   const sectionsQuery = useMemoFirebase(() => query(collection(db, 'homeShowcaseSections'), orderBy('order', 'asc')), [db]);
   const { data: sections, isLoading: loadingSections } = useCollection(sectionsQuery);
 
+  // Consulta de Categorias para o Select de URL
+  const categoriesQuery = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('name', 'asc')), [db]);
+  const { data: categories } = useCollection(categoriesQuery);
+
   // Consulta de Produtos para o seletor
   const productsQuery = useMemoFirebase(() => query(collection(db, 'products'), orderBy('createdAt', 'desc')), [db]);
   const { data: allProducts, isLoading: loadingProducts } = useCollection(productsQuery);
@@ -78,6 +90,25 @@ export function AdminShowcaseSections() {
     if (!s) return allProducts.slice(0, 10);
     return allProducts.filter(p => p.name?.toLowerCase().includes(s) || p.category?.toLowerCase().includes(s)).slice(0, 20);
   }, [allProducts, productSearch]);
+
+  const fixedUrlOptions = [
+    { label: 'Início', value: '/' },
+    { label: 'Coleções', value: '/#colecoes' },
+    { label: 'Produtos', value: '/#vitrine' },
+    { label: 'Mais Vendidos', value: '/#mais-vendidos' },
+    { label: 'SIZE (Economize)', value: '/economize' },
+  ];
+
+  const currentUrlValue = useMemo(() => {
+    const isFixed = fixedUrlOptions.some(opt => opt.value === formData.linkUrl);
+    const isCategory = categories?.some(c => {
+      const slug = c.name.toLowerCase().trim().replace(/\s+/g, '-');
+      return `/categoria/${slug}` === formData.linkUrl;
+    });
+
+    if (isFixed || isCategory) return formData.linkUrl;
+    return '__custom__';
+  }, [formData.linkUrl, categories]);
 
   const handleOpenDialog = (section?: any) => {
     if (section) {
@@ -215,7 +246,7 @@ export function AdminShowcaseSections() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
              <div className="h-px w-8 bg-accent" />
-             <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Curadoria Visual</span>
+             <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Gestão Visual</span>
           </div>
           <h1 className="text-4xl font-headline font-bold text-primary tracking-tighter">Vitrines da Home</h1>
         </div>
@@ -323,7 +354,54 @@ export function AdminShowcaseSections() {
                     </div>
                     <div className="space-y-2">
                        <Label className="ml-2 text-[9px] font-bold uppercase text-muted-foreground">URL de Destino</Label>
-                       <Input value={formData.linkUrl} onChange={e => setFormData({...formData, linkUrl: e.target.value})} className="rounded-xl h-12 bg-white" />
+                       <Select 
+                        value={currentUrlValue} 
+                        onValueChange={(val) => {
+                          if (val !== '__custom__') {
+                            setFormData({ ...formData, linkUrl: val });
+                          }
+                        }}
+                       >
+                         <SelectTrigger className="h-12 rounded-xl border-none bg-white shadow-sm font-medium text-xs px-4">
+                           <SelectValue placeholder="Selecione o destino..." />
+                         </SelectTrigger>
+                         <SelectContent>
+                            <SelectItem value="/" className="text-xs font-bold uppercase">Início</SelectItem>
+                            <SelectItem value="/#colecoes" className="text-xs font-bold uppercase">Coleções</SelectItem>
+                            <SelectItem value="/#vitrine" className="text-xs font-bold uppercase">Produtos</SelectItem>
+                            <SelectItem value="/#mais-vendidos" className="text-xs font-bold uppercase">Mais Vendidos</SelectItem>
+                            <SelectItem value="/economize" className="text-xs font-bold uppercase">SIZE (Economize)</SelectItem>
+                            
+                            {categories && categories.length > 0 && (
+                              <>
+                                <div className="h-px bg-gray-100 my-2" />
+                                <div className="px-2 py-1 text-[8px] font-black text-accent uppercase tracking-widest">Categorias</div>
+                                {categories.map(cat => {
+                                  const slug = cat.name.toLowerCase().trim().replace(/\s+/g, '-');
+                                  return (
+                                    <SelectItem key={cat.id} value={`/categoria/${slug}`} className="text-xs uppercase">
+                                      {cat.name}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </>
+                            )}
+
+                            <div className="h-px bg-gray-100 my-2" />
+                            <SelectItem value="__custom__" className="text-xs font-bold text-accent italic">Personalizado (digitar link)</SelectItem>
+                         </SelectContent>
+                       </Select>
+
+                       {currentUrlValue === '__custom__' && (
+                         <div className="mt-2 animate-in slide-in-from-top-2 duration-300">
+                           <Input 
+                            value={formData.linkUrl} 
+                            onChange={e => setFormData({...formData, linkUrl: e.target.value})} 
+                            placeholder="Digite o link (ex: /promo-natal ou https://...)" 
+                            className="rounded-xl h-12 bg-white border-accent/20" 
+                           />
+                         </div>
+                       )}
                     </div>
                     <div className="space-y-2">
                        <Label className="ml-2 text-[9px] font-bold uppercase text-muted-foreground">Ordem de Exibição</Label>
