@@ -213,7 +213,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     className="absolute inset-0 w-full h-full"
                     style={{
                       backgroundImage: `url(${optimizedUrl})`,
-                      backgroundSize: `${activeZoom}%`,
+                      backgroundSize: activeZoom === 100 ? 'cover' : `${activeZoom}%`,
                       backgroundPosition: `${activePosition.x}% ${activePosition.y}%`,
                       backgroundRepeat: 'no-repeat',
                       imageRendering: 'high-quality' as any,

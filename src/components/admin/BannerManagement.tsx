@@ -595,7 +595,7 @@ export function BannerManagement() {
                       className="w-full h-full object-cover" 
                       style={{ 
                         objectPosition: banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center',
-                        backgroundSize: banner.imageZoom ? `${banner.imageZoom}%` : 'cover'
+                        backgroundSize: banner.imageZoom === 100 || !banner.imageZoom ? 'cover' : `${banner.imageZoom}%`
                       }} 
                     />
                   )}
@@ -693,7 +693,7 @@ export function BannerManagement() {
                     className="w-full h-full pointer-events-none"
                     style={{
                       backgroundImage: `url(${editData.imageUrl})`,
-                      backgroundSize: `${previewMode === 'mobile' ? editData.mobileImageZoom : editData.imageZoom}%`,
+                      backgroundSize: (previewMode === 'mobile' ? editData.mobileImageZoom : editData.imageZoom) === 100 ? 'cover' : `${previewMode === 'mobile' ? editData.mobileImageZoom : editData.imageZoom}%`,
                       backgroundPosition: `${previewMode === 'mobile' ? editData.mobileImagePosition.x : editData.imagePosition.x}% ${previewMode === 'mobile' ? editData.mobileImagePosition.y : editData.imagePosition.y}%`,
                       backgroundRepeat: 'no-repeat'
                     }}
