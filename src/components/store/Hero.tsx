@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -164,7 +163,11 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         <div className="flex h-full w-full">
           {displayBanners.map((banner: any, idx: number) => {
             const optimizedUrl = banner.imageUrl?.includes('cloudinary') 
-              ? banner.imageUrl.replace('/upload/', `/upload/q_auto,f_auto,w_${isMobile ? 800 : 1920}/`) 
+              ? banner.imageUrl.replace('/upload/', `/upload/q_auto:good,f_auto,dpr_auto,w_${isMobile ? 1080 : 1920}/`) 
+              : banner.imageUrl;
+            
+            const optimizedVideoUrl = banner.imageUrl?.includes('cloudinary')
+              ? banner.imageUrl.replace('/upload/', `/upload/q_auto,f_auto,w_${isMobile ? 1080 : 1920}/`)
               : banner.imageUrl;
 
             // Determina as configurações visuais baseadas no dispositivo
@@ -180,7 +183,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full bg-[#1a0a0e]">
                 {banner.mediaType === 'video' ? (
                   <video
-                    key={optimizedUrl}
+                    key={optimizedVideoUrl}
                     autoPlay
                     muted
                     loop
@@ -193,7 +196,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                       imageRendering: 'high-quality' as any
                     }}
                   >
-                    <source src={optimizedUrl} type="video/mp4" />
+                    <source src={optimizedVideoUrl} type="video/mp4" />
                   </video>
                 ) : (
                   <div
