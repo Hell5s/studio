@@ -9,6 +9,7 @@ import { Loader2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ShowcaseSectionProps {
+  id: string;
   eyebrow: string;
   title: string;
   linkText: string;
@@ -17,7 +18,7 @@ interface ShowcaseSectionProps {
   onAddToCart?: (product: any) => void;
 }
 
-export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds, onAddToCart }: ShowcaseSectionProps) {
+export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, productIds, onAddToCart }: ShowcaseSectionProps) {
   const db = useFirestore();
 
   const validProductIds = useMemo(() => (productIds || []).slice(0, 30), [productIds]);
@@ -53,8 +54,11 @@ export function ShowcaseSection({ eyebrow, title, linkText, linkUrl, productIds,
           </h2>
         </div>
         
-        {linkText && linkUrl && (
-          <Link href={linkUrl} className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary/60 underline underline-offset-8 hover:text-accent transition-colors">
+        {linkText && (
+          <Link 
+            href={linkUrl || `/vitrine/${id}`} 
+            className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary/60 underline underline-offset-8 hover:text-accent transition-colors"
+          >
             {linkText}
           </Link>
         )}

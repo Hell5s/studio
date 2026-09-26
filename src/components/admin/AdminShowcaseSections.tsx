@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -66,7 +65,7 @@ export function AdminShowcaseSections() {
     eyebrow: 'EDITORIAL DE ESTILO',
     title: '',
     linkText: 'VER TODAS AS PEÇAS',
-    linkUrl: '/#vitrine',
+    linkUrl: '',
     productIds: [] as string[],
     order: 1,
     active: true
@@ -92,6 +91,7 @@ export function AdminShowcaseSections() {
   }, [allProducts, productSearch]);
 
   const fixedUrlOptions = [
+    { label: 'Esta Vitrine (ver todos os itens)', value: '' },
     { label: 'Início', value: '/' },
     { label: 'Coleções', value: '/#colecoes' },
     { label: 'Produtos', value: '/#vitrine' },
@@ -117,7 +117,7 @@ export function AdminShowcaseSections() {
         eyebrow: section.eyebrow || 'EDITORIAL DE ESTILO',
         title: section.title || '',
         linkText: section.linkText || 'VER TODAS AS PEÇAS',
-        linkUrl: section.linkUrl || '/#vitrine',
+        linkUrl: section.linkUrl || '',
         productIds: section.productIds || [],
         order: section.order || 1,
         active: section.active !== false
@@ -128,7 +128,7 @@ export function AdminShowcaseSections() {
         eyebrow: 'EDITORIAL DE ESTILO',
         title: '',
         linkText: 'VER TODAS AS PEÇAS',
-        linkUrl: '/#vitrine',
+        linkUrl: '',
         productIds: [],
         order: (sections?.length || 0) + 1,
         active: true
@@ -163,7 +163,7 @@ export function AdminShowcaseSections() {
           eyebrow: 'EDITORIAL DE ESTILO',
           title: 'Novas Peças',
           linkText: 'VER TODAS AS PEÇAS',
-          linkUrl: '/#vitrine',
+          linkUrl: '',
           productIds: featuredIds,
           order: 1,
           active: true,
@@ -176,7 +176,7 @@ export function AdminShowcaseSections() {
           eyebrow: 'DESTAQUES ABSOLUTOS',
           title: 'Mais Vendidos',
           linkText: 'EXPLORAR OFERTAS',
-          linkUrl: '/economize',
+          linkUrl: '',
           productIds: bestsellerIds,
           order: 10,
           active: true,
@@ -366,11 +366,9 @@ export function AdminShowcaseSections() {
                            <SelectValue placeholder="Selecione o destino..." />
                          </SelectTrigger>
                          <SelectContent>
-                            <SelectItem value="/" className="text-xs font-bold uppercase">Início</SelectItem>
-                            <SelectItem value="/#colecoes" className="text-xs font-bold uppercase">Coleções</SelectItem>
-                            <SelectItem value="/#vitrine" className="text-xs font-bold uppercase">Produtos</SelectItem>
-                            <SelectItem value="/#mais-vendidos" className="text-xs font-bold uppercase">Mais Vendidos</SelectItem>
-                            <SelectItem value="/economize" className="text-xs font-bold uppercase">SIZE (Economize)</SelectItem>
+                            {fixedUrlOptions.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value} className="text-xs font-bold uppercase">{opt.label}</SelectItem>
+                            ))}
                             
                             {categories && categories.length > 0 && (
                               <>
@@ -401,6 +399,10 @@ export function AdminShowcaseSections() {
                             className="rounded-xl h-12 bg-white border-accent/20" 
                            />
                          </div>
+                       )}
+
+                       {!editingSection && (
+                         <p className="text-[9px] text-muted-foreground italic mt-1 ml-2">Salve a vitrine primeiro para habilitar links internos específicos.</p>
                        )}
                     </div>
                     <div className="space-y-2">
