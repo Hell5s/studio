@@ -163,11 +163,11 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         <div className="flex h-full w-full">
           {displayBanners.map((banner: any, idx: number) => {
             const optimizedUrl = banner.imageUrl?.includes('cloudinary') 
-              ? banner.imageUrl.replace('/upload/', `/upload/q_auto:best,f_auto,dpr_auto,w_${isMobile ? 1440 : 2560}/`) 
+              ? banner.imageUrl.replace('/upload/', `/upload/q_100,f_auto,dpr_auto,w_${isMobile ? 1440 : 2560}/`) 
               : banner.imageUrl;
             
             const optimizedVideoUrl = banner.imageUrl?.includes('cloudinary')
-              ? banner.imageUrl.replace('/upload/', `/upload/q_auto:best,f_auto,w_${isMobile ? 1440 : 1920}/`)
+              ? banner.imageUrl.replace('/upload/', `/upload/q_100,f_auto,w_${isMobile ? 1440 : 1920}/`)
               : banner.imageUrl;
 
             // Determina as configurações visuais baseadas no dispositivo
