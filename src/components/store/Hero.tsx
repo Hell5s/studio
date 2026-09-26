@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -181,6 +180,15 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
               ? banner.imageUrl.replace('/upload/', '/upload/q_100,f_auto/') 
               : banner.imageUrl;
 
+            // Determina as configurações visuais baseadas no dispositivo
+            const activePosition = isMobile 
+              ? (banner.mobileImagePosition || banner.imagePosition || { x: 50, y: 50 })
+              : (banner.imagePosition || { x: 50, y: 50 });
+              
+            const activeZoom = isMobile
+              ? (banner.mobileImageZoom || banner.imageZoom || 100)
+              : (banner.imageZoom || 100);
+
             return (
               <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full bg-[#1a0a0e]">
                 {banner.mediaType === 'video' ? (
@@ -205,10 +213,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     className="absolute inset-0 w-full h-full"
                     style={{
                       backgroundImage: `url(${optimizedUrl})`,
-                      backgroundSize: isMobile ? 'cover' : (banner.imageZoom ? `${banner.imageZoom}%` : 'contain'),
-                      backgroundPosition: isMobile 
-                        ? 'center center' 
-                        : (banner.imagePosition ? `${banner.imagePosition.x}% ${banner.imagePosition.y}%` : 'center center'),
+                      backgroundSize: `${activeZoom}%`,
+                      backgroundPosition: `${activePosition.x}% ${activePosition.y}%`,
                       backgroundRepeat: 'no-repeat',
                       imageRendering: 'high-quality' as any,
                       WebkitFontSmoothing: 'antialiased',

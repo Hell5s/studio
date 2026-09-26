@@ -24,7 +24,9 @@ import {
   Pencil,
   Minus,
   Maximize2,
-  RefreshCw
+  RefreshCw,
+  Smartphone,
+  Monitor
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -44,6 +46,7 @@ import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, d
 import { collection, query, orderBy, doc, serverTimestamp, addDoc } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function BannerManagement() {
   const db = useFirestore();
@@ -65,6 +68,10 @@ export function BannerManagement() {
   
   const [imagePosition, setImagePosition] = useState({ x: 50, y: 20 });
   const [zoom, setZoom] = useState(100);
+  const [mobileImagePosition, setMobileImagePosition] = useState({ x: 50, y: 50 });
+  const [mobileZoom, setMobileZoom] = useState(100);
+
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
 
   const [editingBanner, setEditingBanner] = useState<any>(null);
   const [editData, setEditData] = useState({ 
@@ -74,6 +81,8 @@ export function BannerManagement() {
     duration: 6,
     imagePosition: { x: 50, y: 50 },
     imageZoom: 100,
+    mobileImagePosition: { x: 50, y: 50 },
+    mobileImageZoom: 100,
     imageUrl: ''
   });
 
@@ -101,9 +110,11 @@ export function BannerManagement() {
     return [...banners].sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [banners]);
 
-  const handleMove = (direction: 'up' | 'down' | 'left' | 'right') => {
-    setImagePosition(prev => {
-      const step = 5;
+  const handleMove = (direction: 'up' | 'down' | 'left' | 'right', isMobileSettings = false) => {
+    const setter = isMobileSettings ? setMobileImagePosition : setImagePosition;
+    const step = 5;
+    
+    setter(prev => {
       switch (direction) {
         case 'up': return { ...prev, y: Math.max(0, prev.y - step) };
         case 'down': return { ...prev, y: Math.min(100, prev.y + step) };
@@ -124,6 +135,8 @@ export function BannerManagement() {
     setImageUrl('');
     setImagePosition({ x: 50, y: 20 });
     setZoom(100);
+    setMobileImagePosition({ x: 50, y: 50 });
+    setMobileZoom(100);
     toast({ title: "Link da mídia carregado!" });
   };
 
@@ -141,6 +154,8 @@ export function BannerManagement() {
       setPreviewImage(result.imageUrl);
       setImagePosition({ x: 50, y: 20 });
       setZoom(100);
+      setMobileImagePosition({ x: 50, y: 50 });
+      setMobileZoom(100);
       toast({ title: "Imagem gerada!" });
     } catch (error: any) {
       toast({ title: "Erro na IA", description: error.message || "Não foi possível gerar a imagem.", variant: "destructive" });
@@ -216,6 +231,8 @@ export function BannerManagement() {
         setMediaType(resourceType === 'video' ? 'video' : 'image');
         setImagePosition({ x: 50, y: 20 });
         setZoom(100);
+        setMobileImagePosition({ x: 50, y: 50 });
+        setMobileZoom(100);
         toast({ title: "Mídia carregada com sucesso!" });
       }
     } catch (error: any) {
@@ -255,6 +272,8 @@ export function BannerManagement() {
         imageUrl: finalUrl,
         imagePosition: imagePosition,
         imageZoom: zoom,
+        mobileImagePosition: mobileImagePosition,
+        mobileImageZoom: mobileZoom,
         mediaType: mediaType,
         aspectRatio,
         duration,
@@ -268,6 +287,8 @@ export function BannerManagement() {
       setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks' });
       setImagePosition({ x: 50, y: 20 });
       setZoom(100);
+      setMobileImagePosition({ x: 50, y: 50 });
+      setMobileZoom(100);
       toast({ title: "Banner Ativado!" });
     } catch (error: any) {
       toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
@@ -307,13 +328,16 @@ export function BannerManagement() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     
-    setEditData(prev => ({
-      ...prev,
-      imagePosition: {
-        x: Math.max(0, Math.min(100, Math.round(x))),
-        y: Math.max(0, Math.min(100, Math.round(y)))
-      }
-    }));
+    const pos = {
+      x: Math.max(0, Math.min(100, Math.round(x))),
+      y: Math.max(0, Math.min(100, Math.round(y)))
+    };
+
+    if (previewMode === 'mobile') {
+      setEditData(prev => ({ ...prev, mobileImagePosition: pos }));
+    } else {
+      setEditData(prev => ({ ...prev, imagePosition: pos }));
+    }
   };
 
   const handleDragEnd = () => {
@@ -324,10 +348,18 @@ export function BannerManagement() {
     if (editingBanner?.mediaType === 'video') return;
     e.preventDefault();
     const delta = e.deltaY < 0 ? 5 : -5;
-    setEditData(prev => ({
-      ...prev,
-      imageZoom: Math.min(300, Math.max(100, prev.imageZoom + delta))
-    }));
+    
+    if (previewMode === 'mobile') {
+      setEditData(prev => ({
+        ...prev,
+        mobileImageZoom: Math.min(300, Math.max(100, prev.mobileImageZoom + delta))
+      }));
+    } else {
+      setEditData(prev => ({
+        ...prev,
+        imageZoom: Math.min(300, Math.max(100, prev.imageZoom + delta))
+      }));
+    }
   };
 
   return (
@@ -471,17 +503,26 @@ export function BannerManagement() {
                 </div>
 
                 <div className="space-y-6">
-                   <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                     {mediaType === 'video' ? <Film className="h-3 w-3" /> : <ImageIcon className="h-3 w-3" />} 
-                     Enquadramento Profissional
-                   </Label>
+                   <div className="flex items-center justify-between">
+                     <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
+                       {mediaType === 'video' ? <Film className="h-3 w-3" /> : <ImageIcon className="h-3 w-3" />} 
+                       Enquadramento Profissional
+                     </Label>
+                     <div className="flex bg-white/50 p-1 rounded-lg border border-primary/5">
+                        <button onClick={() => setPreviewMode('desktop')} className={cn("p-1.5 rounded transition-all", previewMode === 'desktop' ? "bg-primary text-white" : "text-primary/40")}><Monitor className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => setPreviewMode('mobile')} className={cn("p-1.5 rounded transition-all", previewMode === 'mobile' ? "bg-primary text-white" : "text-primary/40")}><Smartphone className="h-3.5 w-3.5" /></button>
+                     </div>
+                   </div>
                    
                    <div 
-                    className={cn("rounded-2xl overflow-hidden shadow-2xl border-4 border-white relative bg-black", aspectRatio === '16:9' ? 'aspect-video' : 'aspect-square')}
+                    className={cn(
+                      "rounded-2xl overflow-hidden shadow-2xl border-4 border-white relative bg-black transition-all duration-500 mx-auto", 
+                      previewMode === 'desktop' ? (aspectRatio === '16:9' ? 'aspect-video w-full' : 'aspect-square w-full') : 'aspect-[9/16] w-[180px]'
+                    )}
                     style={mediaType === 'image' ? { 
                       backgroundImage: `url(${previewImage})`, 
-                      backgroundSize: zoom === 100 ? 'cover' : `${zoom}%`, 
-                      backgroundPosition: `${imagePosition.x}% ${imagePosition.y}%` 
+                      backgroundSize: (previewMode === 'mobile' ? mobileZoom : zoom) === 100 ? 'cover' : `${previewMode === 'mobile' ? mobileZoom : zoom}%`, 
+                      backgroundPosition: `${previewMode === 'mobile' ? mobileImagePosition.x : imagePosition.x}% ${previewMode === 'mobile' ? mobileImagePosition.y : imagePosition.y}%` 
                     } : {}}
                    >
                       {mediaType === 'video' && (
@@ -492,33 +533,38 @@ export function BannerManagement() {
                    </div>
 
                    {mediaType === 'image' && (
-                     <div className="p-6 bg-white rounded-3xl border border-primary/5 space-y-8 shadow-sm">
+                     <div className="p-6 bg-white rounded-3xl border border-primary/5 space-y-6 shadow-sm">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase text-accent tracking-widest border-b border-primary/5 pb-2">
+                          {previewMode === 'desktop' ? <Monitor className="h-3 w-3" /> : <Smartphone className="h-3 w-3" />}
+                          Ajuste para {previewMode === 'desktop' ? 'Desktop' : 'Mobile'}
+                        </div>
+
                         <div className="grid grid-cols-3 gap-2 w-32 mx-auto">
                            <div />
-                           <Button size="icon" variant="secondary" onClick={() => handleMove('up')} className="h-10 w-10 rounded-xl"><ChevronUp className="h-4 w-4" /></Button>
+                           <Button size="icon" variant="secondary" onClick={() => handleMove('up', previewMode === 'mobile')} className="h-10 w-10 rounded-xl"><ChevronUp className="h-4 w-4" /></Button>
                            <div />
-                           <Button size="icon" variant="secondary" onClick={() => handleMove('left')} className="h-10 w-10 rounded-xl"><ChevronLeft className="h-4 w-4" /></Button>
-                           <Button size="icon" variant="secondary" onClick={() => handleMove('down')} className="h-10 w-10 rounded-xl"><ChevronDown className="h-4 w-4" /></Button>
-                           <Button size="icon" variant="secondary" onClick={() => handleMove('right')} className="h-10 w-10 rounded-xl"><ChevronRight className="h-4 w-4" /></Button>
+                           <Button size="icon" variant="secondary" onClick={() => handleMove('left', previewMode === 'mobile')} className="h-10 w-10 rounded-xl"><ChevronLeft className="h-4 w-4" /></Button>
+                           <Button size="icon" variant="secondary" onClick={() => handleMove('down', previewMode === 'mobile')} className="h-10 w-10 rounded-xl"><ChevronDown className="h-4 w-4" /></Button>
+                           <Button size="icon" variant="secondary" onClick={() => handleMove('right', previewMode === 'mobile')} className="h-10 w-10 rounded-xl"><ChevronRight className="h-4 w-4" /></Button>
                         </div>
 
                         <div className="space-y-6">
                            <div className="space-y-3">
-                              <div className="flex justify-between items-center"><Label className="text-[9px] font-bold uppercase text-primary/40">Posição Horizontal (X)</Label><span className="text-[9px] font-mono font-bold text-accent">{imagePosition.x}%</span></div>
-                              <Slider value={[imagePosition.x]} min={0} max={100} step={1} onValueChange={([v]) => setImagePosition(p => ({...p, x: v}))} />
+                              <div className="flex justify-between items-center"><Label className="text-[9px] font-bold uppercase text-primary/40">Posição Horizontal (X)</Label><span className="text-[9px] font-mono font-bold text-accent">{previewMode === 'mobile' ? mobileImagePosition.x : imagePosition.x}%</span></div>
+                              <Slider value={[previewMode === 'mobile' ? mobileImagePosition.x : imagePosition.x]} min={0} max={100} step={1} onValueChange={([v]) => previewMode === 'mobile' ? setMobileImagePosition(p => ({...p, x: v})) : setImagePosition(p => ({...p, x: v}))} />
                            </div>
                            <div className="space-y-3">
-                              <div className="flex justify-between items-center"><Label className="text-[9px] font-bold uppercase text-primary/40">Posição Vertical (Y)</Label><span className="text-[9px] font-mono font-bold text-accent">{imagePosition.y}%</span></div>
-                              <Slider value={[imagePosition.y]} min={0} max={100} step={1} onValueChange={([v]) => setImagePosition(p => ({...p, y: v}))} />
+                              <div className="flex justify-between items-center"><Label className="text-[9px] font-bold uppercase text-primary/40">Posição Vertical (Y)</Label><span className="text-[9px] font-mono font-bold text-accent">{previewMode === 'mobile' ? mobileImagePosition.y : imagePosition.y}%</span></div>
+                              <Slider value={[previewMode === 'mobile' ? mobileImagePosition.y : imagePosition.y]} min={0} max={100} step={1} onValueChange={([v]) => previewMode === 'mobile' ? setMobileImagePosition(p => ({...p, y: v})) : setImagePosition(p => ({...p, y: v}))} />
                            </div>
                         </div>
 
                         <div className="flex items-center justify-between border-t border-primary/5 pt-6">
                            <Label className="text-[9px] font-bold uppercase text-primary/40">Escala de Zoom</Label>
                            <div className="flex items-center gap-3">
-                              <Button size="icon" variant="outline" onClick={() => setZoom(z => Math.max(100, z - 10))} className="h-9 w-9 rounded-full border-primary/10"><Minus className="h-3 w-3" /></Button>
-                              <span className="text-[10px] font-black w-10 text-center text-primary">{zoom}%</span>
-                              <Button size="icon" variant="outline" onClick={() => setZoom(z => z + 10)} className="h-9 w-9 rounded-full border-primary/10"><Plus className="h-3 w-3" /></Button>
+                              <Button size="icon" variant="outline" onClick={() => previewMode === 'mobile' ? setMobileZoom(z => Math.max(100, z - 10)) : setZoom(z => Math.max(100, z - 10))} className="h-9 w-9 rounded-full border-primary/10"><Minus className="h-3 w-3" /></Button>
+                              <span className="text-[10px] font-black w-10 text-center text-primary">{previewMode === 'mobile' ? mobileZoom : zoom}%</span>
+                              <Button size="icon" variant="outline" onClick={() => previewMode === 'mobile' ? setMobileZoom(z => z + 10) : setZoom(z => z + 10)} className="h-9 w-9 rounded-full border-primary/10"><Plus className="h-3 w-3" /></Button>
                            </div>
                         </div>
                      </div>
@@ -563,8 +609,11 @@ export function BannerManagement() {
                           duration: banner.duration || 6,
                           imagePosition: banner.imagePosition || { x: 50, y: 50 },
                           imageZoom: banner.imageZoom || 100,
+                          mobileImagePosition: banner.mobileImagePosition || { x: 50, y: 50 },
+                          mobileImageZoom: banner.mobileImageZoom || 100,
                           imageUrl: banner.imageUrl || ''
                         })
+                        setPreviewMode('desktop')
                       }}
                       className="p-3 bg-blue-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"
                     >
@@ -605,19 +654,27 @@ export function BannerManagement() {
       </div>
 
       <Dialog open={!!editingBanner} onOpenChange={(o) => !o && setEditingBanner(null)}>
-        <DialogContent className="rounded-[2rem] bg-white border-none shadow-2xl p-0 overflow-hidden max-w-md">
+        <DialogContent className="rounded-[2rem] bg-white border-none shadow-2xl p-0 overflow-hidden max-w-2xl">
           <div className="bg-primary p-6 text-white">
             <DialogHeader>
               <DialogTitle className="text-xl font-headline font-bold">Editar Banner</DialogTitle>
             </DialogHeader>
           </div>
-          <div className="p-8 space-y-4">
-            <div className="space-y-2">
-               <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Preview Interativo (Arraste para reposicionar)</Label>
+          <div className="p-8 grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+               <div className="flex items-center justify-between">
+                 <Label className="text-[10px] font-bold uppercase tracking-widest text-accent">Preview Interativo</Label>
+                 <div className="flex bg-secondary/20 p-1 rounded-lg">
+                    <button onClick={() => setPreviewMode('desktop')} className={cn("p-1.5 rounded transition-all", previewMode === 'desktop' ? "bg-primary text-white" : "text-primary/40")}><Monitor className="h-3 w-3" /></button>
+                    <button onClick={() => setPreviewMode('mobile')} className={cn("p-1.5 rounded transition-all", previewMode === 'mobile' ? "bg-primary text-white" : "text-primary/40")}><Smartphone className="h-3 w-3" /></button>
+                 </div>
+               </div>
+
                <div 
                 ref={dragContainerRef}
                 className={cn(
-                  "rounded-xl overflow-hidden aspect-video bg-black relative group select-none",
+                  "rounded-xl overflow-hidden bg-black relative group select-none transition-all duration-500 mx-auto",
+                  previewMode === 'mobile' ? 'aspect-[9/16] w-[150px]' : 'aspect-video w-full',
                   editingBanner?.mediaType !== 'video' ? "cursor-move" : "cursor-default"
                 )}
                 onMouseDown={handleDragStart}
@@ -635,8 +692,8 @@ export function BannerManagement() {
                     className="w-full h-full pointer-events-none"
                     style={{
                       backgroundImage: `url(${editData.imageUrl})`,
-                      backgroundSize: `${editData.imageZoom}%`,
-                      backgroundPosition: `${editData.imagePosition.x}% ${editData.imagePosition.y}%`,
+                      backgroundSize: `${previewMode === 'mobile' ? editData.mobileImageZoom : editData.imageZoom}%`,
+                      backgroundPosition: `${previewMode === 'mobile' ? editData.mobileImagePosition.x : editData.imagePosition.x}% ${previewMode === 'mobile' ? editData.mobileImagePosition.y : editData.imagePosition.y}%`,
                       backgroundRepeat: 'no-repeat'
                     }}
                   />
@@ -653,57 +710,48 @@ export function BannerManagement() {
                    <input type="file" ref={replaceFileInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, true)} />
                 </div>
               </div>
-              <p className="text-[9px] text-muted-foreground italic px-1">Dica: use a rodinha do mouse sobre a imagem para dar zoom.</p>
+              <p className="text-[8px] text-muted-foreground italic text-center">Arraste para reposicionar • Rodinha p/ zoom</p>
             </div>
 
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Título</Label>
-                <Input placeholder="Título" value={editData.title} onChange={e => setEditData({...editData, title: e.target.value})} className="h-12 rounded-xl border-primary/10" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Subtítulo</Label>
-                <Input placeholder="Subtítulo" value={editData.subtitle} onChange={e => setEditData({...editData, subtitle: e.target.value})} className="h-12 rounded-xl border-primary/10" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Texto do Botão</Label>
-                <Input placeholder="Texto do Botão" value={editData.ctaText} onChange={e => setEditData({...editData, ctaText: e.target.value})} className="h-12 rounded-xl border-primary/10" />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Tempo</Label>
-                  <select
-                    value={editData.duration}
-                    onChange={e => setEditData({...editData, duration: Number(e.target.value)})}
-                    className="w-full h-11 rounded-xl border border-primary/10 px-4 text-xs font-bold text-primary outline-none"
-                  >
-                    <option value={3}>3s</option>
-                    <option value={5}>5s</option>
-                    <option value={6}>6s</option>
-                    <option value={10}>10s</option>
-                  </select>
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Título</Label>
+                  <Input placeholder="Título" value={editData.title} onChange={e => setEditData({...editData, title: e.target.value})} className="h-10 rounded-xl border-primary/10" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Zoom: {editData.imageZoom}%</Label>
-                  <div className="flex items-center h-11">
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Subtítulo</Label>
+                  <Input placeholder="Subtítulo" value={editData.subtitle} onChange={e => setEditData({...editData, subtitle: e.target.value})} className="h-10 rounded-xl border-primary/10" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Botão</Label>
+                  <Input placeholder="Texto do Botão" value={editData.ctaText} onChange={e => setEditData({...editData, ctaText: e.target.value})} className="h-10 rounded-xl border-primary/10" />
+                </div>
+              </div>
+              
+              <div className="bg-secondary/10 p-4 rounded-2xl space-y-4">
+                 <div className="flex items-center gap-2 text-[9px] font-black uppercase text-accent tracking-widest border-b border-primary/5 pb-2">
+                    <Settings className="h-3 w-3" /> Configurações de {previewMode === 'desktop' ? 'Desktop' : 'Mobile'}
+                 </div>
+                 
+                 <div className="space-y-3">
+                    <div className="flex justify-between items-center"><Label className="text-[8px] font-bold uppercase text-primary/40">Zoom: {previewMode === 'mobile' ? editData.mobileImageZoom : editData.imageZoom}%</Label></div>
                     <Slider 
-                      value={[editData.imageZoom]} 
+                      value={[previewMode === 'mobile' ? editData.mobileImageZoom : editData.imageZoom]} 
                       min={100} 
                       max={200} 
                       step={1} 
-                      onValueChange={([v]) => setEditData(prev => ({ ...prev, imageZoom: v }))} 
+                      onValueChange={([v]) => previewMode === 'mobile' ? setEditData(p => ({...p, mobileImageZoom: v})) : setEditData(p => ({...p, imageZoom: v}))} 
                     />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center pt-2 px-1">
-                 <div className="flex flex-col">
-                    <span className="text-[8px] font-bold uppercase text-muted-foreground">Posição Salva</span>
-                    <span className="text-[10px] font-mono text-accent">X: {editData.imagePosition.x}% Y: {editData.imagePosition.y}%</span>
                  </div>
-                 <Button variant="ghost" size="sm" onClick={() => setEditData(prev => ({ ...prev, imagePosition: { x: 50, y: 50 } }))} className="h-7 text-[8px] font-bold uppercase border border-primary/5">Resetar Centro</Button>
+
+                 <div className="flex justify-between items-center pt-1">
+                   <div className="flex flex-col">
+                      <span className="text-[8px] font-bold uppercase text-muted-foreground">Posição Atual</span>
+                      <span className="text-[9px] font-mono text-accent">X: {previewMode === 'mobile' ? editData.mobileImagePosition.x : editData.imagePosition.x}% Y: {previewMode === 'mobile' ? editData.mobileImagePosition.y : editData.imagePosition.y}%</span>
+                   </div>
+                   <Button variant="ghost" size="sm" onClick={() => previewMode === 'mobile' ? setEditData(p => ({...p, mobileImagePosition: { x: 50, y: 50 }})) : setEditData(p => ({...p, imagePosition: { x: 50, y: 50 }}))} className="h-7 text-[8px] font-bold uppercase border border-primary/5">Resetar</Button>
+                 </div>
               </div>
             </div>
           </div>
@@ -724,6 +772,8 @@ export function BannerManagement() {
                   duration: editData.duration,
                   imagePosition: editData.imagePosition,
                   imageZoom: editData.imageZoom,
+                  mobileImagePosition: editData.mobileImagePosition,
+                  mobileImageZoom: editData.mobileImageZoom,
                   imageUrl: editData.imageUrl
                 })
                 toast({ title: "Banner atualizado!" })
