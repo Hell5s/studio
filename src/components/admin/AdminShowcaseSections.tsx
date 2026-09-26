@@ -91,7 +91,7 @@ export function AdminShowcaseSections() {
   }, [allProducts, productSearch]);
 
   const fixedUrlOptions = [
-    { label: 'Esta Vitrine (ver todos os itens)', value: '' },
+    { label: 'Esta Vitrine (ver todos os itens)', value: '__default__' },
     { label: 'Início', value: '/' },
     { label: 'Coleções', value: '/#colecoes' },
     { label: 'Produtos', value: '/#vitrine' },
@@ -100,7 +100,9 @@ export function AdminShowcaseSections() {
   ];
 
   const currentUrlValue = useMemo(() => {
-    const isFixed = fixedUrlOptions.some(opt => opt.value === formData.linkUrl);
+    if (formData.linkUrl === '') return '__default__';
+
+    const isFixed = fixedUrlOptions.some(opt => opt.value !== '__default__' && opt.value === formData.linkUrl);
     const isCategory = categories?.some(c => {
       const slug = c.name.toLowerCase().trim().replace(/\s+/g, '-');
       return `/categoria/${slug}` === formData.linkUrl;
@@ -154,7 +156,7 @@ export function AdminShowcaseSections() {
       // 2. Vitrine "Mais Vendidos" (Destaques Absolutos)
       const bestsellerIds = allProducts
         .filter(p => p.bestseller || p.published !== false)
-        .reverse() // Lógica diferente para simular outra seleção
+        .reverse()
         .slice(0, 12)
         .map(p => p.id);
 
@@ -357,7 +359,9 @@ export function AdminShowcaseSections() {
                        <Select 
                         value={currentUrlValue} 
                         onValueChange={(val) => {
-                          if (val !== '__custom__') {
+                          if (val === '__default__') {
+                            setFormData({ ...formData, linkUrl: '' });
+                          } else if (val !== '__custom__') {
                             setFormData({ ...formData, linkUrl: val });
                           }
                         }}
