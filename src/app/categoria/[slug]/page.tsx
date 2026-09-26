@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -14,6 +13,7 @@ import { FavoritesDialog } from '@/components/store/FavoritesDialog';
 import { Loader2, Tag, ArrowLeft, ChevronRight, Filter, X, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/contexts/CartContext';
+import { Button } from "@/components/ui/button";
 import { 
   Select, 
   SelectContent, 
