@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -107,13 +108,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   if (!hasHydrated || (!displayBanners.length && !isBannersLoading)) {
     return (
       <section
-        className="relative w-full overflow-hidden flex items-center justify-center"
+        className="relative w-full h-[70vh] md:h-screen min-h-[450px] md:min-h-[600px] max-h-screen overflow-hidden flex items-center justify-center bg-[#1a0a0e]"
         style={{ 
-          width: '100%',
-          height: isMobile ? '70vh' : '100vh',
-          maxHeight: '100vh',
-          minHeight: isMobile ? '450px' : '600px',
-          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 60%, #1a0a0e 100%)',
           WebkitBackfaceVisibility: 'hidden',
           transform: 'translateZ(0)'
         }}
@@ -137,13 +133,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   if (!displayBanners.length && isBannersLoading) {
     return (
       <section
-        className="relative w-full overflow-hidden animate-pulse"
+        className="relative w-full h-[70vh] md:h-screen min-h-[450px] md:min-h-[600px] max-h-screen overflow-hidden animate-pulse bg-[#1a0a0e]"
         style={{ 
-          width: '100%',
-          height: isMobile ? '70vh' : '100vh',
-          maxHeight: '100vh',
-          minHeight: isMobile ? '450px' : '600px',
-          background: 'linear-gradient(135deg, #1a0a0e 0%, #3d1a22 50%, #1a0a0e 100%)',
           WebkitBackfaceVisibility: 'hidden',
           transform: 'translateZ(0)'
         }}
@@ -161,12 +152,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
   return (
     <section 
-      className="relative w-full overflow-hidden bg-black group"
+      className="relative w-full h-[70vh] md:h-screen min-h-[450px] md:min-h-[600px] max-h-screen overflow-hidden bg-black group"
       style={{ 
-        width: '100%',
-        height: isMobile ? '70vh' : '100vh',
-        maxHeight: '100vh',
-        minHeight: isMobile ? '450px' : '600px',
         WebkitBackfaceVisibility: 'hidden',
         backfaceVisibility: 'hidden',
         perspective: '1000px',
@@ -200,7 +187,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
                     playsInline
                     className="absolute inset-0 w-full h-full object-cover"
                     style={{
-                      objectPosition: 'center center',
+                      objectPosition: `${activePosition.x}% ${activePosition.y}%`,
                       willChange: 'transform',
                       objectFit: 'cover',
                       imageRendering: 'high-quality' as any
