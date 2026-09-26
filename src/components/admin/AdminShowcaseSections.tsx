@@ -94,7 +94,7 @@ export function AdminShowcaseSections() {
     { label: 'Esta Vitrine (ver todos os itens)', value: '__default__' },
     { label: 'Início', value: '/' },
     { label: 'Coleções', value: '/#colecoes' },
-    { label: 'Produtos', value: '/#vitrine' },
+    { label: 'Produtos', value: '/produtos' },
     { label: 'Mais Vendidos', value: '/#mais-vendidos' },
     { label: 'SIZE (Economize)', value: '/economize' },
   ];
