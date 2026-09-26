@@ -164,7 +164,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         <div className="flex h-full w-full">
           {displayBanners.map((banner: any, idx: number) => {
             const optimizedUrl = banner.imageUrl?.includes('cloudinary') 
-              ? banner.imageUrl.replace('/upload/', '/upload/q_100,f_auto/') 
+              ? banner.imageUrl.replace('/upload/', `/upload/q_auto,f_auto,w_${isMobile ? 800 : 1920}/`) 
               : banner.imageUrl;
 
             // Determina as configurações visuais baseadas no dispositivo
