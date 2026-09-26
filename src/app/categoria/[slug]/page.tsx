@@ -53,7 +53,17 @@ export default function CategoryPage() {
 
   const categoryName = category?.name || '';
 
-  const productsQuery = useMemoFirebase(() => {
+  // Busca híbrida para suportar categorias simples e múltiplas
+  const queryArray = useMemoFirebase(() => {
+    if (!db || !categoryName) return null;
+    return query(
+      collection(db, 'products'), 
+      where('categories', 'array-contains', categoryName),
+      limit(60)
+    );
+  }, [db, categoryName]);
+
+  const queryString = useMemoFirebase(() => {
     if (!db || !categoryName) return null;
     return query(
       collection(db, 'products'), 
@@ -62,7 +72,15 @@ export default function CategoryPage() {
     );
   }, [db, categoryName]);
 
-  const { data: products, isLoading } = useCollection(productsQuery);
+  const { data: productsArray, isLoading: loadingArray } = useCollection(queryArray);
+  const { data: productsString, isLoading: loadingString } = useCollection(queryString);
+
+  const products = useMemo(() => {
+    const all = [...(productsArray || []), ...(productsString || [])];
+    return Array.from(new Map(all.map(p => [p.id, p])).values());
+  }, [productsArray, productsString]);
+
+  const isLoading = loadingArray || loadingString;
 
   // Lógica de Filtro e Ordenação (Client-side)
   const filteredAndSortedProducts = useMemo(() => {
@@ -83,7 +101,6 @@ export default function CategoryPage() {
     } else if (sortOrder === 'price-desc') {
       result.sort((a, b) => (b.price || 0) - (a.price || 0));
     }
-    // 'recent' mantém a ordem do Firestore (que já costuma ser por data)
 
     return result;
   }, [products, selectedSizes, sortOrder]);

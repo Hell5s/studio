@@ -29,9 +29,10 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, getDocs, query, collection, orderBy } from 'firebase/firestore';
 import { useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface EditProductDialogProps {
@@ -51,6 +52,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
+  const [categoriesList, setCategoriesList] = useState<string[]>(['Vestidos', 'Conjuntos', 'Blusas', 'Calças', 'Acessórios']);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -59,6 +61,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     description: '',
     longDescription: '',
     category: '',
+    categories: [] as string[],
     collection: '',
     badge: '',
     image: '',
@@ -75,6 +78,17 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   });
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'categories'), orderBy('name')));
+        const names = snap.docs.map(d => d.data().name).filter(Boolean);
+        if (names.length > 0) setCategoriesList(names);
+      } catch (e) {}
+    };
+    fetchCategories();
+  }, [db]);
+
+  useEffect(() => {
     if (product) {
       setFormData({
         name: product.name || '',
@@ -83,6 +97,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         description: product.description || '',
         longDescription: product.longDescription || '',
         category: product.category || '',
+        categories: product.categories || (product.category ? [product.category] : []),
         collection: product.collection || 'Moda Fitness',
         badge: product.badge || '',
         image: product.image || '',
@@ -120,6 +135,15 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     return Number(String(val).replace(/\./g, "").replace(",", ".")) || 0;
   };
 
+  const toggleCategory = (cat: string) => {
+    setFormData(prev => {
+      const newCats = prev.categories.includes(cat)
+        ? prev.categories.filter(c => c !== cat)
+        : [...prev.categories, cat];
+      return { ...prev, categories: newCats };
+    });
+  };
+
   const handleAddVariation = () => {
     setFormData(prev => ({
       ...prev,
@@ -142,6 +166,10 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
   const handleSave = () => {
     if (!product?.id) return;
+    if (formData.categories.length === 0) {
+      toast({ title: "Seleção obrigatória", description: "Vincule pelo menos uma categoria ao produto.", variant: "destructive" });
+      return;
+    }
     
     setLoading(true);
     const docRef = doc(db, 'products', product.id);
@@ -155,6 +183,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       stock: Number(formData.stock) || 0,
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
+      category: formData.categories[0],
+      categories: formData.categories,
       image: finalMainImage,
       images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
       updatedAt: serverTimestamp()
@@ -233,7 +263,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     try {
       const result = await adminGenerateProductDescription({
         productName: formData.name,
-        category: formData.category,
+        category: formData.categories[0] || formData.category,
         price: `R$ ${formData.price}`,
         keyFeatures: [formData.colors, formData.sizes].filter(Boolean)
       });
@@ -288,7 +318,26 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} placeholder="Coleção" />
-                <Input value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="Categoria" />
+                <div className="space-y-4 col-span-2">
+                  <div className="flex justify-between items-center px-2">
+                    <Label className="text-primary uppercase tracking-widest text-[10px] font-bold">Categorias Vinculadas</Label>
+                    <Badge variant="outline" className="text-[9px] border-primary/10">{formData.categories.length} selecionadas</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 p-3 bg-white border border-primary/5 rounded-2xl max-h-[120px] overflow-y-auto no-scrollbar">
+                    {categoriesList.map(cat => (
+                      <div key={cat} className="flex items-center gap-2 cursor-pointer" onClick={() => toggleCategory(cat)}>
+                        <Checkbox 
+                          id={`edit-cat-${cat}`} 
+                          checked={formData.categories.includes(cat)} 
+                          onCheckedChange={() => toggleCategory(cat)}
+                        />
+                        <label htmlFor={`edit-cat-${cat}`} className="text-[10px] font-medium text-primary/60 truncate cursor-pointer">
+                          {cat}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -355,7 +404,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                         </div>
                       )}
                     </div>
-                    <Input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-10 text-[10px] bg-white border-none rounded-xl" />
+                    <Input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-10 text-[10px] bg-white border-none rounded-xl px-4 flex-1" />
                     <Input placeholder="Link da foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-10 text-[10px] bg-white border-none rounded-xl flex-[2]" />
                     <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600"><X className="h-4 w-4" /></button>
                   </div>
@@ -377,8 +426,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               </div>
               <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5">
                 <div className="space-y-0.5">
-                  <Label className="text-[11px] font-bold uppercase text-primary">Incluir na vitrine SALE</Label>
-                  <p className="text-[9px] text-muted-foreground italic">Mesmo sem desconto cadastrado, o produto aparece na página SALE (Economize com Sofisticação) quando esta opção estiver ligada.</p>
+                  <Label className="text-[11px] font-bold uppercase text-primary">Incluir na vitrine SIZE</Label>
+                  <p className="text-[9px] text-muted-foreground italic">Mesmo sem desconto cadastrado, o produto aparece na página SIZE (Economize com Sofisticação) quando esta opção estiver ligada.</p>
                 </div>
                 <Switch checked={formData.showInSale} onCheckedChange={v => setFormData({...formData, showInSale: v})} />
               </div>

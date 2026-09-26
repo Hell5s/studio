@@ -24,11 +24,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDocs, query, collection, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
+import { Badge } from '@/components/ui/badge';
 
 interface ProductFormProps {
   initialData?: any;
@@ -45,6 +47,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
+  const [categoriesList, setCategoriesList] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -52,6 +55,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     description: '',
     longDescription: '',
     category: 'Vestidos',
+    categories: [] as string[],
     subcategory: '',
     brand: 'Toda Bela',
     sku: '',
@@ -82,6 +86,17 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   });
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'categories'), orderBy('name')));
+        const names = snap.docs.map(d => d.data().name).filter(Boolean);
+        if (names.length > 0) setCategoriesList(names);
+      } catch (e) {}
+    };
+    fetchCategories();
+  }, [db]);
+
+  useEffect(() => {
     if (initialData) {
       setFormData({
         ...initialData,
@@ -95,6 +110,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         metaDescription: initialData.seo?.metaDescription || '',
         gallery: initialData.images || [],
         variations: initialData.variations || [],
+        category: initialData.category || '',
+        categories: initialData.categories || (initialData.category ? [initialData.category] : []),
         colors: initialData.colors?.join(', ') || '',
         sizes: initialData.sizes?.join(', ') || 'P, M, G, GG',
         showInSale: !!initialData.showInSale
@@ -124,6 +141,15 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       name,
       slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
     }));
+  };
+
+  const toggleCategory = (cat: string) => {
+    setFormData(prev => {
+      const newCats = prev.categories.includes(cat)
+        ? prev.categories.filter(c => c !== cat)
+        : [...prev.categories, cat];
+      return { ...prev, categories: newCats };
+    });
   };
 
   const handleAddVariation = () => {
@@ -203,7 +229,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     try {
       const res = await adminGenerateProductDescription({
         productName: formData.name,
-        category: formData.category,
+        category: formData.categories[0] || formData.category,
         price: `R$ ${formData.price}`,
         keyFeatures: [formData.brand, formData.shippingTime]
       });
@@ -254,6 +280,10 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       toast({ title: "Campos obrigatórios", description: "Preencha nome, preço e imagem.", variant: "destructive" });
       return;
     }
+    if (formData.categories.length === 0) {
+      toast({ title: "Escolha as categorias", description: "Vincule o produto a pelo menos uma coleção.", variant: "destructive" });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -267,6 +297,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         oldPrice: formData.oldPrice ? parseSafeNumber(formData.oldPrice) : null,
         cost: parseSafeNumber(formData.cost),
         stock: parseSafeNumber(formData.stock),
+        category: formData.categories[0],
+        categories: formData.categories,
         image: finalMainImage,
         images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
         colors: formData.colors.split(',').map(c => c.trim()).filter(Boolean),
@@ -315,7 +347,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <p className="text-muted-foreground italic font-light">Gestão visual de cores e detalhes editoriais.</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onClick={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
+          <Button variant="outline" onSuccess={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
           <Button onClick={handleSave} disabled={loading} className="rounded-full h-12 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-transform uppercase text-[10px] font-bold tracking-widest">
             {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Produto
           </Button>
@@ -351,6 +383,27 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
                 <div className="grid gap-2"><Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Coleção</Label><Input value={formData.collection} onChange={e => setFormData({...formData, collection: e.target.value})} className="rounded-2xl h-14 bg-secondary/20 border-none px-6" /></div>
                 
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center px-4">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Categorias da Loja</Label>
+                    <Badge variant="secondary" className="text-[9px]">{formData.categories.length} selecionadas</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-secondary/5 rounded-2xl border border-primary/5 max-h-[160px] overflow-y-auto no-scrollbar">
+                    {categoriesList.map(cat => (
+                      <div key={cat} className="flex items-center gap-2 group cursor-pointer" onClick={() => toggleCategory(cat)}>
+                        <Checkbox 
+                          id={`form-cat-${cat}`} 
+                          checked={formData.categories.includes(cat)} 
+                          onCheckedChange={() => toggleCategory(cat)}
+                        />
+                        <label htmlFor={`form-cat-${cat}`} className="text-[11px] font-medium text-primary/60 group-hover:text-primary cursor-pointer truncate">
+                          {cat}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="grid gap-2">
                     <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos (P, M, G...)</Label>
@@ -488,7 +541,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               
               <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-primary/5">
                 <div className="space-y-0.5">
-                  <Label className="text-[10px] font-bold uppercase text-primary">Incluir na vitrine SALE</Label>
+                  <Label className="text-[10px] font-bold uppercase text-primary">Incluir na vitrine SIZE</Label>
                   <p className="text-[8px] text-muted-foreground italic leading-tight">Garante a exibição na página de ofertas mesmo sem desconto.</p>
                 </div>
                 <Switch checked={formData.showInSale} onCheckedChange={v => setFormData({...formData, showInSale: v})} />

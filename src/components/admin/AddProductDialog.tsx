@@ -123,6 +123,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     description: '',
     longDescription: '',
     category: 'Vestidos',
+    categories: [] as string[],
     collection: 'Nova Coleção',
     badge: 'Novo',
     image: '' as any,
@@ -151,6 +152,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           description: product.description || '',
           longDescription: product.longDescription || '',
           category: product.category || 'Vestidos',
+          categories: product.categories || (product.category ? [product.category] : []),
           collection: product.collection || 'Nova Coleção',
           badge: product.badge || '',
           image: product.image || '',
@@ -178,7 +180,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         setFormData({
           name: '', price: '', oldPrice: '', cost: '', supplierUrl: '', supplierName: '',
           internalNotes: '', description: '', longDescription: '',
-          category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
+          category: 'Vestidos', categories: [], collection: 'Nova Coleção', badge: 'Novo', image: '', 
           gallery: [], stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
           featured: false, bestseller: false, showInSale: false, variations: []
         });
@@ -269,13 +271,22 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     toast({ title: "Preços calculados!", description: "Margem de 3x aplicada com sucesso." });
   };
 
+  const toggleCategory = (cat: string) => {
+    setFormData(prev => {
+      const newCats = prev.categories.includes(cat)
+        ? prev.categories.filter(c => c !== cat)
+        : [...prev.categories, cat];
+      return { ...prev, categories: newCats };
+    });
+  };
+
   const handleSave = async () => {
     const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
 
-    if (!formData.name || !formData.price || !finalMainImage) {
+    if (!formData.name || !formData.price || !finalMainImage || formData.categories.length === 0) {
       toast({
         title: "Campos obrigatórios",
-        description: "Preencha nome, preço de venda e imagem de capa.",
+        description: "Preencha nome, preço, imagem de capa e selecione ao menos uma categoria.",
         variant: "destructive"
       });
       return;
@@ -295,6 +306,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       stock: parseSafeNumber(formData.stock),
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
+      category: formData.categories[0],
+      categories: formData.categories,
       image: finalMainImage,
       images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
       variations: formData.variations, 
@@ -451,7 +464,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     try {
       const res = await adminGenerateProductDescription({
         productName: formData.name,
-        category: formData.category,
+        category: formData.categories[0] || formData.category,
         price: `R$ ${formData.price}`,
         keyFeatures: ["Modelagem exclusiva", "Dropshipping Premium"]
       });
@@ -576,11 +589,25 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                     />
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label>Categoria</Label>
-                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm">
-                      {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="flex justify-between items-center px-2">
+                      <Label className="text-accent uppercase tracking-widest text-[10px] font-bold">Categorias da Peça</Label>
+                      <Badge variant="outline" className="text-[9px] border-primary/10">{formData.categories.length} selecionadas</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-white border border-primary/5 rounded-2xl max-h-[160px] overflow-y-auto no-scrollbar">
+                      {categories.map(cat => (
+                        <div key={cat} className="flex items-center gap-2 group cursor-pointer" onClick={() => toggleCategory(cat)}>
+                          <Checkbox 
+                            id={`cat-${cat}`} 
+                            checked={formData.categories.includes(cat)} 
+                            onCheckedChange={() => toggleCategory(cat)}
+                          />
+                          <label htmlFor={`cat-${cat}`} className="text-[11px] font-medium text-primary/60 group-hover:text-primary cursor-pointer truncate">
+                            {cat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -591,8 +618,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   <div className="md:col-span-2">
                     <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5">
                       <div className="space-y-0.5">
-                        <Label className="text-[11px] font-bold uppercase text-primary">Incluir na vitrine SALE</Label>
-                        <p className="text-[9px] text-muted-foreground italic">Mesmo sem desconto cadastrado, o produto aparece na página SALE (Economize com Sofisticação) quando esta opção estiver ligada.</p>
+                        <Label className="text-[11px] font-bold uppercase text-primary">Incluir na vitrine SIZE</Label>
+                        <p className="text-[9px] text-muted-foreground italic">Mesmo sem desconto cadastrado, o produto aparece na página SIZE (Economize com Sofisticação) quando esta opção estiver ligada.</p>
                       </div>
                       <Switch checked={formData.showInSale} onCheckedChange={v => setFormData({...formData, showInSale: v})} />
                     </div>
@@ -690,7 +717,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   <div className="md:col-span-2 space-y-2">
                     <Label>Link do Fornecedor (AliExpress, Shopee, etc)</Label>
                     <div className="relative">
-                      <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-accent/40" />
                       <Input value={formData.supplierUrl} onChange={e => setFormData({...formData, supplierUrl: e.target.value})} placeholder="https://..." className="h-11 pl-12 bg-secondary/10 border-none rounded-xl" />
                     </div>
                   </div>
