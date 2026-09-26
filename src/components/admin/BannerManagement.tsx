@@ -26,7 +26,8 @@ import {
   Maximize2,
   RefreshCw,
   Smartphone,
-  Monitor
+  Monitor,
+  Settings
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
