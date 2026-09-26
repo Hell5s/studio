@@ -15,7 +15,9 @@ import {
   Package,
   X,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -197,6 +199,16 @@ export function AdminShowcaseSections() {
     });
   };
 
+  const moveProduct = (index: number, direction: -1 | 1) => {
+    setFormData(prev => {
+      const newIds = [...prev.productIds];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= newIds.length) return prev;
+      [newIds[index], newIds[targetIndex]] = [newIds[targetIndex], newIds[index]];
+      return { ...prev, productIds: newIds };
+    });
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in duration-700 max-w-6xl mx-auto">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -375,18 +387,43 @@ export function AdminShowcaseSections() {
                   <h5 className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-primary/5 pb-4">Sua Seleção</h5>
                   <div className="space-y-4 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
                     {formData.productIds.length > 0 ? (
-                      formData.productIds.map(id => {
+                      formData.productIds.map((id, index) => {
                         const p = allProducts?.find(item => item.id === id);
                         if (!p) return null;
                         const pImg = getItemImageUrl(p.image);
                         return (
-                          <div key={id} className="flex items-center gap-4 p-3 bg-secondary/20 rounded-xl group relative">
+                          <div key={id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-xl group relative">
+                             <div className="flex flex-col gap-0.5 shrink-0">
+                               <button 
+                                 type="button"
+                                 onClick={(e) => { e.stopPropagation(); moveProduct(index, -1); }}
+                                 disabled={index === 0}
+                                 className={cn(
+                                   "h-5 w-5 rounded-full flex items-center justify-center text-primary/30 hover:text-primary hover:bg-white transition-all",
+                                   index === 0 && "opacity-20 pointer-events-none"
+                                 )}
+                               >
+                                 <ChevronUp className="h-3 w-3" />
+                               </button>
+                               <button 
+                                 type="button"
+                                 onClick={(e) => { e.stopPropagation(); moveProduct(index, 1); }}
+                                 disabled={index === formData.productIds.length - 1}
+                                 className={cn(
+                                   "h-5 w-5 rounded-full flex items-center justify-center text-primary/30 hover:text-primary hover:bg-white transition-all",
+                                   index === formData.productIds.length - 1 && "opacity-20 pointer-events-none"
+                                 )}
+                               >
+                                 <ChevronDown className="h-3 w-3" />
+                               </button>
+                             </div>
                              {pImg ? <img src={pImg} className="h-12 w-10 object-cover rounded-lg border border-primary/5" alt="item" /> : <div className="h-12 w-10 rounded-lg bg-secondary/20" />}
                              <div className="flex-1 min-w-0">
                                 <p className="text-[10px] font-bold text-primary truncate uppercase">{p.name}</p>
                                 <p className="text-[9px] text-accent font-bold">R$ {p.price?.toFixed(2)}</p>
                              </div>
                              <button 
+                              type="button"
                               onClick={(e) => { e.stopPropagation(); toggleProduct(id); }}
                               className="opacity-0 group-hover:opacity-100 p-1 bg-red-500 text-white rounded-full transition-opacity absolute -top-1 -right-1"
                              >
