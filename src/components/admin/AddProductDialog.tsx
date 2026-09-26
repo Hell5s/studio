@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -134,6 +133,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     published: true,
     featured: false,
     bestseller: false,
+    showInSale: false,
     variations: [] as { color: string; image: any }[]
   });
 
@@ -161,6 +161,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           published: product.published !== false,
           featured: !!product.featured,
           bestseller: !!product.bestseller,
+          showInSale: !!product.showInSale,
           variations: product.variations || []
         });
 
@@ -179,7 +180,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           internalNotes: '', description: '', longDescription: '',
           category: 'Vestidos', collection: 'Nova Coleção', badge: 'Novo', image: '', 
           gallery: [], stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
-          featured: false, bestseller: false, variations: []
+          featured: false, bestseller: false, showInSale: false, variations: []
         });
         setSelectedShowcaseIds(new Set());
       }
@@ -383,8 +384,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (maxFile: File) => {
+    const file = maxFile;
     if (!file) return;
     setUploading(true);
     try {
@@ -585,6 +586,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2"><Label>Preço Venda (R$)</Label><Input value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
                     <div className="space-y-2"><Label>Preço Original "De" (R$)</Label><Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="bg-white border-gray-200 h-12 rounded-xl" /></div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5">
+                      <div className="space-y-0.5">
+                        <Label className="text-[11px] font-bold uppercase text-primary">Incluir na vitrine SALE</Label>
+                        <p className="text-[9px] text-muted-foreground italic">Mesmo sem desconto cadastrado, o produto aparece na página SALE (Economize com Sofisticação) quando esta opção estiver ligada.</p>
+                      </div>
+                      <Switch checked={formData.showInSale} onCheckedChange={v => setFormData({...formData, showInSale: v})} />
+                    </div>
                   </div>
 
                   <div className="space-y-3">
@@ -812,7 +823,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         <span className="text-[10px] font-bold mt-2">CAPA</span>
                       </div>
                     )}
-                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileUpload(file);
+                    }} />
                     {uploading && activeVariationIndex === null && <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-30"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}
                   </div>
                   <div className="p-6 text-center">

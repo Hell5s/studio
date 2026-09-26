@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -68,6 +67,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     status: 'active',
     featured: false,
     bestseller: false,
+    showInSale: false,
     sourceUrl: '',
     vendorName: '',
     originalPrice: '',
@@ -96,7 +96,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         gallery: initialData.images || [],
         variations: initialData.variations || [],
         colors: initialData.colors?.join(', ') || '',
-        sizes: initialData.sizes?.join(', ') || 'P, M, G, GG'
+        sizes: initialData.sizes?.join(', ') || 'P, M, G, GG',
+        showInSale: !!initialData.showInSale
       });
     }
   }, [initialData]);
@@ -484,6 +485,15 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               </div>
               <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço de Venda (R$)</Label><Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none px-6" /></div>
               <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Preço Original / "De" (R$)</Label><Input type="number" value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none px-6" /></div>
+              
+              <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-primary/5">
+                <div className="space-y-0.5">
+                  <Label className="text-[10px] font-bold uppercase text-primary">Incluir na vitrine SALE</Label>
+                  <p className="text-[8px] text-muted-foreground italic leading-tight">Garante a exibição na página de ofertas mesmo sem desconto.</p>
+                </div>
+                <Switch checked={formData.showInSale} onCheckedChange={v => setFormData({...formData, showInSale: v})} />
+              </div>
+
               <div className="grid gap-2"><Label className="text-[9px] uppercase font-bold text-muted-foreground ml-2">Estoque</Label><Input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} className="rounded-xl h-12 bg-secondary/10 border-none px-6" /></div>
             </div>
           </Card>

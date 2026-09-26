@@ -33,7 +33,7 @@ export default function EconomizePage() {
 
   const saleProducts = useMemo(() => {
     if (!allProducts) return [];
-    return allProducts.filter(p => p.oldPrice && p.oldPrice > p.price);
+    return allProducts.filter(p => (p.oldPrice && p.oldPrice > p.price) || p.showInSale === true);
   }, [allProducts]);
 
   return (

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -70,6 +69,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     published: true,
     featured: false,
     bestseller: false,
+    showInSale: false,
     sourceUrl: '',
     variations: [] as { color: string; image: string }[]
   });
@@ -93,6 +93,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         published: product.published !== false,
         featured: !!product.featured,
         bestseller: !!product.bestseller,
+        showInSale: !!product.showInSale,
         sourceUrl: product.sourceUrl || '',
         variations: product.variations || []
       });
@@ -373,6 +374,13 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                   <span className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Preço Original "De"</span>
                   <Input value={formData.oldPrice} onChange={e => setFormData({...formData, oldPrice: e.target.value})} placeholder="169,90" />
                 </div>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-primary/5">
+                <div className="space-y-0.5">
+                  <Label className="text-[11px] font-bold uppercase text-primary">Incluir na vitrine SALE</Label>
+                  <p className="text-[9px] text-muted-foreground italic">Mesmo sem desconto cadastrado, o produto aparece na página SALE (Economize com Sofisticação) quando esta opção estiver ligada.</p>
+                </div>
+                <Switch checked={formData.showInSale} onCheckedChange={v => setFormData({...formData, showInSale: v})} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} placeholder="Estoque" />
