@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingBag, Search, Heart, Package, Menu, X, LayoutDashboard } from 'lucide-react';
+import { ShoppingBag, Search, Heart, Package, Menu, X, LayoutDashboard, Instagram, MessageCircle, User } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, doc } from 'firebase/firestore';
 import { LogoMark } from './LogoMark';
@@ -333,6 +333,39 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
               >
                 <Package className="h-4 w-4" /> Meus Pedidos
               </Link>
+
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onOpenFavorites();
+                }}
+                className="w-full flex items-center gap-4 py-5 border-b border-gray-50 text-[13px] font-bold uppercase tracking-[0.2em] text-primary/70 hover:text-accent transition-colors text-left"
+              >
+                <Heart className={cn("h-4 w-4", favoritesCount > 0 && "fill-current text-accent")} />
+                Desejos {favoritesCount > 0 && `(${favoritesCount})`}
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onOpenCart();
+                }}
+                className="w-full flex items-center gap-4 py-5 border-b border-gray-50 text-[13px] font-bold uppercase tracking-[0.2em] text-primary/70 hover:text-accent transition-colors text-left"
+              >
+                <ShoppingBag className="h-4 w-4" />
+                Carrinho {cartCount > 0 && `(${cartCount})`}
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsAccountOpen(true);
+                }}
+                className="w-full flex items-center gap-4 py-5 border-b border-gray-50 text-[13px] font-bold uppercase tracking-[0.2em] text-primary/70 hover:text-accent transition-colors text-left"
+              >
+                <User className="h-4 w-4" />
+                {user ? "Minha Conta" : "Entrar / Cadastrar"}
+              </button>
             </nav>
             <div className="p-8 border-t border-gray-100 bg-secondary/10">
               <form onSubmit={handleSearchSubmit} className="relative">
@@ -344,6 +377,33 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   onChange={(e) => setSearchValue(e.target.value)}
                 />
               </form>
+
+              <div className="mt-6 flex flex-wrap items-center gap-6">
+                {settings?.whatsapp && (
+                  <a 
+                    href={`https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-[10px] font-bold text-primary/40 uppercase tracking-widest hover:text-accent transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Fale conosco
+                  </a>
+                )}
+                {settings?.instagram && (
+                  <a 
+                    href={`https://instagram.com/${settings.instagram.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-[10px] font-bold text-primary/40 uppercase tracking-widest hover:text-accent transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Instagram className="h-4 w-4" />
+                    Instagram
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
