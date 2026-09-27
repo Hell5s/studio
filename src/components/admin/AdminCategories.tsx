@@ -25,6 +25,41 @@ function getCategoryImageUrl(image: any): string {
   return '';
 }
 
+async function getCroppedImageBlob(imageSrc: string, pixelCrop: any): Promise<Blob> {
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Não foi possível carregar a imagem para recorte'));
+    img.src = imageSrc;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Não foi possível criar o canvas de recorte');
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
+  );
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Falha ao gerar a imagem recortada'));
+    }, 'image/jpeg', 0.92);
+  });
+}
+
 export function AdminCategories() {
   const db = useFirestore();
   const { toast } = useToast();
@@ -43,7 +78,7 @@ export function AdminCategories() {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
-  const [tempCroppedArea, setTempCroppedArea] = useState<any>(null);
+  const [tempCroppedAreaPixels, setTempCroppedAreaPixels] = useState<any>(null);
 
   const q = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('order', 'asc')), [db]);
   const { data: categories, isLoading } = useCollection(q);
@@ -66,6 +101,11 @@ export function AdminCategories() {
     return result.secure_url;
   };
 
+  const uploadBlobToCloudinary = async (blob: Blob) => {
+    const file = new File([blob], `category-crop-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    return uploadToCloudinary(file);
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -75,7 +115,9 @@ export function AdminCategories() {
       const url = await uploadToCloudinary(file);
       
       if (isEdit) {
-        setEditImage({ url, crop: { x: 50, y: 50 }, zoom: 1 });
+        setEditImage({ url });
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
         setIsCropperOpen(true);
       } else {
         setNewCatImage(url);
@@ -118,9 +160,7 @@ export function AdminCategories() {
     if (!editingCategory || !editName) return;
 
     const currentUrl = getCategoryImageUrl(editImage);
-    const finalImage = typeof editImage === 'object' 
-      ? { ...editImage, url: currentUrl }
-      : { url: currentUrl, crop: { x: 50, y: 50 }, zoom: 1 };
+    const finalImage = { url: currentUrl };
 
     try {
       await updateDoc(doc(db, 'categories', editingCategory.id), {
@@ -156,11 +196,35 @@ export function AdminCategories() {
     setEditingCategory(cat);
     setEditName(cat.name);
     const img = cat.image;
-    // Fallback para categorias que ainda usam string simples
     if (typeof img === 'string') {
-      setEditImage({ url: img, crop: { x: 50, y: 50 }, zoom: 1 });
+      setEditImage({ url: img });
     } else {
-      setEditImage(img || { url: '', crop: { x: 50, y: 50 }, zoom: 1 });
+      setEditImage(img || { url: '' });
+    }
+  };
+
+  const handleSaveCrop = async () => {
+    if (!tempCroppedAreaPixels) {
+      setIsCropperOpen(false);
+      return;
+    }
+    setUploading(true);
+    try {
+      const sourceUrl = getCategoryImageUrl(editImage);
+      const blob = await getCroppedImageBlob(sourceUrl, tempCroppedAreaPixels);
+      const croppedUrl = await uploadBlobToCloudinary(blob);
+      setEditImage({ url: croppedUrl });
+      toast({ title: "Enquadramento aplicado!" });
+    } catch (error: any) {
+      console.error('Erro ao recortar imagem:', error);
+      toast({
+        title: 'Erro ao recortar',
+        description: error?.message || 'Não foi possível aplicar o recorte.',
+        variant: 'destructive'
+      });
+    } finally {
+      setUploading(false);
+      setIsCropperOpen(false);
     }
   };
 
@@ -239,10 +303,6 @@ export function AdminCategories() {
                   <img 
                     src={getCategoryImageUrl(cat.image)} 
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                    style={typeof cat.image === 'object' && cat.image?.crop ? { 
-                      objectPosition: `${cat.image.crop.x}% ${cat.image.crop.y}%`, 
-                      transform: `scale(${cat.image.zoom || 1})` 
-                    } : undefined}
                     alt={cat.name} 
                   />
                 ) : (
@@ -316,10 +376,6 @@ export function AdminCategories() {
                     <img 
                       src={getCategoryImageUrl(editImage)} 
                       className="h-full w-full object-cover" 
-                      style={typeof editImage === 'object' && editImage?.crop ? {
-                        objectPosition: `${editImage.crop.x}% ${editImage.crop.y}%`,
-                        transform: `scale(${editImage.zoom || 1})`
-                      } : undefined}
                       alt="Edit Preview" 
                     />
                   ) : (
@@ -342,7 +398,7 @@ export function AdminCategories() {
                          onClick={(e) => {
                            e.stopPropagation();
                            setCrop({ x: 0, y: 0 });
-                           setZoom(typeof editImage === 'object' ? editImage.zoom : 1);
+                           setZoom(1);
                            setIsCropperOpen(true);
                          }}
                        >
@@ -384,7 +440,7 @@ export function AdminCategories() {
               cropShape="rect"
               onCropChange={setCrop}
               onZoomChange={setZoom}
-              onCropComplete={(croppedAreaPercentage) => setTempCroppedArea(croppedAreaPercentage)}
+              onCropComplete={(croppedAreaPercentage, croppedAreaPixels) => setTempCroppedAreaPixels(croppedAreaPixels)}
               style={{
                 containerStyle: {
                   width: '100%',
@@ -411,20 +467,11 @@ export function AdminCategories() {
             <div className="flex gap-3">
               <Button variant="ghost" onClick={() => setIsCropperOpen(false)} className="text-white text-[10px] font-bold uppercase">Cancelar</Button>
               <Button 
-                onClick={() => {
-                  if (tempCroppedArea) {
-                    const currentUrl = getCategoryImageUrl(editImage);
-                    const newCrop = {
-                      x: Math.round(tempCroppedArea.x + tempCroppedArea.width / 2),
-                      y: Math.round(tempCroppedArea.y + tempCroppedArea.height / 2)
-                    };
-                    setEditImage({ url: currentUrl, crop: newCrop, zoom });
-                  }
-                  setIsCropperOpen(false);
-                }} 
+                onClick={handleSaveCrop}
+                disabled={uploading}
                 className="bg-accent text-primary font-bold uppercase text-[10px] h-10 px-8 rounded-full"
               >
-                Salvar Enquadramento
+                {uploading ? <Loader2 className="animate-spin h-4 w-4" /> : 'Salvar Enquadramento'}
               </Button>
             </div>
           </div>
