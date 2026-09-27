@@ -389,13 +389,17 @@ export function AdminCategories() {
           </div>
           <div className="p-6 bg-[#2A1F22] flex items-center justify-between gap-6">
             <div className="flex-1 flex items-center gap-4">
-              <Minus className="h-4 w-4 text-white/40" />
+              <button type="button" onClick={() => setZoom(z => Math.max(1, Math.round((z - 0.1) * 10) / 10))} className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                <Minus className="h-4 w-4 text-white/70" />
+              </button>
               <input 
                 type="range" min={1} max={3} step={0.1} value={zoom} 
                 onChange={e => setZoom(Number(e.target.value))}
                 className="flex-1 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent" 
               />
-              <Plus className="h-4 w-4 text-white/40" />
+              <button type="button" onClick={() => setZoom(z => Math.min(3, Math.round((z + 0.1) * 10) / 10))} className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                <Plus className="h-4 w-4 text-white/70" />
+              </button>
             </div>
             <div className="flex gap-3">
               <Button variant="ghost" onClick={() => setIsCropperOpen(false)} className="text-white text-[10px] font-bold uppercase">Cancelar</Button>
