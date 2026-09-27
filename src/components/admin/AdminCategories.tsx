@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
@@ -114,23 +114,30 @@ export function AdminCategories() {
     toast({ title: "Categoria criada!" });
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!editingCategory || !editName) return;
 
-    // Garante que o editImage seja salvo corretamente com a URL
     const currentUrl = getCategoryImageUrl(editImage);
     const finalImage = typeof editImage === 'object' 
       ? { ...editImage, url: currentUrl }
       : { url: currentUrl, crop: { x: 50, y: 50 }, zoom: 1 };
 
-    updateDocumentNonBlocking(doc(db, 'categories', editingCategory.id), {
-      name: editName,
-      image: finalImage,
-      updatedAt: serverTimestamp()
-    });
-
-    toast({ title: "Categoria atualizada!" });
-    setEditingCategory(null);
+    try {
+      await updateDoc(doc(db, 'categories', editingCategory.id), {
+        name: editName,
+        image: finalImage,
+        updatedAt: serverTimestamp()
+      });
+      toast({ title: "Categoria atualizada!" });
+      setEditingCategory(null);
+    } catch (error: any) {
+      console.error("Erro ao atualizar categoria:", error);
+      toast({ 
+        title: "Erro ao salvar", 
+        description: error?.message || "Não foi possível salvar as alterações.",
+        variant: "destructive" 
+      });
+    }
   };
 
   const handleDelete = (id: string, name: string) => {
