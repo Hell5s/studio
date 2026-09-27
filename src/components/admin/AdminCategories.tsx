@@ -260,30 +260,37 @@ export function AdminCategories() {
             </DialogHeader>
           </div>
           <div className="p-8 space-y-6">
-            <div className="flex gap-6 items-center">
-              <div 
-                className="h-24 w-24 rounded-2xl bg-secondary/50 border-2 border-dashed border-primary/10 flex items-center justify-center overflow-hidden cursor-pointer relative group"
-                onClick={() => editFileInputRef.current?.click()}
-              >
-                {editImage ? (
-                  <img src={editImage} className="h-full w-full object-cover" alt="Edit Preview" />
-                ) : (
-                  <ImageIcon className="h-8 w-8 text-primary/20" />
-                )}
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   {uploading ? <Loader2 className="animate-spin text-white" /> : <Upload className="text-white h-5 w-5" />}
+            <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent ml-2">Imagem de Capa</label>
+                <div 
+                  className={cn(
+                    "w-48 h-48 rounded-[2rem] bg-secondary/50 border-2 border-dashed border-primary/10 flex items-center justify-center overflow-hidden cursor-pointer relative group",
+                    editImage && "border-none"
+                  )}
+                  onClick={() => editFileInputRef.current?.click()}
+                >
+                  {editImage ? (
+                    <img src={editImage} className="h-full w-full object-cover" alt="Edit Preview" />
+                  ) : (
+                    <ImageIcon className="h-10 w-10 text-primary/20" />
+                  )}
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                     {uploading ? <Loader2 className="animate-spin text-white h-8 w-8" /> : <Upload className="text-white h-8 w-8" />}
+                  </div>
+                  <input type="file" ref={editFileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, true)} />
                 </div>
-                <input type="file" ref={editFileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, true)} />
+                <p className="text-[9px] text-primary/40 uppercase font-bold text-center italic tracking-widest">Toque para trocar a foto</p>
               </div>
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 w-full">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-accent ml-1">Nome da Categoria</label>
-                <Input value={editName} onChange={e => setEditName(e.target.value)} className="rounded-xl h-12" />
+                <Input value={editName} onChange={e => setEditName(e.target.value)} className="rounded-xl h-14 bg-white border-none shadow-sm focus:ring-2 focus:ring-primary/10" />
               </div>
             </div>
           </div>
           <DialogFooter className="p-8 bg-secondary/20 flex gap-3">
-            <button onClick={() => setEditingCategory(null)} className="rounded-full px-6 h-12 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors">Cancelar</button>
-            <Button onClick={handleUpdate} disabled={uploading} className="rounded-full px-8 bg-primary text-white h-12 text-[10px] font-bold uppercase tracking-widest shadow-lg">
+            <button onClick={() => setEditingCategory(null)} className="rounded-full px-8 h-12 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors">Cancelar</button>
+            <Button onClick={handleUpdate} disabled={uploading} className="rounded-full px-10 bg-primary text-white h-12 text-[10px] font-bold uppercase tracking-widest shadow-lg">
               {uploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Alterações
             </Button>
           </DialogFooter>
