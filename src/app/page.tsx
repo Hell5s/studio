@@ -20,6 +20,13 @@ const AIProductGenerator = React.lazy(() => import('@/components/admin/AIProduct
 const CheckoutDialog = React.lazy(() => import('@/components/store/CheckoutDialog').then(mod => ({ default: mod.CheckoutDialog })));
 const FavoritesDialog = React.lazy(() => import('@/components/store/FavoritesDialog').then(mod => ({ default: mod.FavoritesDialog })));
 
+function getCategoryImageUrl(image: any): string {
+  if (!image) return '';
+  if (typeof image === 'string') return image;
+  if (typeof image === 'object' && typeof image.url === 'string') return image.url;
+  return '';
+}
+
 function StorefrontContent() {
   const db = useFirestore();
   const { user } = useUser();
@@ -122,6 +129,7 @@ function StorefrontContent() {
           {categories && categories.length > 0 ? (
             categories.map((col) => {
               const slug = col.name.toLowerCase().trim().replace(/\s+/g, '-');
+              const catImageUrl = getCategoryImageUrl(col.image);
               return (
                 <Link 
                   key={col.id} 
@@ -132,7 +140,7 @@ function StorefrontContent() {
                   )}
                 >
                   <img 
-                    src={col.image || 'https://picsum.photos/seed/placeholder/400/500'} 
+                    src={catImageUrl || 'https://picsum.photos/seed/placeholder/400/500'} 
                     className="w-full h-full object-cover transition-transform duration-2000 group-hover:scale-110" 
                     alt={col.name} 
                   />
