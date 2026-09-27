@@ -398,11 +398,12 @@ export function AdminCategories() {
               <Button 
                 onClick={() => {
                   if (tempCroppedArea) {
+                    const currentUrl = getCategoryImageUrl(editImage);
                     const newCrop = {
                       x: Math.round(tempCroppedArea.x + tempCroppedArea.width / 2),
                       y: Math.round(tempCroppedArea.y + tempCroppedArea.height / 2)
                     };
-                    setEditImage({ ...editImage, crop: newCrop, zoom });
+                    setEditImage({ url: currentUrl, crop: newCrop, zoom });
                   }
                   setIsCropperOpen(false);
                 }} 
