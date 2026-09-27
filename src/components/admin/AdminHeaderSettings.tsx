@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Layout, Save, Plus, Trash2, Image as ImageIcon, 
   Upload, Search, Package, Heart, ShoppingBag, User, 
@@ -13,9 +13,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useDoc, useMemoFirebase, useFirebase } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, useFirebase, useCollection } from '@/firebase';
+import { doc, setDoc, collection, query, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function AdminHeaderSettings() {
   const db = useFirestore();
@@ -27,6 +34,28 @@ export function AdminHeaderSettings() {
 
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings, isLoading } = useDoc(settingsRef);
+
+  // Busca categorias para o seletor de links
+  const categoriesQuery = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('name', 'asc')), [db]);
+  const { data: categoriesData } = useCollection(categoriesQuery);
+
+  const categoryOptions = useMemo(() => {
+    return categoriesData?.map(cat => {
+      const slug = cat.name.toLowerCase().trim().replace(/\s+/g, '-');
+      return {
+        label: cat.name,
+        value: `/categoria/${slug}`
+      };
+    }) || [];
+  }, [categoriesData]);
+
+  const fixedOptions = useMemo(() => [
+    { label: 'Início', value: '/' },
+    { label: 'Coleções', value: '/#colecoes' },
+    { label: 'Produtos', value: '/produtos' },
+    { label: 'Mais Vendidos', value: '/#mais-vendidos' },
+    { label: 'SIZE (Economize)', value: '/economize' },
+  ], []);
 
   const [formData, setFormData] = useState({
     navLinks: [] as any[],
@@ -109,55 +138,104 @@ export function AdminHeaderSettings() {
         </div>
         
         <div className="space-y-4">
-          {formData.navLinks.map((link, idx) => (
-            <div key={idx} className="flex flex-col md:flex-row gap-4 p-5 bg-secondary/10 rounded-2xl items-end md:items-center border border-primary/5">
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Rótulo</Label>
-                  <Input 
-                    value={link.label} 
-                    onChange={e => {
-                      const newLinks = [...formData.navLinks];
-                      newLinks[idx].label = e.target.value.toUpperCase();
-                      setFormData({...formData, navLinks: newLinks});
-                    }} 
-                    className="bg-white border-none h-11"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Link (URL)</Label>
-                  <Input 
-                    value={link.href} 
-                    onChange={e => {
-                      const newLinks = [...formData.navLinks];
-                      newLinks[idx].href = e.target.value;
-                      setFormData({...formData, navLinks: newLinks});
-                    }} 
-                    className="bg-white border-none h-11"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-6 pl-4">
-                 <div className="flex items-center gap-2">
-                   <Label className="text-[9px] font-bold uppercase text-primary/40">Destaque</Label>
-                   <Switch 
-                      checked={link.highlight} 
-                      onCheckedChange={v => {
+          {formData.navLinks.map((link, idx) => {
+            const isFixed = fixedOptions.some(opt => opt.value === link.href);
+            const isCategory = categoryOptions.some(opt => opt.value === link.href);
+            const selectValue = link._isCustom || (!isFixed && !isCategory) ? '__custom__' : link.href;
+
+            return (
+              <div key={idx} className="flex flex-col md:flex-row gap-4 p-5 bg-secondary/10 rounded-2xl items-end md:items-center border border-primary/5">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Rótulo</Label>
+                    <Input 
+                      value={link.label} 
+                      onChange={e => {
                         const newLinks = [...formData.navLinks];
-                        newLinks[idx].highlight = v;
+                        newLinks[idx].label = e.target.value.toUpperCase();
                         setFormData({...formData, navLinks: newLinks});
                       }} 
+                      className="bg-white border-none h-11"
                     />
-                 </div>
-                 <button 
-                  onClick={() => setFormData({...formData, navLinks: formData.navLinks.filter((_, i) => i !== idx)})}
-                  className="text-red-300 hover:text-red-500 p-2"
-                 >
-                   <Trash2 className="h-4 w-4" />
-                 </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Link (URL)</Label>
+                    <Select 
+                      value={selectValue} 
+                      onValueChange={(val) => {
+                        const newLinks = [...formData.navLinks];
+                        if (val === '__custom__') {
+                          newLinks[idx]._isCustom = true;
+                        } else {
+                          newLinks[idx].href = val;
+                          newLinks[idx]._isCustom = false;
+                        }
+                        setFormData({...formData, navLinks: newLinks});
+                      }}
+                    >
+                      <SelectTrigger className="bg-white border-none h-11 rounded-md text-xs font-medium px-4">
+                        <SelectValue placeholder="Selecione o destino..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fixedOptions.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value} className="text-xs font-bold uppercase">{opt.label}</SelectItem>
+                        ))}
+                        
+                        {categoryOptions.length > 0 && (
+                          <>
+                            <div className="h-px bg-gray-100 my-2" />
+                            <div className="px-2 py-1 text-[8px] font-black text-accent uppercase tracking-widest">Categorias</div>
+                            {categoryOptions.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value} className="text-xs uppercase">
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+
+                        <div className="h-px bg-gray-100 my-2" />
+                        <SelectItem value="__custom__" className="text-xs font-bold text-accent italic">Personalizado (digitar link)</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {selectValue === '__custom__' && (
+                      <div className="mt-2 animate-in slide-in-from-top-2 duration-300">
+                        <Input 
+                          value={link.href} 
+                          onChange={e => {
+                            const newLinks = [...formData.navLinks];
+                            newLinks[idx].href = e.target.value;
+                            setFormData({...formData, navLinks: newLinks});
+                          }} 
+                          placeholder="Digite o link manualmente..." 
+                          className="bg-white border-accent/20 h-10 text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-6 pl-4">
+                   <div className="flex items-center gap-2">
+                     <Label className="text-[9px] font-bold uppercase text-primary/40">Destaque</Label>
+                     <Switch 
+                        checked={link.highlight} 
+                        onCheckedChange={v => {
+                          const newLinks = [...formData.navLinks];
+                          newLinks[idx].highlight = v;
+                          setFormData({...formData, navLinks: newLinks});
+                        }} 
+                      />
+                   </div>
+                   <button 
+                    onClick={() => setFormData({...formData, navLinks: formData.navLinks.filter((_, i) => i !== idx)})}
+                    className="text-red-300 hover:text-red-500 p-2"
+                   >
+                     <Trash2 className="h-4 w-4" />
+                   </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="flex justify-end pt-4">
           <Button onClick={() => handleSave('Links')} disabled={loading} className="rounded-full bg-primary text-white font-bold h-11 px-8 text-[10px] uppercase tracking-widest shadow-lg">Salvar Links</Button>
