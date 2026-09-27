@@ -1,15 +1,15 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { Layers, Plus, Trash2, Edit, Loader2, Upload, X, Image as ImageIcon, Save } from 'lucide-react';
+import { Layers, Plus, Trash2, Edit, Loader2, Upload, X, Image as ImageIcon, Save, Minus, Pencil } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import Cropper from 'react-easy-crop';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,6 @@ import {
 
 export function AdminCategories() {
   const db = useFirestore();
-  const { user } = useUser();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -31,7 +30,13 @@ export function AdminCategories() {
   
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [editName, setEditName] = useState('');
-  const [editImage, setEditImage] = useState('');
+  const [editImage, setEditImage] = useState<any>(null);
+
+  // States para Recorte
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [tempCroppedArea, setTempCroppedArea] = useState<any>(null);
 
   const q = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('order', 'asc')), [db]);
   const { data: categories, isLoading } = useCollection(q);
@@ -60,17 +65,18 @@ export function AdminCategories() {
       const url = await uploadToCloudinary(file);
       
       if (isEdit) {
-        setEditImage(url);
+        setEditImage({ url, crop: { x: 50, y: 50 }, zoom: 1 });
+        setIsCropperOpen(true);
       } else {
         setNewCatImage(url);
       }
       
-      toast({ title: "Imagem carregada no Cloudinary!" });
+      toast({ title: "Imagem carregada!" });
     } catch (error: any) {
       console.error("Erro upload categoria:", error);
       toast({ 
         title: "Erro no upload", 
-        description: "Falha ao enviar para o Cloudinary. Verifique sua conexão.",
+        description: "Falha ao enviar arquivo. Verifique sua conexão.",
         variant: "destructive" 
       });
     } finally {
@@ -117,16 +123,22 @@ export function AdminCategories() {
     try {
       const categoryRef = doc(db, 'categories', id);
       deleteDocumentNonBlocking(categoryRef);
-      toast({ title: "Categoria removida com sucesso!" });
+      toast({ title: "Categoria removida!" });
     } catch (error: any) {
-      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao excluir", variant: "destructive" });
     }
   };
 
   const openEdit = (cat: any) => {
     setEditingCategory(cat);
     setEditName(cat.name);
-    setEditImage(cat.image || '');
+    const img = cat.image;
+    // Fallback para categorias que ainda usam string simples
+    if (typeof img === 'string') {
+      setEditImage({ url: img, crop: { x: 50, y: 50 }, zoom: 1 });
+    } else {
+      setEditImage(img || { url: '', crop: { x: 50, y: 50 }, zoom: 1 });
+    }
   };
 
   return (
@@ -199,9 +211,17 @@ export function AdminCategories() {
         ) : categories && categories.length > 0 ? (
           categories.map((cat) => (
             <Card key={cat.id} className="group overflow-hidden border-none shadow-lg bg-white rounded-[2.5rem] transition-all duration-500 hover:shadow-2xl">
-              <div className="aspect-[4/5] relative bg-secondary/20">
+              <div className="aspect-[4/5] relative bg-secondary/20 overflow-hidden">
                 {cat.image ? (
-                  <img src={cat.image} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={cat.name} />
+                  <img 
+                    src={typeof cat.image === 'string' ? cat.image : cat.image.url} 
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                    style={typeof cat.image === 'object' ? {
+                      objectPosition: `${cat.image.crop?.x || 50}% ${cat.image.crop?.y || 50}%`,
+                      transform: `scale(${cat.image.zoom || 1})`
+                    } : {}}
+                    alt={cat.name} 
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-primary/10">
                     <ImageIcon className="h-12 w-12" />
@@ -265,18 +285,48 @@ export function AdminCategories() {
                 <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent ml-2">Imagem de Capa</label>
                 <div 
                   className={cn(
-                    "w-48 h-48 rounded-[2rem] bg-secondary/50 border-2 border-dashed border-primary/10 flex items-center justify-center overflow-hidden cursor-pointer relative group",
+                    "w-48 h-48 rounded-[2rem] bg-secondary/50 border-2 border-dashed border-primary/10 flex items-center justify-center overflow-hidden relative group",
                     editImage && "border-none"
                   )}
-                  onClick={() => editFileInputRef.current?.click()}
                 >
                   {editImage ? (
-                    <img src={editImage} className="h-full w-full object-cover" alt="Edit Preview" />
+                    <img 
+                      src={typeof editImage === 'string' ? editImage : editImage.url} 
+                      className="h-full w-full object-cover" 
+                      style={typeof editImage === 'object' ? {
+                        objectPosition: `${editImage.crop?.x || 50}% ${editImage.crop?.y || 50}%`,
+                        transform: `scale(${editImage.zoom || 1})`
+                      } : {}}
+                      alt="Edit Preview" 
+                    />
                   ) : (
                     <ImageIcon className="h-10 w-10 text-primary/20" />
                   )}
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                     {uploading ? <Loader2 className="animate-spin text-white h-8 w-8" /> : <Upload className="text-white h-8 w-8" />}
+                  
+                  <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-2">
+                     <Button 
+                       size="sm" 
+                       className="rounded-full bg-white text-primary text-[9px] font-bold uppercase h-8 px-4"
+                       onClick={(e) => { e.stopPropagation(); editFileInputRef.current?.click(); }}
+                     >
+                       {uploading ? <Loader2 className="animate-spin h-3 w-3" /> : <Upload className="h-3 w-3 mr-1" />}
+                       Trocar Foto
+                     </Button>
+                     {editImage && (
+                       <Button 
+                         size="sm"
+                         className="rounded-full bg-accent text-primary text-[9px] font-bold uppercase h-8 px-4"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           setCrop({ x: 0, y: 0 });
+                           setZoom(typeof editImage === 'object' ? editImage.zoom : 1);
+                           setIsCropperOpen(true);
+                         }}
+                       >
+                         <Pencil className="h-3 w-3 mr-1" />
+                         Enquadrar
+                       </Button>
+                     )}
                   </div>
                   <input type="file" ref={editFileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, true)} />
                 </div>
@@ -294,6 +344,62 @@ export function AdminCategories() {
               {uploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Alterações
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog do Editor de Recorte */}
+      <Dialog open={isCropperOpen} onOpenChange={setIsCropperOpen}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black border-none rounded-[2rem]">
+          <DialogTitle className="sr-only">Ajustar Enquadramento</DialogTitle>
+          <div className="relative h-[60vh] w-full">
+            <Cropper
+              image={typeof editImage === 'string' ? editImage : editImage?.url}
+              crop={crop}
+              zoom={zoom}
+              aspect={4/5}
+              showGrid={false}
+              cropShape="rect"
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={(_, area) => setTempCroppedArea(area)}
+              style={{
+                containerStyle: {
+                  width: '100%',
+                  height: '100%',
+                  position: 'relative'
+                }
+              }}
+            />
+          </div>
+          <div className="p-6 bg-[#2A1F22] flex items-center justify-between gap-6">
+            <div className="flex-1 flex items-center gap-4">
+              <Minus className="h-4 w-4 text-white/40" />
+              <input 
+                type="range" min={1} max={3} step={0.1} value={zoom} 
+                onChange={e => setZoom(Number(e.target.value))}
+                className="flex-1 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent" 
+              />
+              <Plus className="h-4 w-4 text-white/40" />
+            </div>
+            <div className="flex gap-3">
+              <Button variant="ghost" onClick={() => setIsCropperOpen(false)} className="text-white text-[10px] font-bold uppercase">Cancelar</Button>
+              <Button 
+                onClick={() => {
+                  if (tempCroppedArea) {
+                    const newCrop = {
+                      x: Math.round(tempCroppedArea.x + tempCroppedArea.width / 2),
+                      y: Math.round(tempCroppedArea.y + tempCroppedArea.height / 2)
+                    };
+                    setEditImage({ ...editImage, crop: newCrop, zoom });
+                  }
+                  setIsCropperOpen(false);
+                }} 
+                className="bg-accent text-primary font-bold uppercase text-[10px] h-10 px-8 rounded-full"
+              >
+                Salvar Enquadramento
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
