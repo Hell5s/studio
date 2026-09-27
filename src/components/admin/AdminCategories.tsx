@@ -18,6 +18,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
+function getCategoryImageUrl(image: any): string {
+  if (!image) return '';
+  if (typeof image === 'string') return image;
+  if (typeof image === 'object' && typeof image.url === 'string') return image.url;
+  return '';
+}
+
 export function AdminCategories() {
   const db = useFirestore();
   const { toast } = useToast();
@@ -107,9 +114,14 @@ export function AdminCategories() {
   const handleUpdate = () => {
     if (!editingCategory || !editName) return;
 
+    // Garante que o editImage seja salvo corretamente com a URL
+    const finalImage = typeof editImage === 'string' 
+      ? { url: editImage, crop: { x: 50, y: 50 }, zoom: 1 }
+      : editImage;
+
     updateDocumentNonBlocking(doc(db, 'categories', editingCategory.id), {
       name: editName,
-      image: editImage,
+      image: finalImage,
       updatedAt: serverTimestamp()
     });
 
@@ -212,14 +224,14 @@ export function AdminCategories() {
           categories.map((cat) => (
             <Card key={cat.id} className="group overflow-hidden border-none shadow-lg bg-white rounded-[2.5rem] transition-all duration-500 hover:shadow-2xl">
               <div className="aspect-[4/5] relative bg-secondary/20 overflow-hidden">
-                {cat.image ? (
+                {getCategoryImageUrl(cat.image) ? (
                   <img 
-                    src={typeof cat.image === 'string' ? cat.image : cat.image.url} 
+                    src={getCategoryImageUrl(cat.image)} 
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                    style={typeof cat.image === 'object' ? {
-                      objectPosition: `${cat.image.crop?.x || 50}% ${cat.image.crop?.y || 50}%`,
-                      transform: `scale(${cat.image.zoom || 1})`
-                    } : {}}
+                    style={typeof cat.image === 'object' && cat.image?.crop ? { 
+                      objectPosition: `${cat.image.crop.x}% ${cat.image.crop.y}%`, 
+                      transform: `scale(${cat.image.zoom || 1})` 
+                    } : undefined}
                     alt={cat.name} 
                   />
                 ) : (
@@ -286,17 +298,17 @@ export function AdminCategories() {
                 <div 
                   className={cn(
                     "w-48 h-48 rounded-[2rem] bg-secondary/50 border-2 border-dashed border-primary/10 flex items-center justify-center overflow-hidden relative group",
-                    editImage && "border-none"
+                    getCategoryImageUrl(editImage) && "border-none"
                   )}
                 >
-                  {editImage ? (
+                  {getCategoryImageUrl(editImage) ? (
                     <img 
-                      src={typeof editImage === 'string' ? editImage : editImage.url} 
+                      src={getCategoryImageUrl(editImage)} 
                       className="h-full w-full object-cover" 
-                      style={typeof editImage === 'object' ? {
-                        objectPosition: `${editImage.crop?.x || 50}% ${editImage.crop?.y || 50}%`,
+                      style={typeof editImage === 'object' && editImage?.crop ? {
+                        objectPosition: `${editImage.crop.x}% ${editImage.crop.y}%`,
                         transform: `scale(${editImage.zoom || 1})`
-                      } : {}}
+                      } : undefined}
                       alt="Edit Preview" 
                     />
                   ) : (
@@ -312,7 +324,7 @@ export function AdminCategories() {
                        {uploading ? <Loader2 className="animate-spin h-3 w-3" /> : <Upload className="h-3 w-3 mr-1" />}
                        Trocar Foto
                      </Button>
-                     {editImage && (
+                     {getCategoryImageUrl(editImage) && (
                        <Button 
                          size="sm"
                          className="rounded-full bg-accent text-primary text-[9px] font-bold uppercase h-8 px-4"
@@ -353,7 +365,7 @@ export function AdminCategories() {
           <DialogTitle className="sr-only">Ajustar Enquadramento</DialogTitle>
           <div className="relative h-[60vh] w-full">
             <Cropper
-              image={typeof editImage === 'string' ? editImage : editImage?.url}
+              image={getCategoryImageUrl(editImage)}
               crop={crop}
               zoom={zoom}
               aspect={4/5}
