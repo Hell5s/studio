@@ -87,6 +87,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [galleryPickerIndex, setGalleryPickerIndex] = useState<number | null>(null);
   const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
   const [colorInput, setColorInput] = useState('');
+  const [sizeInput, setSizeInput] = useState('');
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [savingCrop, setSavingCrop] = useState(false);
 
@@ -628,7 +629,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   <div className="space-y-3">
                     <Label>Tamanhos Disponíveis</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2'].map(size => (
+                      {['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'].map(size => (
                         <button
                           key={size}
                           type="button"
@@ -643,6 +644,34 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                           {size}
                         </button>
                       ))}
+                    </div>
+                    
+                    <div className="mt-4 space-y-2">
+                      <Label className="text-[9px] font-bold uppercase text-primary/40 ml-2">Outro tamanho (opcional)</Label>
+                      <div className="flex flex-wrap gap-2 p-3 bg-white border border-gray-200 rounded-xl min-h-[56px] items-center">
+                        {formData.sizes.split(',').map(s => s.trim()).filter(s => s && !['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'].includes(s)).map((size, i) => (
+                          <Badge key={i} className="bg-secondary text-primary hover:bg-secondary flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/5">
+                            {size}
+                            <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => handleToggleSize(size)} />
+                          </Badge>
+                        ))}
+                        <input
+                          value={sizeInput}
+                          onChange={e => setSizeInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = sizeInput.trim().toUpperCase();
+                              if (val) {
+                                handleToggleSize(val);
+                                setSizeInput('');
+                              }
+                            }
+                          }}
+                          placeholder="Ex: Único, 38, 40..."
+                          className="flex-1 bg-transparent border-none outline-none text-xs px-2 min-w-[120px]"
+                        />
+                      </div>
                     </div>
                   </div>
 

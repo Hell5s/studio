@@ -48,6 +48,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
   const [categoriesList, setCategoriesList] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
+  const [sizeInput, setSizeInput] = useState('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -150,6 +151,16 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         : [...prev.categories, cat];
       return { ...prev, categories: newCats };
     });
+  };
+
+  const handleToggleSize = (size: string) => {
+    let sizesArr = formData.sizes.split(',').map(s => s.trim()).filter(Boolean);
+    if (sizesArr.includes(size)) {
+      sizesArr = sizesArr.filter(s => s !== size);
+    } else {
+      sizesArr.push(size);
+    }
+    setFormData({ ...formData, sizes: sizesArr.join(', ') });
   };
 
   const handleAddVariation = () => {
@@ -347,7 +358,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <p className="text-muted-foreground italic font-light">Gestão visual de cores e detalhes editoriais.</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onSuccess={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
+          <Button variant="outline" onClick={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
           <Button onClick={handleSave} disabled={loading} className="rounded-full h-12 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-transform uppercase text-[10px] font-bold tracking-widest">
             {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Produto
           </Button>
@@ -405,14 +416,53 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="grid gap-2">
-                    <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos (P, M, G...)</Label>
-                    <Input 
-                      value={formData.sizes} 
-                      onChange={e => setFormData({...formData, sizes: e.target.value})} 
-                      placeholder="Ex: P, M, G, GG"
-                      className="rounded-2xl h-14 bg-secondary/20 border-none px-6"
-                    />
+                  <div className="space-y-3 md:col-span-2">
+                    <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Tamanhos Disponíveis</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'].map(size => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => handleToggleSize(size)}
+                          className={cn(
+                            "px-4 py-2 rounded-full text-[10px] font-bold border transition-all",
+                            formData.sizes.split(',').map(s => s.trim()).includes(size)
+                              ? "bg-primary text-white border-primary shadow-md"
+                              : "bg-white text-primary border-primary/10 hover:border-primary/40"
+                          )}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      <Label className="text-[9px] font-bold uppercase text-primary/40 ml-4">Outro tamanho (opcional)</Label>
+                      <div className="flex flex-wrap gap-2 p-3 bg-white border border-primary/5 rounded-2xl min-h-[56px] items-center">
+                        {formData.sizes.split(',').map(s => s.trim()).filter(s => s && !['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'].includes(s)).map((size, i) => (
+                          <Badge key={i} className="bg-secondary text-primary hover:bg-secondary flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/5">
+                            {size}
+                            <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => handleToggleSize(size)} />
+                          </Badge>
+                        ))}
+                        <input
+                          value={sizeInput}
+                          onChange={e => setSizeInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = sizeInput.trim().toUpperCase();
+                              if (val) {
+                                handleToggleSize(val);
+                                setSizeInput('');
+                              }
+                            }
+                          }}
+                          placeholder="Ex: Único, 38, 40..."
+                          className="flex-1 bg-transparent border-none outline-none text-xs px-2 min-w-[120px]"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="grid gap-2">
                     <Label className="ml-4 text-[10px] font-bold uppercase text-muted-foreground">Cores (Rosa, Azul...)</Label>
