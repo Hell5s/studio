@@ -55,6 +55,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const [categoriesList, setCategoriesList] = useState<string[]>(['Vestidos', 'Conjuntos', 'Blusas', 'Calças', 'Acessórios']);
   const [sizeInput, setSizeInput] = useState('');
   
+  const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
+
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -91,6 +93,10 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
   useEffect(() => {
     if (product) {
+      const allSizes = Array.isArray(product.sizes) ? product.sizes : (product.sizes?.split(',').map((s:string) => s.trim()) || []);
+      const fixed = allSizes.filter((s:any) => fixedList.includes(s));
+      const custom = allSizes.filter((s:any) => !fixedList.includes(s));
+
       setFormData({
         ...product,
         price: product.price?.toString() || '',
@@ -104,7 +110,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         image: product.image || '',
         gallery: product.images || [],
         stock: product.stock?.toString() || '',
-        sizes: product.sizes?.join(', ') || '',
+        sizes: fixed.join(', '),
         colors: product.colors?.join(', ') || '',
         published: product.published !== false,
         featured: !!product.featured,
@@ -113,6 +119,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         sourceUrl: product.sourceUrl || '',
         variations: product.variations || []
       });
+      setSizeInput(custom.join(', '));
     }
   }, [product]);
 
@@ -187,12 +194,16 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     
     const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
 
+    const fixedSizes = formData.sizes.split(',').map(s => s.trim()).filter(Boolean);
+    const customSizes = sizeInput.split(',').map(s => s.trim()).filter(Boolean);
+    const finalSizes = Array.from(new Set([...fixedSizes, ...customSizes]));
+
     updateDocumentNonBlocking(docRef, {
       ...formData,
       price: parsePrice(formData.price),
       oldPrice: formData.oldPrice ? parsePrice(formData.oldPrice) : null,
       stock: Number(formData.stock) || 0,
-      sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
+      sizes: finalSizes,
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
       category: formData.categories[0],
       categories: formData.categories,
@@ -469,25 +480,9 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                 <div className="mt-2 space-y-2">
                   <Label className="text-[8px] font-bold uppercase text-primary/40 ml-2">Outro tamanho (opcional)</Label>
                   <div className="flex flex-wrap gap-1.5 p-2.5 bg-secondary/10 rounded-xl items-center border border-primary/5">
-                    {formData.sizes.split(',').map(s => s.trim()).filter(s => s && !['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'].includes(s)).map((size, i) => (
-                      <Badge key={i} className="bg-white text-primary hover:bg-white flex items-center gap-1.5 px-2 py-1 rounded-lg border border-primary/5 text-[9px]">
-                        {size}
-                        <X className="h-2.5 w-2.5 cursor-pointer hover:text-red-500" onClick={() => handleToggleSize(size)} />
-                      </Badge>
-                    ))}
                     <input
                       value={sizeInput}
                       onChange={e => setSizeInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const val = sizeInput.trim().toUpperCase();
-                          if (val) {
-                            handleToggleSize(val);
-                            setSizeInput('');
-                          }
-                        }
-                      }}
                       placeholder="Ex: Único, 38..."
                       className="flex-1 bg-transparent border-none outline-none text-[10px] px-1"
                     />

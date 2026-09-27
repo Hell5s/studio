@@ -50,6 +50,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   const [categoriesList, setCategoriesList] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
   const [sizeInput, setSizeInput] = useState('');
 
+  const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
+
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -99,6 +101,10 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
 
   useEffect(() => {
     if (initialData) {
+      const allSizes = Array.isArray(initialData.sizes) ? initialData.sizes : (initialData.sizes?.split(',').map((s:string) => s.trim()) || []);
+      const fixed = allSizes.filter((s:any) => fixedList.includes(s));
+      const custom = allSizes.filter((s:any) => !fixedList.includes(s));
+
       setFormData({
         ...initialData,
         price: initialData.price?.toString() || '',
@@ -114,9 +120,10 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         category: initialData.category || '',
         categories: initialData.categories || (initialData.category ? [initialData.category] : []),
         colors: initialData.colors?.join(', ') || '',
-        sizes: initialData.sizes?.join(', ') || 'P, M, G, GG',
+        sizes: fixed.join(', '),
         showInSale: !!initialData.showInSale
       });
+      setSizeInput(custom.join(', '));
     }
   }, [initialData]);
 
@@ -181,6 +188,54 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       ...prev,
       variations: prev.variations.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleSave = async () => {
+    const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
+    if (!formData.name || !formData.price || !finalMainImage) {
+      toast({ title: "Campos obrigatórios", description: "Preencha nome, preço e imagem.", variant: "destructive" });
+      return;
+    }
+    if (formData.categories.length === 0) {
+      toast({ title: "Escolha as categorias", description: "Vincule o produto a pelo menos uma coleção.", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const id = initialData?.id || `prod-${Date.now()}`;
+      const productRef = doc(db, 'products', id);
+
+      const fixedSizes = formData.sizes.split(',').map(s => s.trim()).filter(Boolean);
+      const customSizes = sizeInput.split(',').map(s => s.trim()).filter(Boolean);
+      const finalSizes = Array.from(new Set([...fixedSizes, ...customSizes]));
+
+      const payload = {
+        ...formData,
+        id,
+        price: parseSafeNumber(formData.price),
+        oldPrice: formData.oldPrice ? parseSafeNumber(formData.oldPrice) : null,
+        cost: parseSafeNumber(formData.cost),
+        stock: parseSafeNumber(formData.stock),
+        category: formData.categories[0],
+        categories: formData.categories,
+        image: finalMainImage,
+        images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
+        colors: formData.colors.split(',').map(c => c.trim()).filter(Boolean),
+        sizes: finalSizes,
+        createdAt: initialData?.createdAt || serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      await setDoc(productRef, payload, { merge: true });
+      toast({ title: "Produto salvo!" });
+      onSuccess();
+    } catch (e: any) {
+      console.error("Erro ao salvar produto:", e);
+      toast({ title: "Erro ao salvar", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, isGallery = false) => {
@@ -285,50 +340,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     toast({ title: "Preços calculados!", description: "Margem de 3x aplicada com sucesso." });
   };
 
-  const handleSave = async () => {
-    const finalMainImage = formData.image || (formData.gallery.length > 0 ? formData.gallery[0] : '');
-    if (!formData.name || !formData.price || !finalMainImage) {
-      toast({ title: "Campos obrigatórios", description: "Preencha nome, preço e imagem.", variant: "destructive" });
-      return;
-    }
-    if (formData.categories.length === 0) {
-      toast({ title: "Escolha as categorias", description: "Vincule o produto a pelo menos uma coleção.", variant: "destructive" });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const id = initialData?.id || `prod-${Date.now()}`;
-      const productRef = doc(db, 'products', id);
-
-      const payload = {
-        ...formData,
-        id,
-        price: parseSafeNumber(formData.price),
-        oldPrice: formData.oldPrice ? parseSafeNumber(formData.oldPrice) : null,
-        cost: parseSafeNumber(formData.cost),
-        stock: parseSafeNumber(formData.stock),
-        category: formData.categories[0],
-        categories: formData.categories,
-        image: finalMainImage,
-        images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
-        colors: formData.colors.split(',').map(c => c.trim()).filter(Boolean),
-        sizes: formData.sizes.split(',').map(s => s.trim()).filter(Boolean),
-        createdAt: initialData?.createdAt || serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
-
-      await setDoc(productRef, payload, { merge: true });
-      toast({ title: "Produto salvo!" });
-      onSuccess();
-    } catch (e: any) {
-      console.error("Erro ao salvar produto:", e);
-      toast({ title: "Erro ao salvar", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDragStart = (e: React.DragEvent, index: number) => {
     e.dataTransfer.setData('draggedIndex', index.toString());
   };
@@ -358,7 +369,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <p className="text-muted-foreground italic font-light">Gestão visual de cores e detalhes editoriais.</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onClick={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
+          <Button variant="outline" onSuccess={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
           <Button onClick={handleSave} disabled={loading} className="rounded-full h-12 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-transform uppercase text-[10px] font-bold tracking-widest">
             {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Produto
           </Button>
@@ -439,25 +450,9 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                     <div className="mt-4 space-y-2">
                       <Label className="text-[9px] font-bold uppercase text-primary/40 ml-4">Outro tamanho (opcional)</Label>
                       <div className="flex flex-wrap gap-2 p-3 bg-white border border-primary/5 rounded-2xl min-h-[56px] items-center">
-                        {formData.sizes.split(',').map(s => s.trim()).filter(s => s && !['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'].includes(s)).map((size, i) => (
-                          <Badge key={i} className="bg-secondary text-primary hover:bg-secondary flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/5">
-                            {size}
-                            <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => handleToggleSize(size)} />
-                          </Badge>
-                        ))}
                         <input
                           value={sizeInput}
                           onChange={e => setSizeInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const val = sizeInput.trim().toUpperCase();
-                              if (val) {
-                                handleToggleSize(val);
-                                setSizeInput('');
-                              }
-                            }
-                          }}
                           placeholder="Ex: Único, 38, 40..."
                           className="flex-1 bg-transparent border-none outline-none text-xs px-2 min-w-[120px]"
                         />
@@ -546,7 +541,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                         </div>
                       )}
                     </label>
-                    <Input placeholder="Nome da Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-1" />
+                    <Input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-12 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-1" />
                     <Input placeholder="Link da imagem" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-12 text-xs bg-secondary/10 border-none rounded-xl px-4 flex-[2]" />
                     <button onClick={() => handleRemoveVariation(i)} className="text-red-300 hover:text-red-500 transition-colors p-2"><X className="h-5 w-5" /></button>
                   </div>

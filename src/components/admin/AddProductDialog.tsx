@@ -102,6 +102,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [zoom, setZoom] = useState(1);
   const [imageAspect, setImageAspect] = useState(1);
 
+  const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -142,6 +144,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   useEffect(() => {
     if (open) {
       if (product) {
+        const allSizes = Array.isArray(product.sizes) ? product.sizes : (product.sizes?.split(',').map((s:string) => s.trim()) || []);
+        const fixed = allSizes.filter((s:any) => fixedList.includes(s));
+        const custom = allSizes.filter((s:any) => !fixedList.includes(s));
+
         setFormData({
           name: product.name || '',
           price: product.price?.toString() || '',
@@ -159,7 +165,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           image: product.image || '',
           gallery: product.images || [],
           stock: product.stock?.toString() || '10',
-          sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : (product.sizes || 'P, M, G, GG'),
+          sizes: fixed.join(', '),
           colors: Array.isArray(product.colors) ? product.colors.join(', ') : (product.colors || ''),
           published: product.published !== false,
           featured: !!product.featured,
@@ -167,6 +173,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           showInSale: !!product.showInSale,
           variations: product.variations || []
         });
+        setSizeInput(custom.join(', '));
 
         if (showcases) {
           const initial = new Set<string>();
@@ -185,6 +192,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           gallery: [], stock: '10', sizes: 'P, M, G, GG', colors: '', published: true, 
           featured: false, bestseller: false, showInSale: false, variations: []
         });
+        setSizeInput('');
         setSelectedShowcaseIds(new Set());
       }
     }
@@ -298,6 +306,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const productId = isEdit ? product.id : `prod-${Date.now()}`;
     const productRef = doc(db, 'products', productId);
 
+    const fixedSizes = formData.sizes.split(',').map(s => s.trim()).filter(Boolean);
+    const customSizes = sizeInput.split(',').map(s => s.trim()).filter(Boolean);
+    const finalSizes = Array.from(new Set([...fixedSizes, ...customSizes]));
+
     const payload = {
       ...formData,
       id: productId,
@@ -305,7 +317,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       oldPrice: formData.oldPrice ? parseSafeNumber(formData.oldPrice) : null,
       cost: parseSafeNumber(formData.cost),
       stock: parseSafeNumber(formData.stock),
-      sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s),
+      sizes: finalSizes,
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
       category: formData.categories[0],
       categories: formData.categories,
@@ -649,25 +661,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                     <div className="mt-4 space-y-2">
                       <Label className="text-[9px] font-bold uppercase text-primary/40 ml-2">Outro tamanho (opcional)</Label>
                       <div className="flex flex-wrap gap-2 p-3 bg-white border border-gray-200 rounded-xl min-h-[56px] items-center">
-                        {formData.sizes.split(',').map(s => s.trim()).filter(s => s && !['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'].includes(s)).map((size, i) => (
-                          <Badge key={i} className="bg-secondary text-primary hover:bg-secondary flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/5">
-                            {size}
-                            <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => handleToggleSize(size)} />
-                          </Badge>
-                        ))}
                         <input
                           value={sizeInput}
                           onChange={e => setSizeInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const val = sizeInput.trim().toUpperCase();
-                              if (val) {
-                                handleToggleSize(val);
-                                setSizeInput('');
-                              }
-                            }
-                          }}
                           placeholder="Ex: Único, 38, 40..."
                           className="flex-1 bg-transparent border-none outline-none text-xs px-2 min-w-[120px]"
                         />
