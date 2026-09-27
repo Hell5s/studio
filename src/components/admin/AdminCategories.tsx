@@ -25,6 +25,13 @@ function getCategoryImageUrl(image: any): string {
   return '';
 }
 
+function getCategorySourceUrl(image: any): string {
+  if (!image) return '';
+  if (typeof image === 'string') return image;
+  if (typeof image === 'object') return image.sourceUrl || image.url || '';
+  return '';
+}
+
 async function getCroppedImageBlob(imageSrc: string, pixelCrop: any): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
@@ -115,7 +122,7 @@ export function AdminCategories() {
       const url = await uploadToCloudinary(file);
       
       if (isEdit) {
-        setEditImage({ url });
+        setEditImage({ url, sourceUrl: url });
         setCrop({ x: 0, y: 0 });
         setZoom(1);
         setIsCropperOpen(true);
@@ -145,7 +152,7 @@ export function AdminCategories() {
     
     addDocumentNonBlocking(collection(db, 'categories'), {
       name: newCat,
-      image: newCatImage,
+      image: newCatImage ? { url: newCatImage, sourceUrl: newCatImage } : '',
       order: (categories?.length || 0) + 1,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -159,8 +166,10 @@ export function AdminCategories() {
   const handleUpdate = async () => {
     if (!editingCategory || !editName) return;
 
-    const currentUrl = getCategoryImageUrl(editImage);
-    const finalImage = { url: currentUrl };
+    const finalImage = { 
+      url: getCategoryImageUrl(editImage), 
+      sourceUrl: getCategorySourceUrl(editImage) 
+    };
 
     try {
       await updateDoc(doc(db, 'categories', editingCategory.id), {
@@ -197,9 +206,9 @@ export function AdminCategories() {
     setEditName(cat.name);
     const img = cat.image;
     if (typeof img === 'string') {
-      setEditImage({ url: img });
+      setEditImage({ url: img, sourceUrl: img });
     } else {
-      setEditImage(img || { url: '' });
+      setEditImage(img ? { url: img.url || '', sourceUrl: img.sourceUrl || img.url || '' } : { url: '', sourceUrl: '' });
     }
   };
 
@@ -210,10 +219,10 @@ export function AdminCategories() {
     }
     setUploading(true);
     try {
-      const sourceUrl = getCategoryImageUrl(editImage);
+      const sourceUrl = getCategorySourceUrl(editImage);
       const blob = await getCroppedImageBlob(sourceUrl, tempCroppedAreaPixels);
       const croppedUrl = await uploadBlobToCloudinary(blob);
-      setEditImage({ url: croppedUrl });
+      setEditImage({ url: croppedUrl, sourceUrl });
       toast({ title: "Enquadramento aplicado!" });
     } catch (error: any) {
       console.error('Erro ao recortar imagem:', error);
@@ -432,7 +441,7 @@ export function AdminCategories() {
           <DialogTitle className="sr-only">Ajustar Enquadramento</DialogTitle>
           <div className="relative h-[60vh] w-full">
             <Cropper
-              image={getCategoryImageUrl(editImage)}
+              image={getCategorySourceUrl(editImage)}
               crop={crop}
               zoom={zoom}
               aspect={4/5}
