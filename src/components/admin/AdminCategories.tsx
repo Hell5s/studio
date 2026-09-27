@@ -55,6 +55,9 @@ export function AdminCategories() {
     
     const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
       method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+      },
       body: data
     });
 
@@ -115,9 +118,10 @@ export function AdminCategories() {
     if (!editingCategory || !editName) return;
 
     // Garante que o editImage seja salvo corretamente com a URL
-    const finalImage = typeof editImage === 'string' 
-      ? { url: editImage, crop: { x: 50, y: 50 }, zoom: 1 }
-      : editImage;
+    const currentUrl = getCategoryImageUrl(editImage);
+    const finalImage = typeof editImage === 'object' 
+      ? { ...editImage, url: currentUrl }
+      : { url: currentUrl, crop: { x: 50, y: 50 }, zoom: 1 };
 
     updateDocumentNonBlocking(doc(db, 'categories', editingCategory.id), {
       name: editName,
@@ -373,7 +377,7 @@ export function AdminCategories() {
               cropShape="rect"
               onCropChange={setCrop}
               onZoomChange={setZoom}
-              onCropComplete={(_, area) => setTempCroppedArea(area)}
+              onCropComplete={(croppedAreaPercentage) => setTempCroppedArea(croppedAreaPercentage)}
               style={{
                 containerStyle: {
                   width: '100%',
