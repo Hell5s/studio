@@ -36,7 +36,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc, Timestamp, onSnapshot } from 'firebase/firestore';
 import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -105,14 +105,15 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const snap = await getDocs(query(collection(db, 'categories'), orderBy('name')));
-        const names = snap.docs.map(d => d.data().name).filter(Boolean);
-        if (names.length > 0) setCategories(names);
-      } catch (e) {}
-    };
-    fetchCategories();
+    if (!db) return;
+    const q = query(collection(db, 'categories'), orderBy('name'));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const names = snap.docs.map(d => d.data().name).filter(Boolean);
+      if (names.length > 0) setCategories(names);
+    }, (error) => {
+      console.error("Erro ao ouvir categorias:", error);
+    });
+    return () => unsubscribe();
   }, [db]);
   
   const [formData, setFormData] = useState({

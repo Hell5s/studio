@@ -156,7 +156,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full">
                 <div className="space-y-0 w-full">
                   {cartItems.map((item, idx) => {
-                    const imageUrl = getItemImageUrl(item.image);
+                    const imageUrl = typeof item.image === 'string' ? item.image : item.image?.url;
                     const imageConfig = typeof item.image === 'object' ? item.image : null;
 
                     return (
@@ -168,9 +168,9 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                                 src={imageUrl} 
                                 className="h-full w-full object-cover" 
                                 alt={item.name} 
-                                style={imageConfig ? {
-                                  objectPosition: imageConfig.crop ? `${imageConfig.crop.x}% ${imageConfig.crop.y}%` : 'center',
-                                  transform: imageConfig.zoom ? `scale(${imageConfig.zoom / 100})` : 'none'
+                                style={imageConfig && imageConfig.crop ? {
+                                  objectPosition: `${imageConfig.crop.x}% ${imageConfig.crop.y}%`,
+                                  transform: `scale(${imageConfig.zoom || 1})`
                                 } : undefined}
                               />
                             ) : (
