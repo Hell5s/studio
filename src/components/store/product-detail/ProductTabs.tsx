@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -8,6 +7,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { ProductDescription } from './ProductDescription';
+import { Plus } from 'lucide-react';
 
 interface ProductTabsProps {
   product: any;
@@ -24,17 +25,19 @@ export function ProductTabs({ product }: ProductTabsProps) {
   return (
     <Accordion type="single" collapsible className="w-full border-t border-primary/5">
       <AccordionItem value="item-1" className="border-b border-primary/5">
-        <AccordionTrigger className="hover:no-underline py-5 group text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80 [&[data-state=open]>svg]:rotate-45">
-          Descrição Editorial
+        <AccordionTrigger className="hover:no-underline py-5 group text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80 [&>svg]:hidden flex justify-between">
+          <span>Descrição Editorial</span>
+          <Plus className="h-4 w-4 shrink-0 text-accent transition-transform duration-200 data-[state=open]:rotate-45" />
         </AccordionTrigger>
-        <AccordionContent className="pb-6 text-[13px] text-muted-foreground leading-relaxed font-light italic space-y-4">
-          <p>{product.longDescription || product.description}</p>
+        <AccordionContent className="pb-6">
+          <ProductDescription text={product.longDescription || product.description || ''} productName={product.name} />
         </AccordionContent>
       </AccordionItem>
 
       <AccordionItem value="item-2" className="border-b border-primary/5">
-        <AccordionTrigger className="hover:no-underline py-5 group text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80 [&[data-state=open]>svg]:rotate-45">
-          Guia de Cuidados & Tecido
+        <AccordionTrigger className="hover:no-underline py-5 group text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80 [&>svg]:hidden flex justify-between">
+          <span>Guia de Cuidados & Tecido</span>
+          <Plus className="h-4 w-4 shrink-0 text-accent transition-transform duration-200 data-[state=open]:rotate-45" />
         </AccordionTrigger>
         <AccordionContent className="pb-6 text-[13px] text-muted-foreground leading-relaxed font-light italic">
           <p className="mb-4">Para preservar a essência e a durabilidade desta peça Toda Bela, recomendamos:</p>

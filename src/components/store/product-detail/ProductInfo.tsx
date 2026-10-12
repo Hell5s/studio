@@ -15,6 +15,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ProductDescription } from './ProductDescription';
 
 interface ProductInfoProps {
   product: any;
@@ -372,9 +373,9 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
               <span>DESCRIÇÃO EDITORIAL</span>
               <Plus className="h-5 w-5 shrink-0 text-accent transition-transform duration-200 data-[state=open]:rotate-45" />
             </AccordionTrigger>
-            <AccordionContent className="pb-10 text-[13px] md:text-[14px] text-muted-foreground leading-relaxed italic font-light">
+            <AccordionContent className="pb-10 text-[13px] md:text-[14px] text-muted-foreground leading-relaxed font-light">
               <div className="space-y-4">
-                {product.description || product.longDescription}
+                <ProductDescription text={product.longDescription || product.description || ''} productName={product.name} />
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -384,7 +385,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
               <span>ENTREGA & PRAZOS</span>
               <Plus className="h-5 w-5 shrink-0 text-accent transition-transform duration-200 data-[state=open]:rotate-45" />
             </AccordionTrigger>
-            <AccordionContent className="pb-10 text-[13px] text-muted-foreground leading-relaxed italic font-light">
+            <AccordionContent className="pb-10 text-[13px] md:text-[14px] text-muted-foreground leading-relaxed italic font-light">
               Nossas peças são enviadas com seguro e embalagem premium. O prazo estimado de entrega é de 10 a 20 dias úteis, garantindo que sua escolha chegue em perfeitas condições.
             </AccordionContent>
           </AccordionItem>
