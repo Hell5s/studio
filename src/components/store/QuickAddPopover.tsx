@@ -22,6 +22,7 @@ export function QuickAddPopover({ product, onConfirm, trigger }: QuickAddPopover
   const { toast } = useToast();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
 
   const imageUrl = useMemo(() => getItemImageUrl(product.image), [product.image]);
@@ -41,9 +42,9 @@ export function QuickAddPopover({ product, onConfirm, trigger }: QuickAddPopover
 
   const isSelectionComplete = useMemo(() => {
     const sizeOk = !hasSizes || selectedSize;
-    const colorOk = !hasColors || selectedColor;
+    const colorOk = !hasColors || selectedColorIndex !== null;
     return sizeOk && colorOk;
-  }, [hasSizes, hasColors, selectedSize, selectedColor]);
+  }, [hasSizes, hasColors, selectedSize, selectedColorIndex]);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -103,23 +104,26 @@ export function QuickAddPopover({ product, onConfirm, trigger }: QuickAddPopover
               <div className="flex flex-wrap gap-2">
                 {colorVariations.map((v: any, idx: number) => {
                   const swatchImg = getItemImageUrl(v.image || product.image);
+                  const displayName = v.color || `Opção ${idx + 1}`;
+                  const isSelected = selectedColorIndex === idx;
                   return (
                     <button
                       key={idx}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setSelectedColor(v.color);
+                        setSelectedColor(displayName);
+                        setSelectedColorIndex(idx);
                       }}
                       className={cn(
                         "relative h-12 w-10 overflow-hidden border-2 transition-all bg-secondary/10 rounded-md",
-                        selectedColor === v.color ? "border-primary scale-105" : "border-transparent opacity-60 hover:opacity-100"
+                        isSelected ? "border-primary scale-105" : "border-transparent opacity-60 hover:opacity-100"
                       )}
                     >
                       {swatchImg ? (
                         <Image 
                           src={swatchImg} 
-                          alt={v.color} 
+                          alt={displayName} 
                           fill 
                           className="object-cover" 
                           sizes="40px" 

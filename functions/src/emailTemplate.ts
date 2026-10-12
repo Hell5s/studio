@@ -22,6 +22,17 @@ interface Item {
     total: number;
     address: Address;
   }
+
+  interface TrackingItem {
+    name: string;
+    trackingCode: string;
+  }
+
+  interface TrackingEmailProps {
+    orderId: string;
+    customerName: string;
+    items: TrackingItem[];
+  }
   
   function formatarPreco(valor: number): string {
     return new Intl.NumberFormat("pt-BR", {
@@ -102,6 +113,60 @@ interface Item {
         <tr><td style="padding:20px 24px;">
           <p style="margin:0 0 8px 0;font-family:Arial,sans-serif;font-size:11px;color:#8c6e5a;text-transform:uppercase;letter-spacing:1.5px;">📦 Endereço de entrega</p>
           <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#3d1f27;line-height:1.6;">${formatarEndereco(address)}</p>
+        </td></tr>
+      </table>
+  
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#6b4f4f;line-height:1.7;text-align:center;">Qualquer dúvida, estamos à disposição. 💌<br/>Com amor,<br/><strong style="color:#6E3C47;font-family:Georgia,serif;">Equipe Toda Bela</strong></p>
+    </td></tr>
+  
+    <tr><td style="background-color:#3d1f27;border-radius:0 0 16px 16px;padding:28px 48px;text-align:center;">
+      <p style="margin:0 0 8px 0;font-family:Georgia,serif;font-size:16px;color:#C7A17A;letter-spacing:3px;text-transform:uppercase;">Toda Bela</p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#8c6e5a;line-height:1.6;">© ${new Date().getFullYear()} Toda Bela. Todos os direitos reservados.</p>
+    </td></tr>
+  
+  </table>
+  </td></tr>
+  </table>
+  </body></html>`;
+  }
+
+  export function gerarEmailRastreio({ orderId, customerName, items }: TrackingEmailProps): string {
+    const primeiroNome = customerName.split(" ")[0];
+  
+    const itensHtml = items.map((item) => `
+      <tr>
+        <td style="padding:16px 0;border-bottom:1px solid #f0e8e0;">
+          <p style="margin:0 0 4px 0;font-family:Georgia,serif;font-size:15px;color:#3d1f27;font-weight:600;">${item.name}</p>
+          <div style="background-color:#fdf8f4;border:1px dashed #C7A17A;border-radius:8px;padding:12px;margin-top:8px;">
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#8c6e5a;text-transform:uppercase;letter-spacing:1px;">Código de rastreio</p>
+            <p style="margin:4px 0 0 0;font-family:monospace;font-size:18px;color:#6E3C47;font-weight:700;letter-spacing:2px;">${item.trackingCode}</p>
+          </div>
+        </td>
+      </tr>`).join("");
+  
+    return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/></head>
+  <body style="margin:0;padding:0;background-color:#fdf8f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fdf8f4;padding:40px 16px;">
+  <tr><td align="center">
+  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+  
+    <tr><td style="background:linear-gradient(135deg,#6E3C47 0%,#9b5466 100%);border-radius:16px 16px 0 0;padding:40px 48px;text-align:center;">
+      <p style="margin:0 0 8px 0;font-family:Georgia,serif;font-size:32px;font-weight:700;color:#C7A17A;letter-spacing:4px;text-transform:uppercase;">Toda Bela</p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#e8c9b0;letter-spacing:2px;text-transform:uppercase;">Moda Feminina</p>
+      <p style="margin:24px 0 8px 0;font-family:Georgia,serif;font-size:22px;color:#fff;">Seu pedido está a caminho! 📦</p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#e8c9b0;">Olá, <strong>${primeiroNome}</strong> 💛</p>
+    </td></tr>
+  
+    <tr><td style="background-color:#ffffff;padding:40px 48px;">
+      <p style="margin:0 0 24px 0;font-family:Georgia,serif;font-size:18px;color:#3d1f27;">Boas notícias!</p>
+      <p style="margin:0 0 32px 0;font-family:Arial,sans-serif;font-size:14px;color:#6b4f4f;line-height:1.7;">Sua seleção Toda Bela acaba de ser enviada. Você pode acompanhar o progresso da entrega utilizando os códigos abaixo diretamente no site dos Correios ou da transportadora parceira. 🌸</p>
+  
+      <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;color:#8c6e5a;text-transform:uppercase;letter-spacing:1.5px;">Itens Enviados</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">${itensHtml}</table>
+  
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;text-align:center;">
+        <tr><td>
+          <a href="https://studio-mocha-sigma-26.vercel.app/meus-pedidos" style="display:inline-block;background-color:#6E3C47;color:#ffffff;padding:18px 32px;border-radius:32px;text-decoration:none;font-family:Arial,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">Ver meus pedidos</a>
         </td></tr>
       </table>
   

@@ -35,6 +35,18 @@ export default function ProductDetailPage() {
 
   const { data: product, isLoading } = useDoc(productRef);
 
+  const categoriesQuery = useMemoFirebase(() => query(collection(db, 'categories')), [db]);
+  const { data: categories } = useCollection(categoriesQuery);
+
+  const resolvedCategoryName = useMemo(() => {
+    if (!product) return '';
+    if (product.categoryId && categories) {
+      const cat = categories.find(c => c.id === product.categoryId);
+      if (cat) return cat.name;
+    }
+    return product.category || '';
+  }, [product, categories]);
+
   const relatedQuery = useMemoFirebase(() => {
     if (!db || !product) return null;
     return query(
@@ -87,7 +99,7 @@ export default function ProductDetailPage() {
           <nav className="mb-10 md:mb-16 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
             <Link href="/" className="hover:text-black transition-colors">Início</Link>
             <ChevronRight className="h-3 w-3" />
-            <Link href={`/categoria/${product.category?.toLowerCase().trim().replace(/\s+/g, '-')}`} className="hover:text-black transition-colors">{product.category}</Link>
+            <Link href={`/categoria/${resolvedCategoryName.toLowerCase().trim().replace(/\s+/g, '-')}`} className="hover:text-black transition-colors">{resolvedCategoryName}</Link>
             <ChevronRight className="h-3 w-3" />
             <span className="text-black truncate">{product.name}</span>
             <span className="ml-2 text-gray-200">| REF: {product.sku || product.id.slice(-6).toUpperCase()}</span>

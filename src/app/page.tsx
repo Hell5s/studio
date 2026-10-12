@@ -296,7 +296,7 @@ function StorefrontContent() {
   return (
     <div className="min-h-screen selection:bg-accent/30 selection:text-primary overflow-x-hidden">
       <Navbar 
-        onOpenLogin={() => setIsLoginOpen(true)}
+        onOpenLogin={() => setIsLoginOpen(true)} 
         onOpenCart={() => setIsCheckoutOpen(true)}
         onOpenFavorites={() => setIsFavoritesOpen(true)}
         cartCount={cartCount}

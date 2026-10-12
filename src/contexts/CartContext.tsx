@@ -5,8 +5,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 interface CartContextType {
   cart: any[];
   addToCart: (product: any) => void;
-  updateQuantity: (id: string, delta: number) => void;
-  removeFromCart: (id: string) => void;
+  updateQuantity: (cartItemId: string, delta: number) => void;
+  removeFromCart: (cartItemId: string) => void;
   clearCart: () => void;
   cartCount: number;
   cartTotal: number;
@@ -18,12 +18,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<any[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Helper to generate a unique key for cart items based on specs
+  const getCartItemId = (item: any) => {
+    return `${item.id}__${item.selectedSize || ''}__${item.selectedColor || ''}`;
+  };
+
   // Initialize from sessionStorage on mount
   useEffect(() => {
     const savedCart = sessionStorage.getItem('toda_bela_cart');
     if (savedCart) {
       try {
-        setCart(JSON.parse(savedCart));
+        let items = JSON.parse(savedCart);
+        // Migration: Add cartItemId to legacy items
+        items = items.map((it: any) => ({
+          ...it,
+          cartItemId: it.cartItemId || getCartItemId(it)
+        }));
+        setCart(items);
       } catch (e) {
         console.error('Failed to load cart from session storage', e);
       }
@@ -40,17 +51,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = useCallback((prod: any) => {
     setCart(prev => {
-      const existing = prev.find(item => item.id === prod.id);
+      const cartItemId = getCartItemId(prod);
+      const existing = prev.find(item => item.cartItemId === cartItemId);
+      
       if (existing) {
-        return prev.map(item => item.id === prod.id ? { ...item, quantity: (item.quantity || 0) + 1 } : item);
+        return prev.map(item => 
+          item.cartItemId === cartItemId 
+            ? { ...item, quantity: (item.quantity || 0) + (prod.quantity || 1) } 
+            : item
+        );
       }
-      return [...prev, { ...prod, quantity: 1 }];
+      
+      return [...prev, { ...prod, cartItemId, quantity: prod.quantity || 1 }];
     });
   }, []);
 
-  const updateQuantity = useCallback((id: string, delta: number) => {
+  const updateQuantity = useCallback((cartItemId: string, delta: number) => {
     setCart(prev => prev.map(item => {
-      if (item.id === id) {
+      if (item.cartItemId === cartItemId) {
         const newQty = Math.max(1, (item.quantity || 1) + delta);
         return { ...item, quantity: newQty };
       }
@@ -58,8 +76,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const removeFromCart = useCallback((id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+  const removeFromCart = useCallback((cartItemId: string) => {
+    setCart(prev => prev.filter(item => item.cartItemId !== cartItemId));
   }, []);
 
   const clearCart = useCallback(() => {

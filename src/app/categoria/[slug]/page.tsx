@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit } from 'firebase/firestore';
+import { collection, query, where, limit, or } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -46,41 +46,58 @@ export default function CategoryPage() {
   const categoriesQuery = useMemoFirebase(() => query(collection(db, 'categories')), [db]);
   const { data: categories } = useCollection(categoriesQuery);
 
+  // Decodificação e Normalização do Slug para comparação robusta
+  const decodedSlug = useMemo(() => {
+    if (!slug) return '';
+    try {
+      return decodeURIComponent(slug as string);
+    } catch {
+      return (slug as string) || '';
+    }
+  }, [slug]);
+
+  const normalizeForComparison = (str: string) => {
+    return str
+      .toLowerCase()
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+      .replace(/ç/g, "c")
+      .replace(/\s+/g, '-');
+  };
+
   const category = useMemo(() => {
-    if (!categories || !slug) return null;
-    return categories.find(c => c.name.toLowerCase().trim().replace(/\s+/g, '-') === slug);
-  }, [categories, slug]);
+    if (!categories || !decodedSlug) return null;
+    const targetSlug = normalizeForComparison(decodedSlug);
+    return categories.find(c => normalizeForComparison(c.name) === targetSlug);
+  }, [categories, decodedSlug]);
 
   const categoryName = category?.name || '';
 
-  // Busca híbrida para suportar categorias simples e múltiplas
-  const queryArray = useMemoFirebase(() => {
+  // Busca de produtos com or(...) para suportar categorias simples e múltiplas
+  const productsQuery = useMemoFirebase(() => {
     if (!db || !categoryName) return null;
     return query(
       collection(db, 'products'), 
-      where('categories', 'array-contains', categoryName),
-      limit(60)
+      or(
+        where('category', '==', categoryName),
+        where('categories', 'array-contains', categoryName)
+      ),
+      limit(100)
     );
   }, [db, categoryName]);
 
-  const queryString = useMemoFirebase(() => {
-    if (!db || !categoryName) return null;
-    return query(
-      collection(db, 'products'), 
-      where('category', '==', categoryName),
-      limit(60)
-    );
-  }, [db, categoryName]);
-
-  const { data: productsArray, isLoading: loadingArray } = useCollection(queryArray);
-  const { data: productsString, isLoading: loadingString } = useCollection(queryString);
+  const { data: rawProducts, isLoading } = useCollection(productsQuery);
 
   const products = useMemo(() => {
-    const all = [...(productsArray || []), ...(productsString || [])];
-    return Array.from(new Map(all.map(p => [p.id, p])).values());
-  }, [productsArray, productsString]);
-
-  const isLoading = loadingArray || loadingString;
+    if (!rawProducts) return [];
+    // Ordenação padrão por data de criação (recentes primeiro) no cliente para evitar erros de índice com or(...)
+    return [...rawProducts].sort((a, b) => {
+      const dateA = a.createdAt?.toMillis?.() || (typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : 0);
+      const dateB = b.createdAt?.toMillis?.() || (typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : 0);
+      return dateB - dateA;
+    });
+  }, [rawProducts]);
 
   // Lógica de Filtro e Ordenação (Client-side)
   const filteredAndSortedProducts = useMemo(() => {
@@ -136,7 +153,7 @@ export default function CategoryPage() {
         <nav className="flex flex-col gap-3">
           {categories?.map((cat) => {
             const catSlug = cat.name.toLowerCase().trim().replace(/\s+/g, '-');
-            const isActive = catSlug === slug;
+            const isActive = normalizeForComparison(cat.name) === normalizeForComparison(decodedSlug);
             return isActive ? (
               <span key={cat.id} className="text-xs font-bold text-accent uppercase tracking-widest">{cat.name}</span>
             ) : (
@@ -206,7 +223,7 @@ export default function CategoryPage() {
               <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-accent">Explorando Estilo</span>
             </div>
             <h1 className="text-4xl md:text-7xl font-headline font-bold text-primary leading-[0.95] tracking-tighter">
-              {categoryName || (slug as string).replace(/-/g, ' ')}
+              {categoryName || decodedSlug.replace(/-/g, ' ')}
             </h1>
           </div>
         </section>
@@ -217,7 +234,7 @@ export default function CategoryPage() {
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/60">
                  <Link href="/" className="hover:text-accent transition-colors">Início</Link>
                  <span className="opacity-30">/</span>
-                 <span className="text-primary">{categoryName}</span>
+                 <span className="text-primary">{categoryName || decodedSlug.replace(/-/g, ' ')}</span>
               </div>
               
               <div className="flex items-center gap-6">

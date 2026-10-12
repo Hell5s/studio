@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -27,7 +28,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
-import { doc, setDoc, serverTimestamp, getDocs, query, collection, orderBy } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDocs, query, collection, orderBy, onSnapshot } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { Badge } from '@/components/ui/badge';
@@ -47,7 +48,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
-  const [categoriesList, setCategoriesList] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
   const [sizeInput, setSizeInput] = useState('');
 
   const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
@@ -89,14 +90,13 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   });
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const snap = await getDocs(query(collection(db, 'categories'), orderBy('name')));
-        const names = snap.docs.map(d => d.data().name).filter(Boolean);
-        if (names.length > 0) setCategoriesList(names);
-      } catch (e) {}
-    };
-    fetchCategories();
+    if (!db) return;
+    const q = query(collection(db, 'categories'), orderBy('name'));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setCategoriesList(data);
+    });
+    return () => unsubscribe();
   }, [db]);
 
   useEffect(() => {
@@ -151,11 +151,11 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     }));
   };
 
-  const toggleCategory = (cat: string) => {
+  const toggleCategory = (catName: string) => {
     setFormData(prev => {
-      const newCats = prev.categories.includes(cat)
-        ? prev.categories.filter(c => c !== cat)
-        : [...prev.categories, cat];
+      const newCats = prev.categories.includes(catName)
+        ? prev.categories.filter(c => c !== catName)
+        : [...prev.categories, catName];
       return { ...prev, categories: newCats };
     });
   };
@@ -210,6 +210,11 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       const customSizes = sizeInput.split(',').map(s => s.trim()).filter(Boolean);
       const finalSizes = Array.from(new Set([...fixedSizes, ...customSizes]));
 
+      // Resolve categoryId for the primary category
+      const primaryCatName = formData.categories[0] || '';
+      const primaryCat = categoriesList.find(c => c.name === primaryCatName);
+      const categoryId = primaryCat?.id || null;
+
       const payload = {
         ...formData,
         id,
@@ -217,7 +222,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         oldPrice: formData.oldPrice ? parseSafeNumber(formData.oldPrice) : null,
         cost: parseSafeNumber(formData.cost),
         stock: parseSafeNumber(formData.stock),
-        category: formData.categories[0],
+        category: primaryCatName,
+        categoryId: categoryId,
         categories: formData.categories,
         image: finalMainImage,
         images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
@@ -369,7 +375,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <p className="text-muted-foreground italic font-light">Gestão visual de cores e detalhes editoriais.</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onSuccess={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
+          <Button variant="outline" onClick={onSuccess} className="rounded-full h-12 px-8 uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
           <Button onClick={handleSave} disabled={loading} className="rounded-full h-12 px-10 bg-primary text-white shadow-xl hover:scale-105 transition-transform uppercase text-[10px] font-bold tracking-widest">
             {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Salvar Produto
           </Button>
@@ -412,14 +418,14 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-secondary/5 rounded-2xl border border-primary/5 max-h-[160px] overflow-y-auto no-scrollbar">
                     {categoriesList.map(cat => (
-                      <div key={cat} className="flex items-center gap-2 group cursor-pointer" onClick={() => toggleCategory(cat)}>
+                      <div key={cat.id} className="flex items-center gap-2 group cursor-pointer" onClick={() => toggleCategory(cat.name)}>
                         <Checkbox 
-                          id={`form-cat-${cat}`} 
-                          checked={formData.categories.includes(cat)} 
-                          onCheckedChange={() => toggleCategory(cat)}
+                          id={`form-cat-${cat.id}`} 
+                          checked={formData.categories.includes(cat.name)} 
+                          onCheckedChange={() => toggleCategory(cat.name)}
                         />
-                        <label htmlFor={`form-cat-${cat}`} className="text-[11px] font-medium text-primary/60 group-hover:text-primary cursor-pointer truncate">
-                          {cat}
+                        <label htmlFor={`form-cat-${cat.id}`} className="text-[11px] font-medium text-primary/60 group-hover:text-primary cursor-pointer truncate">
+                          {cat.name}
                         </label>
                       </div>
                     ))}

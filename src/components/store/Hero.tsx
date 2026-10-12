@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { preload } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, limit, doc } from 'firebase/firestore';
@@ -9,19 +10,41 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+// Helper function to optimize Cloudinary URLs based on device and media type
+const getOptimizedUrl = (url: string, type: 'image' | 'video', isMobile: boolean, isPoster = false) => {
+  if (!url || !url.includes('cloudinary.com')) return url;
+  
+  const width = isMobile ? '1080' : '1920';
+  let params = '';
+  
+  if (isPoster) {
+    params = `so_0,f_auto,q_auto:best,w_${width},c_limit`;
+    // Replace /upload/ and change extension to .jpg for posters
+    return url.replace('/upload/', `/upload/${params}/`).replace(/\.[^/.]+$/, ".jpg");
+  }
+
+  if (type === 'image') {
+    params = `f_auto,q_auto:best,w_${width},c_limit`;
+  } else {
+    params = `f_auto,q_auto:good,vc_auto,w_${width},c_limit`;
+  }
+  
+  return url.replace('/upload/', `/upload/${params}/`);
+};
+
 export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const db = useFirestore();
-  const isMobile = useIsMobile();
+  const isMobile = !!useIsMobile();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [hasHydrated, setHasHydrated] = useState(false);
+  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(new Set([0]));
+  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // Recupera o último banner do cache para evitar "flash" preto/vazio no carregamento
   const [cachedBanner, setCachedBanner] = useState<any>(null);
 
-  // Efeito para garantir hidratação segura e carregar cache do localStorage
   useEffect(() => {
     setHasHydrated(true);
     const saved = localStorage.getItem('lastBannerData');
@@ -44,7 +67,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
   const { data: banners, isLoading: isBannersLoading } = useCollection(bannersQuery);
 
-  // Atualiza o cache sempre que os banners reais carregarem
   useEffect(() => {
     if (banners && banners.length > 0) {
       localStorage.setItem('lastBannerData', JSON.stringify(banners[0]));
@@ -74,22 +96,57 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   const displayBanners = useMemo(() => {
-    // CRITICAL: Durante a hidratação, displayBanners deve ser vazio para bater com o HTML do servidor
     if (!hasHydrated) return [];
-
-    // Se temos banners do Firestore, usamos eles
     if (banners && banners.length > 0) {
       return [...banners].sort((a, b) => (a.order || 0) - (b.order || 0));
     }
-    // Se não carregou ainda mas temos cache, usamos o cache para evitar tela preta
     if (cachedBanner) {
       return [cachedBanner];
     }
-    // Retorna vazio para que os fallbacks de UI assumam
     return [];
   }, [banners, cachedBanner, hasHydrated]);
 
-  // Autoplay baseado na duração customizada de cada banner
+  // Handle on-demand loading of slides (liberate current + next)
+  useEffect(() => {
+    if (displayBanners.length > 0) {
+      setLoadedIndices(prev => {
+        const nextIndex = (selectedIndex + 1) % displayBanners.length;
+        if (prev.has(selectedIndex) && prev.has(nextIndex)) return prev;
+        const newSet = new Set(prev);
+        newSet.add(selectedIndex);
+        newSet.add(nextIndex);
+        return newSet;
+      });
+    }
+  }, [selectedIndex, displayBanners.length]);
+
+  // Preload high-priority first image
+  useEffect(() => {
+    if (displayBanners.length > 0) {
+      const first = displayBanners[0];
+      if (first.mediaType !== 'video') {
+        const url = getOptimizedUrl(first.imageUrl, 'image', isMobile);
+        if (url && url.includes('cloudinary.com')) {
+          try {
+            preload(url, { as: 'image', fetchPriority: 'high' });
+          } catch (e) {}
+        }
+      }
+    }
+  }, [displayBanners, isMobile]);
+
+  // Control video playback so only active slide plays
+  useEffect(() => {
+    Object.entries(videoRefs.current).forEach(([idx, video]) => {
+      if (!video) return;
+      if (parseInt(idx) === selectedIndex) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, [selectedIndex, loadedIndices]);
+
   useEffect(() => {
     if (!emblaApi || !displayBanners.length) return;
     
@@ -103,15 +160,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return () => clearTimeout(timer);
   }, [emblaApi, selectedIndex, displayBanners]);
 
-  // ESTADO SEM BANNERS OU DURANTE HIDRATAÇÃO (TELA ELEGANTE LOGO)
   if (!hasHydrated || (!displayBanners.length && !isBannersLoading)) {
     return (
       <section
         className="relative w-full h-[70vh] md:h-screen min-h-[450px] md:min-h-[600px] max-h-screen overflow-hidden flex items-center justify-center bg-[#1a0a0e]"
-        style={{ 
-          WebkitBackfaceVisibility: 'hidden',
-          transform: 'translateZ(0)'
-        }}
       >
         <div className="relative z-10 text-center space-y-4 md:space-y-6 animate-in fade-in zoom-in-95 duration-1000">
            <h1 className="font-headline text-4xl md:text-7xl text-white tracking-[0.1em] uppercase leading-none">
@@ -128,15 +180,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     );
   }
 
-  // ESTADO DE CARREGAMENTO (SKELETON EDITORIAL)
   if (!displayBanners.length && isBannersLoading) {
     return (
       <section
         className="relative w-full h-[70vh] md:h-screen min-h-[450px] md:min-h-[600px] max-h-screen overflow-hidden animate-pulse bg-[#1a0a0e]"
-        style={{ 
-          WebkitBackfaceVisibility: 'hidden',
-          transform: 'translateZ(0)'
-        }}
       >
         <div className="container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-16 md:pb-28 relative z-10">
           <div className="space-y-4">
@@ -162,15 +209,11 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
         <div className="flex h-full w-full">
           {displayBanners.map((banner: any, idx: number) => {
-            const optimizedUrl = banner.imageUrl?.includes('cloudinary') 
-              ? banner.imageUrl.replace('/upload/', `/upload/q_100,f_auto,dpr_auto,w_${isMobile ? 1440 : 2560}/`) 
-              : banner.imageUrl;
+            const isLiberated = loadedIndices.has(idx);
             
-            const optimizedVideoUrl = banner.imageUrl?.includes('cloudinary')
-              ? banner.imageUrl.replace('/upload/', `/upload/q_100,f_auto,w_${isMobile ? 1440 : 1920}/`)
-              : banner.imageUrl;
+            const optimizedUrl = getOptimizedUrl(banner.imageUrl, 'image', isMobile);
+            const optimizedVideoUrl = getOptimizedUrl(banner.imageUrl, 'video', isMobile);
 
-            // Determina as configurações visuais baseadas no dispositivo
             const activePosition = isMobile 
               ? (banner.mobileImagePosition || banner.imagePosition || { x: 50, y: 50 })
               : (banner.imagePosition || { x: 50, y: 50 });
@@ -181,40 +224,43 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
 
             return (
               <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full bg-[#1a0a0e]">
-                {banner.mediaType === 'video' ? (
-                  <video
-                    key={optimizedVideoUrl}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={{
-                      objectPosition: `${activePosition.x}% ${activePosition.y}%`,
-                      willChange: 'transform',
-                      objectFit: 'cover',
-                      imageRendering: 'high-quality' as any
-                    }}
-                  >
-                    <source src={optimizedVideoUrl} type="video/mp4" />
-                  </video>
-                ) : (
-                  <div
-                    className="absolute inset-0 w-full h-full"
-                    style={{
-                      backgroundImage: `url(${optimizedUrl})`,
-                      backgroundSize: activeZoom === 100 ? 'cover' : `${activeZoom}%`,
-                      backgroundPosition: `${activePosition.x}% ${activePosition.y}%`,
-                      backgroundRepeat: 'no-repeat',
-                      imageRendering: 'high-quality' as any,
-                      WebkitFontSmoothing: 'antialiased',
-                      willChange: 'transform',
-                      transform: 'translateZ(0)',
-                      WebkitTransform: 'translateZ(0)'
-                    }} 
-                    role="img"
-                    aria-label={banner.title || "Banner Toda Bela"}
-                  />
+                {isLiberated && (
+                  <>
+                    {banner.mediaType === 'video' ? (
+                      <video
+                        ref={el => videoRefs.current[idx] = el}
+                        key={optimizedVideoUrl}
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        poster={getOptimizedUrl(banner.imageUrl, 'video', isMobile, true)}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{
+                          objectPosition: `${activePosition.x}% ${activePosition.y}%`,
+                          willChange: 'transform',
+                          objectFit: 'cover'
+                        }}
+                      >
+                        <source src={optimizedVideoUrl} type="video/mp4" />
+                      </video>
+                    ) : (
+                      <div
+                        className="absolute inset-0 w-full h-full"
+                        style={{
+                          backgroundImage: `url(${optimizedUrl})`,
+                          backgroundSize: activeZoom === 100 ? 'cover' : `${activeZoom}%`,
+                          backgroundPosition: `${activePosition.x}% ${activePosition.y}%`,
+                          backgroundRepeat: 'no-repeat',
+                          imageRendering: 'high-quality' as any,
+                          willChange: 'transform',
+                          transform: 'translateZ(0)'
+                        }} 
+                        role="img"
+                        aria-label={banner.title || "Banner Toda Bela"}
+                      />
+                    )}
+                  </>
                 )}
                 
                 <div className="absolute inset-0 bg-black/10 pointer-events-none" />

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { Share2, Star, Minus, Plus, ShoppingBag, Camera } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Share2, Star, Minus, Plus, ShoppingBag, Camera, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ProductInfoProps {
   product: any;
@@ -28,7 +29,12 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
+  
+  // Mixed colors state
+  const [isMixingColors, setIsMixingColors] = useState(false);
+  const [colorCounts, setColorCounts] = useState<Record<number, number>>({});
 
   const colorVariations = useMemo(() => {
     if (product.variations && Array.isArray(product.variations) && product.variations.length > 0) {
@@ -40,32 +46,117 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
     return [];
   }, [product]);
 
+  // Sync mixing mode with quantity
+  useEffect(() => {
+    if (quantity < 2 && isMixingColors) {
+      setIsMixingColors(false);
+    }
+  }, [quantity, isMixingColors]);
+
+  // Sync counts when quantity changes or mixing is toggled
+  useEffect(() => {
+    if (!isMixingColors) return;
+
+    const totalDistributed = Object.values(colorCounts).reduce((acc, c) => acc + c, 0);
+    
+    if (totalDistributed !== quantity) {
+      if (selectedColorIndex !== null && totalDistributed === 0) {
+        // Initial assignment to selected color
+        setColorCounts({ [selectedColorIndex]: quantity });
+      } else if (quantity < totalDistributed) {
+        // Remove from last populated color
+        const newCounts = { ...colorCounts };
+        let diff = totalDistributed - quantity;
+        const keys = Object.keys(newCounts).map(Number).reverse();
+        for (const k of keys) {
+          if (newCounts[k] >= diff) {
+            newCounts[k] -= diff;
+            diff = 0;
+            break;
+          } else {
+            diff -= newCounts[k];
+            newCounts[k] = 0;
+          }
+        }
+        setColorCounts(newCounts);
+      }
+      // If quantity increased, we let the user manually add the missing pieces
+    }
+  }, [quantity, isMixingColors, selectedColorIndex]);
+
+  const distributedCount = useMemo(() => {
+    return Object.values(colorCounts).reduce((acc, c) => acc + c, 0);
+  }, [colorCounts]);
+
+  const remainingToDistribute = quantity - distributedCount;
+
   const validateSelection = () => {
-    if ((product.sizes?.length && !selectedSize) || (colorVariations.length > 0 && !selectedColor)) {
-      toast({
-        title: "Escolha as opções",
-        description: "Selecione o tamanho e a cor antes de prosseguir.",
-        variant: "destructive"
-      });
+    if (product.sizes?.length && !selectedSize) {
+      toast({ title: "Escolha o tamanho", description: "Selecione um tamanho antes de prosseguir.", variant: "destructive" });
       return false;
+    }
+
+    if (isMixingColors) {
+      if (distributedCount !== quantity) {
+        toast({ 
+          title: "Distribua as cores", 
+          description: `Você escolheu ${quantity} peças. Distribua todas entre as cores desejadas (faltam ${remainingToDistribute}).`, 
+          variant: "destructive" 
+        });
+        return false;
+      }
+    } else {
+      if (colorVariations.length > 0 && selectedColorIndex === null) {
+        toast({ title: "Escolha a cor", description: "Selecione uma cor antes de prosseguir.", variant: "destructive" });
+        return false;
+      }
     }
     return true;
   };
 
+  const performAddToCart = (openCart: boolean) => {
+    if (isMixingColors) {
+      const activeColorIndices = Object.keys(colorCounts).map(Number).filter(idx => colorCounts[idx] > 0);
+      
+      activeColorIndices.forEach((idx, i) => {
+        const variant = colorVariations[idx];
+        const colorName = variant.color || `Opção ${idx + 1}`;
+        const isLast = i === activeColorIndices.length - 1;
+        
+        onAddToCart?.({
+          ...product,
+          quantity: colorCounts[idx],
+          selectedSize,
+          selectedColor: colorName
+        }, isLast ? openCart : false);
+      });
+    } else {
+      onAddToCart?.({ ...product, quantity, selectedSize, selectedColor }, openCart);
+    }
+  };
+
   const handleBuyNowClick = () => {
     if (!validateSelection()) return;
-    const cartProduct = { ...product, quantity, selectedSize, selectedColor };
-    onAddToCart?.(cartProduct, true);
+    performAddToCart(true);
   };
 
   const handleAddToCartClick = () => {
     if (!validateSelection()) return;
-    const cartProduct = { ...product, quantity, selectedSize, selectedColor };
-    onAddToCart?.(cartProduct, false);
+    performAddToCart(false);
     toast({
       title: "Item adicionado!",
       description: "A peça foi reservada no seu carrinho.",
     });
+  };
+
+  const updateColorCount = (idx: number, delta: number) => {
+    const current = colorCounts[idx] || 0;
+    const newVal = current + delta;
+    
+    if (newVal < 0) return;
+    if (delta > 0 && distributedCount >= quantity) return;
+
+    setColorCounts(prev => ({ ...prev, [idx]: newVal }));
   };
 
   const scrollToReviews = () => {
@@ -117,49 +208,101 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
 
       {colorVariations.length > 0 && (
         <div className="space-y-6">
-          <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
-            Cor: <span className="text-primary font-black ml-2">{selectedColor || 'SELECIONE'}</span>
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+              Cor: <span className="text-primary font-black ml-2">
+                {isMixingColors ? 'MIX DE CORES' : (selectedColor || 'SELECIONE')}
+              </span>
+            </p>
+            {quantity >= 2 && colorVariations.length >= 2 && (
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <Checkbox 
+                  checked={isMixingColors} 
+                  onCheckedChange={(v) => setIsMixingColors(!!v)}
+                  className="rounded-sm border-primary/20 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                />
+                <span className="text-[9px] font-bold uppercase tracking-widest text-primary/40 group-hover:text-primary transition-colors">Quero cores diferentes</span>
+              </label>
+            )}
+          </div>
+
+          {isMixingColors && (
+            <p className="text-[10px] font-bold text-accent uppercase tracking-widest animate-in fade-in slide-in-from-left-2">
+              Distribua {quantity} peças entre as cores {remainingToDistribute > 0 && `(faltam ${remainingToDistribute})`}
+            </p>
+          )}
+
           <div className="flex flex-wrap gap-3 md:gap-4">
             {colorVariations.map((v: any, idx: number) => {
               const imgUrl = v.image || product.image;
               const hasValidImage = isValidUrl(imgUrl);
+              const displayName = v.color || `Opção ${idx + 1}`;
+              const isSelected = selectedColorIndex === idx;
+              const mixCount = colorCounts[idx] || 0;
 
               return (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedColor(v.color)}
-                  className={cn(
-                    "group flex flex-col items-center gap-3 transition-all min-h-[44px]",
-                    selectedColor === v.color ? "opacity-100" : "opacity-60 hover:opacity-100"
-                  )}
-                >
-                  <div className={cn(
-                    "relative h-20 md:h-24 w-16 md:w-20 overflow-hidden border-2 transition-all shadow-md bg-secondary/20",
-                    selectedColor === v.color ? "border-primary ring-4 ring-primary/5 scale-105" : "border-transparent"
-                  )}>
-                    {hasValidImage ? (
-                      <Image 
-                        src={imgUrl} 
-                        alt={v.color} 
-                        fill 
-                        className="object-cover" 
-                        quality={90}
-                        sizes="100px"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Camera className="h-5 w-5 text-primary/10" />
-                      </div>
+                <div key={idx} className="flex flex-col items-center gap-3">
+                  <button
+                    onClick={() => {
+                      if (isMixingColors) return;
+                      setSelectedColor(displayName);
+                      setSelectedColorIndex(idx);
+                    }}
+                    className={cn(
+                      "group flex flex-col items-center gap-3 transition-all min-h-[44px] relative",
+                      isMixingColors ? "cursor-default" : (isSelected ? "opacity-100" : "opacity-60 hover:opacity-100")
                     )}
-                  </div>
-                  <span className={cn(
-                    "text-[9px] font-bold uppercase tracking-widest",
-                    selectedColor === v.color ? "text-primary" : "text-muted-foreground"
-                  )}>
-                    {v.color}
-                  </span>
-                </button>
+                  >
+                    <div className={cn(
+                      "relative h-20 md:h-24 w-16 md:w-20 overflow-hidden border-2 transition-all shadow-md bg-secondary/20",
+                      !isMixingColors && isSelected ? "border-primary ring-4 ring-primary/5 scale-105" : "border-transparent",
+                      isMixingColors && mixCount > 0 ? "border-accent scale-105" : ""
+                    )}>
+                      {hasValidImage ? (
+                        <Image 
+                          src={imgUrl} 
+                          alt={displayName} 
+                          fill 
+                          className="object-cover" 
+                          quality={90}
+                          sizes="100px"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Camera className="h-5 w-5 text-primary/10" />
+                        </div>
+                      )}
+                      
+                      {isMixingColors && mixCount > 0 && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                           <div className="bg-accent text-primary font-black text-xs h-7 w-7 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                             {mixCount}
+                           </div>
+                        </div>
+                      )}
+                    </div>
+                    <span className={cn(
+                      "text-[9px] font-bold uppercase tracking-widest",
+                      (!isMixingColors && isSelected) || (isMixingColors && mixCount > 0) ? "text-primary" : "text-muted-foreground"
+                    )}>
+                      {displayName}
+                    </span>
+                  </button>
+
+                  {isMixingColors && (
+                    <div className="flex items-center gap-1 bg-white border border-primary/5 rounded-full p-0.5 shadow-sm animate-in zoom-in-95">
+                      <button 
+                        onClick={() => updateColorCount(idx, -1)}
+                        className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-secondary transition-colors text-xs"
+                      >−</button>
+                      <span className="text-[10px] font-bold w-4 text-center">{mixCount}</span>
+                      <button 
+                        onClick={() => updateColorCount(idx, 1)}
+                        className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-secondary transition-colors text-xs"
+                      >+</button>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

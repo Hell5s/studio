@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -29,7 +30,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp, getDocs, query, collection, orderBy } from 'firebase/firestore';
+import { doc, serverTimestamp, getDocs, query, collection, orderBy, onSnapshot } from 'firebase/firestore';
 import { useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { Badge } from '@/components/ui/badge';
@@ -52,15 +53,14 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
-  const [categoriesList, setCategoriesList] = useState<string[]>(['Vestidos', 'Conjuntos', 'Blusas', 'Calças', 'Acessórios']);
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
   const [sizeInput, setSizeInput] = useState('');
   
   const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
 
   const [formData, setFormData] = useState({
     name: '',
-    price: '',
-    oldPrice: '',
+    slug: '',
     description: '',
     longDescription: '',
     category: '',
@@ -81,19 +81,18 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   });
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const snap = await getDocs(query(collection(db, 'categories'), orderBy('name')));
-        const names = snap.docs.map(d => d.data().name).filter(Boolean);
-        if (names.length > 0) setCategoriesList(names);
-      } catch (e) {}
-    };
-    fetchCategories();
+    if (!db) return;
+    const q = query(collection(db, 'categories'), orderBy('name'));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setCategoriesList(data);
+    });
+    return () => unsubscribe();
   }, [db]);
 
   useEffect(() => {
     if (product) {
-      const allSizes = Array.isArray(product.sizes) ? product.sizes : (product.sizes?.split(',').map((s:string) => s.trim()) || []);
+      const allSizes = Array.isArray(initialData.sizes) ? initialData.sizes : (initialData.sizes?.split(',').map((s:string) => s.trim()) || []);
       const fixed = allSizes.filter((s:any) => fixedList.includes(s));
       const custom = allSizes.filter((s:any) => !fixedList.includes(s));
 
@@ -143,11 +142,11 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     return Number(String(val).replace(/\./g, "").replace(",", ".")) || 0;
   };
 
-  const toggleCategory = (cat: string) => {
+  const toggleCategory = (catName: string) => {
     setFormData(prev => {
-      const newCats = prev.categories.includes(cat)
-        ? prev.categories.filter(c => c !== cat)
-        : [...prev.categories, cat];
+      const newCats = prev.categories.includes(catName)
+        ? prev.categories.filter(c => c !== catName)
+        : [...prev.categories, catName];
       return { ...prev, categories: newCats };
     });
   };
@@ -198,6 +197,11 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     const customSizes = sizeInput.split(',').map(s => s.trim()).filter(Boolean);
     const finalSizes = Array.from(new Set([...fixedSizes, ...customSizes]));
 
+    // Resolve categoryId para a categoria principal selecionada
+    const primaryCatName = formData.categories[0] || '';
+    const primaryCat = categoriesList.find(c => c.name === primaryCatName);
+    const categoryId = primaryCat?.id || null;
+
     updateDocumentNonBlocking(docRef, {
       ...formData,
       price: parsePrice(formData.price),
@@ -205,7 +209,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       stock: Number(formData.stock) || 0,
       sizes: finalSizes,
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
-      category: formData.categories[0],
+      category: primaryCatName,
+      categoryId: categoryId,
       categories: formData.categories,
       image: finalMainImage,
       images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
@@ -287,7 +292,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         productName: formData.name,
         category: formData.categories[0] || formData.category,
         price: `R$ ${formData.price}`,
-        keyFeatures: [formData.colors, formData.sizes].filter(Boolean)
+        keyFeatures: [formData.brand, formData.shippingTime]
       });
       setFormData(prev => ({ 
         ...prev, 
@@ -347,14 +352,14 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                   </div>
                   <div className="grid grid-cols-2 gap-2 p-3 bg-white border border-primary/5 rounded-2xl max-h-[120px] overflow-y-auto no-scrollbar">
                     {categoriesList.map(cat => (
-                      <div key={cat} className="flex items-center gap-2 cursor-pointer" onClick={() => toggleCategory(cat)}>
+                      <div key={cat.id} className="flex items-center gap-2 cursor-pointer" onClick={() => toggleCategory(cat.name)}>
                         <Checkbox 
-                          id={`edit-cat-${cat}`} 
-                          checked={formData.categories.includes(cat)} 
-                          onCheckedChange={() => toggleCategory(cat)}
+                          id={`edit-cat-${cat.id}`} 
+                          checked={formData.categories.includes(cat.name)} 
+                          onCheckedChange={() => toggleCategory(cat.name)}
                         />
-                        <label htmlFor={`edit-cat-${cat}`} className="text-[10px] font-medium text-primary/60 truncate cursor-pointer">
-                          {cat}
+                        <label htmlFor={`edit-cat-${cat.id}`} className="text-[10px] font-medium text-primary/60 truncate cursor-pointer">
+                          {cat.name}
                         </label>
                       </div>
                     ))}

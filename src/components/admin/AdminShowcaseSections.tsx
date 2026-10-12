@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -17,7 +18,8 @@ import {
   Sparkles,
   ArrowRight,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  GripVertical
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,10 +33,9 @@ import {
   useFirestore, 
   useMemoFirebase, 
   addDocumentNonBlocking, 
-  deleteDocumentNonBlocking, 
   updateDocumentNonBlocking 
 } from '@/firebase';
-import { collection, query, orderBy, doc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, serverTimestamp, addDoc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getItemImageUrl } from '@/lib/utils';
 import {
@@ -51,6 +52,119 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+// Sortable Imports
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  TouchSensor,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableProductItem({ id, index, product, onMove, onRemove, isLast }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 100 : 1,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  const pImg = getItemImageUrl(product.image);
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={cn(
+        "flex items-center gap-3 p-3 bg-secondary/20 rounded-xl group relative transition-all duration-200",
+        isDragging && "shadow-2xl ring-2 ring-accent/20 bg-white"
+      )}
+    >
+       <div 
+         {...attributes} 
+         {...listeners}
+         className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-primary/20 hover:text-accent transition-colors shrink-0 touch-none"
+       >
+         <GripVertical className="h-4 w-4" />
+       </div>
+
+       <div className="flex flex-col gap-0.5 shrink-0">
+         <button 
+           type="button"
+           onClick={(e) => { e.stopPropagation(); onMove(index, -1); }}
+           disabled={index === 0}
+           className={cn(
+             "h-5 w-5 rounded-full flex items-center justify-center text-primary/30 hover:text-primary hover:bg-white transition-all",
+             index === 0 && "opacity-20 pointer-events-none"
+           )}
+         >
+           <ChevronUp className="h-3 w-3" />
+         </button>
+         <button 
+           type="button"
+           onClick={(e) => { e.stopPropagation(); onMove(index, 1); }}
+           disabled={isLast}
+           className={cn(
+             "h-5 w-5 rounded-full flex items-center justify-center text-primary/30 hover:text-primary hover:bg-white transition-all",
+             isLast && "opacity-20 pointer-events-none"
+           )}
+         >
+           <ChevronDown className="h-3 w-3" />
+         </button>
+       </div>
+       
+       {pImg ? (
+         <img src={pImg} className="h-12 w-10 object-cover rounded-lg border border-primary/5" alt="item" />
+       ) : (
+         <div className="h-12 w-10 rounded-lg bg-secondary/20" />
+       )}
+       
+       <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-primary truncate uppercase">{product.name}</p>
+          <p className="text-[9px] text-accent font-bold">R$ {product.price?.toFixed(2)}</p>
+       </div>
+       
+       <button 
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onRemove(id); }}
+        className="opacity-0 group-hover:opacity-100 p-1 bg-red-500 text-white rounded-full transition-opacity absolute -top-1 -right-1"
+       >
+         <X className="h-3 w-3" />
+       </button>
+    </div>
+  );
+}
 
 export function AdminShowcaseSections() {
   const db = useFirestore();
@@ -60,6 +174,8 @@ export function AdminShowcaseSections() {
   const [editingSection, setEditingSection] = useState<any>(null);
   const [productSearch, setProductSearch] = useState('');
   const [isMigrating, setIsMigrating] = useState(false);
+  const [sectionToDelete, setSectionToDelete] = useState<{ id: string, title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     eyebrow: 'EDITORIAL DE ESTILO',
@@ -70,6 +186,24 @@ export function AdminShowcaseSections() {
     order: 1,
     active: true
   });
+
+  // DnD Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Consulta de Seções
   const sectionsQuery = useMemoFirebase(() => query(collection(db, 'homeShowcaseSections'), orderBy('order', 'asc')), [db]);
@@ -147,13 +281,11 @@ export function AdminShowcaseSections() {
     
     setIsMigrating(true);
     try {
-      // 1. Vitrine "Novas Peças" (Editorial)
       const featuredIds = allProducts
         .filter(p => p.featured || p.badge === 'Destaque' || p.badge === 'Lançamento' || p.published !== false)
         .slice(0, 12)
         .map(p => p.id);
 
-      // 2. Vitrine "Mais Vendidos" (Destaques Absolutos)
       const bestsellerIds = allProducts
         .filter(p => p.bestseller || p.published !== false)
         .reverse()
@@ -216,10 +348,18 @@ export function AdminShowcaseSections() {
     setIsDialogOpen(false);
   };
 
-  const handleDelete = (id: string, title: string) => {
-    if (confirm(`Remover a vitrine "${title}" permanentemente?`)) {
-      deleteDocumentNonBlocking(doc(db, 'homeShowcaseSections', id));
-      toast({ title: "Vitrine removida." });
+  const handleConfirmDelete = async () => {
+    if (!sectionToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteDoc(doc(db, 'homeShowcaseSections', sectionToDelete.id));
+      toast({ title: "Vitrine excluída!" });
+    } catch (error) {
+      console.error("Erro ao excluir vitrine:", error);
+      toast({ title: "Não foi possível excluir a vitrine", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+      setSectionToDelete(null);
     }
   };
 
@@ -240,6 +380,22 @@ export function AdminShowcaseSections() {
       [newIds[index], newIds[targetIndex]] = [newIds[targetIndex], newIds[index]];
       return { ...prev, productIds: newIds };
     });
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setFormData((prev) => {
+        const oldIndex = prev.productIds.indexOf(active.id as string);
+        const newIndex = prev.productIds.indexOf(over.id as string);
+
+        return {
+          ...prev,
+          productIds: arrayMove(prev.productIds, oldIndex, newIndex),
+        };
+      });
+    }
   };
 
   return (
@@ -294,7 +450,16 @@ export function AdminShowcaseSections() {
                      </div>
                      <div className="flex gap-2 ml-auto">
                         <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(section)} className="rounded-full h-10 w-10 text-primary hover:bg-secondary"><Edit className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(section.id, section.title)} className="rounded-full h-10 w-10 text-red-300 hover:text-red-500"><Trash2 className="h-4 w-4" /></Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          disabled={isDeleting}
+                          onClick={() => setSectionToDelete({ id: section.id, title: section.title })} 
+                          className="rounded-full h-10 w-10 text-red-300 hover:text-primary transition-all cursor-pointer"
+                          title="Excluir Vitrine"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                      </div>
                   </div>
                </div>
@@ -469,53 +634,37 @@ export function AdminShowcaseSections() {
             <div className="space-y-8">
                <Card className="p-8 rounded-[2.5rem] bg-white shadow-xl space-y-6 sticky top-28">
                   <h5 className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-primary/5 pb-4">Sua Seleção</h5>
+                  
                   <div className="space-y-4 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
                     {formData.productIds.length > 0 ? (
-                      formData.productIds.map((id, index) => {
-                        const p = allProducts?.find(item => item.id === id);
-                        if (!p) return null;
-                        const pImg = getItemImageUrl(p.image);
-                        return (
-                          <div key={id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-xl group relative">
-                             <div className="flex flex-col gap-0.5 shrink-0">
-                               <button 
-                                 type="button"
-                                 onClick={(e) => { e.stopPropagation(); moveProduct(index, -1); }}
-                                 disabled={index === 0}
-                                 className={cn(
-                                   "h-5 w-5 rounded-full flex items-center justify-center text-primary/30 hover:text-primary hover:bg-white transition-all",
-                                   index === 0 && "opacity-20 pointer-events-none"
-                                 )}
-                               >
-                                 <ChevronUp className="h-3 w-3" />
-                               </button>
-                               <button 
-                                 type="button"
-                                 onClick={(e) => { e.stopPropagation(); moveProduct(index, 1); }}
-                                 disabled={index === formData.productIds.length - 1}
-                                 className={cn(
-                                   "h-5 w-5 rounded-full flex items-center justify-center text-primary/30 hover:text-primary hover:bg-white transition-all",
-                                   index === formData.productIds.length - 1 && "opacity-20 pointer-events-none"
-                                 )}
-                               >
-                                 <ChevronDown className="h-3 w-3" />
-                               </button>
-                             </div>
-                             {pImg ? <img src={pImg} className="h-12 w-10 object-cover rounded-lg border border-primary/5" alt="item" /> : <div className="h-12 w-10 rounded-lg bg-secondary/20" />}
-                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-bold text-primary truncate uppercase">{p.name}</p>
-                                <p className="text-[9px] text-accent font-bold">R$ {p.price?.toFixed(2)}</p>
-                             </div>
-                             <button 
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); toggleProduct(id); }}
-                              className="opacity-0 group-hover:opacity-100 p-1 bg-red-500 text-white rounded-full transition-opacity absolute -top-1 -right-1"
-                             >
-                               <X className="h-3 w-3" />
-                             </button>
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={formData.productIds}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="space-y-4">
+                            {formData.productIds.map((id, index) => {
+                              const p = allProducts?.find(item => item.id === id);
+                              if (!p) return null;
+                              return (
+                                <SortableProductItem
+                                  key={id}
+                                  id={id}
+                                  index={index}
+                                  product={p}
+                                  onMove={moveProduct}
+                                  onRemove={toggleProduct}
+                                  isLast={index === formData.productIds.length - 1}
+                                />
+                              );
+                            })}
                           </div>
-                        );
-                      })
+                        </SortableContext>
+                      </DndContext>
                     ) : (
                       <div className="py-20 text-center space-y-3 opacity-20">
                          <Plus className="h-10 w-10 mx-auto" />
@@ -534,6 +683,30 @@ export function AdminShowcaseSections() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!sectionToDelete} onOpenChange={(o) => !o && setSectionToDelete(null)}>
+        <AlertDialogContent className="rounded-[2.5rem] bg-white border-none shadow-2xl p-8">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-headline font-bold text-primary">
+              Excluir Vitrine
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground italic font-light">
+              Excluir a seção "{sectionToDelete?.title}"? Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-8 gap-3">
+            <AlertDialogCancel className="rounded-full h-12 px-8 border-primary/10 text-primary font-bold uppercase text-[10px] tracking-widest">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="rounded-full h-12 px-8 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-[10px] tracking-widest border-none"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

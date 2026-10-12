@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -85,7 +86,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
   const [galleryPickerIndex, setGalleryPickerIndex] = useState<number | null>(null);
-  const [categories, setCategories] = useState<string[]>(['Vestidos', 'Plus Size', 'Moda Fitness', 'Conjuntos', 'Casual Chic']);
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
   const [colorInput, setColorInput] = useState('');
   const [sizeInput, setSizeInput] = useState('');
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
@@ -108,8 +109,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     if (!db) return;
     const q = query(collection(db, 'categories'), orderBy('name'));
     const unsubscribe = onSnapshot(q, (snap) => {
-      const names = snap.docs.map(d => d.data().name).filter(Boolean);
-      if (names.length > 0) setCategories(names);
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setCategoriesList(data);
     }, (error) => {
       console.error("Erro ao ouvir categorias:", error);
     });
@@ -281,11 +282,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     toast({ title: "Preços calculados!", description: "Margem de 3x aplicada com sucesso." });
   };
 
-  const toggleCategory = (cat: string) => {
+  const toggleCategory = (catName: string) => {
     setFormData(prev => {
-      const newCats = prev.categories.includes(cat)
-        ? prev.categories.filter(c => c !== cat)
-        : [...prev.categories, cat];
+      const newCats = prev.categories.includes(catName)
+        ? prev.categories.filter(c => c !== catName)
+        : [...prev.categories, catName];
       return { ...prev, categories: newCats };
     });
   };
@@ -311,6 +312,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const customSizes = sizeInput.split(',').map(s => s.trim()).filter(Boolean);
     const finalSizes = Array.from(new Set([...fixedSizes, ...customSizes]));
 
+    // Resolve categoryId para a categoria principal selecionada
+    const primaryCatName = formData.categories[0] || '';
+    const primaryCat = categoriesList.find(c => c.name === primaryCatName);
+    const categoryId = primaryCat?.id || null;
+
     const payload = {
       ...formData,
       id: productId,
@@ -320,7 +326,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       stock: parseSafeNumber(formData.stock),
       sizes: finalSizes,
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
-      category: formData.categories[0],
+      category: primaryCatName,
+      categoryId: categoryId,
       categories: formData.categories,
       image: finalMainImage,
       images: formData.gallery.length > 0 ? formData.gallery : [finalMainImage],
@@ -474,7 +481,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       toast({ title: "Preencha nome e preço", variant: "destructive" });
       return;
     }
-    setGeneratingAI(true);
+    generatingAI;
     try {
       const res = await adminGenerateProductDescription({
         productName: formData.name,
@@ -609,15 +616,15 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       <Badge variant="outline" className="text-[9px] border-primary/10">{formData.categories.length} selecionadas</Badge>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-white border border-primary/5 rounded-2xl max-h-[160px] overflow-y-auto no-scrollbar">
-                      {categories.map(cat => (
-                        <div key={cat} className="flex items-center gap-2 group cursor-pointer" onClick={() => toggleCategory(cat)}>
+                      {categoriesList.map(cat => (
+                        <div key={cat.id} className="flex items-center gap-2 group cursor-pointer" onClick={() => toggleCategory(cat.name)}>
                           <Checkbox 
-                            id={`cat-${cat}`} 
-                            checked={formData.categories.includes(cat)} 
-                            onCheckedChange={() => toggleCategory(cat)}
+                            id={`cat-${cat.id}`} 
+                            checked={formData.categories.includes(cat.name)} 
+                            onCheckedChange={() => toggleCategory(cat.name)}
                           />
-                          <label htmlFor={`cat-${cat}`} className="text-[11px] font-medium text-primary/60 group-hover:text-primary cursor-pointer truncate">
-                            {cat}
+                          <label htmlFor={`cat-${cat.id}`} className="text-[11px] font-medium text-primary/60 group-hover:text-primary cursor-pointer truncate">
+                            {cat.name}
                           </label>
                         </div>
                       ))}
@@ -699,7 +706,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               <section className="space-y-6">
                 <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                   <div className="flex items-center gap-3"><ImageIcon className="h-5 w-5 text-primary" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Galeria de Fotos</h4></div>
-                  <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 px-4 rounded-full">+ Fotos</Button>
+                  <Button variant="ghost" size="sm" onClick={() => galleryInputRef.current?.click()} className="h-8 text-accent text-[10px] font-bold uppercase border border-accent/20 rounded-full px-4">+ Fotos</Button>
                 </div>
                 <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-4">

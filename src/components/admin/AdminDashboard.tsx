@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -398,7 +397,7 @@ export function AdminDashboard({ productsCount, categoriesCount, onOpenAI, onExi
                   ) : (
                     <div className="py-10 md:py-12 text-center space-y-3">
                        <ShoppingBag className="h-8 w-8 md:h-10 md:w-10 text-primary/5 mx-auto" />
-                       <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-primary/20">Sem pedidos recentes</p>
+                       <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest text-primary/20">Sem pedidos recentes</p>
                     </div>
                   )}
                 </div>

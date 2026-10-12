@@ -20,6 +20,7 @@ interface ShowcaseSectionProps {
 
 export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, productIds, onAddToCart }: ShowcaseSectionProps) {
   const db = useFirestore();
+  const MAX_MOBILE = 8;
 
   const validProductIds = useMemo(() => (productIds || []).slice(0, 30), [productIds]);
 
@@ -71,16 +72,36 @@ export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, product
            ))}
         </div>
       ) : (
-        <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth pb-4 px-4 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 -mx-4 md:mx-0 items-start">
-          {products.map((product: any) => (
-            <div key={product.id} className="w-[45vw] shrink-0 snap-start md:w-auto md:shrink md:snap-align-none">
-              <ProductCard 
-                {...product} 
-                onAddToCart={(selectedP) => onAddToCart?.(selectedP || product)}
-              />
+        <>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-8 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 items-stretch md:items-start">
+            {products.map((product: any, index: number) => (
+              <div 
+                key={product.id} 
+                className={cn(
+                  "w-full min-w-0 md:w-auto md:shrink-0 md:snap-align-none h-full",
+                  index >= MAX_MOBILE && "hidden md:block"
+                )}
+              >
+                <ProductCard 
+                  {...product} 
+                  onAddToCart={(selectedP) => onAddToCart?.(selectedP || product)}
+                />
+              </div>
+            ))}
+          </div>
+
+          {linkUrl && products.length > 0 && (
+            <div className="md:hidden mt-8">
+              <Link href={linkUrl || `/vitrine/${id}`}>
+                <button
+                  className="w-full rounded-full border border-primary bg-transparent px-3 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-primary transition-all active:scale-95"
+                >
+                  {linkText || "Ver todas as peças"}
+                </button>
+              </Link>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </section>
   );

@@ -21,8 +21,8 @@ interface CheckoutDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   cartItems: any[];
-  onUpdateQuantity: (id: string, delta: number) => void;
-  onRemoveItem: (id: string) => void;
+  onUpdateQuantity: (cartItemId: string, delta: number) => void;
+  onRemoveItem: (cartItemId: string) => void;
   total: number;
   onSuccess: () => void;
 }
@@ -160,7 +160,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                     const imageConfig = typeof item.image === 'object' ? item.image : null;
 
                     return (
-                      <div key={item.id} className="w-full">
+                      <div key={item.cartItemId || item.id} className="w-full">
                         <div className="flex gap-4 md:gap-6 py-6 group w-full">
                           <div className="h-24 w-20 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm relative">
                             {imageUrl ? (
@@ -184,12 +184,12 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                               {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
                             </div>
                             <div className="flex items-center gap-3 pt-3">
-                                <button onClick={() => onUpdateQuantity(item.id, -1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">−</button>
+                                <button onClick={() => onUpdateQuantity(item.cartItemId || item.id, -1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">−</button>
                                 <span className="text-[11px] font-bold w-4 text-center">{item.quantity}</span>
-                                <button onClick={() => onUpdateQuantity(item.id, 1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">+</button>
+                                <button onClick={() => onUpdateQuantity(item.cartItemId || item.id, 1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">+</button>
                             </div>
                           </div>
-                          <button onClick={() => onRemoveItem(item.id)} className="text-primary/10 hover:text-destructive self-start p-2 shrink-0"><X className="h-4 w-4" /></button>
+                          <button onClick={() => onRemoveItem(item.cartItemId || item.id)} className="text-primary/10 hover:text-destructive self-start p-2 shrink-0"><X className="h-4 w-4" /></button>
                         </div>
                         {idx < cartItems.length - 1 && <div className="h-px bg-primary/5" />}
                       </div>
