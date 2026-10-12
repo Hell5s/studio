@@ -19,7 +19,6 @@ const getOptimizedUrl = (url: string, type: 'image' | 'video', isMobile: boolean
   
   if (isPoster) {
     params = `so_0,f_auto,q_auto:best,w_${width},c_limit`;
-    // Replace /upload/ and change extension to .jpg for posters
     return url.replace('/upload/', `/upload/${params}/`).replace(/\.[^/.]+$/, ".jpg");
   }
 
@@ -32,13 +31,107 @@ const getOptimizedUrl = (url: string, type: 'image' | 'video', isMobile: boolean
   return url.replace('/upload/', `/upload/${params}/`);
 };
 
+const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onShopNow, settings }: any) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isActive) {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isActive]);
+
+  const optimizedUrl = getOptimizedUrl(banner.imageUrl, 'image', isMobile);
+  const optimizedVideoUrl = getOptimizedUrl(banner.imageUrl, 'video', isMobile);
+
+  const activePosition = isMobile 
+    ? (banner.mobileImagePosition || banner.imagePosition || { x: 50, y: 50 })
+    : (banner.imagePosition || { x: 50, y: 50 });
+    
+  const activeZoom = isMobile
+    ? (banner.mobileImageZoom || banner.imageZoom || 100)
+    : (banner.imageZoom || 100);
+
+  return (
+    <div className="relative flex-[0_0_100%] min-w-0 h-full w-full bg-[#1a0a0e]">
+      {isLoaded && (
+        <>
+          {banner.mediaType === 'video' ? (
+            <video
+              ref={videoRef}
+              key={optimizedVideoUrl}
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={getOptimizedUrl(banner.imageUrl, 'video', isMobile, true)}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                objectPosition: `${activePosition.x}% ${activePosition.y}%`,
+                objectFit: 'cover'
+              }}
+            >
+              <source src={optimizedVideoUrl} type="video/mp4" />
+            </video>
+          ) : (
+            <div
+              className="absolute inset-0 w-full h-full"
+              style={{
+                backgroundImage: `url(${optimizedUrl})`,
+                backgroundSize: activeZoom === 100 ? 'cover' : `${activeZoom}%`,
+                backgroundPosition: `${activePosition.x}% ${activePosition.y}%`,
+                backgroundRepeat: 'no-repeat',
+              }} 
+              role="img"
+              aria-label={banner.title || "Banner Toda Bela"}
+            />
+          )}
+        </>
+      )}
+      
+      <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+
+      <div className={cn(
+        "container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-16 md:pb-28 relative z-10 pointer-events-none",
+        "max-md:absolute max-md:bottom-[20px] max-md:left-[16px] max-md:h-auto max-md:pb-0 max-md:px-0 max-md:pl-0 max-md:items-start"
+      )}>
+        <div className={cn(
+          "max-w-2xl space-y-4 md:space-y-10 transition-[opacity,transform] duration-700 ease-out pointer-events-auto",
+          isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        )}>
+          <div className="space-y-2 md:space-y-4">
+            <h1 className="text-base md:text-3xl font-headline font-semibold text-white uppercase tracking-[0.08em] leading-[0.9]">
+              {banner.title || ''}
+            </h1>
+            <p className="text-xs md:text-sm text-white/90 font-light italic max-w-lg leading-relaxed">
+              {banner.subtitle || ''}
+            </p>
+          </div>
+          {(banner.ctaText || settings?.heroCta) && (
+            <Button 
+              onClick={onShopNow}
+              className="rounded-full bg-white text-black px-6 py-2 md:px-8 md:py-3 text-[10px] md:text-xs tracking-[0.2em] font-bold uppercase w-fit h-auto hover:bg-accent hover:text-white transition-all shadow-2xl"
+            >
+              {banner.ctaText || settings?.heroCta || 'Conferir'}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+HeroSlide.displayName = 'HeroSlide';
+
 export function Hero({ onShopNow }: { onShopNow?: () => void }) {
   const db = useFirestore();
   const isMobile = !!useIsMobile();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [hasHydrated, setHasHydrated] = useState(false);
   const [loadedIndices, setLoadedIndices] = useState<Set<number>>(new Set([0]));
-  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   
   const settingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -106,21 +199,33 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     return [];
   }, [banners, cachedBanner, hasHydrated]);
 
-  // Handle on-demand loading of slides (liberate current + next)
+  // Handle slide liberation and pre-decoding
   useEffect(() => {
     if (displayBanners.length > 0) {
+      const nextIndex = (selectedIndex + 1) % displayBanners.length;
+      
       setLoadedIndices(prev => {
-        const nextIndex = (selectedIndex + 1) % displayBanners.length;
         if (prev.has(selectedIndex) && prev.has(nextIndex)) return prev;
         const newSet = new Set(prev);
         newSet.add(selectedIndex);
         newSet.add(nextIndex);
         return newSet;
       });
-    }
-  }, [selectedIndex, displayBanners.length]);
 
-  // Preload high-priority first image
+      // Warm up liberated images
+      [selectedIndex, nextIndex].forEach(idx => {
+        const banner = displayBanners[idx];
+        if (banner && banner.mediaType !== 'video') {
+          const url = getOptimizedUrl(banner.imageUrl, 'image', isMobile);
+          const img = new window.Image();
+          img.src = url;
+          img.decode().catch(() => {});
+        }
+      });
+    }
+  }, [selectedIndex, displayBanners.length, isMobile, displayBanners]);
+
+  // Preload critical first image
   useEffect(() => {
     if (displayBanners.length > 0) {
       const first = displayBanners[0];
@@ -134,18 +239,6 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
       }
     }
   }, [displayBanners, isMobile]);
-
-  // Control video playback so only active slide plays
-  useEffect(() => {
-    Object.entries(videoRefs.current).forEach(([idx, video]) => {
-      if (!video) return;
-      if (parseInt(idx) === selectedIndex) {
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-      }
-    });
-  }, [selectedIndex, loadedIndices]);
 
   useEffect(() => {
     if (!emblaApi || !displayBanners.length) return;
@@ -207,97 +300,19 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
       }}
     >
       <div className="h-full w-full overflow-hidden" ref={emblaRef}>
-        <div className="flex h-full w-full">
-          {displayBanners.map((banner: any, idx: number) => {
-            const isLiberated = loadedIndices.has(idx);
-            
-            const optimizedUrl = getOptimizedUrl(banner.imageUrl, 'image', isMobile);
-            const optimizedVideoUrl = getOptimizedUrl(banner.imageUrl, 'video', isMobile);
-
-            const activePosition = isMobile 
-              ? (banner.mobileImagePosition || banner.imagePosition || { x: 50, y: 50 })
-              : (banner.imagePosition || { x: 50, y: 50 });
-              
-            const activeZoom = isMobile
-              ? (banner.mobileImageZoom || banner.imageZoom || 100)
-              : (banner.imageZoom || 100);
-
-            return (
-              <div key={idx} className="relative flex-[0_0_100%] min-w-0 h-full w-full bg-[#1a0a0e]">
-                {isLiberated && (
-                  <>
-                    {banner.mediaType === 'video' ? (
-                      <video
-                        ref={el => videoRefs.current[idx] = el}
-                        key={optimizedVideoUrl}
-                        muted
-                        loop
-                        playsInline
-                        preload="metadata"
-                        poster={getOptimizedUrl(banner.imageUrl, 'video', isMobile, true)}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        style={{
-                          objectPosition: `${activePosition.x}% ${activePosition.y}%`,
-                          willChange: 'transform',
-                          objectFit: 'cover'
-                        }}
-                      >
-                        <source src={optimizedVideoUrl} type="video/mp4" />
-                      </video>
-                    ) : (
-                      <div
-                        className="absolute inset-0 w-full h-full"
-                        style={{
-                          backgroundImage: `url(${optimizedUrl})`,
-                          backgroundSize: activeZoom === 100 ? 'cover' : `${activeZoom}%`,
-                          backgroundPosition: `${activePosition.x}% ${activePosition.y}%`,
-                          backgroundRepeat: 'no-repeat',
-                          imageRendering: 'high-quality' as any,
-                          willChange: 'transform',
-                          transform: 'translateZ(0)'
-                        }} 
-                        role="img"
-                        aria-label={banner.title || "Banner Toda Bela"}
-                      />
-                    )}
-                  </>
-                )}
-                
-                <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-
-                <div className={cn(
-                  "container mx-auto h-full px-5 md:px-12 pl-6 md:pl-16 flex items-end pb-16 md:pb-28 relative z-10 pointer-events-none",
-                  "max-md:absolute max-md:bottom-[20px] max-md:left-[16px] max-md:h-auto max-md:pb-0 max-md:px-0 max-md:pl-0 max-md:items-start"
-                )}>
-                  <div className={cn(
-                    "max-w-2xl space-y-4 md:space-y-10 transition-all duration-1000 pointer-events-auto",
-                    selectedIndex === idx ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-                  )}>
-                    <div className="space-y-2 md:space-y-4">
-                      <h1 
-                        className="text-base md:text-3xl font-headline font-semibold text-white uppercase tracking-[0.08em] leading-[0.9]"
-                      >
-                        {banner.title || ''}
-                      </h1>
-                      <p 
-                        className="text-xs md:text-sm text-white/90 font-light italic max-w-lg leading-relaxed"
-                      >
-                        {banner.subtitle || ''}
-                      </p>
-                    </div>
-                    {(banner.ctaText || settings?.heroCta) && (
-                      <Button 
-                        onClick={onShopNow}
-                        className="rounded-full bg-white text-black px-6 py-2 md:px-8 md:py-3 text-[10px] md:text-xs tracking-[0.2em] font-bold uppercase w-fit h-auto hover:bg-accent hover:text-white transition-all shadow-2xl"
-                      >
-                        {banner.ctaText || settings?.heroCta || 'Conferir'}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="flex h-full w-full" style={{ willChange: 'transform' }}>
+          {displayBanners.map((banner: any, idx: number) => (
+            <HeroSlide 
+              key={idx}
+              banner={banner}
+              idx={idx}
+              isActive={selectedIndex === idx}
+              isLoaded={loadedIndices.has(idx)}
+              isMobile={isMobile}
+              onShopNow={onShopNow}
+              settings={settings}
+            />
+          ))}
         </div>
       </div>
 
@@ -305,13 +320,13 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         <>
           <button 
             onClick={scrollPrev}
-            className="absolute left-6 top-1/2 -translate-y-1/2 h-14 w-14 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary z-30 hidden md:flex"
+            className="absolute left-6 top-1/2 -translate-y-1/2 h-14 w-14 rounded-full bg-black/40 border border-white/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary z-30 hidden md:flex"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
           <button 
             onClick={scrollNext}
-            className="absolute right-6 top-1/2 -translate-y-1/2 h-14 w-14 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary z-30 hidden md:flex"
+            className="absolute right-6 top-1/2 -translate-y-1/2 h-14 w-14 rounded-full bg-black/40 border border-white/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary z-30 hidden md:flex"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
