@@ -14,18 +14,21 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const getOptimizedUrl = (url: string, type: 'image' | 'video', isMobile: boolean, isPoster = false) => {
   if (!url || !url.includes('cloudinary.com')) return url;
   
-  const width = isMobile ? '1080' : '1920';
   let params = '';
   
   if (isPoster) {
-    params = `so_0,f_auto,q_auto:best,w_${width},c_limit`;
+    // Poster: Always 1920px for sharpness as it loads instantly
+    params = `so_0,f_auto,q_auto:best,w_1920,c_limit`;
     return url.replace('/upload/', `/upload/${params}/`).replace(/\.[^/.]+$/, ".jpg");
   }
 
   if (type === 'image') {
+    // Image: 2400px mobile (to handle tall crops), 1920px desktop
+    const width = isMobile ? '2400' : '1920';
     params = `f_auto,q_auto:best,w_${width},c_limit`;
   } else {
-    params = `f_auto,q_auto:good,vc_auto,w_${width},c_limit`;
+    // Video: Always 1920px with best quality
+    params = `f_auto,q_auto:best,vc_auto,w_1920,c_limit`;
   }
   
   return url.replace('/upload/', `/upload/${params}/`);
@@ -212,7 +215,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         return newSet;
       });
 
-      // Warm up liberated images
+      // Warm up liberated images with EXACT same URL
       [selectedIndex, nextIndex].forEach(idx => {
         const banner = displayBanners[idx];
         if (banner && banner.mediaType !== 'video') {
@@ -223,9 +226,9 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         }
       });
     }
-  }, [selectedIndex, displayBanners.length, isMobile, displayBanners]);
+  }, [selectedIndex, displayBanners, isMobile]);
 
-  // Preload critical first image
+  // Preload critical first image with EXACT same URL
   useEffect(() => {
     if (displayBanners.length > 0) {
       const first = displayBanners[0];
