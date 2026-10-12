@@ -1,8 +1,24 @@
 import type {Metadata} from 'next';
+import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/contexts/CartContext';
+
+const inter = Inter({ 
+  subsets: ['latin'], 
+  weight: ['300', '400', '500', '600', '700'], 
+  display: 'swap', 
+  variable: '--font-inter' 
+});
+
+const playfair = Playfair_Display({ 
+  subsets: ['latin'], 
+  weight: ['400', '700'], 
+  style: ['normal', 'italic'], 
+  display: 'swap', 
+  variable: '--font-playfair' 
+});
 
 export const metadata: Metadata = {
   title: 'Toda Bela | Moda Feminina Moderna',
@@ -15,14 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={`${inter.variable} ${playfair.variable}`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
       </head>
       <body 
         className="font-sans antialiased bg-[#FFF9F7] text-[#2A1F22]" 
