@@ -23,6 +23,14 @@ export async function getCroppedImgBlob(
   pixelCrop: PixelCrop,
   minLongSide: number = 1800
 ): Promise<Blob> {
+  if (!pixelCrop || 
+      !Number.isFinite(pixelCrop.width) || pixelCrop.width <= 0 ||
+      !Number.isFinite(pixelCrop.height) || pixelCrop.height <= 0 ||
+      !Number.isFinite(pixelCrop.x) || 
+      !Number.isFinite(pixelCrop.y)) {
+    throw new Error('Parâmetros de recorte inválidos.');
+  }
+
   const image = await createImage(imageSrc);
   
   let currentWidth = pixelCrop.width;

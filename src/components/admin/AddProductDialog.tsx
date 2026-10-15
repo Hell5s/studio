@@ -101,7 +101,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [imageAspect, setImageAspect] = useState(1);
-  const [mediaSize, setMediaSize] = useState({ width: 0, height: 0 });
 
   const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
 
@@ -420,8 +419,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         });
       }
       setEditingImage(null);
-    } catch (err) {
-      toast({ title: "Erro ao salvar recorte", variant: "destructive" });
+    } catch (err: any) {
+      console.error("Erro ao salvar recorte:", err);
+      toast({ 
+        title: "Erro ao salvar recorte", 
+        description: err.message || "Tente novamente mais tarde.",
+        variant: "destructive" 
+      });
     } finally {
       setSavingCrop(false);
     }
@@ -947,14 +951,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               aspect={imageAspect} 
               onCropChange={setCrop} 
               onZoomChange={setZoom} 
-              onCropComplete={(_croppedArea, croppedAreaPixelsResult) => setCroppedAreaPixels(croppedAreaPixelsResult)}
-              onMediaLoaded={(size) => setMediaSize(size)}
+              onCropComplete={(_croppedArea, croppedAreaPixelsResult) => {
+                if (Number.isFinite(croppedAreaPixelsResult.width) && 
+                    Number.isFinite(croppedAreaPixelsResult.height) && 
+                    Number.isFinite(croppedAreaPixelsResult.x) && 
+                    Number.isFinite(croppedAreaPixelsResult.y)) {
+                  setCroppedAreaPixels(croppedAreaPixelsResult);
+                }
+              }}
               showGrid={false}
               cropShape="rect"
-              cropSize={mediaSize.width ? { 
-                width: zoom === 1 ? mediaSize.width : undefined, 
-                height: zoom === 1 ? mediaSize.height : undefined 
-              } : undefined}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -974,19 +980,21 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
             <div className="flex-1 flex flex-col gap-4">
-              {croppedAreaPixels && (
+              {croppedAreaPixels ? (
                 <p className={cn(
                   "text-[10px] font-bold uppercase tracking-wider",
                   croppedAreaPixels.height >= 1200 ? "text-green-500" :
                   croppedAreaPixels.height >= 800 ? "text-yellow-500" : "text-red-500"
                 )}>
-                  Resolução do recorte: {croppedAreaPixels.width} × {croppedAreaPixels.height} px
-                  {croppedAreaPixels.height < 800 && (
+                  Resolução do recorte: {Number.isFinite(croppedAreaPixels.width) ? croppedAreaPixels.width : '...'} × {Number.isFinite(croppedAreaPixels.height) ? croppedAreaPixels.height : '...'} px
+                  {Number.isFinite(croppedAreaPixels.height) && croppedAreaPixels.height < 800 && (
                     <span className="block mt-1 normal-case italic opacity-80">
                       Qualidade baixa: use menos zoom ou uma foto de maior resolução
                     </span>
                   )}
                 </p>
+              ) : (
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
               )}
               <div className="flex items-center gap-4">
                 <button onClick={() => setZoom(z => Math.max(1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
