@@ -16,6 +16,7 @@ export interface PixelCrop {
 
 /**
  * Recorta uma imagem e, se necessário, aplica upscaling suave para manter a qualidade na loja.
+ * Exporta preferencialmente em PNG (Lossless).
  */
 export async function getCroppedImgBlob(
   imageSrc: string,
@@ -83,11 +84,23 @@ export async function getCroppedImgBlob(
     currentHeight = nextHeight;
   }
 
+  // Tenta exportar em PNG (Lossless)
   return new Promise((resolve, reject) => {
-    // Exportação em alta qualidade (0.98)
     canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error('Falha ao gerar o blob da imagem recortada'));
-    }, 'image/jpeg', 0.98);
+      if (!blob) {
+        reject(new Error('Falha ao gerar o blob da imagem'));
+        return;
+      }
+
+      // Se o PNG for muito grande (> 9MB), usa JPEG qualidade máxima
+      if (blob.size > 9 * 1024 * 1024) {
+        canvas.toBlob((jpgBlob) => {
+          if (jpgBlob) resolve(jpgBlob);
+          else reject(new Error('Falha ao gerar JPEG de fallback'));
+        }, 'image/jpeg', 1.0);
+      } else {
+        resolve(blob);
+      }
+    }, 'image/png');
   });
 }

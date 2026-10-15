@@ -101,6 +101,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [imageAspect, setImageAspect] = useState(1);
+  const [mediaSize, setMediaSize] = useState({ width: 0, height: 0 });
 
   const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
 
@@ -368,7 +369,15 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   };
 
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
-  const getOriginalUrl = (img: any) => typeof img === 'string' ? img : (img?.originalUrl || img?.url);
+  
+  // Garante que a imagem fonte para o recorte é a original, sem transformações do Cloudinary
+  const getOriginalUrl = (img: any) => {
+    const url = typeof img === 'string' ? img : (img?.originalUrl || img?.url);
+    if (url?.includes('res.cloudinary.com')) {
+      return url.replace(/\/upload\/[^/]+\//, '/upload/');
+    }
+    return url;
+  };
 
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
     const img = field === 'image' ? formData.image : formData.gallery[index];
@@ -395,7 +404,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       const originalUrl = typeof imgObj === 'string' ? imgObj : (imgObj?.originalUrl || imgObj?.url);
       
       const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
-      const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+      const fileName = blob.type === 'image/png' ? 'cropped.png' : 'cropped.jpg';
+      const file = new File([blob], fileName, { type: blob.type });
       const newUrl = await uploadToCloudinary(file);
 
       const updatedImageData = { url: newUrl, originalUrl, crop, zoom };
@@ -938,8 +948,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               onCropChange={setCrop} 
               onZoomChange={setZoom} 
               onCropComplete={(_croppedArea, croppedAreaPixelsResult) => setCroppedAreaPixels(croppedAreaPixelsResult)}
+              onMediaLoaded={(size) => setMediaSize(size)}
               showGrid={false}
               cropShape="rect"
+              cropSize={mediaSize.width ? { 
+                width: zoom === 1 ? mediaSize.width : undefined, 
+                height: zoom === 1 ? mediaSize.height : undefined 
+              } : undefined}
               style={{
                 containerStyle: {
                   position: 'absolute',
