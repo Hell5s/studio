@@ -11,6 +11,7 @@ import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getItemImageUrl } from '@/lib/utils';
 import { QuickAddPopover } from './QuickAddPopover';
+import cloudinaryLoader from '@/lib/cloudinaryLoader';
 
 interface ProductCardProps {
   id: string | number;
@@ -122,13 +123,11 @@ export const ProductCard = React.memo(function ProductCard({
           
           {isValidUrl && !hasError ? (
             <Image
-              src={url?.includes('cloudinary.com') 
-                ? url.replace('/upload/', '/upload/q_auto:best,f_auto,dpr_auto/') 
-                : url}
+              loader={cloudinaryLoader}
+              src={url}
               alt={name}
               fill
               loading="lazy"
-              quality={90}
               className="object-cover transition-transform duration-1500 group-hover:scale-105"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               onError={() => setHasError(true)}

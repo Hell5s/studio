@@ -7,6 +7,7 @@ import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Heart, Camera } from 'lucide-react';
+import cloudinaryLoader from '@/lib/cloudinaryLoader';
 
 interface ProductGalleryProps {
   images: any[];
@@ -76,15 +77,13 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
 
     return (
       <Image
-        src={url?.includes('cloudinary.com') 
-          ? url.replace('/upload/', '/upload/q_auto:best,f_auto,dpr_auto/') 
-          : url}
+        loader={cloudinaryLoader}
+        src={url}
         alt={`${name} - Imagem ${idx + 1}`}
         fill
         className="object-cover transition-transform duration-2000 group-hover:scale-105"
         priority={isPriority}
-        quality={90}
-        sizes="(max-width: 768px) 100vw, 50vw"
+        sizes="(max-width: 768px) 100vw, 800px"
         onError={() => handleImageError(idx)}
       />
     );
