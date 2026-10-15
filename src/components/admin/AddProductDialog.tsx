@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -481,7 +480,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       toast({ title: "Preencha nome e preço", variant: "destructive" });
       return;
     }
-    generatingAI;
+    setGeneratingAI(true);
     try {
       const res = await adminGenerateProductDescription({
         productName: formData.name,
@@ -959,18 +958,34 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
             />
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
-            <div className="flex-1 flex items-center gap-4">
-              <button onClick={() => setZoom(z => Math.max(1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
-              <input 
-                type="range" 
-                min={1} 
-                max={3} 
-                step={0.1} 
-                value={zoom} 
-                onChange={e => setZoom(Number(e.target.value))} 
-                className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent" 
-              />
-              <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Plus className="h-4 w-4" /></button>
+            <div className="flex-1 flex flex-col gap-4">
+              {croppedAreaPixels && (
+                <p className={cn(
+                  "text-[10px] font-bold uppercase tracking-wider",
+                  croppedAreaPixels.height >= 1200 ? "text-green-500" :
+                  croppedAreaPixels.height >= 800 ? "text-yellow-500" : "text-red-500"
+                )}>
+                  Resolução do recorte: {croppedAreaPixels.width} × {croppedAreaPixels.height} px
+                  {croppedAreaPixels.height < 800 && (
+                    <span className="block mt-1 normal-case italic opacity-80">
+                      Qualidade baixa: use menos zoom ou uma foto de maior resolução
+                    </span>
+                  )}
+                </p>
+              )}
+              <div className="flex items-center gap-4">
+                <button onClick={() => setZoom(z => Math.max(1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+                <input 
+                  type="range" 
+                  min={1} 
+                  max={3} 
+                  step={0.1} 
+                  value={zoom} 
+                  onChange={e => setZoom(Number(e.target.value))} 
+                  className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent" 
+                />
+                <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Plus className="h-4 w-4" /></button>
+              </div>
             </div>
             <div className="flex gap-4">
               <Button variant="ghost" onClick={() => setEditingImage(null)} className="text-white uppercase text-[10px] font-bold">Cancelar</Button>
