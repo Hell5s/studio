@@ -15,8 +15,8 @@ export interface PixelCrop {
 }
 
 /**
- * Recorta uma imagem e, se necessário, aplica upscaling suave para manter a qualidade na loja.
- * Exporta preferencialmente em PNG (Lossless).
+ * Recorta uma imagem e aplica ampliação em uma única etapa se necessário.
+ * Exporta em JPEG de alta qualidade para evitar travamentos de memória.
  */
 export async function getCroppedImgBlob(
   imageSrc: string,
@@ -33,26 +33,36 @@ export async function getCroppedImgBlob(
 
   const image = await createImage(imageSrc);
   
-  let currentWidth = pixelCrop.width;
-  let currentHeight = pixelCrop.height;
-  const currentLongSide = Math.max(currentWidth, currentHeight);
+  const currentLongSide = Math.max(pixelCrop.width, pixelCrop.height);
   
-  let targetWidth = currentWidth;
-  let targetHeight = currentHeight;
-
-  // Se o recorte for muito pequeno, calculamos o tamanho alvo para ampliação (limite de 3x)
+  let scale = 1;
   if (currentLongSide < minLongSide) {
-    const scale = Math.min(3, minLongSide / currentLongSide);
-    targetWidth = Math.round(currentWidth * scale);
-    targetHeight = Math.round(currentHeight * scale);
+    // Calcula escala necessária para chegar a 1800px, limitada a 2x para performance
+    scale = Math.min(2, minLongSide / currentLongSide);
   }
 
-  // Passo 1: Extrair o recorte original
-  let canvas = document.createElement('canvas');
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
-  let ctx = canvas.getContext('2d');
+  const targetWidth = Math.round(pixelCrop.width * scale);
+  const targetHeight = Math.round(pixelCrop.height * scale);
+
+  // Limite absoluto de 2400px para evitar travamentos de memória no canvas
+  const finalLongSide = Math.max(targetWidth, targetHeight);
+  let finalWidth = targetWidth;
+  let finalHeight = targetHeight;
+
+  if (finalLongSide > 2400) {
+    const finalScale = 2400 / finalLongSide;
+    finalWidth = Math.round(targetWidth * finalScale);
+    finalHeight = Math.round(targetHeight * finalScale);
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = finalWidth;
+  canvas.height = finalHeight;
+  const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Não foi possível criar o contexto do canvas');
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   ctx.drawImage(
     image,
@@ -62,53 +72,14 @@ export async function getCroppedImgBlob(
     pixelCrop.height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
+    finalWidth,
+    finalHeight
   );
 
-  // Passo 2: Ampliação iterativa (max 2x por passo) para melhor qualidade
-  while (currentWidth < targetWidth || currentHeight < targetHeight) {
-    const stepScale = Math.min(2, targetWidth / currentWidth);
-    const nextWidth = Math.min(targetWidth, Math.round(currentWidth * stepScale));
-    const nextHeight = Math.min(targetHeight, Math.round(currentHeight * stepScale));
-
-    const nextCanvas = document.createElement('canvas');
-    nextCanvas.width = nextWidth;
-    nextCanvas.height = nextHeight;
-    const nextCtx = nextCanvas.getContext('2d');
-    if (!nextCtx) break;
-
-    nextCtx.imageSmoothingEnabled = true;
-    nextCtx.imageSmoothingQuality = 'high';
-    
-    nextCtx.drawImage(
-      canvas,
-      0, 0, currentWidth, currentHeight,
-      0, 0, nextWidth, nextHeight
-    );
-
-    canvas = nextCanvas;
-    currentWidth = nextWidth;
-    currentHeight = nextHeight;
-  }
-
-  // Tenta exportar em PNG (Lossless)
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error('Falha ao gerar o blob da imagem'));
-        return;
-      }
-
-      // Se o PNG for muito grande (> 9MB), usa JPEG qualidade máxima
-      if (blob.size > 9 * 1024 * 1024) {
-        canvas.toBlob((jpgBlob) => {
-          if (jpgBlob) resolve(jpgBlob);
-          else reject(new Error('Falha ao gerar JPEG de fallback'));
-        }, 'image/jpeg', 1.0);
-      } else {
-        resolve(blob);
-      }
-    }, 'image/png');
+      if (blob) resolve(blob);
+      else reject(new Error('Falha ao gerar o blob da imagem'));
+    }, 'image/jpeg', 0.98);
   });
 }

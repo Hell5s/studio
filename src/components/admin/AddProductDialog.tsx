@@ -199,14 +199,15 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }
   }, [open, product?.id, showcases]); 
 
-  const uploadToCloudinary = async (file: File) => {
+  const uploadToCloudinary = async (file: File, signal?: AbortSignal) => {
     const data = new FormData();
     data.append('file', file);
     data.append('upload_preset', 'todabela_upload');
     
     const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
       method: 'POST',
-      body: data
+      body: data,
+      signal
     });
 
     if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
@@ -394,18 +395,28 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   };
 
   const handleSaveCrop = async () => {
-    if (!editingImage || !croppedAreaPixels) return;
+    if (!editingImage || !croppedAreaPixels || savingCrop) return;
+    
     setSavingCrop(true);
+    // Aguarda um quadro para a UI mostrar "Salvando..." antes do processamento pesado
+    await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout de rede
+
     try {
       const { index, field } = editingImage;
       const imgObj = field === 'image' ? formData.image : formData.gallery[index];
       const sourceUrl = getOriginalUrl(imgObj);
       const originalUrl = typeof imgObj === 'string' ? imgObj : (imgObj?.originalUrl || imgObj?.url);
       
+      // Geração do recorte (processamento local)
       const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
-      const fileName = blob.type === 'image/png' ? 'cropped.png' : 'cropped.jpg';
-      const file = new File([blob], fileName, { type: blob.type });
-      const newUrl = await uploadToCloudinary(file);
+      const fileName = 'cropped.jpg';
+      const file = new File([blob], fileName, { type: 'image/jpeg' });
+      
+      // Upload para Cloudinary com sinal de cancelamento
+      const newUrl = await uploadToCloudinary(file, controller.signal);
 
       const updatedImageData = { url: newUrl, originalUrl, crop, zoom };
 
@@ -420,13 +431,18 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       }
       setEditingImage(null);
     } catch (err: any) {
-      console.error("Erro ao salvar recorte:", err);
+      console.error("Erro completo ao salvar recorte:", err);
+      let msg = err.message || "Tente novamente mais tarde.";
+      if (err.name === 'AbortError') {
+        msg = "Tempo esgotado ao enviar a foto. Tente novamente.";
+      }
       toast({ 
         title: "Erro ao salvar recorte", 
-        description: err.message || "Tente novamente mais tarde.",
+        description: msg,
         variant: "destructive" 
       });
     } finally {
+      clearTimeout(timeoutId);
       setSavingCrop(false);
     }
   };
@@ -544,15 +560,15 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     }
   };
 
-  const handleDragStart = (e: React.DragEvent, index: number) => {
+  const handleDragStartItem = (e: React.DragEvent, index: number) => {
     e.dataTransfer.setData('draggedIndex', index.toString());
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOverItem = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+  const handleDropItem = (e: React.DragEvent, targetIndex: number) => {
     const draggedIndex = parseInt(e.dataTransfer.getData('draggedIndex'));
     if (draggedIndex === targetIndex || isNaN(draggedIndex)) return;
 
@@ -727,9 +743,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                      <div 
                       key={idx} 
                       draggable
-                      onDragStart={(e) => handleDragStart(e, idx)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, idx)}
+                      onDragStart={(e) => handleDragStartItem(e, idx)}
+                      onDragOver={handleDragOverItem}
+                      onDrop={(e) => handleDropItem(e, idx)}
                       className="relative aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 group shadow-sm cursor-move active:scale-95 transition-transform"
                      >
                         <img src={getImageUrl(img)} className="w-full h-full object-cover pointer-events-none" alt="Gallery" />
@@ -940,7 +956,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       </Dialog>
 
       {/* Crop Editor */}
-      <Dialog open={!!editingImage} onOpenChange={(o) => !o && setEditingImage(null)}>
+      <Dialog open={!!editingImage} onOpenChange={(o) => !o && !savingCrop && setEditingImage(null)}>
         <DialogContent className="max-w-6xl p-0 overflow-hidden bg-black border-none rounded-[2rem]">
           <DialogTitle className="sr-only">Editar Enquadramento da Foto</DialogTitle>
           <div className="relative h-[85vh] w-full">
@@ -1011,9 +1027,14 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               </div>
             </div>
             <div className="flex gap-4">
-              <Button variant="ghost" onClick={() => setEditingImage(null)} className="text-white uppercase text-[10px] font-bold">Cancelar</Button>
-              <Button onClick={handleSaveCrop} disabled={savingCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full">
-                {savingCrop ? 'Salvando...' : 'Salvar Enquadramento'}
+              <Button variant="ghost" onClick={() => !savingCrop && setEditingImage(null)} className="text-white uppercase text-[10px] font-bold" disabled={savingCrop}>Cancelar</Button>
+              <Button onClick={handleSaveCrop} disabled={savingCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full min-w-[200px]">
+                {savingCrop ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Salvando...</span>
+                  </div>
+                ) : 'Salvar Enquadramento'}
               </Button>
             </div>
           </div>
