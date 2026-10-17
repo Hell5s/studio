@@ -92,7 +92,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
   useEffect(() => {
     if (product) {
-      const allSizes = Array.isArray(initialData.sizes) ? initialData.sizes : (initialData.sizes?.split(',').map((s:string) => s.trim()) || []);
+      const allSizes = Array.isArray(product.sizes) ? product.sizes : (product.sizes?.split(',').map((s:string) => s.trim()) || []);
       const fixed = allSizes.filter((s:any) => fixedList.includes(s));
       const custom = allSizes.filter((s:any) => !fixedList.includes(s));
 
@@ -337,7 +337,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
             <div className="grid gap-4">
               <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Package className="h-3 w-3" /> Identidade</Label>
               <div className="space-y-2">
-                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Nome do Produto" />
+                <Input value={formData.name} onChange={handleNameChange} placeholder="Nome do Produto" />
                 <div className="relative">
                   <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input value={formData.sourceUrl} onChange={e => setFormData({...formData, sourceUrl: e.target.value})} placeholder="Link do Produto (Fornecedor)" className="pl-9 h-10 text-xs" />
