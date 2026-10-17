@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -17,7 +18,9 @@ import {
   Copy,
   CheckCircle2,
   Clock,
-  X
+  X,
+  Tag,
+  Ticket
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +53,12 @@ function CheckoutContent() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isBrickReady, setIsBrickReady] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+
+  // Estados de Cupom
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   const shippingSettingsRef = useMemoFirebase(() => doc(db, 'settings', 'shipping'), [db]);
   const { data: shippingSettings } = useDoc(shippingSettingsRef);
@@ -87,6 +96,8 @@ function CheckoutContent() {
     return sessionItems.reduce((acc, it) => acc + ((it.price || 0) * (it.quantity || 1)), 0);
   }, [sessionItems]);
 
+  const discount = appliedCoupon?.discount || 0;
+
   // Atualização dinâmica do preço de frete baseado na seleção e estado
   useEffect(() => {
     if (shippingSettings?.options && entrega.state) {
@@ -97,11 +108,42 @@ function CheckoutContent() {
       if (opt) {
         setSelectedShippingId(opt.id);
         const basePrice = isSouthSoutheast ? opt.priceSoutheastSouth : opt.priceOtherRegions;
+        // Limite de frete grátis continua comparando com o SUBTOTAL (antes do desconto)
         const finalPrice = subtotal >= (shippingSettings.freeShippingThreshold || 250) ? 0 : basePrice;
         setShippingPrice(finalPrice);
       }
     }
   }, [entrega.state, shippingSettings, subtotal, selectedShippingId]);
+
+  // Re-validar cupom se o subtotal mudar
+  useEffect(() => {
+    if (appliedCoupon && subtotal > 0) {
+      const revalidate = async () => {
+        try {
+          const res = await fetch('/api/cupons/validar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: appliedCoupon.code, subtotal })
+          });
+          const data = await res.json();
+          if (!data.valid) {
+            setAppliedCoupon(null);
+            toast({ 
+              title: "Cupom removido", 
+              description: data.message || "As condições do pedido mudaram e o cupom não é mais válido.",
+              variant: "destructive"
+            });
+          } else {
+            // Atualiza apenas o valor do desconto calculado
+            setAppliedCoupon(data);
+          }
+        } catch (e) {
+          console.error("Erro ao revalidar cupom");
+        }
+      };
+      revalidate();
+    }
+  }, [subtotal]);
 
   // Polling para verificar pagamento PIX conforme solicitado
   useEffect(() => {
@@ -196,7 +238,9 @@ function CheckoutContent() {
     }
   };
 
-  const totalGeral = Number((subtotal + shippingPrice).toFixed(2));
+  const totalGeral = Number((subtotal - discount + shippingPrice).toFixed(2)) > 0 
+    ? Number((subtotal - discount + shippingPrice).toFixed(2)) 
+    : 0;
 
   const handleGoogleAuth = async () => {
     if (authLoading) return;
@@ -255,6 +299,31 @@ function CheckoutContent() {
       toast({ title: "Erro", description: errorMsg, variant: "destructive" });
     } finally {
       setAuthLoading(false);
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await fetch('/api/cupons/validar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponInput, subtotal })
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setAppliedCoupon(data);
+        setCouponInput('');
+        toast({ title: "Cupom aplicado!" });
+      } else {
+        setCouponError(data.message || 'Cupom inválido.');
+      }
+    } catch (e) {
+      setCouponError('Erro ao validar cupom.');
+    } finally {
+      setCouponLoading(false);
     }
   };
 
@@ -333,6 +402,9 @@ function CheckoutContent() {
           price: shippingPrice,
           days: selectedOpt?.days || ''
         },
+        couponCode: appliedCoupon?.code || null,
+        couponDiscount: discount,
+        coupon: appliedCoupon ? { ...appliedCoupon } : null,
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp()
       };
@@ -819,7 +891,7 @@ function CheckoutContent() {
                 <div className="flex items-start gap-3 bg-accent/5 border border-accent/15 rounded-2xl p-4 mb-6">
                   <Package className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
                   <p className="text-[11px] text-primary/70 leading-relaxed">
-                    Seu pedido tem mais de um product. Como trabalhamos com fornecedores parceiros, cada peça pode ser enviada separadamente e chegar em dias diferentes — fique tranquila, é normal!
+                    Seu pedido tem mais de um produto. Como trabalhamos com fornecedores parceiros, cada peça pode ser enviada separadamente e chegar em dias diferentes — fique tranquila, é normal!
                   </p>
                 </div>
               )}
@@ -985,9 +1057,64 @@ function CheckoutContent() {
                     );
                   })}
                </div>
+
+               {/* Seção de Cupom */}
+               <div className="pt-4 border-t border-primary/5 space-y-3">
+                  <div className="flex items-center gap-2 text-accent">
+                     <Tag className="h-3 w-3" />
+                     <span className="text-[10px] font-bold uppercase tracking-widest">Cupom de Desconto</span>
+                  </div>
+                  
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between bg-emerald-50 p-3 rounded-xl border border-emerald-100 animate-in zoom-in-95">
+                       <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tight">CUPOM {appliedCoupon.code}</span>
+                       </div>
+                       <button 
+                        onClick={() => setAppliedCoupon(null)}
+                        className="text-[9px] font-bold uppercase text-primary/40 hover:text-primary transition-colors flex items-center gap-1"
+                       >
+                         Remover <X className="h-3 w-3" />
+                       </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input 
+                          value={couponInput}
+                          onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                          placeholder="CÓDIGO"
+                          className="h-10 text-[11px] font-bold uppercase tracking-widest border-primary/10 rounded-xl bg-secondary/10"
+                        />
+                        <Button 
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading || !couponInput.trim()}
+                          variant="outline"
+                          className="h-10 px-4 rounded-xl border-primary text-primary font-bold uppercase text-[9px] tracking-widest hover:bg-primary hover:text-white transition-all"
+                        >
+                          {couponLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'APLICAR'}
+                        </Button>
+                      </div>
+                      {couponError && (
+                        <p className="text-[9px] text-red-500 font-bold uppercase tracking-tighter ml-1">{couponError}</p>
+                      )}
+                    </div>
+                  )}
+               </div>
+
                <div className="space-y-2.5 pt-4 border-t border-primary/5 w-full">
                   <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+                  
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-[11px] text-emerald-600 uppercase font-black tracking-tight animate-in slide-in-from-top-2">
+                      <span>Desconto ({appliedCoupon.code})</span>
+                      <span>- {formatPrice(discount)}</span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Envio Especial</span><span>{shippingPrice === 0 ? 'Grátis' : formatPrice(shippingPrice)}</span></div>
+                  
                   <div className="flex justify-between items-end pt-4">
                     <span className="text-xs font-black uppercase text-primary tracking-tighter shrink-0">Total</span>
                     <div className="text-right min-w-0">

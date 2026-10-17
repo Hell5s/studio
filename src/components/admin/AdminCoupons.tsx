@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Tag, Plus, Trash2, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Tag, Plus, Trash2, CheckCircle2, XCircle, Loader2, Calendar, DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,9 @@ export function AdminCoupons() {
   const [formData, setFormData] = useState({
     code: '',
     value: '',
-    type: 'percentage'
+    type: 'percentage',
+    minOrder: '',
+    expiresAt: ''
   });
 
   const q = useMemoFirebase(() => query(collection(db, 'coupons'), orderBy('code', 'asc')), [db]);
@@ -31,13 +33,16 @@ export function AdminCoupons() {
       return;
     }
     addDocumentNonBlocking(collection(db, 'coupons'), {
-      ...formData,
+      code: formData.code.trim().toUpperCase(),
       value: parseFloat(formData.value),
+      type: formData.type,
+      minOrder: formData.minOrder ? parseFloat(formData.minOrder) : null,
+      expiresAt: formData.expiresAt || null,
       active: true,
       usedCount: 0,
       createdAt: new Date().toISOString()
     });
-    setFormData({ code: '', value: '', type: 'percentage' });
+    setFormData({ code: '', value: '', type: 'percentage', minOrder: '', expiresAt: '' });
     toast({ title: "Cupom gerado!" });
   };
 
@@ -56,6 +61,12 @@ export function AdminCoupons() {
     }
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col gap-2">
@@ -63,44 +74,75 @@ export function AdminCoupons() {
         <p className="text-sm text-muted-foreground italic font-light">Gerencie ofertas especiais para fidelizar suas clientes.</p>
       </div>
 
-      <Card className="p-10 border-none shadow-2xl bg-white rounded-[3rem] grid md:grid-cols-4 gap-8 items-end relative overflow-hidden">
+      <Card className="p-10 border-none shadow-2xl bg-white rounded-[3rem] space-y-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-10 opacity-[0.03]"><Tag className="h-32 w-32" /></div>
-        <div className="space-y-3 relative z-10">
-          <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Código</label>
-          <Input 
-            placeholder="EX: BELA10" 
-            className="h-14 rounded-full px-6 bg-secondary/20 border-none uppercase font-bold"
-            value={formData.code} 
-            onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} 
-          />
+        
+        <div className="grid md:grid-cols-3 gap-8 relative z-10">
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Código</label>
+            <Input 
+              placeholder="EX: BELA10" 
+              className="h-14 rounded-full px-6 bg-secondary/20 border-none uppercase font-bold"
+              value={formData.code} 
+              onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} 
+            />
+          </div>
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Valor</label>
+            <Input 
+              type="number" 
+              placeholder="10" 
+              className="h-14 rounded-full px-6 bg-secondary/20 border-none"
+              value={formData.value} 
+              onChange={e => setFormData({...formData, value: e.target.value})} 
+            />
+          </div>
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Tipo de Desconto</label>
+            <select 
+              value={formData.type} 
+              onChange={e => setFormData({...formData, type: e.target.value})}
+              className="w-full h-14 rounded-full border-none bg-secondary/20 px-6 text-sm font-bold text-primary outline-none"
+            >
+              <option value="percentage">% Porcentagem</option>
+              <option value="fixed">R$ Fixo</option>
+            </select>
+          </div>
         </div>
-        <div className="space-y-3 relative z-10">
-          <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Valor</label>
-          <Input 
-            type="number" 
-            placeholder="10" 
-            className="h-14 rounded-full px-6 bg-secondary/20 border-none"
-            value={formData.value} 
-            onChange={e => setFormData({...formData, value: e.target.value})} 
-          />
-        </div>
-        <div className="space-y-3 relative z-10">
-          <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Tipo de Desconto</label>
-          <select 
-            value={formData.type} 
-            onChange={e => setFormData({...formData, type: e.target.value})}
-            className="w-full h-14 rounded-full border-none bg-secondary/20 px-6 text-sm font-bold text-primary outline-none"
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10 items-end">
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Pedido mínimo (R$)</label>
+            <div className="relative">
+              <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
+              <Input 
+                type="number" 
+                placeholder="Opcional" 
+                className="h-14 rounded-full pl-11 pr-6 bg-secondary/20 border-none"
+                value={formData.minOrder} 
+                onChange={e => setFormData({...formData, minOrder: e.target.value})} 
+              />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-2">Válido até</label>
+            <div className="relative">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
+              <Input 
+                type="date" 
+                className="h-14 rounded-full pl-11 pr-6 bg-secondary/20 border-none text-xs"
+                value={formData.expiresAt} 
+                onChange={e => setFormData({...formData, expiresAt: e.target.value})} 
+              />
+            </div>
+          </div>
+          <Button 
+            onClick={handleAdd} 
+            className="h-14 rounded-full bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px]"
           >
-            <option value="percentage">% Porcentagem</option>
-            <option value="fixed">R$ Fixo</option>
-          </select>
+            <Plus className="mr-2 h-5 w-5" /> Ativar Cupom
+          </Button>
         </div>
-        <Button 
-          onClick={handleAdd} 
-          className="h-14 rounded-full bg-primary text-white shadow-xl hover:scale-105 transition-all font-bold uppercase tracking-widest text-[10px]"
-        >
-          <Plus className="mr-2 h-5 w-5" /> Ativar Cupom
-        </Button>
       </Card>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -127,7 +169,16 @@ export function AdminCoupons() {
               </div>
               <div className="space-y-2">
                  <h4 className="text-4xl font-headline font-bold text-primary">{c.type === 'percentage' ? `${c.value}%` : `R$ ${c.value}`}</h4>
-                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Utilizado {c.usedCount || 0} vezes</p>
+                 <div className="flex flex-col gap-1">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Utilizado {c.usedCount || 0} vezes</p>
+                    {(c.minOrder || c.expiresAt) && (
+                      <p className="text-[9px] text-accent font-bold uppercase tracking-widest">
+                        {c.minOrder && `Mín. R$ ${c.minOrder.toFixed(2)}`}
+                        {c.minOrder && c.expiresAt && ` · `}
+                        {c.expiresAt && `Até ${formatDate(c.expiresAt)}`}
+                      </p>
+                    )}
+                 </div>
               </div>
               <div className="mt-8 flex justify-between items-center md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <p className="text-[9px] text-accent font-bold uppercase tracking-[0.2em] italic">Elegância com benefício</p>
