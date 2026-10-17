@@ -7,15 +7,23 @@ if (getApps().length === 0) {
   initializeApp();
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+/**
+ * Helper para obter instância do Resend com a chave atualizada
+ */
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error("RESEND_API_KEY não configurada nas variáveis de ambiente.");
+    return null;
+  }
+  return new Resend(apiKey);
+}
 
 export const enviarEmailPosCompra = onDocumentCreated(
   "orders/{orderId}",
   async (event) => {
-    if (!process.env.RESEND_API_KEY) {
-      console.error("RESEND_API_KEY não configurada");
-      return;
-    }
+    const resend = getResendClient();
+    if (!resend) return;
 
     const order = event.data?.data();
     const orderId = event.params.orderId;
@@ -25,9 +33,10 @@ export const enviarEmailPosCompra = onDocumentCreated(
     const email = order.customerEmail || order.customer?.email;
     const name = order.customerName || order.customer?.name;
     const items = order.items || [];
-    const total = order.total;
+    const total = typeof order.total === 'number' ? order.total : 0;
+    
     const address = order.customerAddress || {
-      street: order.customer?.address || '',
+      street: order.customer?.address || 'Endereço não informado',
       number: '',
       neighborhood: '',
       city: order.customer?.city || '',
@@ -35,20 +44,24 @@ export const enviarEmailPosCompra = onDocumentCreated(
       zipCode: order.customer?.zip || '',
     };
 
-    if (!email) return;
+    if (!email) {
+      console.warn(`Pedido ${orderId} sem e-mail de cliente.`);
+      return;
+    }
 
     const html = gerarEmailPosCompra({ orderId, customerName: name || 'Cliente', items, total, address });
 
     try {
+      // Nota: Se usar onboarding@resend.dev, o Resend só envia para o e-mail do dono da conta.
       await resend.emails.send({
         from: "Toda Bela <onboarding@resend.dev>",
         to: email,
         subject: `✨ Pedido confirmado! Obrigada, ${(name || 'cliente').split(" ")[0]} 💛`,
         html,
       });
-      console.log(`Email enviado para ${email}`);
+      console.log(`Email de confirmação enviado para ${email} (Pedido: ${orderId})`);
     } catch (error) {
-      console.error("Erro ao enviar email:", error);
+      console.error("Erro ao enviar email pos-compra:", error);
     }
   }
 );
@@ -56,10 +69,8 @@ export const enviarEmailPosCompra = onDocumentCreated(
 export const enviarEmailRastreio = onDocumentUpdated(
   "orders/{orderId}",
   async (event) => {
-    if (!process.env.RESEND_API_KEY) {
-      console.error("RESEND_API_KEY não configurada");
-      return;
-    }
+    const resend = getResendClient();
+    if (!resend) return;
 
     const after = event.data?.after.data();
     if (!after) return;
