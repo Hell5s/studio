@@ -58,6 +58,10 @@ export async function POST(request: Request) {
         const db = await getAdminDb();
         const orderRef = db.collection('orders').doc(orderId);
 
+        // 1. Leia o pedido antes da atualização para verificar notificações prévias
+        const orderSnap = await orderRef.get();
+        const prev = orderSnap.exists ? orderSnap.data() : null;
+
         let newStatus = 'pending';
         if (status === 'approved') newStatus = 'paid';
         if (status === 'rejected' || status === 'cancelled') newStatus = 'canceled';
@@ -72,6 +76,53 @@ export async function POST(request: Request) {
         });
 
         console.log('Pedido atualizado no Firestore:', { orderId, newStatus });
+
+        // 2. Enviar aviso pelo Telegram se for PAGO e não notificado ainda
+        if (newStatus === 'paid' && prev && prev.paidNotified !== true) {
+          const botToken = process.env.TELEGRAM_BOT_TOKEN;
+          const chatId = process.env.TELEGRAM_CHAT_ID;
+
+          if (botToken && chatId) {
+            try {
+              const shortId = orderId.substring(0, 6).toUpperCase();
+              const customerName = prev.customer?.name || 'Cliente';
+              const totalFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prev.total || 0);
+              
+              let msg = `💰 Nova venda!\n`;
+              msg += `Pedido #${shortId}\n`;
+              msg += `${customerName} — ${totalFormatted}\n`;
+              
+              prev.items?.forEach((item: any) => {
+                const specs = [item.selectedSize, item.selectedColor].filter(Boolean).join(', ');
+                msg += `${item.quantity}x ${item.name}${specs ? ` (${specs})` : ''}\n`;
+              });
+
+              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://studio-mocha-sigma-26.vercel.app';
+              msg += `\nVer no painel: ${siteUrl}/?admin=true`;
+
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+              await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  chat_id: chatId,
+                  text: msg
+                }),
+                signal: controller.signal
+              });
+
+              clearTimeout(timeoutId);
+              
+              // Marca como notificado para evitar duplicidade
+              await orderRef.update({ paidNotified: true });
+              console.log('Notificação Telegram enviada com sucesso');
+            } catch (telErr) {
+              console.error('Erro ao enviar notificação para o Telegram:', telErr);
+            }
+          }
+        }
       }
     }
 
