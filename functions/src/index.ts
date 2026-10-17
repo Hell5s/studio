@@ -19,53 +19,74 @@ function getResendClient() {
   return new Resend(apiKey);
 }
 
-export const enviarEmailPosCompra = onDocumentCreated(
+/**
+ * Função disparada quando o status do pedido muda para 'paid'
+ */
+export const enviarEmailPosCompra = onDocumentUpdated(
   "orders/{orderId}",
   async (event) => {
     const resend = getResendClient();
     if (!resend) return;
 
-    const order = event.data?.data();
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
     const orderId = event.params.orderId;
 
-    if (!order) return;
+    if (!before || !after) return;
 
-    const email = order.customerEmail || order.customer?.email;
-    const name = order.customerName || order.customer?.name;
-    const items = order.items || [];
-    const total = typeof order.total === 'number' ? order.total : 0;
-    
-    const address = order.customerAddress || {
-      street: order.customer?.address || 'Endereço não informado',
-      number: '',
-      neighborhood: '',
-      city: order.customer?.city || '',
-      state: order.customer?.state || '',
-      zipCode: order.customer?.zip || '',
-    };
+    // Detectar transição para 'paid' (pago)
+    // Suporta 'paid' (padrão) ou 'Pago' (legado/frontend manual)
+    const isPaid = after.status === 'paid' || after.status === 'Pago';
+    const wasPaid = before.status === 'paid' || before.status === 'Pago';
 
-    if (!email) {
-      console.warn(`Pedido ${orderId} sem e-mail de cliente.`);
-      return;
-    }
+    // Só envia se acabou de ser pago e ainda não enviamos o e-mail de confirmação
+    if (isPaid && !wasPaid && !after.confirmationEmailSent) {
+      const email = after.customerEmail || after.customer?.email;
+      const name = after.customerName || after.customer?.name;
+      const items = after.items || [];
+      const total = typeof after.total === 'number' ? after.total : 0;
+      
+      const address = after.customerAddress || {
+        street: after.customer?.address || 'Endereço não informado',
+        number: '',
+        neighborhood: '',
+        city: after.customer?.city || '',
+        state: after.customer?.state || '',
+        zipCode: after.customer?.zip || '',
+      };
 
-    const html = gerarEmailPosCompra({ orderId, customerName: name || 'Cliente', items, total, address });
+      if (!email) {
+        console.warn(`Pedido ${orderId} sem e-mail de cliente.`);
+        return;
+      }
 
-    try {
-      // Nota: Se usar onboarding@resend.dev, o Resend só envia para o e-mail do dono da conta.
-      await resend.emails.send({
-        from: "Toda Bela <onboarding@resend.dev>",
-        to: email,
-        subject: `✨ Pedido confirmado! Obrigada, ${(name || 'cliente').split(" ")[0]} 💛`,
-        html,
-      });
-      console.log(`Email de confirmação enviado para ${email} (Pedido: ${orderId})`);
-    } catch (error) {
-      console.error("Erro ao enviar email pos-compra:", error);
+      const html = gerarEmailPosCompra({ orderId, customerName: name || 'Cliente', items, total, address });
+
+      try {
+        await resend.emails.send({
+          from: "Toda Bela <onboarding@resend.dev>",
+          to: email,
+          subject: `✨ Pedido confirmado! Obrigada, ${(name || 'cliente').split(" ")[0]} 💛`,
+          html,
+        });
+
+        // Marca como enviado no Firestore para evitar duplicidade
+        await event.data?.after.ref.update({
+          confirmationEmailSent: true,
+          confirmationEmailSentAt: new Date(),
+        });
+
+        console.log(`Email de confirmação enviado para ${email} (Pedido: ${orderId})`);
+      } catch (error) {
+        console.error("Erro ao enviar email pos-compra:", error);
+      }
     }
   }
 );
 
+/**
+ * Função disparada quando o status do pedido muda para 'shipped' (Enviado)
+ */
 export const enviarEmailRastreio = onDocumentUpdated(
   "orders/{orderId}",
   async (event) => {
@@ -76,7 +97,7 @@ export const enviarEmailRastreio = onDocumentUpdated(
     if (!after) return;
 
     // Só processa se o status for 'shipped' (Enviado)
-    if (after.status !== 'shipped') return;
+    if (after.status !== 'shipped' && after.status !== 'Enviado') return;
 
     // Filtra itens que possuem código de rastreio
     const itemsWithTracking = (after.items || []).filter((item: any) => item.trackingCode && String(item.trackingCode).trim() !== "");
