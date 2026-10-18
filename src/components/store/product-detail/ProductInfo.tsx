@@ -1,10 +1,9 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Share2, Star, Minus, Plus, ShoppingBag, Camera, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { useFirestore, useUser, useDoc } from '@/firebase';
@@ -352,21 +351,20 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
       </div>
 
       <div className="space-y-4 pt-4">
-        <Button
+        <button
           onClick={handleBuyNowClick}
           className="w-full h-14 md:h-16 text-[12px] md:text-[14px] font-bold uppercase tracking-[0.3em] bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-500 rounded-none shadow-2xl min-h-[54px]"
         >
           COMPRAR AGORA
-        </Button>
+        </button>
         
-        <Button
-          variant="outline"
+        <button
           onClick={handleAddToCartClick}
-          className="w-full h-12 md:h-14 text-[10px] md:text-[12px] font-bold uppercase tracking-[0.2em] border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-3 min-h-[44px]"
+          className="w-full h-12 md:h-14 flex items-center justify-center text-[10px] md:text-[12px] font-bold uppercase tracking-[0.2em] border border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-3 min-h-[44px]"
         >
           <ShoppingBag className="h-4 w-4" />
           ADICIONAR AO MEU CARRINHO
-        </Button>
+        </button>
       </div>
 
       <div className="border-t border-primary/5 pt-4">
