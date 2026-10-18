@@ -10,27 +10,30 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-// Helper function to optimize Cloudinary URLs based on device and media type
-const getOptimizedUrl = (url: string, type: 'image' | 'video', isMobile: boolean, isPoster = false) => {
+// Helper function to build optimized Cloudinary URLs for banners
+const buildBannerUrl = (url: string, isMobile: boolean, zoom: number, type: 'image' | 'video' = 'image', isPoster = false) => {
   if (!url || !url.includes('cloudinary.com')) return url;
-  
+
   let params = '';
-  
-  if (isPoster) {
-    // Poster: Always 1920px for sharpness as it loads instantly
-    params = `so_0,f_auto,q_auto:best,w_1920,c_limit`;
-    return url.replace('/upload/', `/upload/${params}/`).replace(/\.[^/.]+$/, ".jpg");
+
+  if (type === 'image' || isPoster) {
+    // Image logic: calculate width based on device and zoom
+    const width = isMobile 
+      ? 2800 
+      : Math.min(4096, Math.round(2880 * (zoom ? zoom / 100 : 1)));
+    
+    params = `f_auto,q_auto:best,w_${width},c_limit,e_sharpen:30`;
+    
+    if (isPoster) {
+      params = `so_0,${params}`;
+      return url.replace('/upload/', `/upload/${params}/`).replace(/\.[^/.]+$/, ".jpg");
+    }
+  } else {
+    // Video logic: higher resolution for desktop, optimized for mobile
+    const width = isMobile ? 1920 : 2560;
+    params = `f_auto,q_auto:best,vc_auto,w_${width},c_limit`;
   }
 
-  if (type === 'image') {
-    // Image: 2400px mobile (to handle tall crops), 1920px desktop
-    const width = isMobile ? '2400' : '1920';
-    params = `f_auto,q_auto:best,w_${width},c_limit`;
-  } else {
-    // Video: Always 1920px with best quality
-    params = `f_auto,q_auto:best,vc_auto,w_1920,c_limit`;
-  }
-  
   return url.replace('/upload/', `/upload/${params}/`);
 };
 
@@ -47,8 +50,9 @@ const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onSho
     }
   }, [isActive]);
 
-  const optimizedUrl = getOptimizedUrl(banner.imageUrl, 'image', isMobile);
-  const optimizedVideoUrl = getOptimizedUrl(banner.imageUrl, 'video', isMobile);
+  const optimizedUrl = buildBannerUrl(banner.imageUrl, isMobile, banner.imageZoom || 100, 'image');
+  const optimizedVideoUrl = buildBannerUrl(banner.imageUrl, isMobile, 100, 'video');
+  const posterUrl = buildBannerUrl(banner.imageUrl, isMobile, banner.imageZoom || 100, 'image', true);
 
   const activePosition = isMobile 
     ? (banner.mobileImagePosition || banner.imagePosition || { x: 50, y: 50 })
@@ -70,7 +74,7 @@ const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onSho
               loop
               playsInline
               preload="metadata"
-              poster={getOptimizedUrl(banner.imageUrl, 'video', isMobile, true)}
+              poster={posterUrl}
               className="absolute inset-0 w-full h-full object-cover"
               style={{
                 objectPosition: `${activePosition.x}% ${activePosition.y}%`,
@@ -219,7 +223,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
       [selectedIndex, nextIndex].forEach(idx => {
         const banner = displayBanners[idx];
         if (banner && banner.mediaType !== 'video') {
-          const url = getOptimizedUrl(banner.imageUrl, 'image', isMobile);
+          const url = buildBannerUrl(banner.imageUrl, isMobile, banner.imageZoom || 100, 'image');
           const img = new window.Image();
           img.src = url;
           img.decode().catch(() => {});
@@ -233,10 +237,10 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
     if (displayBanners.length > 0) {
       const first = displayBanners[0];
       if (first.mediaType !== 'video') {
-        const url = getOptimizedUrl(first.imageUrl, 'image', isMobile);
+        const url = buildBannerUrl(first.imageUrl, isMobile, first.imageZoom || 100, 'image');
         if (url && url.includes('cloudinary.com')) {
           try {
-            preload(url, { as: 'image', fetchPriority: 'high' });
+            preload(url, { as: 'image', fetchPriority: 'high' } as any);
           } catch (e) {}
         }
       }
