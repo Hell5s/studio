@@ -45,6 +45,8 @@ import Cropper from 'react-easy-crop';
 import { Badge } from '@/components/ui/badge';
 import { getCroppedImgBlob } from '@/lib/cropImage';
 
+const DEFAULT_ZOOM = 1.1;
+
 // Pool de data para avaliações demonstrativas
 const DEMO_REVIEWS_POOL = {
   names: ["VALENTINA S.", "HELENA M.", "BEATRIZ R.", "ISABELA F.", "CAMILA G.", "LARISSA P.", "JULIANA B.", "MARIA CLARA T.", "SOPHIA V.", "ALICE L.", "GIOVANNA C.", "MANUELA D.", "LÍVIA H.", "LORENA K.", "MAYA P."],
@@ -99,8 +101,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   // Editor de Recorte
   const [editingImage, setEditingImage] = useState<{ index: number, field: 'gallery' | 'image' } | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [imageAspect, setImageAspect] = useState(1);
+  const [mediaSize, setMediaSize] = useState<{ width: number, height: number } | null>(null);
 
   const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
 
@@ -379,27 +382,20 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     return url;
   };
 
-  const getSavedInitialZoom = () => {
-    try {
-      const saved = localStorage.getItem('toda-bela:zoom-inicial');
-      return saved ? parseFloat(saved) : 1;
-    } catch (e) {
-      return 1;
-    }
-  };
-
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
     const img = field === 'image' ? formData.image : formData.gallery[index];
     const source = getOriginalUrl(img);
     setEditingImage({ index, field });
     
-    // Carrega estados persistidos ou padrão global
-    setZoom(img?.zoom !== undefined ? img.zoom : getSavedInitialZoom());
-    setCrop(img?.crop || { x: 0, y: 0 });
+    setZoom(img?.zoom ?? DEFAULT_ZOOM);
+    setCrop(img?.crop ?? { x: 0, y: 0 });
     
     setCroppedAreaPixels(null);
     const tempImg = new window.Image();
-    tempImg.onload = () => setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
+    tempImg.onload = () => {
+      setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
+      setMediaSize({ width: tempImg.naturalWidth, height: tempImg.naturalHeight });
+    };
     tempImg.src = source;
   };
 
@@ -407,11 +403,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     if (!editingImage || !croppedAreaPixels || savingCrop) return;
     
     setSavingCrop(true);
-    // Aguarda um quadro para a UI mostrar "Salvando..." antes do processamento pesado
     await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout de rede
+    const timeoutId = setTimeout(() => controller.abort(), 60000); 
 
     try {
       const { index, field } = editingImage;
@@ -419,12 +414,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       const sourceUrl = getOriginalUrl(imgObj);
       const originalUrl = typeof imgObj === 'string' ? imgObj : (imgObj?.originalUrl || imgObj?.url);
       
-      // Geração do recorte (processamento local)
       const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
       const fileName = 'cropped.jpg';
       const file = new File([blob], fileName, { type: 'image/jpeg' });
       
-      // Upload para Cloudinary com sinal de cancelamento
       const newUrl = await uploadToCloudinary(file, controller.signal);
 
       const updatedImageData = { url: newUrl, originalUrl, crop, zoom };
@@ -608,6 +601,21 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const profit = priceNum - costNum;
   const margin = costNum > 0 ? (profit / costNum) * 100 : 0;
   const marginColor = margin > 50 ? "text-green-600" : margin > 20 ? "text-yellow-600" : "text-red-600";
+
+  // Cálculo da resolução da parte REAL (interseção)
+  const realResolution = useMemo(() => {
+    if (!croppedAreaPixels || !mediaSize) return null;
+    const pixels = croppedAreaPixels;
+    const img = mediaSize;
+
+    const realX = Math.max(0, pixels.x);
+    const realY = Math.max(0, pixels.y);
+    const realW = Math.max(0, Math.min(img.width, pixels.x + pixels.width) - realX);
+    const realH = Math.max(0, Math.min(img.height, pixels.y + pixels.height) - realY);
+
+    if (!Number.isFinite(realW) || !Number.isFinite(realH)) return null;
+    return { width: Math.round(realW), height: Math.round(realH) };
+  }, [croppedAreaPixels, mediaSize]);
 
   return (
     <>
@@ -986,7 +994,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               }}
               showGrid={false}
               cropShape="rect"
-              minZoom={0.8}
+              minZoom={0.5}
               maxZoom={3}
               restrictPosition={false}
               style={{
@@ -1008,14 +1016,14 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           </div>
           <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
             <div className="flex-1 flex flex-col gap-4">
-              {croppedAreaPixels ? (
+              {realResolution ? (
                 <p className={cn(
                   "text-[10px] font-bold uppercase tracking-wider",
-                  croppedAreaPixels.height >= 1200 ? "text-green-500" :
-                  croppedAreaPixels.height >= 800 ? "text-yellow-500" : "text-red-500"
+                  realResolution.height >= 1200 ? "text-green-500" :
+                  realResolution.height >= 800 ? "text-yellow-500" : "text-red-500"
                 )}>
-                  Resolução do recorte: {Number.isFinite(croppedAreaPixels.width) ? Math.round(croppedAreaPixels.width) : '...'} × {Number.isFinite(croppedAreaPixels.height) ? Math.round(croppedAreaPixels.height) : '...'} px
-                  {Number.isFinite(croppedAreaPixels.height) && croppedAreaPixels.height < 800 && (
+                  Resolução do recorte: {realResolution.width} × {realResolution.height} px
+                  {realResolution.height < 800 && (
                     <span className="block mt-1 normal-case italic opacity-80">
                       Qualidade baixa: use menos zoom ou uma foto de maior resolução
                     </span>
@@ -1025,10 +1033,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
               )}
               <div className="flex items-center gap-4">
-                <button onClick={() => setZoom(z => Math.max(0.8, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+                <button onClick={() => setZoom(z => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
                 <input 
                   type="range" 
-                  min={0.8} 
+                  min={0.5} 
                   max={3} 
                   step={0.01} 
                   value={zoom} 
@@ -1041,23 +1049,21 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
             <div className="flex gap-4 items-center">
               <button 
                 onClick={() => {
-                  try {
-                    localStorage.setItem('toda-bela:zoom-inicial', zoom.toString());
-                    toast({ title: "Zoom inicial salvo" });
-                  } catch (e) {}
+                  setZoom(DEFAULT_ZOOM);
+                  setCrop({ x: 0, y: 0 });
                 }}
                 className="text-[9px] font-bold uppercase text-accent/60 hover:text-accent transition-colors"
               >
-                Usar como zoom inicial
+                Zoom padrão
               </button>
               <button 
                 onClick={() => {
-                  setZoom(getSavedInitialZoom());
+                  setZoom(1);
                   setCrop({ x: 0, y: 0 });
                 }}
                 className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
               >
-                Restaurar
+                Foto inteira
               </button>
               <Button variant="ghost" onClick={() => !savingCrop && setEditingImage(null)} className="text-white uppercase text-[10px] font-bold" disabled={savingCrop}>Cancelar</Button>
               <Button onClick={handleSaveCrop} disabled={savingCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full min-w-[200px]">

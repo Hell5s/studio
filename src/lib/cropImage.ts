@@ -16,7 +16,7 @@ export interface PixelCrop {
 
 /**
  * Recorta uma imagem e aplica ampliação em uma única etapa se necessário.
- * Suporta áreas de recorte maiores que a imagem original (zoom < 1) preenchendo com fundo desfocado.
+ * Suporta áreas de recorte maiores que a imagem original (zoom < 1) preenchendo com fundo PRETO sólido.
  */
 export async function getCroppedImgBlob(
   imageSrc: string,
@@ -67,32 +67,9 @@ export async function getCroppedImgBlob(
                        (pixelCrop.y + pixelCrop.height) > image.height;
 
   if (isOutOfBounds) {
-    // Desenha fundo desfocado (cover logic)
-    const canvasAspect = targetWidth / targetHeight;
-    const imageAspect = image.width / image.height;
-    let renderW, renderH, renderX, renderY;
-    
-    if (imageAspect > canvasAspect) {
-      renderH = targetHeight;
-      renderW = targetHeight * imageAspect;
-      renderX = (targetWidth - renderW) / 2;
-      renderY = 0;
-    } else {
-      renderW = targetWidth;
-      renderH = targetWidth / imageAspect;
-      renderX = 0;
-      renderY = (targetHeight - renderH) / 2;
-    }
-    
-    // Cria versão minúscula para simular desfoque via upscaling (Safari friendly)
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = 32;
-    tempCanvas.height = Math.round(32 / imageAspect);
-    const tempCtx = tempCanvas.getContext('2d');
-    if (tempCtx) {
-      tempCtx.drawImage(image, 0, 0, tempCanvas.width, tempCanvas.height);
-      ctx.drawImage(tempCanvas, renderX, renderY, renderW, renderH);
-    }
+    // Preenche fundo com PRETO sólido
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
   }
 
   // Desenha a imagem real por cima na posição correta
