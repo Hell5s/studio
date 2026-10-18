@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -27,6 +28,7 @@ export default function ProductDetailPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [selectedVariation, setSelectedVariation] = useState<any>(null);
 
   const productRef = useMemo(() => {
     if (!db || !id) return null;
@@ -112,6 +114,7 @@ export default function ProductDetailPage() {
                 images={product.images || [product.image]} 
                 name={product.name} 
                 productId={product.id}
+                activeVariation={selectedVariation}
               />
             </div>
 
@@ -121,6 +124,7 @@ export default function ProductDetailPage() {
                 product={product} 
                 onAddToCart={addToCart} 
                 relatedProducts={relatedProducts} 
+                onColorSelect={setSelectedVariation}
               />
             </div>
           </div>

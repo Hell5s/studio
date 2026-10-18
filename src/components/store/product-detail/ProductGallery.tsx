@@ -1,11 +1,12 @@
+
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 import { Heart, Camera } from 'lucide-react';
 import cloudinaryLoader from '@/lib/cloudinaryLoader';
 
@@ -13,22 +14,59 @@ interface ProductGalleryProps {
   images: any[];
   name: string;
   productId: string;
+  activeVariation?: any;
 }
 
-export function ProductGallery({ images, name, productId }: ProductGalleryProps) {
+export function ProductGallery({ images, name, productId, activeVariation }: ProductGalleryProps) {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const galleryRef = useRef<HTMLDivElement>(null);
 
   const [errorImages, setErrorImages] = useState<Record<number, boolean>>({});
 
-  const favoriteRef = React.useMemo(() => {
+  const favoriteRef = useMemo(() => {
     if (!db || !user?.uid || !productId) return null;
     return doc(db, 'users', user.uid, 'favorites', productId);
   }, [db, user?.uid, productId]);
 
   const { data: favoriteData } = useDoc(favoriteRef);
   const isFavorited = !!favoriteData;
+
+  // Sincronização de galeria dinâmica
+  const displayImages = useMemo(() => {
+    // 1. Prioridade: Array de fotos específicas da variação
+    if (activeVariation?.images && activeVariation.images.length > 0) {
+      return activeVariation.images;
+    }
+
+    // 2. Fallback: Miniatura da variação + galeria original (sem duplicar)
+    if (activeVariation?.image) {
+      const mainUrl = getItemImageUrl(activeVariation.image);
+      const others = images.filter(img => getItemImageUrl(img) !== mainUrl);
+      return [activeVariation.image, ...others];
+    }
+
+    // 3. Padrão: Galeria completa do produto
+    return images;
+  }, [activeVariation, images]);
+
+  // Efeitos colaterais ao trocar a variação
+  useEffect(() => {
+    setErrorImages({});
+
+    // Scroll suave no mobile para facilitar a visualização da mudança
+    if (activeVariation && window.innerWidth < 768 && galleryRef.current) {
+      const headerHeight = 80;
+      const elementPosition = galleryRef.current.getBoundingClientRect().top + window.scrollY;
+      const offsetPosition = elementPosition - headerHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, [activeVariation]);
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -45,7 +83,7 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
       deleteDocumentNonBlocking(favoriteRef);
       toast({ title: "Removido dos favoritos" });
     } else {
-      const firstImage = typeof images[0] === 'string' ? images[0] : images[0]?.url;
+      const firstImage = getItemImageUrl(images[0]);
       setDocumentNonBlocking(favoriteRef, {
         productId,
         productName: name,
@@ -60,12 +98,10 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
     setErrorImages(prev => ({ ...prev, [idx]: true }));
   };
 
-  const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
-
   const isValidUrl = (url: any) => typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
 
   const renderImage = (img: any, idx: number, isPriority = false) => {
-    const url = getImageUrl(img);
+    const url = getItemImageUrl(img);
     if (errorImages[idx] || !isValidUrl(url)) {
       return (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-300">
@@ -90,26 +126,29 @@ export function ProductGallery({ images, name, productId }: ProductGalleryProps)
   };
 
   return (
-    <div className="relative space-y-4">
-      {/* Desktop Grid */}
-      <div className="hidden md:grid grid-cols-2 gap-4">
-        {images.map((img, idx) => (
-          <div
-            key={idx}
-            className="relative aspect-[3/5] overflow-hidden bg-[#F5F5F5] group rounded-sm"
-          >
-            {renderImage(img, idx, idx === 0)}
-          </div>
-        ))}
-      </div>
+    <div ref={galleryRef} className="relative">
+      {/* Container principal com chave p/ resetar animações ao trocar variação */}
+      <div key={activeVariation?.color || 'default'} className="animate-in fade-in duration-500 space-y-4">
+        {/* Desktop Grid */}
+        <div className="hidden md:grid grid-cols-2 gap-4">
+          {displayImages.map((img, idx) => (
+            <div
+              key={idx}
+              className="relative aspect-[3/5] overflow-hidden bg-[#F5F5F5] group rounded-sm"
+            >
+              {renderImage(img, idx, idx === 0)}
+            </div>
+          ))}
+        </div>
 
-      {/* Mobile Stack */}
-      <div className="flex flex-col md:hidden gap-2">
-        {images.map((img, idx) => (
-          <div key={idx} className="relative aspect-[3/5] w-full overflow-hidden bg-[#F5F5F5] rounded-sm">
-            {renderImage(img, idx, idx === 0)}
-          </div>
-        ))}
+        {/* Mobile Stack */}
+        <div className="flex flex-col md:hidden gap-2">
+          {displayImages.map((img, idx) => (
+            <div key={idx} className="relative aspect-[3/5] w-full overflow-hidden bg-[#F5F5F5] rounded-sm">
+              {renderImage(img, idx, idx === 0)}
+            </div>
+          ))}
+        </div>
       </div>
 
       <button

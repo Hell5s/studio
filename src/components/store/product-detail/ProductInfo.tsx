@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -21,9 +22,10 @@ interface ProductInfoProps {
   product: any;
   onAddToCart?: (product: any, openCart?: boolean) => void;
   relatedProducts?: any[];
+  onColorSelect?: (variation: any) => void;
 }
 
-export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
+export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfoProps) {
   const { toast } = useToast();
   const { user } = useUser();
   const db = useFirestore();
@@ -235,7 +237,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
 
           <div className="flex flex-wrap gap-3 md:gap-4">
             {colorVariations.map((v: any, idx: number) => {
-              const imgUrl = v.image || product.image;
+              const imgUrl = getItemImageUrl(v.image || product.image);
               const hasValidImage = isValidUrl(imgUrl);
               const displayName = v.color || `Opção ${idx + 1}`;
               const isSelected = selectedColorIndex === idx;
@@ -248,6 +250,7 @@ export function ProductInfo({ product, onAddToCart }: ProductInfoProps) {
                       if (isMixingColors) return;
                       setSelectedColor(displayName);
                       setSelectedColorIndex(idx);
+                      onColorSelect?.(v);
                     }}
                     className={cn(
                       "group flex flex-col items-center gap-3 transition-all min-h-[44px] relative",

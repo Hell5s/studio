@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
@@ -40,7 +41,7 @@ import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, array
 import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
 import { Badge } from '@/components/ui/badge';
 import { getCroppedImgBlob } from '@/lib/cropImage';
@@ -142,7 +143,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     featured: false,
     bestseller: false,
     showInSale: false,
-    variations: [] as { color: string; image: any }[]
+    variations: [] as { color: string; image: any; images?: any[] }[]
   });
 
   useEffect(() => {
@@ -494,7 +495,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       const url = await uploadToCloudinary(file);
       setFormData(prev => {
         const newVars = [...prev.variations];
-        newVars[activeVariationIndex!] = { ...newVars[activeVariationIndex!], image: url };
+        const currentImages = newVars[activeVariationIndex!].images || (newVars[activeVariationIndex!].image ? [newVars[activeVariationIndex!].image] : []);
+        const newImages = [url, ...currentImages];
+        newVars[activeVariationIndex!] = { 
+          ...newVars[activeVariationIndex!], 
+          images: newImages,
+          image: url 
+        };
         return { ...prev, variations: newVars };
       });
       toast({ title: "Variação salva!" });
@@ -835,7 +842,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <input type="file" ref={variationInputRef} className="hidden" accept="image/*" onChange={handleVariationFileUpload} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 text-accent"><Palette className="h-5 w-5" /><h4 className="text-[11px] font-bold uppercase tracking-widest">Variações por Cor</h4></div>
-                  <Button variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, variations: [...prev.variations, { color: '', image: '' }] }))} className="text-accent text-[9px] font-bold uppercase">+ Nova Cor</Button>
+                  <Button variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, variations: [...prev.variations, { color: '', image: '', images: [] }] }))} className="text-accent text-[9px] font-bold uppercase">+ Nova Cor</Button>
                 </div>
                 <div className="grid gap-4">
                   {formData.variations.map((v, i) => (
@@ -844,7 +851,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         className="h-16 w-12 rounded-lg overflow-hidden bg-white border border-primary/10 cursor-pointer relative group"
                         onClick={() => { setActiveVariationIndex(i); variationInputRef.current?.click(); }}
                       >
-                        {v.image ? <img src={v.image} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
+                        {v.image ? <img src={getImageUrl(v.image)} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center opacity-20"><Upload className="h-4 w-4" /></div>}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="text-white h-4 w-4" /></div>
                       </div>
                       
@@ -853,7 +860,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                         onClick={() => setGalleryPickerIndex(galleryPickerIndex === i ? null : i)}
                         className="text-[9px] font-bold uppercase text-accent underline whitespace-nowrap"
                       >
-                        Usar foto já existente
+                        Fotos desta cor ({v.images?.length || 0})
                       </button>
 
                       <Input placeholder="Nome da Cor" value={v.color} onChange={e => {
@@ -865,23 +872,39 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                       <button onClick={() => setFormData(prev => ({ ...prev, variations: prev.variations.filter((_, idx) => idx !== i) }))} className="text-red-300 hover:text-red-500 p-2"><X className="h-5 w-5" /></button>
                       
                       {galleryPickerIndex === i && (
-                        <div className="w-full grid grid-cols-6 gap-2 p-3 bg-white rounded-xl border border-primary/10">
+                        <div className="w-full grid grid-cols-6 gap-2 p-3 bg-white rounded-xl border border-primary/10 animate-in slide-in-from-top-2">
                           {[formData.image, ...formData.gallery].filter(Boolean).map((img, imgIdx) => {
-                            const url = typeof img === 'string' ? img : (img as any)?.url;
+                            const url = getImageUrl(img);
                             if (!url) return null;
+                            const isSelected = v.images?.includes(url) || v.image === url;
                             return (
                               <button
                                 key={imgIdx}
                                 type="button"
                                 onClick={() => {
                                   const newVars = [...formData.variations];
-                                  newVars[i] = { ...newVars[i], image: url };
+                                  const currentImages = newVars[i].images || (newVars[i].image ? [newVars[i].image] : []);
+                                  const newImages = currentImages.includes(url) 
+                                    ? currentImages.filter((u:any) => u !== url)
+                                    : [...currentImages, url];
+                                  newVars[i] = { 
+                                    ...newVars[i], 
+                                    images: newImages,
+                                    image: newImages[0] || '' 
+                                  };
                                   setFormData(prev => ({ ...prev, variations: newVars }));
-                                  setGalleryPickerIndex(null);
                                 }}
-                                className="aspect-square rounded-md overflow-hidden border border-primary/10 hover:border-accent transition-colors"
+                                className={cn(
+                                  "aspect-square rounded-md overflow-hidden border-2 transition-all relative group/item",
+                                  isSelected ? "border-primary scale-95 shadow-inner" : "border-primary/10 hover:border-accent"
+                                )}
                               >
                                 <img src={url} className="h-full w-full object-cover" />
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                    <Check className="h-4 w-4 text-white drop-shadow-md" />
+                                  </div>
+                                )}
                               </button>
                             );
                           })}

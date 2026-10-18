@@ -14,7 +14,8 @@ import {
   Palette,
   X,
   Plus,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +35,7 @@ import { doc, serverTimestamp, getDocs, query, collection, orderBy, onSnapshot }
 import { useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, getItemImageUrl } from '@/lib/utils';
 
 interface EditProductDialogProps {
   product: any;
@@ -53,6 +54,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const [uploading, setUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [activeVariationIndex, setActiveVariationIndex] = useState<number | null>(null);
+  const [galleryPickerIndex, setGalleryPickerIndex] = useState<number | null>(null);
   const [categoriesList, setCategoriesList] = useState<any[]>([]);
   const [sizeInput, setSizeInput] = useState('');
   
@@ -77,7 +79,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     bestseller: false,
     showInSale: false,
     sourceUrl: '',
-    variations: [] as { color: string; image: string }[]
+    variations: [] as { color: string; image: string; images?: string[] }[]
   });
 
   useEffect(() => {
@@ -164,11 +166,11 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const handleAddVariation = () => {
     setFormData(prev => ({
       ...prev,
-      variations: [...prev.variations, { color: '', image: '' }]
+      variations: [...prev.variations, { color: '', image: '', images: [] }]
     }));
   };
 
-  const handleVariationChange = (index: number, field: string, value: string) => {
+  const handleVariationChange = (index: number, field: string, value: any) => {
     const newVars = [...formData.variations];
     newVars[index] = { ...newVars[index], [field]: value };
     setFormData({ ...formData, variations: newVars });
@@ -204,7 +206,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
 
     updateDocumentNonBlocking(docRef, {
       ...formData,
-      price: parsePrice(formData.price),
+      price: parsePrice(String(product.price)),
       oldPrice: formData.oldPrice ? parsePrice(formData.oldPrice) : null,
       stock: Number(formData.stock) || 0,
       sizes: finalSizes,
@@ -270,7 +272,17 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
     setUploading(true);
     try {
       const url = await uploadToCloudinary(file);
-      handleVariationChange(activeVariationIndex, 'image', url);
+      setFormData(prev => {
+        const newVars = [...prev.variations];
+        const currentImages = newVars[activeVariationIndex!].images || (newVars[activeVariationIndex!].image ? [newVars[activeVariationIndex!].image] : []);
+        const newImages = [url, ...currentImages];
+        newVars[activeVariationIndex!] = { 
+          ...newVars[activeVariationIndex!], 
+          images: newImages,
+          image: url 
+        };
+        return { ...prev, variations: newVars };
+      });
       toast({ title: "Foto da cor carregada!" });
     } catch (error: any) {
       toast({ title: "Erro no upload da cor", variant: "destructive" });
@@ -282,7 +294,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   };
 
   const handleAIGenerate = async () => {
-    if (!formData.name || !formData.price) {
+    if (!formData.name || !product.price) {
       toast({ title: "Dados incompletos", variant: "destructive" });
       return;
     }
@@ -291,8 +303,8 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       const result = await adminGenerateProductDescription({
         productName: formData.name,
         category: formData.categories[0] || formData.category,
-        price: `R$ ${formData.price}`,
-        keyFeatures: [formData.brand, formData.shippingTime]
+        price: `R$ ${product.price}`,
+        keyFeatures: [formData.brand, product.shippingTime]
       });
       setFormData(prev => ({ 
         ...prev, 
@@ -337,7 +349,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
             <div className="grid gap-4">
               <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Package className="h-3 w-3" /> Identidade</Label>
               <div className="space-y-2">
-                <Input value={formData.name} onChange={handleNameChange} placeholder="Nome do Produto" />
+                <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Nome do Produto" />
                 <div className="relative">
                   <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input value={formData.sourceUrl} onChange={e => setFormData({...formData, sourceUrl: e.target.value})} placeholder="Link do Produto (Fornecedor)" className="pl-9 h-10 text-xs" />
@@ -407,33 +419,81 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                 onChange={handleVariationFileUpload} 
               />
               <div className="flex justify-between items-center">
-                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Palette className="h-3 w-3" /> Miniaturas por Cor (Clique p/ Upload)</Label>
+                <Label className="text-accent uppercase tracking-widest text-[10px] font-bold flex items-center gap-2"><Palette className="h-3 w-3" /> Fotos por Cor (Selecione na galeria)</Label>
                 <Button variant="ghost" size="sm" onClick={handleAddVariation} className="h-7 text-[8px] font-bold uppercase text-accent border border-accent/10 px-3">Add Cor</Button>
               </div>
               <div className="space-y-3">
                 {formData.variations.map((v, i) => (
-                  <div key={i} className="flex gap-3 items-center bg-secondary/20 p-3 rounded-2xl border border-primary/5">
-                    <div 
-                      className="h-12 w-10 rounded-lg overflow-hidden bg-white border border-primary/10 flex-shrink-0 relative cursor-pointer group/thumb"
-                      onClick={() => {
-                        setActiveVariationIndex(i);
-                        variationInputRef.current?.click();
-                      }}
-                    >
-                      {v.image ? (
-                        <img src={v.image} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center bg-secondary/50 text-primary/20"><Upload className="h-3 w-3" /></div>
-                      )}
-                      {uploading && activeVariationIndex === i && (
-                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                          <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                        </div>
-                      )}
+                  <div key={i} className="space-y-3 p-3 bg-secondary/20 rounded-2xl border border-primary/5">
+                    <div className="flex gap-3 items-center">
+                      <div 
+                        className="h-12 w-10 rounded-lg overflow-hidden bg-white border border-primary/10 flex-shrink-0 relative cursor-pointer group/thumb"
+                        onClick={() => {
+                          setActiveVariationIndex(i);
+                          variationInputRef.current?.click();
+                        }}
+                      >
+                        {v.image ? (
+                          <img src={getItemImageUrl(v.image)} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-secondary/50 text-primary/20"><Upload className="h-3 w-3" /></div>
+                        )}
+                        {uploading && activeVariationIndex === i && (
+                          <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                          </div>
+                        )}
+                      </div>
+                      <Input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-10 text-[10px] bg-white border-none rounded-xl px-4 flex-1" />
+                      <button 
+                        type="button"
+                        onClick={() => setGalleryPickerIndex(galleryPickerIndex === i ? null : i)}
+                        className="text-[9px] font-bold uppercase text-accent underline whitespace-nowrap"
+                      >
+                        Fotos ({v.images?.length || 0})
+                      </button>
+                      <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600"><X className="h-4 w-4" /></button>
                     </div>
-                    <Input placeholder="Cor" value={v.color} onChange={e => handleVariationChange(i, 'color', e.target.value)} className="h-10 text-[10px] bg-white border-none rounded-xl px-4 flex-1" />
-                    <Input placeholder="Link da foto" value={v.image} onChange={e => handleVariationChange(i, 'image', e.target.value)} className="h-10 text-[10px] bg-white border-none rounded-xl flex-[2]" />
-                    <button onClick={() => handleRemoveVariation(i)} className="text-red-400 hover:text-red-600"><X className="h-4 w-4" /></button>
+                    
+                    {galleryPickerIndex === i && (
+                      <div className="w-full grid grid-cols-6 gap-2 p-3 bg-white rounded-xl border border-primary/10 animate-in slide-in-from-top-2">
+                        {[formData.image, ...formData.gallery].filter(Boolean).map((img, imgIdx) => {
+                          const url = getItemImageUrl(img);
+                          if (!url) return null;
+                          const isSelected = v.images?.includes(url) || v.image === url;
+                          return (
+                            <button
+                              key={imgIdx}
+                              type="button"
+                              onClick={() => {
+                                const newVars = [...formData.variations];
+                                const currentImages = newVars[i].images || (newVars[i].image ? [newVars[i].image] : []);
+                                const newImages = currentImages.includes(url) 
+                                  ? currentImages.filter((u:any) => u !== url)
+                                  : [...currentImages, url];
+                                newVars[i] = { 
+                                  ...newVars[i], 
+                                  images: newImages,
+                                  image: newImages[0] || '' 
+                                };
+                                setFormData(prev => ({ ...prev, variations: newVars }));
+                              }}
+                              className={cn(
+                                "aspect-square rounded-md overflow-hidden border-2 transition-all relative",
+                                isSelected ? "border-primary scale-95" : "border-primary/10"
+                              )}
+                            >
+                              <img src={url} className="h-full w-full object-cover" />
+                              {isSelected && (
+                                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                  <Check className="h-4 w-4 text-white" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
