@@ -37,7 +37,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc, Timestamp, onSnapshot } from 'firebase/firestore';
-import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection } from '@/firebase';
+import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
 import { cn } from '@/lib/utils';
@@ -604,11 +604,19 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
   // Cálculo da resolução baseado na moldura atual (pixelCrop)
   const realResolution = useMemo(() => {
-    if (!croppedAreaPixels) return null;
-    const { width, height } = croppedAreaPixels;
+    if (!croppedAreaPixels || !mediaSize) return null;
+    const { width, height, x, y } = croppedAreaPixels;
     if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
-    return { width: Math.round(width), height: Math.round(height) };
-  }, [croppedAreaPixels]);
+
+    // Calcular a interseção real com a imagem
+    const intersectedWidth = Math.max(0, Math.min(x + width, mediaSize.width) - Math.max(x, 0));
+    const intersectedHeight = Math.max(0, Math.min(y + height, mediaSize.height) - Math.max(y, 0));
+
+    return { 
+      width: Math.round(intersectedWidth), 
+      height: Math.round(intersectedHeight) 
+    };
+  }, [croppedAreaPixels, mediaSize]);
 
   return (
     <>
@@ -616,7 +624,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
         <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto rounded-[3rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
           <div className="bg-[#2A1F22] p-8 text-white flex items-center justify-between sticky top-0 z-20 shadow-lg">
             <div className="flex items-center gap-6">
-              <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center"><Package className="h-6 w-6 text-primary" /></div>
+              <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center text-primary"><Package className="h-6 w-6 text-primary" /></div>
               <DialogHeader>
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent/60 mb-1">NOVO CADASTRO</p>
                 <DialogTitle className="text-2xl font-bold">{product ? 'Editar Peça' : 'Peça Exclusiva'}</DialogTitle>
@@ -987,9 +995,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               }}
               showGrid={false}
               cropShape="rect"
-              minZoom={1}
+              minZoom={0.5}
               maxZoom={3}
-              restrictPosition={true}
+              restrictPosition={false}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -1026,10 +1034,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
               )}
               <div className="flex items-center gap-4">
-                <button onClick={() => setZoom(z => Math.max(1, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+                <button onClick={() => setZoom(z => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
                 <input 
                   type="range" 
-                  min={1} 
+                  min={0.5} 
                   max={3} 
                   step={0.01} 
                   value={zoom} 
@@ -1056,7 +1064,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 }}
                 className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
               >
-                Zoom mínimo
+                Foto inteira
               </button>
               <Button variant="ghost" onClick={() => !savingCrop && setEditingImage(null)} className="text-white uppercase text-[10px] font-bold" disabled={savingCrop}>Cancelar</Button>
               <Button onClick={handleSaveCrop} disabled={savingCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full min-w-[200px]">

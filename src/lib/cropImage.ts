@@ -16,7 +16,7 @@ export interface PixelCrop {
 
 /**
  * Recorta uma imagem e aplica ampliação em uma única etapa se necessário.
- * O recorte é sempre interno à imagem original.
+ * Suporta áreas de recorte fora dos limites da imagem (preenchimento com preto).
  */
 export async function getCroppedImgBlob(
   imageSrc: string,
@@ -61,18 +61,38 @@ export async function getCroppedImgBlob(
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  // O recorte agora é sempre interno, desenhamos a sub-região da imagem no canvas inteiro
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    targetWidth,
-    targetHeight
-  );
+  // Verificar se o recorte ultrapassa os limites da foto (zoom < 1 ou arrasto livre)
+  const isOutside = pixelCrop.x < 0 || pixelCrop.y < 0 || 
+                    (pixelCrop.x + pixelCrop.width) > image.width || 
+                    (pixelCrop.y + pixelCrop.height) > image.height;
+
+  if (isOutside) {
+    // Preencher fundo com preto sólido
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
+    
+    // Desenhar a foto real por cima na posição correta, respeitando a escala
+    ctx.drawImage(
+      image, 
+      -pixelCrop.x * scale, 
+      -pixelCrop.y * scale, 
+      image.width * scale, 
+      image.height * scale
+    );
+  } else {
+    // Recorte padrão interno
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      targetWidth,
+      targetHeight
+    );
+  }
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
