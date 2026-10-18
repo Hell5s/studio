@@ -602,20 +602,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const margin = costNum > 0 ? (profit / costNum) * 100 : 0;
   const marginColor = margin > 50 ? "text-green-600" : margin > 20 ? "text-yellow-600" : "text-red-600";
 
-  // Cálculo da resolução da parte REAL (interseção)
+  // Cálculo da resolução baseado na moldura atual (pixelCrop)
   const realResolution = useMemo(() => {
-    if (!croppedAreaPixels || !mediaSize) return null;
-    const pixels = croppedAreaPixels;
-    const img = mediaSize;
-
-    const realX = Math.max(0, pixels.x);
-    const realY = Math.max(0, pixels.y);
-    const realW = Math.max(0, Math.min(img.width, pixels.x + pixels.width) - realX);
-    const realH = Math.max(0, Math.min(img.height, pixels.y + pixels.height) - realY);
-
-    if (!Number.isFinite(realW) || !Number.isFinite(realH)) return null;
-    return { width: Math.round(realW), height: Math.round(realH) };
-  }, [croppedAreaPixels, mediaSize]);
+    if (!croppedAreaPixels) return null;
+    const { width, height } = croppedAreaPixels;
+    if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
+    return { width: Math.round(width), height: Math.round(height) };
+  }, [croppedAreaPixels]);
 
   return (
     <>
@@ -994,9 +987,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               }}
               showGrid={false}
               cropShape="rect"
-              minZoom={0.5}
+              minZoom={1}
               maxZoom={3}
-              restrictPosition={false}
+              restrictPosition={true}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -1033,10 +1026,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
               )}
               <div className="flex items-center gap-4">
-                <button onClick={() => setZoom(z => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+                <button onClick={() => setZoom(z => Math.max(1, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
                 <input 
                   type="range" 
-                  min={0.5} 
+                  min={1} 
                   max={3} 
                   step={0.01} 
                   value={zoom} 
@@ -1063,7 +1056,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 }}
                 className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
               >
-                Foto inteira
+                Zoom mínimo
               </button>
               <Button variant="ghost" onClick={() => !savingCrop && setEditingImage(null)} className="text-white uppercase text-[10px] font-bold" disabled={savingCrop}>Cancelar</Button>
               <Button onClick={handleSaveCrop} disabled={savingCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full min-w-[200px]">
