@@ -16,7 +16,7 @@ export interface PixelCrop {
 
 /**
  * Recorta uma imagem e aplica ampliação em uma única etapa se necessário.
- * Exporta em JPEG de alta qualidade para evitar travamentos de memória.
+ * Suporta áreas de recorte maiores que a imagem original (zoom < 1) preenchendo com fundo desfocado.
  */
 export async function getCroppedImgBlob(
   imageSrc: string,
@@ -37,43 +37,69 @@ export async function getCroppedImgBlob(
   
   let scale = 1;
   if (currentLongSide < minLongSide) {
-    // Calcula escala necessária para chegar a 1800px, limitada a 2x para performance
     scale = Math.min(2, minLongSide / currentLongSide);
   }
 
-  const targetWidth = Math.round(pixelCrop.width * scale);
-  const targetHeight = Math.round(pixelCrop.height * scale);
+  let targetWidth = Math.round(pixelCrop.width * scale);
+  let targetHeight = Math.round(pixelCrop.height * scale);
 
-  // Limite absoluto de 2400px para evitar travamentos de memória no canvas
+  // Limite absoluto de 2400px
   const finalLongSide = Math.max(targetWidth, targetHeight);
-  let finalWidth = targetWidth;
-  let finalHeight = targetHeight;
-
   if (finalLongSide > 2400) {
     const finalScale = 2400 / finalLongSide;
-    finalWidth = Math.round(targetWidth * finalScale);
-    finalHeight = Math.round(targetHeight * finalScale);
+    targetWidth = Math.round(targetWidth * finalScale);
+    targetHeight = Math.round(targetHeight * finalScale);
+    scale = targetWidth / pixelCrop.width;
   }
 
   const canvas = document.createElement('canvas');
-  canvas.width = finalWidth;
-  canvas.height = finalHeight;
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Não foi possível criar o contexto do canvas');
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
+  // Verifica se o recorte sai dos limites da imagem (zoom < 1)
+  const isOutOfBounds = pixelCrop.x < 0 || pixelCrop.y < 0 || 
+                       (pixelCrop.x + pixelCrop.width) > image.width || 
+                       (pixelCrop.y + pixelCrop.height) > image.height;
+
+  if (isOutOfBounds) {
+    // Desenha fundo desfocado (cover logic)
+    const canvasAspect = targetWidth / targetHeight;
+    const imageAspect = image.width / image.height;
+    let renderW, renderH, renderX, renderY;
+    
+    if (imageAspect > canvasAspect) {
+      renderH = targetHeight;
+      renderW = targetHeight * imageAspect;
+      renderX = (targetWidth - renderW) / 2;
+      renderY = 0;
+    } else {
+      renderW = targetWidth;
+      renderH = targetWidth / imageAspect;
+      renderX = 0;
+      renderY = (targetHeight - renderH) / 2;
+    }
+    
+    // Cria versão minúscula para simular desfoque via upscaling (Safari friendly)
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 32;
+    tempCanvas.height = Math.round(32 / imageAspect);
+    const tempCtx = tempCanvas.getContext('2d');
+    if (tempCtx) {
+      tempCtx.drawImage(image, 0, 0, tempCanvas.width, tempCanvas.height);
+      ctx.drawImage(tempCanvas, renderX, renderY, renderW, renderH);
+    }
+  }
+
+  // Desenha a imagem real por cima na posição correta
   ctx.drawImage(
     image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    finalWidth,
-    finalHeight
+    0, 0, image.width, image.height,
+    -pixelCrop.x * scale, -pixelCrop.y * scale, image.width * scale, image.height * scale
   );
 
   return new Promise((resolve, reject) => {

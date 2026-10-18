@@ -379,14 +379,23 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     return url;
   };
 
+  const getSavedInitialZoom = () => {
+    try {
+      const saved = localStorage.getItem('toda-bela:zoom-inicial');
+      return saved ? parseFloat(saved) : 1;
+    } catch (e) {
+      return 1;
+    }
+  };
+
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
     const img = field === 'image' ? formData.image : formData.gallery[index];
     const source = getOriginalUrl(img);
     setEditingImage({ index, field });
     
-    // Carrega estados persistidos ou padrões
+    // Carrega estados persistidos ou padrão global
+    setZoom(img?.zoom !== undefined ? img.zoom : getSavedInitialZoom());
     setCrop(img?.crop || { x: 0, y: 0 });
-    setZoom(img?.zoom || 1);
     
     setCroppedAreaPixels(null);
     const tempImg = new window.Image();
@@ -977,6 +986,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               }}
               showGrid={false}
               cropShape="rect"
+              minZoom={0.8}
+              maxZoom={3}
+              restrictPosition={false}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -1002,7 +1014,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   croppedAreaPixels.height >= 1200 ? "text-green-500" :
                   croppedAreaPixels.height >= 800 ? "text-yellow-500" : "text-red-500"
                 )}>
-                  Resolução do recorte: {Number.isFinite(croppedAreaPixels.width) ? croppedAreaPixels.width : '...'} × {Number.isFinite(croppedAreaPixels.height) ? croppedAreaPixels.height : '...'} px
+                  Resolução do recorte: {Number.isFinite(croppedAreaPixels.width) ? Math.round(croppedAreaPixels.width) : '...'} × {Number.isFinite(croppedAreaPixels.height) ? Math.round(croppedAreaPixels.height) : '...'} px
                   {Number.isFinite(croppedAreaPixels.height) && croppedAreaPixels.height < 800 && (
                     <span className="block mt-1 normal-case italic opacity-80">
                       Qualidade baixa: use menos zoom ou uma foto de maior resolução
@@ -1013,20 +1025,40 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
               )}
               <div className="flex items-center gap-4">
-                <button onClick={() => setZoom(z => Math.max(1, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+                <button onClick={() => setZoom(z => Math.max(0.8, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
                 <input 
                   type="range" 
-                  min={1} 
+                  min={0.8} 
                   max={3} 
-                  step={0.1} 
+                  step={0.01} 
                   value={zoom} 
                   onChange={e => setZoom(Number(e.target.value))} 
                   className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent" 
                 />
-                <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Plus className="h-4 w-4" /></button>
+                <button onClick={() => setZoom(z => Math.min(3, Math.round((z + 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Plus className="h-4 w-4" /></button>
               </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
+              <button 
+                onClick={() => {
+                  try {
+                    localStorage.setItem('toda-bela:zoom-inicial', zoom.toString());
+                    toast({ title: "Zoom inicial salvo" });
+                  } catch (e) {}
+                }}
+                className="text-[9px] font-bold uppercase text-accent/60 hover:text-accent transition-colors"
+              >
+                Usar como zoom inicial
+              </button>
+              <button 
+                onClick={() => {
+                  setZoom(getSavedInitialZoom());
+                  setCrop({ x: 0, y: 0 });
+                }}
+                className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
+              >
+                Restaurar
+              </button>
               <Button variant="ghost" onClick={() => !savingCrop && setEditingImage(null)} className="text-white uppercase text-[10px] font-bold" disabled={savingCrop}>Cancelar</Button>
               <Button onClick={handleSaveCrop} disabled={savingCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full min-w-[200px]">
                 {savingCrop ? (
