@@ -1002,8 +1002,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           <DialogTitle className="sr-only">Editar Enquadramento da Foto</DialogTitle>
           <div className="relative h-[85vh] w-full">
             <Cropper
-              key={getOriginalUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
-              image={getOriginalUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
+              key={editingImage ? getOriginalUrl(editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index]) : 'empty'}
+              image={editingImage ? getOriginalUrl(editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index]) : ''}
               crop={crop} 
               zoom={zoom} 
               aspect={imageAspect} 
@@ -1019,9 +1019,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               }}
               onMediaLoaded={(mediaSize) => {
                 setMediaSize(mediaSize);
-                const img = editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage!.index];
-                if (!img?.crop) {
-                  setCrop({ x: 0, y: 0 });
+                if (editingImage) {
+                  const img = editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index];
+                  if (!img?.crop) {
+                    setCrop({ x: 0, y: 0 });
+                  }
                 }
               }}
               showGrid={false}
