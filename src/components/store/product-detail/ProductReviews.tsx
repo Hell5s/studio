@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Star, 
   CheckCircle2, 
@@ -10,18 +10,14 @@ import {
   Sparkles, 
   MessageSquare, 
   X, 
-  Camera, 
   ThumbsUp, 
   ChevronLeft, 
   ChevronRight,
-  Filter,
   ArrowUpDown
 } from 'lucide-react';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, where, serverTimestamp, doc, setDoc, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -92,18 +88,14 @@ const StarRating = ({
 
 export function ProductReviews({ product }: { product: any }) {
   const db = useFirestore();
-  const { storage } = useFirebase();
   const { user: authUser } = useUser();
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // States
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
   const [lightbox, setLightbox] = useState<{ images: string[], index: number } | null>(null);
   
   // Filters and Sorting
@@ -185,70 +177,6 @@ export function ProductReviews({ product }: { product: any }) {
     return photos.slice(0, 12);
   }, [allReviews]);
 
-  // Photo Handling
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const valid = files.filter(f => f.type.startsWith('image/') && f.size <= 8 * 1024 * 1024);
-    
-    if (valid.length + selectedFiles.length > 4) {
-      toast({ title: "Limite de fotos", description: "Você pode enviar no máximo 4 fotos.", variant: "destructive" });
-      return;
-    }
-
-    const newFiles = [...selectedFiles, ...valid];
-    setSelectedFiles(newFiles);
-    
-    const newPreviews = valid.map(f => URL.createObjectURL(f));
-    setPreviews([...previews, ...newPreviews]);
-  };
-
-  const removeFile = (idx: number) => {
-    const updatedFiles = [...selectedFiles];
-    updatedFiles.splice(idx, 1);
-    setSelectedFiles(updatedFiles);
-
-    const updatedPreviews = [...previews];
-    URL.revokeObjectURL(updatedPreviews[idx]);
-    updatedPreviews.splice(idx, 1);
-    setPreviews(updatedPreviews);
-  };
-
-  const compressImage = async (file: File): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (e) => {
-        const img = new (window as any).Image();
-        img.src = e.target?.result;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX_SIDE = 1600;
-
-          if (width > height && width > MAX_SIDE) {
-            height *= MAX_SIDE / width;
-            width = MAX_SIDE;
-          } else if (height > MAX_SIDE) {
-            width *= MAX_SIDE / height;
-            height = MAX_SIDE;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          canvas.toBlob((blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('Falha na compressão'));
-          }, 'image/jpeg', 0.82);
-        };
-        img.onerror = reject;
-      };
-      reader.onerror = reject;
-    });
-  };
-
   const handleSubmit = async () => {
     if (!newReview.user || !newReview.comment) return;
     if (!authUser) {
@@ -258,32 +186,21 @@ export function ProductReviews({ product }: { product: any }) {
 
     setIsSubmitting(true);
     const reviewRef = doc(collection(db, 'reviews'));
-    const uploadedUrls: string[] = [];
 
     try {
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const compressed = await compressImage(selectedFiles[i]);
-        const storageRef = ref(storage!, `reviews/${authUser.uid}/${reviewRef.id}/${i}.jpg`);
-        await uploadBytes(storageRef, compressed, { contentType: 'image/jpeg' });
-        const url = await getDownloadURL(storageRef);
-        uploadedUrls.push(url);
-      }
-
       await setDoc(reviewRef, {
         ...newReview,
         productId: product.id,
         productName: product.name,
         productImage: product.image,
         userId: authUser.uid,
-        images: uploadedUrls,
+        images: [],
         status: 'pending',
         isDemo: false,
         createdAt: serverTimestamp()
       });
 
       setSuccess(true);
-      setPreviews([]);
-      setSelectedFiles([]);
     } catch (err) {
       toast({ title: "Erro ao enviar", description: "Não foi possível processar sua avaliação. Verifique sua conexão.", variant: "destructive" });
     } finally {
@@ -313,18 +230,20 @@ export function ProductReviews({ product }: { product: any }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
         {/* Stats Column */}
         <div className="lg:col-span-4 space-y-12">
-          <div className="p-10 bg-[#FFF9F7] rounded-[3rem] border border-primary/5 space-y-8 shadow-sm">
-            <div className="flex items-center gap-6">
-              <div className="h-20 w-20 rounded-full border-4 border-accent flex items-center justify-center shrink-0 bg-white shadow-xl">
-                <span className="text-3xl font-bold text-primary">{stats ? stats.avg : "—"}</span>
+          {stats && (
+            <div className="p-10 bg-[#FFF9F7] rounded-[3rem] border border-primary/5 space-y-8 shadow-sm">
+              <div className="flex items-center gap-6">
+                <div className="h-20 w-20 rounded-full border-4 border-accent flex items-center justify-center shrink-0 bg-white shadow-xl">
+                  <span className="text-3xl font-bold text-primary">{stats.avg}</span>
+                </div>
+                <div className="space-y-1">
+                  <StarRating rating={Math.round(stats.avg)} size="h-5 w-5" />
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                    {stats.total} {stats.total === 1 ? 'Avaliação real' : 'Avaliações reais'}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <StarRating rating={Math.round(stats?.avg || 0)} size="h-5 w-5" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{stats?.total || 0} Avaliações reais</p>
-              </div>
-            </div>
 
-            {stats ? (
               <div className="space-y-4">
                 {stats.distribution.map(d => (
                   <div key={d.star} className="flex items-center gap-4">
@@ -336,11 +255,7 @@ export function ProductReviews({ product }: { product: any }) {
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm italic text-muted-foreground font-light text-center">Seja a primeira a avaliar esta peça.</p>
-            )}
 
-            {stats && (
               <div className="space-y-6 pt-4 border-t border-primary/5">
                 {[
                   { label: 'Qualidade do Tecido', val: stats.quality },
@@ -358,8 +273,8 @@ export function ProductReviews({ product }: { product: any }) {
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <button 
             onClick={() => { setIsDialogOpen(true); setSuccess(false); }} 
@@ -398,12 +313,14 @@ export function ProductReviews({ product }: { product: any }) {
                 >
                   Todas
                 </button>
-                <button 
-                  onClick={() => setFilterType('images')}
-                  className={cn("px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all", filterType === 'images' ? "bg-primary text-white border-primary" : "bg-white text-primary/40 border-primary/5 hover:border-primary/20")}
-                >
-                  Com Fotos
-                </button>
+                {allCustomerPhotos.length > 0 && (
+                  <button 
+                    onClick={() => setFilterType('images')}
+                    className={cn("px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all", filterType === 'images' ? "bg-primary text-white border-primary" : "bg-white text-primary/40 border-primary/5 hover:border-primary/20")}
+                  >
+                    Com Fotos
+                  </button>
+                )}
              </div>
              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <ArrowUpDown className="h-3 w-3 text-primary/20" />
@@ -617,29 +534,6 @@ export function ProductReviews({ product }: { product: any }) {
                        />
                     </div>
                  </div>
-
-                 {/* Photos Area */}
-                 <div className="space-y-4">
-                    <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Adicionar Fotos (Até 4)</Label>
-                    <div className="flex gap-3">
-                       {previews.map((src, i) => (
-                         <div key={i} className="relative h-20 w-16 rounded-xl overflow-hidden shadow-md group">
-                            <img src={src} className="h-full w-full object-cover" />
-                            <button onClick={() => removeFile(i)} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-3 w-3" /></button>
-                         </div>
-                       ))}
-                       {selectedFiles.length < 4 && (
-                         <button 
-                          onClick={() => fileInputRef.current?.click()}
-                          className="h-20 w-16 rounded-xl border-2 border-dashed border-primary/10 flex flex-col items-center justify-center text-primary/20 hover:bg-secondary/20 transition-all"
-                         >
-                           <Camera className="h-6 w-6" />
-                           <span className="text-[8px] font-black mt-1 uppercase">FOTO</span>
-                         </button>
-                       )}
-                    </div>
-                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
-                 </div>
               </div>
 
               <div className="p-8 border-t border-primary/5 bg-white shrink-0">
@@ -651,7 +545,7 @@ export function ProductReviews({ product }: { product: any }) {
                     {isSubmitting ? (
                       <div className="flex items-center gap-3">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        {selectedFiles.length > 0 ? 'ENVIANDO FOTOS...' : 'ENVIANDO...'}
+                        <span>ENVIANDO...</span>
                       </div>
                     ) : 'PUBLICAR MINHA EXPERIÊNCIA'}
                  </Button>
