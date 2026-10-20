@@ -19,7 +19,11 @@ import {
   Minus,
   Check,
   Presentation,
-  Link as LinkIcon
+  Link as LinkIcon,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +44,6 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc, Timestamp, onSnapshot } from 'firebase/firestore';
 import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
-import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
 import { cn, getItemImageUrl } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
 import { Badge } from '@/components/ui/badge';
@@ -109,8 +112,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
   const calculatedMinZoom = useMemo(() => {
     if (!mediaSize || !cropSize.width || !cropSize.height) return 1.0;
-    // minZoom = Math.max(larguraDoQuadro / larguraRenderizadaDaImagem, alturaDoQuadro / alturaRenderizadaDaImagem)
-    // Usamos as dimensões renderizadas (mediaSize.width/height) pois o zoom do Cropper é relativo a elas (1.0 = fit)
     return Math.max(cropSize.width / mediaSize.width, cropSize.height / mediaSize.height);
   }, [mediaSize, cropSize]);
 
@@ -410,7 +411,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     setCroppedAreaPixels(null);
     const tempImg = new window.Image();
     tempImg.onload = () => {
-      // Forçamos o typecast pois o lib Cropper fornece mais dados em tempo de execução
       setMediaSize({ width: tempImg.width, height: tempImg.height, naturalWidth: tempImg.naturalWidth, naturalHeight: tempImg.naturalHeight });
     };
     tempImg.src = source;
@@ -952,7 +952,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                              className="p-3 bg-blue-500 text-white rounded-full hover:scale-110 transition-transform shadow-xl"
                              title="Editar Enquadramento"
                            >
-                             <Pencil className="h-5 w-5" />
+                             <Pencil className="h-4 w-4" />
                            </button>
                            <button 
                              onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} 
@@ -1046,9 +1046,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               }}
               showGrid={false}
               cropShape="rect"
-              minZoom={isFullImageMode ? 1 : calculatedMinZoom}
+              minZoom={isFullImageMode ? 0.8 : calculatedMinZoom}
               maxZoom={3}
-              restrictPosition={false}
+              restrictPosition={!isFullImageMode}
               style={{
                 containerStyle: {
                   width: '100%',
@@ -1081,10 +1081,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
               )}
               <div className="flex items-center gap-4">
-                <button onClick={() => setZoom(z => Math.max(isFullImageMode ? 1 : calculatedMinZoom, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+                <button onClick={() => setZoom(z => Math.max(isFullImageMode ? 0.8 : calculatedMinZoom, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
                 <input 
                   type="range" 
-                  min={isFullImageMode ? 1 : calculatedMinZoom} 
+                  min={isFullImageMode ? 0.8 : calculatedMinZoom} 
                   max={3} 
                   step={0.01} 
                   value={zoom} 
@@ -1111,7 +1111,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               <button 
                 onClick={() => {
                   setIsFullImageMode(true);
-                  setZoom(1);
+                  setZoom(0.8);
                   setCrop({ x: 0, y: 0 });
                 }}
                 className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
