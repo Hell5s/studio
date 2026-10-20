@@ -23,7 +23,9 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Monitor,
+  Smartphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,6 +81,139 @@ interface AddProductDialogProps {
   product?: any;
 }
 
+/**
+ * Sub-componente interno para gerenciar o estado do editor de recorte.
+ * Keyed pela URL da imagem no componente pai para garantir reinicialização limpa.
+ */
+function ImageCropEditorContent({ 
+  image, 
+  onSave, 
+  onCancel,
+  isSavingExternal
+}: { 
+  image: any, 
+  onSave: (data: { url: string, originalUrl: string, crop: any, zoom: number }) => Promise<void>,
+  onCancel: () => void,
+  isSavingExternal: boolean
+}) {
+  const { toast } = useToast();
+  const [crop, setCrop] = useState(image?.crop ?? { x: 0, y: 0 });
+  const [zoom, setZoom] = useState(image?.zoom ?? DEFAULT_ZOOM);
+  const [isFullImageMode, setIsFullImageMode] = useState(false);
+  const [mediaSize, setMediaSize] = useState<{ width: number, height: number, naturalWidth: number, naturalHeight: number } | null>(null);
+  const [cropSize, setCropSize] = useState({ width: 0, height: 0 });
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [isSavingInternal, setIsSavingInternal] = useState(false);
+
+  const sourceUrl = typeof image === 'string' ? image : (image?.originalUrl || image?.url);
+
+  const calculatedMinZoom = useMemo(() => {
+    if (!mediaSize || !cropSize.width || !cropSize.height) return 1.0;
+    return Math.max(cropSize.width / mediaSize.width, cropSize.height / mediaSize.height);
+  }, [mediaSize, cropSize]);
+
+  const realResolution = useMemo(() => {
+    if (!croppedAreaPixels || !mediaSize) return null;
+    const { width, height, x, y } = croppedAreaPixels;
+    if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
+    const intersectedWidth = Math.max(0, Math.min(x + width, mediaSize.naturalWidth) - Math.max(x, 0));
+    const intersectedHeight = Math.max(0, Math.min(y + height, mediaSize.naturalHeight) - Math.max(y, 0));
+    return { width: Math.round(intersectedWidth), height: Math.round(intersectedHeight) };
+  }, [croppedAreaPixels, mediaSize]);
+
+  const handleSave = async () => {
+    if (!croppedAreaPixels || isSavingInternal) return;
+    setIsSavingInternal(true);
+    try {
+      const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
+      const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'todabela_upload');
+      
+      const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Falha no upload Cloudinary');
+      const result = await response.json();
+      
+      await onSave({
+        url: result.secure_url,
+        originalUrl: sourceUrl,
+        crop,
+        zoom
+      });
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar recorte", description: err.message, variant: "destructive" });
+    } finally {
+      setIsSavingInternal(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="relative h-[85vh] w-full overflow-hidden bg-black rounded-t-[2rem]">
+        <Cropper
+          image={sourceUrl}
+          crop={crop}
+          zoom={zoom}
+          aspect={3/5}
+          onCropChange={setCrop}
+          onZoomChange={(z) => {
+            setIsFullImageMode(false);
+            setZoom(z);
+          }}
+          onCropSizeChange={setCropSize}
+          onCropComplete={(_croppedArea, pixels) => setCroppedAreaPixels(pixels)}
+          onMediaLoaded={setMediaSize}
+          showGrid={false}
+          cropShape="rect"
+          minZoom={isFullImageMode ? 0.8 : calculatedMinZoom}
+          maxZoom={3}
+          restrictPosition={!isFullImageMode}
+          style={{ containerStyle: { width: '100%', height: '100%', position: 'relative' } }}
+        />
+      </div>
+      <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
+        <div className="flex-1 flex flex-col gap-4">
+          {realResolution ? (
+            <p className={cn(
+              "text-[10px] font-bold uppercase tracking-wider",
+              realResolution.height >= 1200 ? "text-green-500" :
+              realResolution.height >= 800 ? "text-yellow-500" : "text-red-500"
+            )}>
+              RESOLUÇÃO DO RECORTE: {realResolution.width} × {realResolution.height} PX
+            </p>
+          ) : (
+            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">CALCULANDO...</p>
+          )}
+          <div className="flex items-center gap-4">
+            <button onClick={() => setZoom(z => Math.max(isFullImageMode ? 0.8 : calculatedMinZoom, z - 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+            <input 
+              type="range" min={isFullImageMode ? 0.8 : calculatedMinZoom} max={3} step={0.01} value={zoom} 
+              onChange={e => { setIsFullImageMode(false); setZoom(Number(e.target.value)); }} 
+              className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent" 
+            />
+            <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Plus className="h-4 w-4" /></button>
+          </div>
+        </div>
+        <div className="flex gap-4 items-center">
+          <button onClick={() => { setIsFullImageMode(false); setZoom(DEFAULT_ZOOM); setCrop({ x: 0, y: 0 }); }} className="text-[9px] font-bold uppercase text-accent/60 hover:text-accent transition-colors">ZOOM PADRÃO</button>
+          <button onClick={() => { setIsFullImageMode(true); setZoom(1.0); setCrop({ x: 0, y: 0 }); }} className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors">FOTO INTEIRA</button>
+          <button onClick={() => { setCrop({ x: 0, y: 0 }); }} className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors">CENTRALIZAR</button>
+          <Button variant="ghost" onClick={onCancel} className="text-white uppercase text-[10px] font-bold" disabled={isSavingInternal}>CANCELAR</Button>
+          <Button onClick={handleSave} disabled={isSavingInternal} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full min-w-[200px]">
+            {isSavingInternal ? <Loader2 className="h-4 w-4 animate-spin" /> : 'SALVAR ENQUADRAMENTO'}
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function AddProductDialog({ open, onOpenChange, product }: AddProductDialogProps) {
   const db = useFirestore();
   const { toast } = useToast();
@@ -94,32 +229,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [categoriesList, setCategoriesList] = useState<any[]>([]);
   const [colorInput, setColorInput] = useState('');
   const [sizeInput, setSizeInput] = useState('');
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
-  const [savingCrop, setSavingCrop] = useState(false);
+
+  const [editingImage, setEditingImage] = useState<{ index: number, field: 'gallery' | 'image' } | null>(null);
 
   // Vitrines
   const showcasesQuery = useMemoFirebase(() => query(collection(db, 'homeShowcaseSections'), where('active', '==', true)), [db]);
   const { data: showcases } = useCollection(showcasesQuery);
   const [selectedShowcaseIds, setSelectedShowcaseIds] = useState<Set<string>>(new Set());
-
-  // Editor de Recorte
-  const [editingImage, setEditingImage] = useState<{ index: number, field: 'gallery' | 'image' } | null>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
-  const [mediaSize, setMediaSize] = useState<{ width: number, height: number, naturalWidth: number, naturalHeight: number } | null>(null);
-  const [cropSize, setCropSize] = useState({ width: 0, height: 0 });
-  const [isFullImageMode, setIsFullImageMode] = useState(false);
-
-  const calculatedMinZoom = useMemo(() => {
-    if (!mediaSize || !cropSize.width || !cropSize.height) return 1.0;
-    return Math.max(cropSize.width / mediaSize.width, cropSize.height / mediaSize.height);
-  }, [mediaSize, cropSize]);
-
-  useEffect(() => {
-    if (!isFullImageMode && zoom < calculatedMinZoom) {
-      setZoom(calculatedMinZoom);
-    }
-  }, [zoom, calculatedMinZoom, isFullImageMode]);
 
   const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
 
@@ -389,7 +505,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
 
   const getImageUrl = (img: any) => typeof img === 'string' ? img : img?.url;
   
-  // Garante que a imagem fonte para o recorte é a original, sem transformações do Cloudinary
   const getOriginalUrl = (img: any) => {
     const url = typeof img === 'string' ? img : (img?.originalUrl || img?.url);
     if (url?.includes('res.cloudinary.com')) {
@@ -399,71 +514,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   };
 
   const handleOpenEditor = (index: number, field: 'gallery' | 'image') => {
-    const img = field === 'image' ? formData.image : formData.gallery[index];
-    const source = getOriginalUrl(img);
     setEditingImage({ index, field });
-    
-    // Reset explícito para garantir centralização de fotos novas
-    setZoom(img?.zoom ?? DEFAULT_ZOOM);
-    setCrop(img?.crop ?? { x: 0, y: 0 });
-    setIsFullImageMode(false);
-    
-    setCroppedAreaPixels(null);
-    const tempImg = new window.Image();
-    tempImg.onload = () => {
-      setMediaSize({ width: tempImg.width, height: tempImg.height, naturalWidth: tempImg.naturalWidth, naturalHeight: tempImg.naturalHeight });
-    };
-    tempImg.src = source;
-  };
-
-  const handleSaveCrop = async () => {
-    if (!editingImage || !croppedAreaPixels || savingCrop) return;
-    
-    setSavingCrop(true);
-    await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); 
-
-    try {
-      const { index, field } = editingImage;
-      const imgObj = field === 'image' ? formData.image : formData.gallery[index];
-      const sourceUrl = getOriginalUrl(imgObj);
-      const originalUrl = typeof imgObj === 'string' ? imgObj : (imgObj?.originalUrl || imgObj?.url);
-      
-      const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
-      const fileName = 'cropped.jpg';
-      const file = new File([blob], fileName, { type: 'image/jpeg' });
-      
-      const newUrl = await uploadToCloudinary(file, controller.signal);
-
-      const updatedImageData = { url: newUrl, originalUrl, crop, zoom };
-
-      if (field === 'image') {
-        setFormData(prev => ({ ...prev, image: updatedImageData }));
-      } else {
-        setFormData(prev => {
-          const newGallery = [...prev.gallery];
-          newGallery[index] = updatedImageData;
-          return { ...prev, gallery: newGallery };
-        });
-      }
-      setEditingImage(null);
-    } catch (err: any) {
-      console.error("Erro completo ao salvar recorte:", err);
-      let msg = err.message || "Tente novamente mais tarde.";
-      if (err.name === 'AbortError') {
-        msg = "Tempo esgotado ao enviar a foto. Tente novamente.";
-      }
-      toast({ 
-        title: "Erro ao salvar recorte", 
-        description: msg,
-        variant: "destructive" 
-      });
-    } finally {
-      clearTimeout(timeoutId);
-      setSavingCrop(false);
-    }
   };
 
   const handleFileUpload = async (maxFile: File) => {
@@ -624,22 +675,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const profit = priceNum - costNum;
   const margin = costNum > 0 ? (profit / costNum) * 100 : 0;
   const marginColor = margin > 50 ? "text-green-600" : margin > 20 ? "text-yellow-600" : "text-red-600";
-
-  // Cálculo da resolução baseado na moldura atual (pixelCrop)
-  const realResolution = useMemo(() => {
-    if (!croppedAreaPixels || !mediaSize) return null;
-    const { width, height, x, y } = croppedAreaPixels;
-    if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
-
-    // Calcular a interseção real com a imagem
-    const intersectedWidth = Math.max(0, Math.min(x + width, mediaSize.naturalWidth) - Math.max(x, 0));
-    const intersectedHeight = Math.max(0, Math.min(y + height, mediaSize.naturalHeight) - Math.max(y, 0));
-
-    return { 
-      width: Math.round(intersectedWidth), 
-      height: Math.round(intersectedHeight) 
-    };
-  }, [croppedAreaPixels, mediaSize]);
 
   return (
     <>
@@ -994,7 +1029,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                    </div>
                 </Card>
 
-                <Card className="p-8 rounded-[2rem] bg-primary text-white space-y-4 shadow-xl border-none">
+                <Card className="p-8 rounded-[2.5rem] bg-primary text-white space-y-4 shadow-xl border-none">
                   <h6 className="text-[10px] font-bold uppercase tracking-widest text-accent">Configurações</h6>
                   <div className="space-y-3">
                      <div className="flex items-center justify-between"><Label className="text-white text-xs">Publicado</Label><Switch checked={formData.published} onCheckedChange={v => setFormData({...formData, published: v})} /></div>
@@ -1013,130 +1048,33 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       </Dialog>
 
       {/* Crop Editor */}
-      <Dialog open={!!editingImage} onOpenChange={(o) => !o && !savingCrop && setEditingImage(null)}>
+      <Dialog 
+        open={!!editingImage} 
+        onOpenChange={(o) => !o && setEditingImage(null)}
+      >
         <DialogContent className="max-w-6xl p-0 overflow-hidden bg-black border-none rounded-[2rem]">
           <DialogTitle className="sr-only">Editar Enquadramento da Foto</DialogTitle>
-          <div className="relative h-[85vh] w-full overflow-hidden bg-black rounded-t-[2rem]">
-            <Cropper
-              key={editingImage ? getOriginalUrl(editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index]) : 'empty'}
-              image={editingImage ? getOriginalUrl(editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index]) : ''}
-              crop={crop} 
-              zoom={zoom} 
-              aspect={3/5} 
-              onCropChange={setCrop} 
-              onZoomChange={(z) => {
-                setIsFullImageMode(false);
-                setZoom(z);
-              }}
-              onCropSizeChange={setCropSize}
-              onCropComplete={(_croppedArea, croppedAreaPixelsResult) => {
-                if (Number.isFinite(croppedAreaPixelsResult.width) && 
-                    Number.isFinite(croppedAreaPixelsResult.height) && 
-                    Number.isFinite(croppedAreaPixelsResult.x) && 
-                    Number.isFinite(croppedAreaPixelsResult.y)) {
-                  setCroppedAreaPixels(croppedAreaPixelsResult);
+          {editingImage && (
+            <ImageCropEditorContent
+              key={getOriginalUrl(editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index])}
+              image={editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index]}
+              isSavingExternal={false}
+              onCancel={() => setEditingImage(null)}
+              onSave={async (data) => {
+                const { index, field } = editingImage;
+                if (field === 'image') {
+                  setFormData(prev => ({ ...prev, image: data }));
+                } else {
+                  setFormData(prev => {
+                    const newGallery = [...prev.gallery];
+                    newGallery[index] = data;
+                    return { ...prev, gallery: newGallery };
+                  });
                 }
-              }}
-              onMediaLoaded={(mediaSizeResult) => {
-                setMediaSize(mediaSizeResult);
-                const img = editingImage?.field === 'image' ? formData.image : (editingImage ? formData.gallery[editingImage.index] : null);
-                if (!img?.crop) {
-                  setCrop({ x: 0, y: 0 });
-                }
-              }}
-              showGrid={false}
-              cropShape="rect"
-              minZoom={isFullImageMode ? 0.8 : calculatedMinZoom}
-              maxZoom={3}
-              restrictPosition={!isFullImageMode}
-              style={{
-                containerStyle: {
-                  width: '100%',
-                  height: '100%',
-                  position: 'relative',
-                }
-              }}
-              classes={{
-                containerClassName: "bg-black",
-                mediaClassName: "max-w-none max-h-none m-0 p-0 border-none shadow-none static",
+                setEditingImage(null);
               }}
             />
-          </div>
-          <div className="p-8 bg-[#2A1F22] flex items-center justify-between gap-8">
-            <div className="flex-1 flex flex-col gap-4">
-              {realResolution ? (
-                <p className={cn(
-                  "text-[10px] font-bold uppercase tracking-wider",
-                  realResolution.height >= 1200 ? "text-green-500" :
-                  realResolution.height >= 800 ? "text-yellow-500" : "text-red-500"
-                )}>
-                  Resolução do recorte: {realResolution.width} × {realResolution.height} px
-                  {realResolution.height < 800 && (
-                    <span className="block mt-1 normal-case italic opacity-80">
-                      Qualidade baixa: use menos zoom ou uma foto de maior resolução
-                    </span>
-                  )}
-                </p>
-              ) : (
-                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
-              )}
-              <div className="flex items-center gap-4">
-                <button onClick={() => setZoom(z => Math.max(isFullImageMode ? 0.8 : calculatedMinZoom, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
-                <input 
-                  type="range" 
-                  min={isFullImageMode ? 0.8 : calculatedMinZoom} 
-                  max={3} 
-                  step={0.01} 
-                  value={zoom} 
-                  onChange={e => {
-                    setIsFullImageMode(false);
-                    setZoom(Number(e.target.value));
-                  }} 
-                  className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent" 
-                />
-                <button onClick={() => setZoom(z => Math.min(3, Math.round((z + 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Plus className="h-4 w-4" /></button>
-              </div>
-            </div>
-            <div className="flex gap-4 items-center">
-              <button 
-                onClick={() => {
-                  setIsFullImageMode(false);
-                  setZoom(calculatedMinZoom);
-                  setCrop({ x: 0, y: 0 });
-                }}
-                className="text-[9px] font-bold uppercase text-accent/60 hover:text-accent transition-colors"
-              >
-                Zoom padrão
-              </button>
-              <button 
-                onClick={() => {
-                  setIsFullImageMode(true);
-                  setZoom(0.8);
-                  setCrop({ x: 0, y: 0 });
-                }}
-                className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
-              >
-                Foto inteira
-              </button>
-              <button 
-                onClick={() => {
-                  setCrop({ x: 0, y: 0 });
-                }}
-                className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
-              >
-                Centralizar
-              </button>
-              <Button variant="ghost" onClick={() => !savingCrop && setEditingImage(null)} className="text-white uppercase text-[10px] font-bold" disabled={savingCrop}>Cancelar</Button>
-              <Button onClick={handleSaveCrop} disabled={savingCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full min-w-[200px]">
-                {savingCrop ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    <span>Salvando...</span>
-                  </div>
-                ) : 'Salvar Enquadramento'}
-              </Button>
-            </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
