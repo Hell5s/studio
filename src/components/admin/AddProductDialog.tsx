@@ -103,7 +103,22 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [editingImage, setEditingImage] = useState<{ index: number, field: 'gallery' | 'image' } | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
-  const [mediaSize, setMediaSize] = useState<{ width: number, height: number } | null>(null);
+  const [mediaSize, setMediaSize] = useState<{ width: number, height: number, naturalWidth: number, naturalHeight: number } | null>(null);
+  const [cropSize, setCropSize] = useState({ width: 0, height: 0 });
+  const [isFullImageMode, setIsFullImageMode] = useState(false);
+
+  const calculatedMinZoom = useMemo(() => {
+    if (!mediaSize || !cropSize.width || !cropSize.height) return 1.0;
+    // minZoom = Math.max(larguraDoQuadro / larguraRenderizadaDaImagem, alturaDoQuadro / alturaRenderizadaDaImagem)
+    // Usamos as dimensões renderizadas (mediaSize.width/height) pois o zoom do Cropper é relativo a elas (1.0 = fit)
+    return Math.max(cropSize.width / mediaSize.width, cropSize.height / mediaSize.height);
+  }, [mediaSize, cropSize]);
+
+  useEffect(() => {
+    if (!isFullImageMode && zoom < calculatedMinZoom) {
+      setZoom(calculatedMinZoom);
+    }
+  }, [zoom, calculatedMinZoom, isFullImageMode]);
 
   const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
 
@@ -390,11 +405,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     // Reset explícito para garantir centralização de fotos novas
     setZoom(img?.zoom ?? DEFAULT_ZOOM);
     setCrop(img?.crop ?? { x: 0, y: 0 });
+    setIsFullImageMode(false);
     
     setCroppedAreaPixels(null);
     const tempImg = new window.Image();
     tempImg.onload = () => {
-      setMediaSize({ width: tempImg.naturalWidth, height: tempImg.naturalHeight });
+      // Forçamos o typecast pois o lib Cropper fornece mais dados em tempo de execução
+      setMediaSize({ width: tempImg.width, height: tempImg.height, naturalWidth: tempImg.naturalWidth, naturalHeight: tempImg.naturalHeight });
     };
     tempImg.src = source;
   };
@@ -615,8 +632,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
 
     // Calcular a interseção real com a imagem
-    const intersectedWidth = Math.max(0, Math.min(x + width, mediaSize.width) - Math.max(x, 0));
-    const intersectedHeight = Math.max(0, Math.min(y + height, mediaSize.height) - Math.max(y, 0));
+    const intersectedWidth = Math.max(0, Math.min(x + width, mediaSize.naturalWidth) - Math.max(x, 0));
+    const intersectedHeight = Math.max(0, Math.min(y + height, mediaSize.naturalHeight) - Math.max(y, 0));
 
     return { 
       width: Math.round(intersectedWidth), 
@@ -1007,7 +1024,11 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               zoom={zoom} 
               aspect={3/5} 
               onCropChange={setCrop} 
-              onZoomChange={setZoom} 
+              onZoomChange={(z) => {
+                setIsFullImageMode(false);
+                setZoom(z);
+              }}
+              onCropSizeChange={setCropSize}
               onCropComplete={(_croppedArea, croppedAreaPixelsResult) => {
                 if (Number.isFinite(croppedAreaPixelsResult.width) && 
                     Number.isFinite(croppedAreaPixelsResult.height) && 
@@ -1016,18 +1037,16 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   setCroppedAreaPixels(croppedAreaPixelsResult);
                 }
               }}
-              onMediaLoaded={(mediaSize) => {
-                setMediaSize(mediaSize);
-                if (editingImage) {
-                  const img = editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index];
-                  if (!img?.crop) {
-                    setCrop({ x: 0, y: 0 });
-                  }
+              onMediaLoaded={(mediaSizeResult) => {
+                setMediaSize(mediaSizeResult);
+                const img = editingImage?.field === 'image' ? formData.image : (editingImage ? formData.gallery[editingImage.index] : null);
+                if (!img?.crop) {
+                  setCrop({ x: 0, y: 0 });
                 }
               }}
               showGrid={false}
               cropShape="rect"
-              minZoom={0.5}
+              minZoom={isFullImageMode ? 1 : calculatedMinZoom}
               maxZoom={3}
               restrictPosition={false}
               style={{
@@ -1062,14 +1081,17 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
               )}
               <div className="flex items-center gap-4">
-                <button onClick={() => setZoom(z => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+                <button onClick={() => setZoom(z => Math.max(isFullImageMode ? 1 : calculatedMinZoom, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
                 <input 
                   type="range" 
-                  min={0.5} 
+                  min={isFullImageMode ? 1 : calculatedMinZoom} 
                   max={3} 
                   step={0.01} 
                   value={zoom} 
-                  onChange={e => setZoom(Number(e.target.value))} 
+                  onChange={e => {
+                    setIsFullImageMode(false);
+                    setZoom(Number(e.target.value));
+                  }} 
                   className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent" 
                 />
                 <button onClick={() => setZoom(z => Math.min(3, Math.round((z + 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Plus className="h-4 w-4" /></button>
@@ -1078,7 +1100,8 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
             <div className="flex gap-4 items-center">
               <button 
                 onClick={() => {
-                  setZoom(DEFAULT_ZOOM);
+                  setIsFullImageMode(false);
+                  setZoom(calculatedMinZoom);
                   setCrop({ x: 0, y: 0 });
                 }}
                 className="text-[9px] font-bold uppercase text-accent/60 hover:text-accent transition-colors"
@@ -1087,6 +1110,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               </button>
               <button 
                 onClick={() => {
+                  setIsFullImageMode(true);
                   setZoom(1);
                   setCrop({ x: 0, y: 0 });
                 }}
