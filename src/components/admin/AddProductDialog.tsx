@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
@@ -8,7 +9,7 @@ import {
   Sparkles,
   Package,
   Layers,
-  Image as ImageIcon,
+  ImageIcon,
   Palette,
   X,
   Plus,
@@ -45,7 +46,7 @@ import Cropper from 'react-easy-crop';
 import { Badge } from '@/components/ui/badge';
 import { getCroppedImgBlob } from '@/lib/cropImage';
 
-const DEFAULT_ZOOM = 1.1;
+const DEFAULT_ZOOM = 1;
 
 // Pool de data para avaliações demonstrativas
 const DEMO_REVIEWS_POOL = {
@@ -1028,9 +1029,9 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               }}
               showGrid={false}
               cropShape="rect"
-              minZoom={1}
+              minZoom={0.5}
               maxZoom={3}
-              restrictPosition={true}
+              restrictPosition={false}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -1067,10 +1068,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
               )}
               <div className="flex items-center gap-4">
-                <button onClick={() => setZoom(z => Math.max(1, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+                <button onClick={() => setZoom(z => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
                 <input 
                   type="range" 
-                  min={1} 
+                  min={0.5} 
                   max={3} 
                   step={0.01} 
                   value={zoom} 
@@ -1097,7 +1098,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 }}
                 className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
               >
-                Zoom mínimo
+                Foto inteira
               </button>
               <button 
                 onClick={() => {
