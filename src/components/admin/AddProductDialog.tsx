@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
@@ -388,6 +387,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     const source = getOriginalUrl(img);
     setEditingImage({ index, field });
     
+    // Reset explícito para garantir centralização de fotos novas
     setZoom(img?.zoom ?? DEFAULT_ZOOM);
     setCrop(img?.crop ?? { x: 0, y: 0 });
     
@@ -1002,6 +1002,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
           <DialogTitle className="sr-only">Editar Enquadramento da Foto</DialogTitle>
           <div className="relative h-[85vh] w-full">
             <Cropper
+              key={getOriginalUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
               image={getOriginalUrl(editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage?.index || 0])}
               crop={crop} 
               zoom={zoom} 
@@ -1016,11 +1017,18 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                   setCroppedAreaPixels(croppedAreaPixelsResult);
                 }
               }}
+              onMediaLoaded={(mediaSize) => {
+                setMediaSize(mediaSize);
+                const img = editingImage?.field === 'image' ? formData.image : formData.gallery[editingImage!.index];
+                if (!img?.crop) {
+                  setCrop({ x: 0, y: 0 });
+                }
+              }}
               showGrid={false}
               cropShape="rect"
-              minZoom={0.5}
+              minZoom={1}
               maxZoom={3}
-              restrictPosition={false}
+              restrictPosition={true}
               style={{
                 containerStyle: {
                   position: 'absolute',
@@ -1057,10 +1065,10 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">calculando...</p>
               )}
               <div className="flex items-center gap-4">
-                <button onClick={() => setZoom(z => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
+                <button onClick={() => setZoom(z => Math.max(1, Math.round((z - 0.1) * 10) / 10))} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"><Minus className="h-4 w-4" /></button>
                 <input 
                   type="range" 
-                  min={0.5} 
+                  min={1} 
                   max={3} 
                   step={0.01} 
                   value={zoom} 
@@ -1087,7 +1095,15 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
                 }}
                 className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
               >
-                Foto inteira
+                Zoom mínimo
+              </button>
+              <button 
+                onClick={() => {
+                  setCrop({ x: 0, y: 0 });
+                }}
+                className="text-[9px] font-bold uppercase text-white/40 hover:text-white transition-colors"
+              >
+                Centralizar
               </button>
               <Button variant="ghost" onClick={() => !savingCrop && setEditingImage(null)} className="text-white uppercase text-[10px] font-bold" disabled={savingCrop}>Cancelar</Button>
               <Button onClick={handleSaveCrop} disabled={savingCrop} className="bg-accent text-primary font-bold uppercase text-[10px] h-12 px-10 rounded-full min-w-[200px]">
