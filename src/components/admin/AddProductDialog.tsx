@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { 
   Save, 
   Loader2, 
@@ -46,7 +46,7 @@ import Cropper from 'react-easy-crop';
 import { Badge } from '@/components/ui/badge';
 import { getCroppedImgBlob } from '@/lib/cropImage';
 
-const DEFAULT_ZOOM = 1;
+const DEFAULT_ZOOM = 1.0;
 
 // Pool de data para avaliações demonstrativas
 const DEMO_REVIEWS_POOL = {
@@ -103,7 +103,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   const [editingImage, setEditingImage] = useState<{ index: number, field: 'gallery' | 'image' } | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
-  const [imageAspect, setImageAspect] = useState(1);
   const [mediaSize, setMediaSize] = useState<{ width: number, height: number } | null>(null);
 
   const fixedList = ['PP', 'P', 'M', 'G', 'GG', 'G1', 'G2', 'G3', 'G4'];
@@ -395,7 +394,6 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
     setCroppedAreaPixels(null);
     const tempImg = new window.Image();
     tempImg.onload = () => {
-      setImageAspect(tempImg.naturalWidth / tempImg.naturalHeight);
       setMediaSize({ width: tempImg.naturalWidth, height: tempImg.naturalHeight });
     };
     tempImg.src = source;
@@ -1001,13 +999,13 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       <Dialog open={!!editingImage} onOpenChange={(o) => !o && !savingCrop && setEditingImage(null)}>
         <DialogContent className="max-w-6xl p-0 overflow-hidden bg-black border-none rounded-[2rem]">
           <DialogTitle className="sr-only">Editar Enquadramento da Foto</DialogTitle>
-          <div className="relative h-[85vh] w-full">
+          <div className="relative h-[85vh] w-full overflow-hidden bg-black rounded-t-[2rem]">
             <Cropper
               key={editingImage ? getOriginalUrl(editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index]) : 'empty'}
               image={editingImage ? getOriginalUrl(editingImage.field === 'image' ? formData.image : formData.gallery[editingImage.index]) : ''}
               crop={crop} 
               zoom={zoom} 
-              aspect={imageAspect} 
+              aspect={3/5} 
               onCropChange={setCrop} 
               onZoomChange={setZoom} 
               onCropComplete={(_croppedArea, croppedAreaPixelsResult) => {
@@ -1034,18 +1032,14 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
               restrictPosition={false}
               style={{
                 containerStyle: {
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
                   width: '100%',
                   height: '100%',
+                  position: 'relative',
                 }
               }}
               classes={{
                 containerClassName: "bg-black",
-                mediaClassName: "max-w-none max-h-none",
+                mediaClassName: "max-w-none max-h-none m-0 p-0 border-none shadow-none static",
               }}
             />
           </div>
