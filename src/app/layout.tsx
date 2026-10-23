@@ -5,20 +5,9 @@ import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/contexts/CartContext';
 
-const inter = Inter({ 
-  subsets: ['latin'], 
-  weight: ['300', '400', '500', '600', '700'], 
-  display: 'swap', 
-  variable: '--font-inter' 
-});
+const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'], display: 'swap', variable: '--font-inter' });
 
-const playfair = Playfair_Display({ 
-  subsets: ['latin'], 
-  weight: ['400', '700'], 
-  style: ['normal', 'italic'], 
-  display: 'swap', 
-  variable: '--font-playfair' 
-});
+const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '700'], style: ['normal', 'italic'], display: 'swap', variable: '--font-playfair' });
 
 export const metadata: Metadata = {
   title: 'Toda Bela | Moda Feminina Moderna',
