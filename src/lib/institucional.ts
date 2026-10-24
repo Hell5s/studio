@@ -178,5 +178,154 @@ Siga as instruções da etiqueta de cada peça. Em geral, recomendamos lavar à 
 Sim. Tratamos seus dados conforme a LGPD e só os usamos para o que é necessário para sua compra e atendimento. Saiba mais na Política de Privacidade.
 ### Não encontrei minha dúvida. Como falo com vocês?
 Pelo WhatsApp {{whatsapp}} ou pelo e-mail {{contactEmail}}.`
+  },
+  'termos-de-uso': {
+    title: 'Termos de Uso',
+    subtitle: 'Condições de uso do site e das compras',
+    updatedAt: '2026-10-24',
+    content: `Estes Termos de Uso regulam o acesso e a utilização do site da {{storeName}} e as compras realizadas nele. Ao navegar ou comprar, você declara que leu e concorda com estas condições. Se não concordar, pedimos que não utilize o site.
+
+## 1. Quem somos
+O site é operado por {{companyName}}.
+CNPJ: {{cnpj}}
+Endereço: {{address}}
+Contato: {{contactEmail}} | WhatsApp {{whatsapp}}
+
+## 2. Cadastro e responsabilidade da conta
+Para comprar, você pode precisar informar dados pessoais e de entrega. Você se compromete a fornecer informações verdadeiras, completas e atualizadas, e é responsável por manter a confidencialidade do seu acesso. Compras por pessoas com menos de 18 anos dependem da autorização e da responsabilidade de pais ou responsáveis.
+
+## 3. Produtos, preços e disponibilidade
+- Exibimos fotos, descrições, medidas e preços com o máximo de cuidado. Pequenas variações de cor podem ocorrer conforme a tela do seu dispositivo.
+- Os preços são em reais (R$) e podem mudar sem aviso prévio, mas vale para o seu pedido o valor exibido no momento da finalização da compra.
+- A oferta está sujeita à disponibilidade de estoque. Se algum item ficar indisponível após a compra, entraremos em contato para oferecer outra peça ou o reembolso integral.
+- Em caso de erro evidente de preço ou descrição, podemos corrigir e entrar em contato antes de confirmar o pedido, garantindo a você a opção de cancelar sem custos.
+
+## 4. Pagamento
+Aceitamos os meios de pagamento exibidos no checkout (Pix e cartão de crédito, com parcelamento nas condições informadas). Os pagamentos são processados pelo Mercado Pago, e o pedido é confirmado após a aprovação. A {{storeName}} não armazena os dados completos do seu cartão. Pedidos com pagamento não aprovado ou não realizado no prazo podem ser cancelados automaticamente.
+
+## 5. Entrega
+Os prazos e os valores de frete são informados antes da finalização da compra e podem variar conforme a região. O prazo de entrega começa a contar a partir da aprovação do pagamento. É responsabilidade do cliente informar corretamente o endereço e estar disponível para receber a encomenda.
+
+## 6. Trocas, devoluções e reembolsos
+Seguem as regras das páginas Trocas e Devoluções e Política de Reembolso, em conformidade com o Código de Defesa do Consumidor.
+
+## 7. Propriedade intelectual
+A marca, o logotipo, os textos, as fotos, os vídeos e os demais conteúdos do site pertencem à {{storeName}} ou são usados com autorização, e são protegidos pela legislação. É proibido copiar, reproduzir ou usar esse material para fins comerciais sem autorização por escrito.
+
+## 8. Condutas proibidas
+Não é permitido usar o site para fins ilícitos, tentar acessar áreas restritas, interferir no funcionamento, fraudar pagamentos, enviar conteúdo ofensivo ou praticar atos que prejudiquem outros usuários ou a loja. Nesses casos, podemos suspender o acesso e cancelar pedidos, sem prejuízo das medidas legais cabíveis.
+
+## 9. Privacidade
+O tratamento de dados pessoais segue a nossa Política de Privacidade, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
+
+## 10. Limitação de responsabilidade
+Empregamos esforços para manter o site disponível e seguro, mas não garantimos funcionamento ininterrupto, nem nos responsabilizamos por indisponibilidades causadas por falhas de internet, serviços de terceiros ou eventos fora do nosso controle, ressalvados os direitos do consumidor previstos em lei.
+
+## 11. Alterações
+Podemos atualizar estes Termos a qualquer momento. A versão vigente é a publicada nesta página, com a data da última atualização. Compras já realizadas continuam regidas pelas condições vigentes na data da compra.
+
+## 12. Lei aplicável e foro
+Estes Termos são regidos pelas leis do Brasil. Fica eleito o foro do domicílio do consumidor para resolver eventuais controvérsias, conforme o Código de Defesa do Consumidor.
+
+## 13. Contato
+Dúvidas sobre estes Termos: {{contactEmail}}.`
+  },
+  'politica-de-privacidade': {
+    title: 'Política de Privacidade',
+    subtitle: 'Como cuidamos dos seus dados',
+    updatedAt: '2026-10-24',
+    content: `A {{storeName}} respeita a sua privacidade e trata seus dados pessoais com transparência e segurança, de acordo com a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018). Esta política explica quais dados coletamos, para que usamos e quais são os seus direitos.
+
+## 1. Quem é o responsável pelos seus dados
+Controladora: {{companyName}}
+CNPJ: {{cnpj}}
+Endereço: {{address}}
+Canal de privacidade (encarregado): {{contactEmail}}
+
+## 2. Dados que coletamos
+- Dados de cadastro e contato: nome, e-mail e telefone.
+- Dados de compra e entrega: endereço, CPF (quando exigido pelo meio de pagamento ou para a entrega), itens comprados, valores e histórico de pedidos.
+- Dados de pagamento: o pagamento é processado pelo Mercado Pago. Não armazenamos os dados completos do seu cartão.
+- Dados de navegação: endereço IP, tipo de dispositivo e navegador, páginas visitadas, produtos favoritados e itens do carrinho, coletados por cookies e tecnologias semelhantes.
+- Dados que você nos envia: mensagens de atendimento, avaliações e currículos enviados em Trabalhe Conosco.
+
+## 3. Para que usamos seus dados
+- Processar e entregar pedidos, e enviar e-mails de confirmação e de acompanhamento (como o código de rastreio).
+- Cumprir obrigações legais, fiscais e regulatórias.
+- Prestar atendimento, trocas, devoluções e reembolsos.
+- Prevenir fraudes e garantir a segurança do site e das transações.
+- Melhorar o site e a experiência de compra, nos limites da lei.
+- Enviar comunicações de marketing, somente se você tiver consentido, podendo cancelar quando quiser.
+
+## 4. Bases legais
+Tratamos seus dados para executar o contrato de compra, cumprir obrigações legais, exercer direitos em processos, atender a interesses legítimos da loja (como segurança e melhoria do site) e, quando aplicável, com o seu consentimento.
+
+## 5. Com quem compartilhamos
+Compartilhamos dados apenas quando necessário, com parceiros que adotam medidas de proteção:
+- Mercado Pago, para processar pagamentos.
+- Correios e transportadoras, para entregar seus pedidos.
+- Provedores de tecnologia que operam o site: hospedagem, banco de dados, autenticação e envio de e-mails.
+- Ferramentas de comunicação interna da equipe, para avisar sobre novos pedidos.
+- Autoridades públicas, quando houver obrigação legal ou ordem judicial.
+Não vendemos seus dados pessoais. Alguns fornecedores podem armazenar dados fora do Brasil; nesses casos, adotamos as salvaguardas previstas na LGPD.
+
+## 6. Cookies
+Usamos cookies e armazenamento local essenciais ao funcionamento do site, como manter você conectada e guardar o carrinho e os favoritos, além de recursos de medição para entender o uso do site e melhorá-lo. Você pode gerenciar ou bloquear cookies nas configurações do navegador, mas algumas funções podem deixar de funcionar.
+
+## 7. Por quanto tempo guardamos seus dados
+Mantemos os dados pelo tempo necessário para cumprir as finalidades acima, as obrigações legais e fiscais e o exercício regular de direitos. Depois disso, eliminamos ou anonimizamos os dados.
+
+## 8. Seus direitos
+Você pode, a qualquer momento, solicitar:
+- Confirmação de que tratamos seus dados e acesso a eles.
+- Correção de dados incompletos, inexatos ou desatualizados.
+- Anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desacordo com a lei.
+- Portabilidade dos dados, observados os segredos comercial e industrial.
+- Eliminação dos dados tratados com base no consentimento.
+- Informação sobre com quem compartilhamos seus dados.
+- Revogação do consentimento e informação sobre as consequências de não consentir.
+Para exercer seus direitos, escreva para {{contactEmail}}. Respondemos em até 15 dias. Você também pode apresentar reclamação à Autoridade Nacional de Proteção de Dados (ANPD).
+
+## 9. Segurança
+Adotamos medidas técnicas e organizacionais para proteger seus dados, como conexão criptografada (HTTPS), controle de acesso e uso de serviços de pagamento certificados. Nenhum sistema é totalmente imune a incidentes; se houver risco relevante, comunicaremos você e a ANPD, conforme a lei.
+
+## 10. Menores de idade
+O site não é direcionado a menores de 18 anos. Compras por menores dependem da autorização dos responsáveis, e não coletamos intencionalmente dados de crianças sem o consentimento de um responsável legal.
+
+## 11. Atualizações desta política
+Podemos atualizar esta política para refletir mudanças legais ou em nossos serviços. A versão vigente fica sempre nesta página, com a data da última atualização.`
+  },
+  'politica-de-reembolso': {
+    title: 'Política de Reembolso',
+    subtitle: 'Transparência em cada etapa',
+    updatedAt: '2026-10-24',
+    content: `Esta política explica quando e como fazemos reembolsos na {{storeName}}, sempre em linha com o Código de Defesa do Consumidor.
+
+## Quando você tem direito ao reembolso
+- Desistência da compra em até 7 dias corridos após o recebimento (direito de arrependimento).
+- Produto com defeito ou diferente do pedido, quando você preferir o reembolso à troca.
+- Item indisponível em estoque após a confirmação do pedido, quando você não aceitar outra peça.
+- Pedido cancelado antes do envio, a seu pedido ou por iniciativa da loja.
+- Cobrança em duplicidade ou indevida.
+
+## Valor reembolsado
+- Desistência em 7 dias, defeito ou erro da loja: valor integral pago, incluindo o frete.
+- Devolução por outros motivos aceitos pela loja: valor dos produtos. O frete pago na compra pode não ser reembolsado quando a devolução não decorrer de defeito, erro da loja ou direito de arrependimento.
+
+## Como o reembolso é feito
+O reembolso é feito pelo mesmo meio de pagamento usado na compra:
+- Cartão de crédito: estorno solicitado ao Mercado Pago; o valor aparece na sua fatura em até duas faturas, conforme o banco emissor.
+- Pix: devolução na conta de origem do pagamento, pelo Mercado Pago.
+
+## Prazos
+- Cancelamento antes do envio: solicitamos o reembolso em até 5 dias úteis.
+- Devoluções: solicitamos o reembolso em até 10 dias úteis após recebermos e conferirmos a peça.
+- Depois que solicitamos, o prazo para o valor aparecer depende do banco ou da operadora do meio de pagamento.
+
+## Como solicitar
+Fale com a gente pelo WhatsApp {{whatsapp}} ou pelo e-mail {{contactEmail}}, informando o número do pedido e o motivo. Para devoluções, siga as instruções da página Trocas e Devoluções.
+
+## Não recebi meu reembolso
+Se o prazo informado passou e você não identificou o valor, escreva com o número do pedido e o comprovante, que acompanhamos o caso junto ao Mercado Pago.`
   }
 };
