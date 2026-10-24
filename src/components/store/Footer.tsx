@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -9,9 +8,10 @@ import {
 } from 'lucide-react';
 import { LogoMark } from './LogoMark';
 import { OrderTrackingDialog } from './OrderTrackingDialog';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase, useFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
+import { FOOTER_LABEL_TO_SLUG } from '@/lib/institucional';
 import {
   Dialog,
   DialogContent,
@@ -68,26 +68,26 @@ export function Footer() {
     {
       title: 'A Toda Bela',
       links: [
-        { label: 'Sobre Nós', type: 'page', pageTitle: 'Sobre Nós', pageContent: 'A Toda Bela é mais que uma loja, é um manifesto de estilo para a mulher que reconhece sua própria luz. Nossa curadoria foca em peças que unem o conforto do dia a dia à sofisticação de momentos especiais.' },
-        { label: 'Nossa História', type: 'page', pageTitle: 'Nossa História', pageContent: 'Iniciamos nossa jornada com o propósito de democratizar a moda premium no Brasil. Hoje, celebramos milhares de clientes que encontraram na Toda Bela a expressão máxima de sua autenticidade.' },
-        { label: 'Trabalhe Conosco', type: 'page', pageTitle: 'Trabalhe Conosco', pageContent: 'Quer fazer parte da equipe Toda Bela? Envie seu portfólio para nossa equipe de RH e venha construir o futuro da moda feminina conosco.' }
+        { label: 'Sobre Nós', type: 'page' },
+        { label: 'Nossa História', type: 'page' },
+        { label: 'Trabalhe Conosco', type: 'page' }
       ]
     },
     {
       title: 'Atendimento',
       links: [
         { label: 'Rastrear Pedido', type: 'track' },
-        { label: 'Trocas e Devoluções', type: 'page', pageTitle: 'Trocas e Devoluções', pageContent: 'Sua satisfação é nossa prioridade. Você tem até 30 dias após o recebimento para solicitar trocas através do nosso canal de atendimento VIP.' },
-        { label: 'Fale Conosco', type: 'whatsapp' },
-        { label: 'Perguntas Frequentes', type: 'page', pageTitle: 'Perguntas Frequentes', pageContent: 'Qual o prazo de entrega? De 10 a 20 dias úteis.\nComo rastreio meu pedido? Use a opção "Rastrear Pedido" no menu de Atendimento abaixo.' }
+        { label: 'Trocas e Devoluções', type: 'page' },
+        { label: 'Fale Conosco', type: 'page' },
+        { label: 'Perguntas Frequentes', type: 'page' }
       ]
     },
     {
       title: 'Informações',
       links: [
-        { label: 'Termos de Uso', type: 'page', pageTitle: 'Termos de Uso', pageContent: 'Ao utilizar nosso site, você concorda com as diretrizes de navegação e comercialização da nossa plataforma, pautadas pela transparência e respeito ao consumidor.' },
-        { label: 'Política de Privacidade', type: 'page', pageTitle: 'Política de Privacidade', pageContent: 'Seus dados estão seguros conosco. Utilizamos criptografia SSL de ponta a ponta para garantir que sua experiência de compra seja privada e protegida.' },
-        { label: 'Política de Reembolso', type: 'page', pageTitle: 'Política de Reembolso', pageContent: 'Nossa política de reembolso é transparente e segue rigorosamente o Código de Defesa do Consumidor brasileiro.' }
+        { label: 'Termos de Uso', type: 'page' },
+        { label: 'Política de Privacidade', type: 'page' },
+        { label: 'Política de Reembolso', type: 'page' }
       ]
     }
   ];
@@ -98,7 +98,22 @@ export function Footer() {
   };
 
   const handleLinkClick = (link: FooterLink) => {
-    if (link.type === 'page') {
+    // Lógica para Páginas Institucionais Reais
+    if (link.type !== 'track') {
+      const normalizedLabel = link.label
+        .toLowerCase()
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+        
+      const slug = FOOTER_LABEL_TO_SLUG[normalizedLabel];
+      if (slug) {
+        window.location.href = `/institucional/${slug}`;
+        return;
+      }
+    }
+
+    if (link.type === 'page' && link.pageTitle) {
       setActivePage({ title: link.pageTitle || link.label, content: link.pageContent || '' });
     } else if (link.type === 'track') {
       setIsTrackOpen(true);
@@ -186,10 +201,9 @@ export function Footer() {
                       <li key={lIdx}>
                         <button 
                           onClick={() => handleLinkClick(link)} 
-                          className="text-[11px] text-white/40 hover:transition-colors uppercase tracking-widest text-left"
-                          style={{ color: 'inherit' }}
+                          className="text-[11px] text-white/40 hover:text-white transition-all uppercase tracking-widest text-left"
                         >
-                          <span className="hover:opacity-100 transition-opacity" style={{ color: 'white', opacity: 0.4 }}>{link.label}</span>
+                          {link.label}
                         </button>
                       </li>
                     ))}
@@ -198,7 +212,7 @@ export function Footer() {
               )
             ))}
 
-            {/* Coluna Contato (Fixa ou Configurável) */}
+            {/* Coluna Contato */}
             {footer?.showContactColumn !== false && (
               <div className="space-y-6">
                 <h5 className="text-[10px] font-black uppercase tracking-[0.4em]" style={{ color: accentColor }}>{footer?.contactTitle || 'Contato'}</h5>

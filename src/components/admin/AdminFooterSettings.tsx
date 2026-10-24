@@ -6,7 +6,7 @@ import {
   Upload, Palette, Loader2, MousePointer2, ChevronUp, ChevronDown, 
   Type, Link as LinkIcon, RefreshCcw, Truck, CreditCard, ShieldCheck, 
   Gift, Heart, Package, Clock, Star, Percent, X, Sparkles, 
-  Instagram, Facebook, Youtube 
+  Instagram, Facebook, Youtube, Building2, MapPin, CalendarDays
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,26 +57,26 @@ const DEFAULT_FOOTER = {
     {
       title: 'A Toda Bela',
       links: [
-        { label: 'Sobre Nós', type: 'page', pageTitle: 'Sobre Nós', pageContent: 'A Toda Bela é mais que uma loja, é um manifesto de style para a mulher que reconhece sua própria luz. Nossa curadoria foca em peças que unem o conforto do dia a dia à sofisticação de momentos especiais.' },
-        { label: 'Nossa História', type: 'page', pageTitle: 'Nossa História', pageContent: 'Iniciamos nossa jornada com o propósito de democratizar a moda premium no Brasil. Hoje, celebramos milhares de clientes que encontraram na Toda Bela a expressão máxima de sua autenticidade.' },
-        { label: 'Trabalhe Conosco', type: 'page', pageTitle: 'Trabalhe Conosco', pageContent: 'Quer fazer parte da equipe Toda Bela? Envie seu portfólio para nossa equipe de RH e venha construir o futuro da moda feminina conosco.' }
+        { label: 'Sobre Nós', type: 'page' },
+        { label: 'Nossa História', type: 'page' },
+        { label: 'Trabalhe Conosco', type: 'page' }
       ]
     },
     {
       title: 'Atendimento',
       links: [
         { label: 'Rastrear Pedido', type: 'track' },
-        { label: 'Trocas e Devoluções', type: 'page', pageTitle: 'Trocas e Devoluções', pageContent: 'Sua satisfação é nossa prioridade. Você tem até 30 dias após o recebimento para solicitar trocas através do nosso canal de atendimento VIP.' },
-        { label: 'Fale Conosco', type: 'whatsapp' },
-        { label: 'Perguntas Frequentes', type: 'page', pageTitle: 'Perguntas Frequentes', pageContent: 'Qual o prazo de entrega? De 10 a 20 dias úteis.\nComo rastreio meu pedido? Use a opção "Rastrear Pedido" no menu de Atendimento abaixo.' }
+        { label: 'Trocas e Devoluções', type: 'page' },
+        { label: 'Fale Conosco', type: 'page' },
+        { label: 'Perguntas Frequentes', type: 'page' }
       ]
     },
     {
       title: 'Informações',
       links: [
-        { label: 'Termos de Uso', type: 'page', pageTitle: 'Termos de Uso', pageContent: 'Ao utilizar nosso site, você concorda com as diretrizes de navegação e comercialização da nossa plataforma, pautadas pela transparência e respeito ao consumidor.' },
-        { label: 'Política de Privacidade', type: 'page', pageTitle: 'Política de Privacidade', pageContent: 'Seus dados estão seguros conosco. Utilizamos criptografia SSL de ponta a ponta para garantir que sua experiência de compra seja privada e protegida.' },
-        { label: 'Política de Reembolso', type: 'page', pageTitle: 'Política de Reembolso', pageContent: 'Nossa política de reembolso é transparente e segue rigorosamente o Código de Defesa do Consumidor brasileiro.' }
+        { label: 'Termos de Uso', type: 'page' },
+        { label: 'Política de Privacidade', type: 'page' },
+        { label: 'Política de Reembolso', type: 'page' }
       ]
     }
   ],
@@ -107,6 +107,9 @@ export function AdminFooterSettings() {
     instagram: '',
     contactEmail: '',
     cnpj: '',
+    companyName: '',
+    address: '',
+    businessHours: '',
     footer: DEFAULT_FOOTER
   });
 
@@ -119,6 +122,9 @@ export function AdminFooterSettings() {
         instagram: settings.instagram || '',
         contactEmail: settings.contactEmail || '',
         cnpj: settings.cnpj || '',
+        companyName: settings.companyName || '',
+        address: settings.address || '',
+        businessHours: settings.businessHours || '',
         footer: settings.footer || DEFAULT_FOOTER
       });
     }
@@ -268,6 +274,56 @@ export function AdminFooterSettings() {
             cnpj: formData.cnpj,
             footer: formData.footer
           })} disabled={loading} className="rounded-full bg-primary text-white font-bold h-11 px-8 text-[10px] uppercase tracking-widest shadow-lg">Salvar Marca e Contatos</Button>
+        </div>
+      </Card>
+
+      {/* NOVO: DADOS DA EMPRESA */}
+      <Card className="p-8 border-none bg-white shadow-premium rounded-[2.5rem] space-y-8">
+        <div className="flex items-center justify-between border-b border-primary/5 pb-4">
+          <div className="flex items-center gap-3 text-accent">
+            <Building2 className="h-5 w-5" />
+            <h5 className="text-[11px] font-bold uppercase tracking-[0.4em]">Dados da Empresa (Páginas Institucionais)</h5>
+          </div>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Razão Social / Nome Empresarial</Label>
+              <Input 
+                value={formData.companyName} 
+                onChange={e => setFormData({...formData, companyName: e.target.value})} 
+                placeholder="Ex: Toda Bela Confecções LTDA"
+                className="h-12 bg-secondary/10 border-none rounded-xl" 
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Horário de Atendimento</Label>
+              <Input 
+                value={formData.businessHours} 
+                onChange={e => setFormData({...formData, businessHours: e.target.value})} 
+                placeholder="Ex: Segunda a sexta, das 9h às 18h"
+                className="h-12 bg-secondary/10 border-none rounded-xl" 
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Endereço Completo</Label>
+            <Textarea 
+              value={formData.address} 
+              onChange={e => setFormData({...formData, address: e.target.value})} 
+              placeholder="Rua, Número, Bairro, Cidade - UF, CEP"
+              className="min-h-[108px] bg-secondary/10 border-none rounded-xl p-4 text-xs italic leading-relaxed" 
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4">
+          <Button onClick={() => handleSave('Dados da Empresa', { 
+            companyName: formData.companyName,
+            address: formData.address,
+            businessHours: formData.businessHours
+          })} disabled={loading} className="rounded-full bg-primary text-white font-bold h-11 px-8 text-[10px] uppercase tracking-widest shadow-lg">Salvar Dados da Empresa</Button>
         </div>
       </Card>
 
@@ -456,7 +512,7 @@ export function AdminFooterSettings() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="page">Página Institucional (Modal)</SelectItem>
+                            <SelectItem value="page">Página Institucional (Recomendado)</SelectItem>
                             <SelectItem value="url">Link Externo / URL</SelectItem>
                             <SelectItem value="track">Rastrear Pedido</SelectItem>
                             <SelectItem value="whatsapp">WhatsApp da Loja</SelectItem>
@@ -484,27 +540,6 @@ export function AdminFooterSettings() {
                       </div>
                     </div>
 
-                    {link.type === 'page' && (
-                      <div className="grid gap-3 animate-in fade-in zoom-in-95 duration-200">
-                        <div className="space-y-1">
-                           <Label className="text-[8px] font-bold uppercase text-primary/40 ml-1">Título da Página</Label>
-                           <Input value={link.pageTitle} onChange={e => {
-                             const newC = [...formData.footer.columns];
-                             newC[cIdx].links[lIdx].pageTitle = e.target.value;
-                             setFormData({...formData, footer: {...formData.footer, columns: newC}});
-                           }} className="h-9 text-xs" />
-                        </div>
-                        <div className="space-y-1">
-                           <Label className="text-[8px] font-bold uppercase text-primary/40 ml-1">Conteúdo da Página</Label>
-                           <Textarea value={link.pageContent} onChange={e => {
-                             const newC = [...formData.footer.columns];
-                             newC[cIdx].links[lIdx].pageContent = e.target.value;
-                             setFormData({...formData, footer: {...formData.footer, columns: newC}});
-                           }} className="min-h-[120px] text-xs p-4 leading-relaxed" />
-                        </div>
-                      </div>
-                    )}
-
                     {link.type === 'url' && (
                       <div className="space-y-1 animate-in fade-in zoom-in-95 duration-200">
                         <Label className="text-[8px] font-bold uppercase text-primary/40 ml-1">URL de Destino</Label>
@@ -521,7 +556,7 @@ export function AdminFooterSettings() {
                   variant="outline" size="sm" 
                   onClick={() => {
                     const newC = [...formData.footer.columns];
-                    newC[cIdx].links.push({ label: 'Novo Link', type: 'page', pageTitle: 'Nova Página', pageContent: '' });
+                    newC[cIdx].links.push({ label: 'Novo Link', type: 'page' });
                     setFormData({...formData, footer: {...formData.footer, columns: newC}});
                   }}
                   className="w-full h-10 border-dashed border-primary/10 text-primary/40 hover:text-primary hover:bg-white"
