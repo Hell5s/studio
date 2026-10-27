@@ -14,14 +14,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  'pending': { label: 'Pedido Recebido', color: 'bg-[#F7E8EA] text-[#6E3C47] border-[#E9C9CF]', icon: <Clock className="h-3 w-3" /> },
+  'pending': { label: 'Aguardando Pagamento', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
   'paid': { label: 'Pagamento Confirmado', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
   'processing': { label: 'Em Processamento', color: 'bg-orange-50 text-orange-700 border-orange-100', icon: <Tag className="h-3 w-3" /> },
   'shipped': { label: 'Enviado', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: <Truck className="h-3 w-3" /> },
   'delivered': { label: 'Entregue', color: 'bg-green-100 text-green-800 border-green-200', icon: <CheckCircle2 className="h-3 w-3" /> },
   'canceled': { label: 'Cancelado', color: 'bg-red-50 text-red-700 border-red-100', icon: <XCircle className="h-3 w-3" /> },
   'refunded': { label: 'Reembolsado', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <RefreshCw className="h-3 w-3" /> },
-  'Pedido recebido': { label: 'Pedido Recebido', color: 'bg-[#F7E8EA] text-[#6E3C47] border-[#E9C9CF]', icon: <Clock className="h-3 w-3" /> },
+  'Pedido recebido': { label: 'Aguardando Pagamento', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
   'Pago': { label: 'Pagamento Confirmado', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
   'Comprado na Shopee': { label: 'Em Processamento', color: 'bg-orange-50 text-orange-700 border-orange-100', icon: <Tag className="h-3 w-3" /> },
   'Enviado': { label: 'Enviado', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: <Truck className="h-3 w-3" /> },
@@ -163,6 +163,10 @@ export default function MeusPedidosPage() {
             <div className="grid gap-12 max-w-5xl mx-auto">
               {orders.map((order: any) => {
                 const status = statusConfig[order.status] || statusConfig['pending'];
+                const isPending = order.status === 'pending' || order.status === 'Pedido recebido';
+                const isCanceled = order.status === 'canceled' || order.status === 'Cancelado';
+                const isRefunded = order.status === 'refunded';
+
                 return (
                   <article key={order.id} className="bg-white rounded-[3rem] border border-primary/5 shadow-editorial overflow-hidden hover:shadow-premium transition-all duration-700">
                     <div className="p-8 md:p-12 border-b border-primary/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
@@ -172,9 +176,16 @@ export default function MeusPedidosPage() {
                              <div className="h-1 w-1 rounded-full bg-accent/30" />
                              <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{formatDate(order.createdAt)}</span>
                           </div>
-                          <div className={cn("px-6 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 w-fit", status.color)}>
-                              {status.icon}
-                              {status.label}
+                          <div className="space-y-2">
+                            <div className={cn("px-6 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 w-fit", status.color)}>
+                                {status.icon}
+                                {status.label}
+                            </div>
+                            {isPending && (
+                              <p className="text-[10px] text-muted-foreground italic font-light leading-relaxed max-w-xs ml-1">
+                                Assim que o pagamento for aprovado, seu pedido segue para preparação. Pedidos sem pagamento são cancelados automaticamente após 24 horas.
+                              </p>
+                            )}
                           </div>
                        </div>
                        <div className="text-left md:text-right space-y-1">
@@ -219,12 +230,21 @@ export default function MeusPedidosPage() {
                                           </div>
                                           <p className="text-xs text-muted-foreground italic mt-1">{item.quantity} un • {formatPrice(item.price)}</p>
                                           {(() => {
-                                            const itemStatus = itemStatusConfig[item.status || 'aguardando'];
+                                            let itemConfig = itemStatusConfig[item.status || 'aguardando'];
+                                            
+                                            if (isPending) {
+                                              itemConfig = { label: 'Aguardando Pagamento', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> };
+                                            } else if (isCanceled) {
+                                              itemConfig = { label: 'Cancelado', color: 'bg-red-50 text-red-700 border-red-100', icon: <XCircle className="h-3 w-3" /> };
+                                            } else if (isRefunded) {
+                                              itemConfig = { label: 'Reembolsado', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <RefreshCw className="h-3 w-3" /> };
+                                            }
+
                                             return (
                                               <div className="flex flex-wrap items-center gap-2 mt-2">
-                                                <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest", itemStatus.color)}>
-                                                  {itemStatus.icon}
-                                                  {itemStatus.label}
+                                                <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest", itemConfig.color)}>
+                                                  {itemConfig.icon}
+                                                  {itemConfig.label}
                                                 </div>
                                                 {item.trackingCode && (
                                                   <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-100")}>

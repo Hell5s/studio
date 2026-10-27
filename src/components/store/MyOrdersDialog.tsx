@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ShoppingBag, Loader2, Package, MapPin, Tag, Clock, CheckCircle2, Truck, XCircle, Info } from 'lucide-react';
+import { ShoppingBag, Loader2, Package, MapPin, Tag, Clock, CheckCircle2, Truck, XCircle, Info, RefreshCw } from 'lucide-react';
 import { cn, getItemImageUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -21,12 +21,26 @@ interface MyOrdersDialogProps {
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  'Pedido recebido': { label: 'Pedido Recebido', color: 'bg-[#F7E8EA] text-[#6E3C47] border-[#E9C9CF]', icon: <Clock className="h-3 w-3" /> },
+  'pending': { label: 'Aguardando Pagamento', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
+  'paid': { label: 'Pagamento Confirmado', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
+  'processing': { label: 'Em Processamento', color: 'bg-orange-50 text-orange-700 border-orange-100', icon: <Tag className="h-3 w-3" /> },
+  'shipped': { label: 'Enviado', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: <Truck className="h-3 w-3" /> },
+  'delivered': { label: 'Entregue', color: 'bg-green-100 text-green-800 border-green-200', icon: <CheckCircle2 className="h-3 w-3" /> },
+  'canceled': { label: 'Cancelado', color: 'bg-red-50 text-red-700 border-red-100', icon: <XCircle className="h-3 w-3" /> },
+  'refunded': { label: 'Reembolsado', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <RefreshCw className="h-3 w-3" /> },
+  'Pedido recebido': { label: 'Aguardando Pagamento', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
   'Pago': { label: 'Pagamento Confirmado', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
   'Comprado na Shopee': { label: 'Em Processamento', color: 'bg-orange-50 text-orange-700 border-orange-100', icon: <Tag className="h-3 w-3" /> },
   'Enviado': { label: 'Enviado', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: <Truck className="h-3 w-3" /> },
   'Entregue': { label: 'Entregue', color: 'bg-green-100 text-green-800 border-green-200', icon: <CheckCircle2 className="h-3 w-3" /> },
   'Cancelado': { label: 'Cancelado', color: 'bg-red-50 text-red-700 border-red-100', icon: <XCircle className="h-3 w-3" /> },
+};
+
+const itemStatusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  'aguardando': { label: 'Preparando Pedido', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
+  'comprado': { label: 'Preparando Pedido', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
+  'transito': { label: 'A Caminho', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <Truck className="h-3 w-3" /> },
+  'entregue': { label: 'Entregue', color: 'bg-green-50 text-green-700 border-green-100', icon: <CheckCircle2 className="h-3 w-3" /> },
 };
 
 export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
@@ -89,7 +103,10 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
           ) : orders && orders.length > 0 ? (
             <div className="space-y-12">
               {orders.map((order: any) => {
-                const status = statusConfig[order.status] || statusConfig['Pedido recebido'];
+                const status = statusConfig[order.status] || statusConfig['pending'];
+                const isPending = order.status === 'pending' || order.status === 'Pedido recebido';
+                const isCanceled = order.status === 'canceled' || order.status === 'Cancelado';
+                const isRefunded = order.status === 'refunded';
                 
                 return (
                   <div key={order.id} className="group relative bg-white rounded-[2.5rem] border border-primary/5 shadow-editorial hover:shadow-premium transition-all duration-700 overflow-hidden">
@@ -100,9 +117,16 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                            <div className="h-1 w-1 rounded-full bg-accent/30" />
                            <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{formatDate(order.createdAt)}</span>
                         </div>
-                        <div className={cn("px-4 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-widest flex items-center gap-2", status.color)}>
-                           {status.icon}
-                           {status.label}
+                        <div className="space-y-2">
+                          <div className={cn("px-4 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-widest flex items-center gap-2 w-fit", status.color)}>
+                             {status.icon}
+                             {status.label}
+                          </div>
+                          {isPending && (
+                            <p className="text-[9px] text-muted-foreground italic font-light max-w-xs leading-relaxed ml-1">
+                              O pedido será preparado assim que o pagamento for aprovado. Pagamentos via boleto podem levar até 3 dias úteis para compensação.
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="text-left md:text-right space-y-1">
@@ -120,6 +144,16 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                           <div className="space-y-4">
                             {order.items?.map((item: any, i: number) => {
                               const itemImg = getItemImageUrl(item.image);
+                              
+                              let itemConfig = itemStatusConfig[item.status || 'aguardando'];
+                              if (isPending) {
+                                itemConfig = { label: 'Aguardando Pagamento', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> };
+                              } else if (isCanceled) {
+                                itemConfig = { label: 'Cancelado', color: 'bg-red-50 text-red-700 border-red-100', icon: <XCircle className="h-3 w-3" /> };
+                              } else if (isRefunded) {
+                                itemConfig = { label: 'Reembolsado', color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <RefreshCw className="h-3 w-3" /> };
+                              }
+
                               return (
                                 <div key={i} className="flex gap-6 items-center p-4 rounded-3xl bg-secondary/10 border border-transparent hover:border-accent/10 transition-colors">
                                   <div className="w-20 aspect-[3/5] rounded-2xl overflow-hidden shadow-sm shrink-0 relative bg-secondary/20">
@@ -132,6 +166,11 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                                       {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
                                     </div>
                                     <p className="mt-1 text-[11px] text-muted-foreground italic">Qtd: {item.quantity} • {formatPrice(item.price)}</p>
+                                    
+                                    <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[8px] font-bold uppercase tracking-widest mt-3", itemConfig.color)}>
+                                      {itemConfig.icon}
+                                      {itemConfig.label}
+                                    </div>
                                   </div>
                                   <p className="text-sm font-bold text-primary">{formatPrice(item.price * item.quantity)}</p>
                                 </div>
