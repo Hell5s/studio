@@ -125,15 +125,28 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
         const colorName = variant.color || `Opção ${idx + 1}`;
         const isLast = i === activeColorIndices.length - 1;
         
+        // Define a imagem da cor específica ou mantém a do produto como fallback
+        const colorImage = getItemImageUrl(variant.image) || getItemImageUrl(product.image);
+        
         onAddToCart?.({
           ...product,
+          image: colorImage,
           quantity: colorCounts[idx],
           selectedSize,
           selectedColor: colorName
         }, isLast ? openCart : false);
       });
     } else {
-      onAddToCart?.({ ...product, quantity, selectedSize, selectedColor }, openCart);
+      const variant = selectedColorIndex !== null ? colorVariations[selectedColorIndex] : null;
+      const colorImage = variant ? (getItemImageUrl(variant.image) || getItemImageUrl(product.image)) : getItemImageUrl(product.image);
+      
+      onAddToCart?.({ 
+        ...product, 
+        image: colorImage,
+        quantity, 
+        selectedSize, 
+        selectedColor 
+      }, openCart);
     }
   };
 

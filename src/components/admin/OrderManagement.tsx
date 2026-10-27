@@ -261,7 +261,7 @@ export function OrderManagement() {
                          {order.items?.slice(0, 3).map((it: any, idx: number) => {
                            const itImg = getItemImageUrl(it.image);
                            return (
-                             <div key={idx} className="h-8 w-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm">
+                             <div key={idx} className="w-8 aspect-[3/5] rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm relative">
                                {itImg ? <img src={itImg} className="h-full w-full object-cover" alt="item" /> : <div className="h-full w-full bg-secondary/20" />}
                              </div>
                            );
@@ -326,7 +326,6 @@ export function OrderManagement() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem] p-0 border-none shadow-2xl bg-[#F4F6F8]">
           {selectedOrder && (
             <>
-              {/* Accessibility Title (Required by Radix) */}
               <div className="sr-only">
                 <DialogTitle>Pedido #{selectedOrder.orderNumber}</DialogTitle>
                 <DialogDescription>Detalhes completos do pedido, itens selecionados e endereço de entrega.</DialogDescription>
@@ -353,11 +352,13 @@ export function OrderManagement() {
                         return (
                           <Card key={i} className="p-6 border-none shadow-sm bg-white space-y-6">
                              <div className="flex gap-6 items-center">
-                               {itemImg ? (
-                                 <img src={itemImg} className="h-20 w-16 object-cover rounded-xl" alt={item.name} />
-                               ) : (
-                                 <div className="h-20 w-16 rounded-xl bg-secondary/20" />
-                               )}
+                               <div className="w-16 aspect-[3/5] relative shrink-0">
+                                 {itemImg ? (
+                                   <img src={itemImg} className="h-full w-full object-cover rounded-xl" alt={item.name} />
+                                 ) : (
+                                   <div className="h-full w-full rounded-xl bg-secondary/20" />
+                                 )}
+                               </div>
                                <div className="flex-1">
                                  <h5 className="font-bold text-primary">{item.name}</h5>
                                  <p className="text-[10px] uppercase font-bold text-muted-foreground">{item.selectedSize} / {item.selectedColor}</p>

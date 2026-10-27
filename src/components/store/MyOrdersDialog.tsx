@@ -122,7 +122,7 @@ export function MyOrdersDialog({ open, onOpenChange }: MyOrdersDialogProps) {
                               const itemImg = getItemImageUrl(item.image);
                               return (
                                 <div key={i} className="flex gap-6 items-center p-4 rounded-3xl bg-secondary/10 border border-transparent hover:border-accent/10 transition-colors">
-                                  <div className="h-24 w-20 rounded-2xl overflow-hidden shadow-sm shrink-0">
+                                  <div className="w-20 aspect-[3/5] rounded-2xl overflow-hidden shadow-sm shrink-0 relative bg-secondary/20">
                                     {itemImg ? <img src={itemImg} className="h-full w-full object-cover" alt={item.name} /> : <div className="h-full w-full bg-secondary/20" />}
                                   </div>
                                   <div className="flex-1 min-w-0">

@@ -202,7 +202,7 @@ export default function MeusPedidosPage() {
                                   const imageUrl = getItemImageUrl(item.image);
                                   return (
                                     <div key={i} className="flex gap-6 items-center p-6 rounded-[2.5rem] bg-secondary/10 border border-transparent hover:border-accent/10 transition-colors">
-                                       <div className="h-28 w-24 rounded-2xl overflow-hidden shadow-sm shrink-0 border border-white bg-secondary/20">
+                                       <div className="w-24 aspect-[3/5] rounded-2xl overflow-hidden shadow-sm shrink-0 border border-white bg-secondary/20 relative">
                                           {imageUrl ? (
                                             <img src={imageUrl} className="h-full w-full object-cover" alt={item.name} />
                                           ) : (

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -258,7 +257,7 @@ function CheckoutContent() {
         errorMsg = "Este domínio não está autorizado. Adicione a URL atual em: Console do Firebase > Auth > Settings > Authorized Domains.";
       } else if (e.code === 'auth/popup-closed-by-user') {
         errorMsg = "A janela de login foi fechada antes de concluir. Tente novamente.";
-      } else if (e.code === 'auth/popup-blocked') {
+      } else if (error.code === 'auth/popup-blocked') {
         errorMsg = "O navegador bloqueou o pop-up de login. Por favor, autorize pop-ups para este site.";
       } else if (e.code === 'auth/operation-not-allowed') {
         errorMsg = "O login com Google não está habilitado no seu Console do Firebase.";
@@ -1030,7 +1029,7 @@ function CheckoutContent() {
                     const imageUrl = getItemImageUrl(item.image);
                     return (
                       <div key={i} className="flex gap-4 items-center group relative">
-                         <div className="h-16 w-12 rounded-lg bg-secondary/30 overflow-hidden shrink-0 border border-primary/5">
+                         <div className="w-12 aspect-[3/5] rounded-lg bg-secondary/30 overflow-hidden shrink-0 border border-primary/5 relative">
                             {imageUrl ? (
                               <img src={imageUrl} className="h-full w-full object-cover" alt={item.name} />
                             ) : (

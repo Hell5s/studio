@@ -51,9 +51,14 @@ export function QuickAddPopover({ product, onConfirm, trigger }: QuickAddPopover
     e.stopPropagation();
 
     if (!isSelectionComplete) return;
+
+    // Obtém a imagem específica da cor selecionada ou mantém a original
+    const variant = selectedColorIndex !== null ? colorVariations[selectedColorIndex] : null;
+    const colorImage = variant ? (getItemImageUrl(variant.image) || product.image) : product.image;
     
     onConfirm({
       ...product,
+      image: colorImage,
       quantity: 1,
       selectedSize,
       selectedColor

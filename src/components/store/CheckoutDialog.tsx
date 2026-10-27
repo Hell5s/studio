@@ -156,22 +156,17 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
               <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full">
                 <div className="space-y-0 w-full">
                   {cartItems.map((item, idx) => {
-                    const imageUrl = typeof item.image === 'string' ? item.image : item.image?.url;
-                    const imageConfig = typeof item.image === 'object' ? item.image : null;
+                    const imageUrl = getItemImageUrl(item.image);
 
                     return (
                       <div key={item.cartItemId || item.id} className="w-full">
                         <div className="flex gap-4 md:gap-6 py-6 group w-full">
-                          <div className="h-24 w-20 md:h-32 md:w-24 bg-secondary/20 overflow-hidden shrink-0 rounded-sm relative">
+                          <div className="w-20 md:w-24 aspect-[3/5] bg-secondary/20 overflow-hidden shrink-0 rounded-sm relative">
                             {imageUrl ? (
                               <img 
                                 src={imageUrl} 
                                 className="h-full w-full object-cover" 
                                 alt={item.name} 
-                                style={imageConfig && imageConfig.crop ? {
-                                  objectPosition: `${imageConfig.crop.x}% ${imageConfig.crop.y}%`,
-                                  transform: `scale(${imageConfig.zoom || 1})`
-                                } : undefined}
                               />
                             ) : (
                               <div className="w-full h-full bg-secondary/20" />
