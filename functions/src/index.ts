@@ -1,4 +1,4 @@
-import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { Resend } from "resend";
 import { gerarEmailPosCompra, gerarEmailRastreio } from "./emailTemplate";
 import { initializeApp, getApps } from "firebase-admin/app";
@@ -22,7 +22,7 @@ function getResendClient() {
 /**
  * Função disparada quando o status do pedido muda para 'paid'
  */
-export const enviarEmailPosCompra = onDocumentUpdated(
+export const enviarEmailPedidoPago = onDocumentUpdated(
   "orders/{orderId}",
   async (event) => {
     const resend = getResendClient();
@@ -34,12 +34,10 @@ export const enviarEmailPosCompra = onDocumentUpdated(
 
     if (!before || !after) return;
 
-    // Detectar transição para 'paid' (pago)
-    // Suporta 'paid' (padrão) ou 'Pago' (legado/frontend manual)
-    const isPaid = after.status === 'paid' || after.status === 'Pago';
-    const wasPaid = before.status === 'paid' || before.status === 'Pago';
+    // Condições: o status anterior não era 'paid', o atual é 'paid' e o e-mail ainda não foi enviado
+    const wasPaid = before.status === 'paid';
+    const isPaid = after.status === 'paid';
 
-    // Só envia se acabou de ser pago e ainda não enviamos o e-mail de confirmação
     if (isPaid && !wasPaid && !after.confirmationEmailSent) {
       const email = after.customerEmail || after.customer?.email;
       const name = after.customerName || after.customer?.name;
@@ -62,24 +60,27 @@ export const enviarEmailPosCompra = onDocumentUpdated(
 
       const html = gerarEmailPosCompra({ orderId, customerName: name || 'Cliente', items, total, address });
 
-      try {
-        await resend.emails.send({
-          from: "Toda Bela <onboarding@resend.dev>",
-          to: email,
-          subject: `✨ Pedido confirmado! Obrigada, ${(name || 'cliente').split(" ")[0]} 💛`,
-          html,
-        });
+      // O Resend não lança exceção para erros de envio; verificamos o campo error da resposta
+      const { data, error } = await resend.emails.send({
+        from: "Toda Bela <onboarding@resend.dev>",
+        to: email,
+        subject: `✨ Pedido confirmado! Obrigada, ${(name || 'cliente').split(" ")[0]} 💛`,
+        html,
+      });
 
-        // Marca como enviado no Firestore para evitar duplicidade
-        await event.data?.after.ref.update({
-          confirmationEmailSent: true,
-          confirmationEmailSentAt: new Date(),
-        });
-
-        console.log(`Email de confirmação enviado para ${email} (Pedido: ${orderId})`);
-      } catch (error) {
-        console.error("Erro ao enviar email pos-compra:", error);
+      if (error) {
+        console.error("Erro ao enviar e-mail de confirmação via Resend (Status 4xx/5xx):", error);
+        return;
       }
+
+      // Sucesso: marca como enviado no Firestore para evitar duplicidade
+      await event.data?.after.ref.update({
+        confirmationEmailSent: true,
+        confirmationEmailSentAt: new Date(),
+        resendMessageId: data?.id
+      });
+
+      console.log(`Email de confirmação enviado para ${email} (Pedido: ${orderId})`);
     }
   }
 );
