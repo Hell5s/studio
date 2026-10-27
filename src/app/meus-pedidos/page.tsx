@@ -5,13 +5,24 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@
 import { collection, query, where, orderBy, limit, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { Navbar } from '@/components/store/Navbar';
 import { Footer } from '@/components/store/Footer';
-import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, RefreshCw, Copy } from 'lucide-react';
+import { ShoppingBag, Loader2, Package, Truck, CheckCircle2, Clock, MapPin, Tag, XCircle, RefreshCw, Copy, CreditCard } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { cn, getItemImageUrl } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useCart } from '@/contexts/CartContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   'pending': { label: 'Aguardando Pagamento', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <Clock className="h-3 w-3" /> },
@@ -41,7 +52,11 @@ export default function MeusPedidosPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+  const { restoreItems } = useCart();
+  
   const [isMigrating, setIsMigrating] = useState(false);
+  const [refazerOrder, setRefazerOrder] = useState<any>(null);
+  const [isProcessingRefazer, setIsProcessingRefazer] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -93,6 +108,43 @@ export default function MeusPedidosPage() {
       toast({ title: "Erro na sincronização", description: "Tente novamente mais tarde.", variant: "destructive" });
     } finally {
       setIsMigrating(false);
+    }
+  };
+
+  const handleRefazerPagamento = async () => {
+    if (!refazerOrder || !user) return;
+    setIsProcessingRefazer(true);
+    
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/orders/refazer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ orderId: refazerOrder.id })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Erro ao processar solicitação.');
+      }
+
+      restoreItems(data.items);
+      toast({ title: "Itens restaurados!", description: "Sua sacola foi atualizada." });
+      router.push('/checkout');
+      
+    } catch (e: any) {
+      toast({ 
+        title: "Não foi possível continuar", 
+        description: e.message, 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsProcessingRefazer(false);
+      setRefazerOrder(null);
     }
   };
 
@@ -176,15 +228,32 @@ export default function MeusPedidosPage() {
                              <div className="h-1 w-1 rounded-full bg-accent/30" />
                              <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{formatDate(order.createdAt)}</span>
                           </div>
-                          <div className="space-y-2">
-                            <div className={cn("px-6 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 w-fit", status.color)}>
-                                {status.icon}
-                                {status.label}
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <div className={cn("px-6 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 w-fit", status.color)}>
+                                  {status.icon}
+                                  {status.label}
+                              </div>
+                              {isPending && (
+                                <p className="text-[10px] text-muted-foreground italic font-light leading-relaxed max-w-xs ml-1">
+                                  Assim que o pagamento for aprovado, seu pedido segue para preparação. Pedidos sem pagamento são cancelados automaticamente após 24 horas.
+                                </p>
+                              )}
                             </div>
+                            
                             {isPending && (
-                              <p className="text-[10px] text-muted-foreground italic font-light leading-relaxed max-w-xs ml-1">
-                                Assim que o pagamento for aprovado, seu pedido segue para preparação. Pedidos sem pagamento são cancelados automaticamente após 24 horas.
-                              </p>
+                              <Button 
+                                onClick={() => setRefazerOrder(order)}
+                                disabled={isProcessingRefazer}
+                                className="rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[9px] h-11 px-6 shadow-md hover:bg-accent transition-all"
+                              >
+                                {isProcessingRefazer && refazerOrder?.id === order.id ? (
+                                  <Loader2 className="animate-spin mr-2 h-3.5 w-3.5" />
+                                ) : (
+                                  <CreditCard className="mr-2 h-3.5 w-3.5" />
+                                )}
+                                Finalizar Pagamento
+                              </Button>
                             )}
                           </div>
                        </div>
@@ -242,12 +311,12 @@ export default function MeusPedidosPage() {
 
                                             return (
                                               <div className="flex flex-wrap items-center gap-2 mt-2">
-                                                <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest", itemConfig.color)}>
+                                                <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[8px] font-bold uppercase tracking-widest", itemConfig.color)}>
                                                   {itemConfig.icon}
                                                   {itemConfig.label}
                                                 </div>
                                                 {item.trackingCode && (
-                                                  <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-100")}>
+                                                  <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[8px] font-bold uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-100")}>
                                                     <span>Rastreio: {item.trackingCode}</span>
                                                     <button 
                                                       onClick={async () => {
@@ -325,6 +394,28 @@ export default function MeusPedidosPage() {
           )}
         </section>
       </main>
+
+      <AlertDialog open={!!refazerOrder} onOpenChange={(o) => !o && setRefazerOrder(null)}>
+        <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl p-8 bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-headline font-bold text-primary">Refazer Pagamento</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground italic font-light leading-relaxed">
+              Vamos colocar os itens deste pedido de volta na sua sacola para você escolher a forma de pagamento. Este pedido pendente será cancelado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-8 gap-3">
+            <AlertDialogCancel className="rounded-full h-12 px-8 border-primary/10 text-primary font-bold uppercase text-[10px] tracking-widest">
+              Voltar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRefazerPagamento}
+              className="rounded-full h-12 px-8 bg-primary text-white font-bold uppercase text-[10px] tracking-widest"
+            >
+              Continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>

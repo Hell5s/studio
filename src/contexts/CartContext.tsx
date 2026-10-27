@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 interface CartContextType {
   cart: any[];
   addToCart: (product: any) => void;
+  restoreItems: (items: any[]) => void;
   updateQuantity: (cartItemId: string, delta: number) => void;
   removeFromCart: (cartItemId: string) => void;
   clearCart: () => void;
@@ -20,7 +21,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Helper to generate a unique key for cart items based on specs
   const getCartItemId = (item: any) => {
-    return `${item.id}__${item.selectedSize || ''}__${item.selectedColor || ''}`;
+    return `${item.id || item.productId}__${item.selectedSize || ''}__${item.selectedColor || ''}`;
   };
 
   // Initialize from sessionStorage on mount
@@ -66,6 +67,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const restoreItems = useCallback((items: any[]) => {
+    setCart(prev => {
+      let newCart = [...prev];
+      
+      items.forEach(itemToRestore => {
+        const cartItemId = getCartItemId(itemToRestore);
+        const existingIndex = newCart.findIndex(it => it.cartItemId === cartItemId);
+        
+        if (existingIndex > -1) {
+          newCart[existingIndex] = {
+            ...newCart[existingIndex],
+            quantity: newCart[existingIndex].quantity + (itemToRestore.quantity || 1)
+          };
+        } else {
+          newCart.push({
+            ...itemToRestore,
+            cartItemId,
+            quantity: itemToRestore.quantity || 1
+          });
+        }
+      });
+      
+      return newCart;
+    });
+  }, []);
+
   const updateQuantity = useCallback((cartItemId: string, delta: number) => {
     setCart(prev => prev.map(item => {
       if (item.cartItemId === cartItemId) {
@@ -88,7 +115,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0), [cart]);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, updateQuantity, removeFromCart, clearCart, cartCount, cartTotal }}>
+    <CartContext.Provider value={{ cart, addToCart, restoreItems, updateQuantity, removeFromCart, clearCart, cartCount, cartTotal }}>
       {children}
     </CartContext.Provider>
   );
