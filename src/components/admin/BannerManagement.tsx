@@ -27,7 +27,9 @@ import {
   RefreshCw,
   Smartphone,
   Monitor,
-  Settings
+  Settings,
+  MousePointer2,
+  Search
 } from 'lucide-react';
 import { generateBannerImage } from '@/ai/flows/admin-generate-banner-flow';
 import { generateBannerTexts } from '@/ai/flows/admin-generate-banner-text-flow';
@@ -44,10 +46,17 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, serverTimestamp, addDoc, where } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function BannerManagement() {
   const db = useFirestore();
@@ -84,7 +93,11 @@ export function BannerManagement() {
     imageZoom: 100,
     mobileImagePosition: { x: 50, y: 50 },
     mobileImageZoom: 100,
-    imageUrl: ''
+    imageUrl: '',
+    linkType: 'scroll' as any,
+    linkCategory: '',
+    linkProductId: '',
+    linkUrl: ''
   });
 
   const [isDragging, setIsDragging] = useState(false);
@@ -96,15 +109,30 @@ export function BannerManagement() {
   const [bannerData, setBannerData] = useState({
     title: '',
     subtitle: '',
-    ctaText: 'Conferir Looks'
+    ctaText: 'Conferir Looks',
+    linkType: 'scroll' as any,
+    linkCategory: '',
+    linkProductId: '',
+    linkUrl: ''
   });
 
   const bannersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'banners'), orderBy('createdAt', 'desc'));
   }, [db]);
-  
   const { data: banners, isLoading } = useCollection(bannersQuery);
+
+  const categoriesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'categories'), orderBy('name', 'asc'));
+  }, [db]);
+  const { data: categories } = useCollection(categoriesQuery);
+
+  const productsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'products'), where('published', '==', true), orderBy('name', 'asc'));
+  }, [db]);
+  const { data: products } = useCollection(productsQuery);
 
   const sortedBanners = useMemo(() => {
     if (!banners) return [];
@@ -177,11 +205,12 @@ export function BannerManagement() {
         currentSubtitle: bannerData.subtitle
       });
       
-      setBannerData({ 
+      setBannerData(prev => ({ 
+        ...prev,
         title: result.title, 
         subtitle: result.subtitle, 
         ctaText: result.ctaText 
-      });
+      }));
       
       toast({ title: "Textos editoriais gerados!" });
       setShowAiTextPanel(false);
@@ -248,8 +277,18 @@ export function BannerManagement() {
     }
   };
 
+  const validateUrl = (url: string) => {
+    if (!url) return true;
+    return url.startsWith('/') || url.startsWith('https://');
+  };
+
   const handleSaveBanner = async () => {
     if (!previewImage) return;
+    if (bannerData.linkType === 'url' && !validateUrl(bannerData.linkUrl)) {
+      toast({ title: "URL Inválida", description: "O link personalizado deve começar com / ou https://", variant: "destructive" });
+      return;
+    }
+
     try {
       let finalUrl = previewImage;
 
@@ -285,7 +324,7 @@ export function BannerManagement() {
 
       setPreviewImage('');
       setPrompt('');
-      setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks' });
+      setBannerData({ title: '', subtitle: '', ctaText: 'Conferir Looks', linkType: 'scroll', linkCategory: '', linkProductId: '', linkUrl: '' });
       setImagePosition({ x: 50, y: 20 });
       setZoom(100);
       setMobileImagePosition({ x: 50, y: 50 });
@@ -360,6 +399,19 @@ export function BannerManagement() {
         ...prev,
         imageZoom: Math.min(300, Math.max(100, prev.imageZoom + delta))
       }));
+    }
+  };
+
+  const getDestinationLabel = (type: string, val?: string) => {
+    switch (type) {
+      case 'scroll': return "Rolar até os produtos";
+      case 'category': return `Categoria: ${val || 'não selecionada'}`;
+      case 'product': 
+        const p = products?.find(i => i.id === val);
+        return `Produto: ${p?.name || 'não selecionado'}`;
+      case 'promo': return "Página de Promoções";
+      case 'url': return `Link: ${val || 'vazio'}`;
+      default: return "Rolar até os produtos";
     }
   };
 
@@ -481,7 +533,74 @@ export function BannerManagement() {
                   <div className="space-y-4">
                     <Input placeholder="Título" value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
                     <Input placeholder="Subtítulo" value={bannerData.subtitle} onChange={e => setBannerData({...bannerData, subtitle: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
-                    <Input placeholder="CTA" value={bannerData.ctaText} onChange={e => setBannerData({...bannerData, ctaText: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                    <Input placeholder="Texto do Botão" value={bannerData.ctaText} onChange={e => setBannerData({...bannerData, ctaText: e.target.value})} className="bg-white border-none h-12 rounded-xl" />
+                  </div>
+
+                  {/* Destination Selection */}
+                  <div className="p-6 bg-white rounded-3xl border border-primary/5 space-y-4 shadow-sm">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
+                      <MousePointer2 className="h-3 w-3" /> Para onde o botão leva?
+                    </Label>
+                    
+                    <Select value={bannerData.linkType} onValueChange={(v) => setBannerData({...bannerData, linkType: v as any})}>
+                      <SelectTrigger className="h-11 rounded-xl bg-secondary/10 border-none px-4">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="scroll">Rolar até os produtos</SelectItem>
+                        <SelectItem value="category">Uma categoria</SelectItem>
+                        <SelectItem value="product">Um produto</SelectItem>
+                        <SelectItem value="promo">Promoções</SelectItem>
+                        <SelectItem value="url">Link personalizado</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {bannerData.linkType === 'category' && (
+                      <Select value={bannerData.linkCategory} onValueChange={(v) => setBannerData({...bannerData, linkCategory: v})}>
+                        <SelectTrigger className="h-11 rounded-xl bg-secondary/10 border-none px-4">
+                          <SelectValue placeholder="Selecione a categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories?.map(c => (
+                            <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+
+                    {bannerData.linkType === 'product' && (
+                      <Select value={bannerData.linkProductId} onValueChange={(v) => setBannerData({...bannerData, linkProductId: v})}>
+                        <SelectTrigger className="h-11 rounded-xl bg-secondary/10 border-none px-4">
+                          <SelectValue placeholder="Busque o produto" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                          <div className="flex items-center gap-2 px-3 py-2 border-b border-primary/5">
+                            <Search className="h-3 w-3 text-primary/20" />
+                            <input 
+                              placeholder="Filtrar..." 
+                              className="bg-transparent border-none outline-none text-xs w-full"
+                              onKeyDown={e => e.stopPropagation()}
+                            />
+                          </div>
+                          {products?.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.name} - R$ {p.price?.toFixed(2)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+
+                    {bannerData.linkType === 'url' && (
+                      <Input 
+                        placeholder="/colecao ou https://..." 
+                        value={bannerData.linkUrl}
+                        onChange={e => setBannerData({...bannerData, linkUrl: e.target.value})}
+                        className="h-11 rounded-xl bg-secondary/10 border-none px-4 text-xs"
+                      />
+                    )}
+
+                    <p className="text-[9px] text-muted-foreground italic font-medium">
+                      O botão vai para: <span className="text-primary not-italic font-bold">{getDestinationLabel(bannerData.linkType, bannerData.linkType === 'category' ? bannerData.linkCategory : bannerData.linkType === 'product' ? bannerData.linkProductId : bannerData.linkUrl)}</span>
+                    </p>
                   </div>
                   
                   <div className="space-y-2">
@@ -612,7 +731,11 @@ export function BannerManagement() {
                           imageZoom: banner.imageZoom || 100,
                           mobileImagePosition: banner.mobileImagePosition || { x: 50, y: 50 },
                           mobileImageZoom: banner.mobileImageZoom || 100,
-                          imageUrl: banner.imageUrl || ''
+                          imageUrl: banner.imageUrl || '',
+                          linkType: banner.linkType || 'scroll',
+                          linkCategory: banner.linkCategory || '',
+                          linkProductId: banner.linkProductId || '',
+                          linkUrl: banner.linkUrl || ''
                         })
                         setPreviewMode('desktop')
                       }}
@@ -655,7 +778,7 @@ export function BannerManagement() {
       </div>
 
       <Dialog open={!!editingBanner} onOpenChange={(o) => !o && setEditingBanner(null)}>
-        <DialogContent className="rounded-[2rem] bg-white border-none shadow-2xl p-0 overflow-hidden max-w-2xl">
+        <DialogContent className="rounded-[2rem] bg-white border-none shadow-2xl p-0 overflow-hidden max-w-4xl">
           <div className="bg-primary p-6 text-white">
             <DialogHeader>
               <DialogTitle className="text-xl font-headline font-bold">Editar Banner</DialogTitle>
@@ -729,6 +852,65 @@ export function BannerManagement() {
                   <Input placeholder="Texto do Botão" value={editData.ctaText} onChange={e => setEditData({...editData, ctaText: e.target.value})} className="h-10 rounded-xl border-primary/10" />
                 </div>
               </div>
+
+              {/* Edit Destination Selection */}
+              <div className="bg-secondary/10 p-5 rounded-2xl space-y-4 border border-primary/5">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-2">
+                  <MousePointer2 className="h-3 w-3" /> Para onde o botão leva?
+                </Label>
+                
+                <Select value={editData.linkType} onValueChange={(v) => setEditData({...editData, linkType: v as any})}>
+                  <SelectTrigger className="h-10 rounded-xl bg-white border-none px-4 text-xs font-medium">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scroll">Rolar até os produtos</SelectItem>
+                    <SelectItem value="category">Uma categoria</SelectItem>
+                    <SelectItem value="product">Um produto</SelectItem>
+                    <SelectItem value="promo">Promoções</SelectItem>
+                    <SelectItem value="url">Link personalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {editData.linkType === 'category' && (
+                  <Select value={editData.linkCategory} onValueChange={(v) => setEditData({...editData, linkCategory: v})}>
+                    <SelectTrigger className="h-10 rounded-xl bg-white border-none px-4 text-xs">
+                      <SelectValue placeholder="Selecione a categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories?.map(c => (
+                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {editData.linkType === 'product' && (
+                  <Select value={editData.linkProductId} onValueChange={(v) => setEditData({...editData, linkProductId: v})}>
+                    <SelectTrigger className="h-10 rounded-xl bg-white border-none px-4 text-xs">
+                      <SelectValue placeholder="Busque o produto" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[250px]">
+                      {products?.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {editData.linkType === 'url' && (
+                  <Input 
+                    placeholder="/colecao ou https://..." 
+                    value={editData.linkUrl}
+                    onChange={e => setEditData({...editData, linkUrl: e.target.value})}
+                    className="h-10 rounded-xl bg-white border-none px-4 text-xs"
+                  />
+                )}
+
+                <p className="text-[9px] text-muted-foreground italic font-medium">
+                  Destino: <span className="text-primary not-italic font-bold">{getDestinationLabel(editData.linkType, editData.linkType === 'category' ? editData.linkCategory : editData.linkType === 'product' ? editData.linkProductId : editData.linkUrl)}</span>
+                </p>
+              </div>
               
               <div className="bg-secondary/10 p-4 rounded-2xl space-y-4">
                  <div className="flex items-center gap-2 text-[9px] font-black uppercase text-accent tracking-widest border-b border-primary/5 pb-2">
@@ -766,6 +948,11 @@ export function BannerManagement() {
             <button
               onClick={() => {
                 if (!editingBanner) return
+                if (editData.linkType === 'url' && !validateUrl(editData.linkUrl)) {
+                  toast({ title: "URL Inválida", description: "O link personalizado deve começar com / ou https://", variant: "destructive" });
+                  return;
+                }
+
                 updateDocumentNonBlocking(doc(db, 'banners', editingBanner.id), {
                   title: editData.title,
                   subtitle: editData.subtitle,
@@ -775,7 +962,11 @@ export function BannerManagement() {
                   imageZoom: editData.imageZoom,
                   mobileImagePosition: editData.mobileImagePosition,
                   mobileImageZoom: editData.mobileImageZoom,
-                  imageUrl: editData.imageUrl
+                  imageUrl: editData.imageUrl,
+                  linkType: editData.linkType,
+                  linkCategory: editData.linkCategory || null,
+                  linkProductId: editData.linkProductId || null,
+                  linkUrl: editData.linkUrl || null
                 })
                 toast({ title: "Banner atualizado!" })
                 setEditingBanner(null)

@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useRouter } from 'next/navigation';
 
 // Helper function to build optimized Cloudinary URLs for banners
 const buildBannerUrl = (url: string, isMobile: boolean, zoom: number, type: 'image' | 'video' = 'image', isPoster = false) => {
@@ -39,6 +40,7 @@ const buildBannerUrl = (url: string, isMobile: boolean, zoom: number, type: 'ima
 
 const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onShopNow, settings }: any) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (videoRef.current) {
@@ -49,6 +51,41 @@ const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onSho
       }
     }
   }, [isActive]);
+
+  const handleAction = () => {
+    if (!banner.linkType || banner.linkType === 'scroll') {
+      onShopNow?.();
+      return;
+    }
+
+    switch (banner.linkType) {
+      case 'category':
+        if (banner.linkCategory) {
+          const slug = encodeURIComponent(banner.linkCategory.toLowerCase().trim().replace(/\s+/g, '-'));
+          router.push(`/categoria/${slug}`);
+        }
+        break;
+      case 'product':
+        if (banner.linkProductId) {
+          router.push(`/products/${banner.linkProductId}`);
+        }
+        break;
+      case 'promo':
+        router.push('/economize');
+        break;
+      case 'url':
+        if (banner.linkUrl) {
+          if (banner.linkUrl.startsWith('https://')) {
+            window.location.href = banner.linkUrl;
+          } else {
+            router.push(banner.linkUrl);
+          }
+        }
+        break;
+      default:
+        onShopNow?.();
+    }
+  };
 
   const optimizedUrl = buildBannerUrl(banner.imageUrl, isMobile, banner.imageZoom || 100, 'image');
   const optimizedVideoUrl = buildBannerUrl(banner.imageUrl, isMobile, 100, 'video');
@@ -119,7 +156,7 @@ const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onSho
           </div>
           {(banner.ctaText || settings?.heroCta) && (
             <Button 
-              onClick={onShopNow}
+              onClick={handleAction}
               className="rounded-full bg-white text-black px-6 py-2 md:px-8 md:py-3 text-[10px] md:text-xs tracking-[0.2em] font-bold uppercase w-fit h-auto hover:bg-accent hover:text-white transition-all shadow-2xl"
             >
               {banner.ctaText || settings?.heroCta || 'Conferir'}
