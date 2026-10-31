@@ -70,8 +70,42 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow read, write: if true;
+      // Leitura: admin, ou a cliente dona do pedido (userId = uid dela).
+      // Pedidos antigos sem userId: a dona pelo e-mail da conta (usado em "Meus pedidos").
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid)
+        || (isSignedIn() && resource.data.userId == null
+            && resource.data.customer.email == request.auth.token.email);
+
+      // Criar: qualquer pessoa (checkout de visitante), mas sempre como 'pending'
+      // e sem apontar o pedido para o uid de outra pessoa.
+      allow create: if isAdmin() || (
+        request.resource.data.status == 'pending'
+        && (request.resource.data.userId == null
+            || (isSignedIn() && request.resource.data.userId == request.auth.uid))
+      );
+
+      // Atualizar: admin faz tudo. Cliente so edita enquanto 'pending' (voltar uma etapa
+      // do checkout) e nao pode mudar status nem o dono. A cliente logada tambem pode
+      // "puxar" pedido antigo sem dono para o proprio uid, se o e-mail for o dela.
+      allow update: if isAdmin()
+        || (resource.data.status == 'pending'
+            && request.resource.data.status == 'pending'
+            && request.resource.data.userId == resource.data.userId)
+        || (isSignedIn()
+            && resource.data.userId == null
+            && request.resource.data.userId == request.auth.uid
+            && resource.data.customer.email == request.auth.token.email
+            && request.resource.data.status == resource.data.status);
+
+      allow delete: if isAdmin();
     }
+
+    // Colecoes usadas apenas pelo painel admin (antes caiam na regra "negar tudo")
+    match /carts/{id} { allow read, write: if isAdmin(); }
+    match /customers/{id} { allow read, write: if isAdmin(); }
+    match /promotions/{id} { allow read, write: if isAdmin(); }
+    match /analytics/{id} { allow read, write: if isAdmin(); }
 
     match /roles_admin/{uid} {
       allow read: if isOwner(uid) || isAdmin();
