@@ -166,7 +166,7 @@ interface Item {
   
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;text-align:center;">
         <tr><td>
-          <a href="https://studio-mocha-sigma-26.vercel.app/meus-pedidos" style="display:inline-block;background-color:#6E3C47;color:#ffffff;padding:18px 32px;border-radius:32px;text-decoration:none;font-family:Arial,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">Ver meus pedidos</a>
+          <a href="https://www.todabelaoficial.com.br/meus-pedidos" style="display:inline-block;background-color:#6E3C47;color:#ffffff;padding:18px 32px;border-radius:32px;text-decoration:none;font-family:Arial,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">Ver meus pedidos</a>
         </td></tr>
       </table>
   

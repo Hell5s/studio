@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.todabelaoficial.com.br';
+
 export async function POST(request: Request) {
   try {
     const { formData } = await request.json();
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
         },
       },
       external_reference: String(formData.external_reference || `PED-${Date.now()}`),
-      notification_url: 'https://studio-mocha-sigma-26.vercel.app/api/webhook/mercadopago',
+      notification_url: `${SITE_URL}/api/webhook/mercadopago`,
     };
 
     // Adiciona endereço se disponível (Muitas vezes obrigatório para boleto)
