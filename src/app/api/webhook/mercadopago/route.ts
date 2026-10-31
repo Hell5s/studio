@@ -97,7 +97,7 @@ export async function POST(request: Request) {
                 msg += `${item.quantity}x ${item.name}${specs ? ` (${specs})` : ''}\n`;
               });
 
-              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://studio-mocha-sigma-26.vercel.app';
+              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.todabelaoficial.com.br';
               msg += `\nVer no painel: ${siteUrl}/?admin=true`;
 
               const controller = new AbortController();

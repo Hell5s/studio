@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.todabelaoficial.com.br';
+
 export async function POST(request: Request) {
   try {
     const { items, orderId, customer } = await request.json();
@@ -28,13 +30,13 @@ export async function POST(request: Request) {
         }
       },
       back_urls: {
-        success: 'https://studio-mocha-sigma-26.vercel.app/pedido-confirmado',
-        failure: 'https://studio-mocha-sigma-26.vercel.app/',
-        pending: 'https://studio-mocha-sigma-26.vercel.app/pedido-pendente',
+        success: `${SITE_URL}/pedido-confirmado`,
+        failure: `${SITE_URL}/`,
+        pending: `${SITE_URL}/pedido-pendente`,
       },
       auto_return: 'approved',
       external_reference: orderId,
-      notification_url: 'https://studio-mocha-sigma-26.vercel.app/api/webhook/mercadopago',
+      notification_url: `${SITE_URL}/api/webhook/mercadopago`,
       statement_descriptor: 'TODA BELA',
     };
 
