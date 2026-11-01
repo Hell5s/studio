@@ -33,23 +33,31 @@ export function ProductGallery({ images, name, productId, activeVariation }: Pro
   const { data: favoriteData } = useDoc(favoriteRef);
   const isFavorited = !!favoriteData;
 
+  // A cliente pode voltar a ver a galeria completa depois de escolher uma cor.
+  const [showAll, setShowAll] = useState(false);
+  useEffect(() => setShowAll(false), [activeVariation]);
+
   // Sincronização de galeria dinâmica
   const displayImages = useMemo(() => {
+    if (showAll) return images;
+
     // 1. Prioridade: Array de fotos específicas da variação
     if (activeVariation?.images && activeVariation.images.length > 0) {
       return activeVariation.images;
     }
 
-    // 2. Fallback: Miniatura da variação + galeria original (sem duplicar)
+    // 2. Cor sem lista de fotos: mostra só a miniatura dela. Misturar com a galeria
+    // completa exibia fotos de outras cores. Para mais fotos da cor, use
+    // "Fotos desta cor" no cadastro do produto.
     if (activeVariation?.image) {
-      const mainUrl = getItemImageUrl(activeVariation.image);
-      const others = images.filter(img => getItemImageUrl(img) !== mainUrl);
-      return [activeVariation.image, ...others];
+      return [activeVariation.image];
     }
 
     // 3. Padrão: Galeria completa do produto
     return images;
-  }, [activeVariation, images]);
+  }, [activeVariation, images, showAll]);
+
+  const isFiltered = !!activeVariation && !showAll && images.length > displayImages.length;
 
   // Efeitos colaterais ao trocar a variação
   useEffect(() => {
@@ -129,8 +137,8 @@ export function ProductGallery({ images, name, productId, activeVariation }: Pro
     <div ref={galleryRef} className="relative">
       {/* Container principal com chave p/ resetar animações ao trocar variação */}
       <div key={activeVariation?.color || 'default'} className="animate-in fade-in duration-500 space-y-4">
-        {/* Desktop Grid */}
-        <div className="hidden md:grid grid-cols-2 gap-4">
+        {/* Desktop Grid (uma foto só fica centralizada, sem esticar) */}
+        <div className={cn("hidden md:grid gap-4", displayImages.length === 1 ? "grid-cols-1 max-w-[55%] mx-auto" : "grid-cols-2")}>
           {displayImages.map((img, idx) => (
             <div
               key={idx}
@@ -149,6 +157,17 @@ export function ProductGallery({ images, name, productId, activeVariation }: Pro
             </div>
           ))}
         </div>
+
+        {isFiltered && (
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowAll(true)}
+              className="text-[10px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary underline underline-offset-4 py-2"
+            >
+              Ver todas as fotos ({images.length})
+            </button>
+          </div>
+        )}
       </div>
 
       <button
