@@ -19,10 +19,9 @@ function getResendClient() {
   return new Resend(apiKey);
 }
 
-// Remetente dos e-mails. "onboarding@resend.dev" é o endereço de teste do Resend e só
-// entrega para o dono da conta; depois de verificar o domínio da loja no Resend,
-// defina RESEND_FROM (ex.: "Toda Bela <pedidos@todabelaoficial.com.br>").
-const EMAIL_FROM = process.env.RESEND_FROM || "Toda Bela <onboarding@resend.dev>";
+// Remetente dos e-mails, no domínio da loja (verificado no Resend em 01/11/2026).
+// Pode ser trocado pela variável RESEND_FROM sem mudar o código.
+const EMAIL_FROM = process.env.RESEND_FROM || "Toda Bela <pedidos@todabelaoficial.com.br>";
 
 /**
  * Função disparada quando o status do pedido muda para 'paid'

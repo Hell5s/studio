@@ -8,3 +8,7 @@ typings/
 # Node.js dependency directory
 node_modules/
 *.local
+
+# Chaves (RESEND_API_KEY etc.) nunca vao para o GitHub
+.env
+.env.*
