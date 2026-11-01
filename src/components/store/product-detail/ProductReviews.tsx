@@ -123,7 +123,9 @@ export function ProductReviews({ product }: { product: any }) {
     );
   }, [db, product?.id]);
 
-  const { data: allReviews, isLoading } = useCollection<Review>(reviewsQuery);
+  const { data: rawReviews, isLoading } = useCollection<Review>(reviewsQuery);
+  // Avaliações de demonstração (geradas automaticamente) não aparecem para a cliente.
+  const allReviews = useMemo(() => rawReviews?.filter(r => !r.isDemo) ?? null, [rawReviews]);
 
   // Stats Logic (Real Reviews Only)
   const stats = useMemo(() => {

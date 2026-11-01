@@ -24,6 +24,17 @@ interface ProductCardProps {
   sizes?: string[];
   colors?: string[];
   variations?: any[];
+  createdAt?: any;
+}
+
+// A etiqueta "Novo" só vale para produtos cadastrados nos últimos 30 dias.
+const NEW_BADGE_DAYS = 30;
+function isRecent(createdAt: any): boolean {
+  const date = createdAt?.toDate ? createdAt.toDate()
+    : typeof createdAt?.seconds === 'number' ? new Date(createdAt.seconds * 1000)
+    : createdAt ? new Date(createdAt) : null;
+  if (!date || isNaN(date.getTime())) return false;
+  return Date.now() - date.getTime() < NEW_BADGE_DAYS * 24 * 60 * 60 * 1000;
 }
 
 export const ProductCard = React.memo(function ProductCard({
@@ -36,8 +47,10 @@ export const ProductCard = React.memo(function ProductCard({
   onAddToCart,
   sizes,
   colors,
-  variations
+  variations,
+  createdAt
 }: ProductCardProps) {
+  const visibleBadge = badge?.trim().toLowerCase() === 'novo' && !isRecent(createdAt) ? undefined : badge;
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
@@ -146,9 +159,9 @@ export const ProductCard = React.memo(function ProductCard({
           </div>
         </Link>
         
-        {badge && (
+        {visibleBadge && (
           <Badge className="absolute top-2 md:top-4 left-2 md:left-4 bg-primary text-white border-none px-2 md:px-3 py-0.5 md:py-1 font-bold uppercase text-[7px] md:text-[9px] rounded-full tracking-widest z-20">
-            {badge}
+            {visibleBadge}
           </Badge>
         )}
         
@@ -205,7 +218,7 @@ export const ProductCard = React.memo(function ProductCard({
             </p>
           )}
           <p className="text-[9px] md:text-xs text-accent font-medium uppercase tracking-widest">
-            10x de {formatCurrency(price / 10)}
+            Em até 10x no cartão
           </p>
 
           <Link href={`/products/${id}`} className="block mt-2 md:mt-4">

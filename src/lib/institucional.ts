@@ -101,7 +101,7 @@ Se o tamanho ou o modelo não ficou como esperado, você pode solicitar a troca 
 Se você recebeu uma peça com defeito de fabricação, danificada ou diferente da que comprou, fale com a gente em até 30 dias corridos após o recebimento, conforme o Código de Defesa do Consumidor. Nesses casos, todos os custos de envio e devolução são por nossa conta, e você escolhe entre a troca por outra peça, o reembolso ou o abatimento proporcional do preço.
 
 ## Como solicitar
-- Entre em contato pelo WhatsApp {{whatsapp}} ou pelo e-mail {{contactEmail}}.
+- Entre em contato {{contactChannels}}.
 - Informe o número do pedido, seu nome completo, a peça e o motivo. Em caso de defeito ou erro de envio, anexe fotos da peça e da etiqueta.
 - Nossa equipe analisa o pedido e responde com as instruções de envio. Não envie a peça antes de receber a confirmação.
 - Embale bem a peça e envie conforme as orientações recebidas.
@@ -165,7 +165,7 @@ Antes do envio, sim. Depois do envio, depende da transportadora. Fale conosco o 
 
 ## Produtos e trocas
 ### Como escolho o tamanho certo?
-Use a tabela de medidas na página do produto e compare com as suas medidas. Se estiver em dúvida entre dois tamanhos, fale com a gente pelo WhatsApp antes de comprar, que ajudamos você a escolher.
+Use a tabela de medidas na página do produto e compare com as suas medidas. Se estiver em dúvida entre dois tamanhos, fale com a gente {{contactChannels}} antes de comprar, que ajudamos você a escolher.
 ### As cores são iguais às das fotos?
 Trabalhamos para que as fotos representem fielmente as peças, mas a cor pode variar um pouco conforme a tela do seu dispositivo.
 ### Posso trocar se não servir?
@@ -177,7 +177,7 @@ Siga as instruções da etiqueta de cada peça. Em geral, recomendamos lavar à 
 ### Meus dados estão protegidos?
 Sim. Tratamos seus dados conforme a LGPD e só os usamos para o que é necessário para sua compra e atendimento. Saiba mais na Política de Privacidade.
 ### Não encontrei minha dúvida. Como falo com vocês?
-Pelo WhatsApp {{whatsapp}} ou pelo e-mail {{contactEmail}}.`
+Fale com a gente {{contactChannels}}.`
   },
   'termos-de-uso': {
     title: 'Termos de Uso',
@@ -189,7 +189,7 @@ Pelo WhatsApp {{whatsapp}} ou pelo e-mail {{contactEmail}}.`
 O site é operado por {{companyName}}.
 CNPJ: {{cnpj}}
 Endereço: {{address}}
-Contato: {{contactEmail}} | WhatsApp {{whatsapp}}
+Atendimento: {{contactChannels}}
 
 ## 2. Cadastro e responsabilidade da conta
 Para comprar, você pode precisar informar dados pessoais e de entrega. Você se compromete a fornecer informações verdadeiras, completas e atualizadas, e é responsável por manter a confidencialidade do seu acesso. Compras por pessoas com menos de 18 anos dependem da autorização e da responsabilidade de pais ou responsáveis.
@@ -323,7 +323,7 @@ O reembolso é feito pelo mesmo meio de pagamento usado na compra:
 - Depois que solicitamos, o prazo para o valor aparecer depende do banco ou da operadora do meio de pagamento.
 
 ## Como solicitar
-Fale com a gente pelo WhatsApp {{whatsapp}} ou pelo e-mail {{contactEmail}}, informando o número do pedido e o motivo. Para devoluções, siga as instruções da página Trocas e Devoluções.
+Fale com a gente {{contactChannels}}, informando o número do pedido e o motivo. Para devoluções, siga as instruções da página Trocas e Devoluções.
 
 ## Não recebi meu reembolso
 Se o prazo informado passou e você não identificou o valor, escreva com o número do pedido e o comprovante, que acompanhamos o caso junto ao Mercado Pago.`

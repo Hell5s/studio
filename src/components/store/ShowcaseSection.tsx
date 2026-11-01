@@ -20,7 +20,8 @@ interface ShowcaseSectionProps {
 
 export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, productIds, onAddToCart }: ShowcaseSectionProps) {
   const db = useFirestore();
-  const MAX_MOBILE = 8;
+  // Até 8 peças por vitrine na home; o restante fica em "Ver todas as peças".
+  const MAX_ITEMS = 8;
 
   const validProductIds = useMemo(() => (productIds || []).slice(0, 30), [productIds]);
 
@@ -35,7 +36,8 @@ export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, product
     if (!rawProducts) return [];
     return validProductIds
       .map(id => rawProducts.find(p => p.id === id))
-      .filter(Boolean);
+      .filter((p: any) => p && p.published !== false)
+      .slice(0, MAX_ITEMS);
   }, [rawProducts, validProductIds]);
 
   if (!isLoading && products.length === 0) return null;
@@ -74,13 +76,10 @@ export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, product
       ) : (
         <>
           <div className="grid grid-cols-2 gap-x-3 gap-y-8 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-12 md:px-0 md:pb-0 items-stretch md:items-start">
-            {products.map((product: any, index: number) => (
-              <div 
-                key={product.id} 
-                className={cn(
-                  "w-full min-w-0 md:w-auto md:shrink-0 md:snap-align-none h-full",
-                  index >= MAX_MOBILE && "hidden md:block"
-                )}
+            {products.map((product: any) => (
+              <div
+                key={product.id}
+                className="w-full min-w-0 md:w-auto md:shrink-0 md:snap-align-none h-full"
               >
                 <ProductCard 
                   {...product} 

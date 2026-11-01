@@ -33,12 +33,24 @@ export function InstitucionalPage({ slug }: InstitucionalPageProps) {
   const processedContent = useMemo(() => {
     if (!pageData || !settings) return [];
 
+    // Frase com os canais de atendimento que existem de fato (ex.: "pelo Instagram @loja ou pelo e-mail x"),
+    // para os textos não citarem um WhatsApp ou e-mail que a loja ainda não tem.
+    const channels = [
+      settings.whatsapp && `pelo WhatsApp ${settings.whatsapp}`,
+      settings.instagram && `pelo Instagram ${settings.instagram}`,
+      settings.contactEmail && `pelo e-mail ${settings.contactEmail}`,
+    ].filter(Boolean) as string[];
+    const contactChannels = channels.length > 1
+      ? `${channels.slice(0, -1).join(', ')} ou ${channels[channels.length - 1]}`
+      : channels[0] || '';
+
     const vars: Record<string, string> = {
       storeName: settings.storeName || 'Toda Bela',
       contactEmail: settings.contactEmail || '',
       whatsapp: settings.whatsapp || '',
       instagram: settings.instagram || '',
-      companyName: settings.companyName || '',
+      contactChannels,
+      companyName: settings.companyName || settings.legalName || '',
       cnpj: settings.cnpj || '',
       address: settings.address || '',
       businessHours: settings.businessHours || '',

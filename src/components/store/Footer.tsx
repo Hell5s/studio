@@ -60,7 +60,7 @@ export function Footer() {
   const benefits = footer?.benefits || [
     { icon: 'Truck', title: 'Frete Grátis', desc: 'Acima de R$ 250' },
     { icon: 'RefreshCcw', title: 'Troca Fácil', desc: 'Até 30 dias' },
-    { icon: 'CreditCard', title: '10x Sem Juros', desc: 'No cartão' },
+    { icon: 'CreditCard', title: 'Até 10x', desc: 'No cartão' },
     { icon: 'ShieldCheck', title: 'Compra Segura', desc: 'SSL Certificado' },
   ];
   
@@ -92,9 +92,16 @@ export function Footer() {
     }
   ];
 
+  // Sem WhatsApp cadastrado, "Fale Conosco" leva ao Instagram da loja (antes abria um número de exemplo).
   const handleOpenWhatsApp = () => {
-    const phone = (settings?.whatsapp || '5511999999999').replace(/\D/g, '');
-    window.open(`https://wa.me/${phone}`, '_blank');
+    const phone = (settings?.whatsapp || '').replace(/\D/g, '');
+    if (phone) {
+      window.open(`https://wa.me/${phone}`, '_blank');
+    } else if (settings?.instagram) {
+      window.open(`https://instagram.com/${settings.instagram.replace('@', '')}`, '_blank');
+    } else if (settings?.contactEmail) {
+      window.location.href = `mailto:${settings.contactEmail}`;
+    }
   };
 
   const handleLinkClick = (link: FooterLink) => {
@@ -263,7 +270,7 @@ export function Footer() {
           
           <div className="text-center md:text-right">
              <p className="text-[9px] text-white/30 uppercase tracking-[0.4em]">© {currentYear} {settings?.storeName || 'Toda Bela'} • {footer?.copyrightSuffix || 'Moda Feminina'}</p>
-             {settings?.cnpj && footer?.showCnpj !== false && <p className="text-[8px] text-white/20 uppercase tracking-widest mt-1">CNPJ: {settings.cnpj}</p>}
+             {settings?.cnpj && footer?.showCnpj !== false && <p className="text-[8px] text-white/40 uppercase tracking-widest mt-1">{settings.legalName ? `${settings.legalName} • ` : ''}CNPJ: {settings.cnpj}</p>}
           </div>
         </div>
       </div>

@@ -222,6 +222,7 @@ function StorefrontContent() {
     return (
       <ShowcaseSection 
         key={showcase.id}
+        id={showcase.id}
         eyebrow={showcase.eyebrow}
         title={showcase.title}
         linkText={showcase.linkText}

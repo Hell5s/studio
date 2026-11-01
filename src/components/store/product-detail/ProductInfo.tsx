@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProductDescription } from './ProductDescription';
+import { SizeGuide } from './SizeGuide';
 
 interface ProductInfoProps {
   product: any;
@@ -196,12 +197,9 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
           </button>
         </div>
         <button onClick={scrollToReviews} className="flex items-center gap-3 pt-2 group min-h-[44px]">
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((s) => (
-              <Star key={s} className="h-4 w-4 fill-current text-accent" />
-            ))}
-          </div>
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-primary transition-colors underline underline-offset-4">Ver Avaliações</span>
+          {/* Sem estrelas fixas: a nota aparece na seção de avaliações, calculada só com avaliações reais */}
+          <Star className="h-4 w-4 text-accent" />
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-primary transition-colors underline underline-offset-4">Avaliações de clientes</span>
         </button>
       </div>
 
@@ -217,7 +215,7 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
           )}
         </div>
         <p className="text-xs md:text-sm text-accent font-bold uppercase tracking-widest">
-          Até 10x de {formatCurrency(product.price / 10)} sem juros
+          Em até 10x no cartão
         </p>
       </div>
 
@@ -326,7 +324,10 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
       )}
 
       <div className="space-y-6">
-        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Tamanho</p>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Tamanho</p>
+          <SizeGuide description={product.description} sizes={product.sizes} />
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-6">
           <div className="flex flex-wrap gap-3">
             {product.sizes?.map((size: string) => (

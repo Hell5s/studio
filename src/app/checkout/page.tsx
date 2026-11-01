@@ -1121,7 +1121,7 @@ function CheckoutContent() {
                     <span className="text-xs font-black uppercase text-primary tracking-tighter shrink-0">Total</span>
                     <div className="text-right min-w-0">
                        <span className="text-2xl md:text-3xl font-headline font-bold text-primary leading-none block truncate">{formatPrice(totalGeral)}</span>
-                       <span className="text-[9px] text-accent uppercase font-bold tracking-widest mt-1">Até 10x sem juros no cartão</span>
+                       <span className="text-[9px] text-accent uppercase font-bold tracking-widest mt-1">Em até 10x no cartão</span>
                     </div>
                   </div>
                </div>
