@@ -89,14 +89,14 @@ export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, product
             ))}
           </div>
 
-          {linkUrl && products.length > 0 && (
-            <div className="md:hidden mt-8">
-              <Link href={linkUrl || `/vitrine/${id}`}>
-                <button
-                  className="w-full rounded-full border border-primary bg-transparent px-3 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-primary transition-all active:scale-95"
-                >
-                  {linkText || "Ver todas as peças"}
-                </button>
+          {/* Botão no fim da vitrine (celular e computador): a home mostra só 8 peças */}
+          {products.length > 0 && (linkUrl || id) && (
+            <div className="mt-8 md:mt-16 flex justify-center">
+              <Link
+                href={linkUrl || `/vitrine/${id}`}
+                className="w-full md:w-auto md:min-w-[320px] rounded-full border border-primary bg-transparent px-10 py-4 text-center text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-primary transition-all hover:bg-primary hover:text-white active:scale-95"
+              >
+                {linkText || "Ver todas as peças"}
               </Link>
             </div>
           )}
