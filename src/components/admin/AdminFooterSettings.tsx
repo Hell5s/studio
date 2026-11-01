@@ -50,7 +50,7 @@ const DEFAULT_FOOTER = {
   benefits: [
     { icon: 'Truck', title: 'Frete Grátis', desc: 'Acima de R$ 250' },
     { icon: 'RefreshCcw', title: 'Troca Fácil', desc: 'Até 30 dias' },
-    { icon: 'CreditCard', title: '10x Sem Juros', desc: 'No cartão' },
+    { icon: 'CreditCard', title: 'Até 10x', desc: 'No cartão' },
     { icon: 'ShieldCheck', title: 'Compra Segura', desc: 'SSL Certificado' },
   ],
   columns: [

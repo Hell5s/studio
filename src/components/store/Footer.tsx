@@ -12,6 +12,7 @@ import { useFirestore, useDoc, useMemoFirebase, useFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { FOOTER_LABEL_TO_SLUG } from '@/lib/institucional';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,9 @@ import {
 const ICON_MAP: Record<string, any> = {
   Truck, RefreshCcw, CreditCard, ShieldCheck, Gift, Heart, Package, Clock, Star, Percent
 };
+
+// Base dos selos de bandeira do rodapé (fundo branco; Elo e Amex trocam a cor de fundo).
+const paymentChip = "h-7 min-w-[44px] px-2 rounded-md bg-white flex items-center justify-center gap-1 shadow-sm";
 
 interface FooterLink {
   label: string;
@@ -146,12 +150,12 @@ export function Footer() {
                 const Icon = ICON_MAP[item.icon] || Star;
                 return (
                   <div key={i} className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-3">
-                    <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center shrink-0" style={{ color: accentColor }}>
-                      <Icon className="h-5 w-5" />
+                    <div className="h-11 w-11 rounded-full bg-white/10 border border-white/15 flex items-center justify-center shrink-0" style={{ color: accentColor }}>
+                      <Icon className="h-5 w-5" strokeWidth={1.75} />
                     </div>
                     <div>
                       <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">{item.title}</p>
-                      <p className="text-[10px] text-white/40 mt-1 uppercase font-medium">{item.desc}</p>
+                      <p className="text-[10px] text-white/60 mt-1 uppercase font-medium">{item.desc}</p>
                     </div>
                   </div>
                 );
@@ -180,17 +184,20 @@ export function Footer() {
             </p>
             <div className="flex gap-4">
               {settings?.instagram && (
-                <button onClick={() => window.open(`https://instagram.com/${settings.instagram.replace('@','')}`, '_blank')} className="h-10 w-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
+                <button onClick={() => window.open(`https://instagram.com/${settings.instagram.replace('@','')}`, '_blank')} className="h-10 w-10 rounded-full border border-white/25 bg-white/10 text-white flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
                   <Instagram className="h-4 w-4" />
                 </button>
               )}
+              {settings?.instagram && (
+                <span className="self-center text-[11px] font-bold text-white/70">{settings.instagram}</span>
+              )}
               {footer?.socials?.facebook && (
-                <button onClick={() => window.open(footer.socials.facebook, '_blank')} className="h-10 w-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
+                <button onClick={() => window.open(footer.socials.facebook, '_blank')} className="h-10 w-10 rounded-full border border-white/25 bg-white/10 text-white flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
                   <Facebook className="h-4 w-4" />
                 </button>
               )}
               {footer?.socials?.youtube && (
-                <button onClick={() => window.open(footer.socials.youtube, '_blank')} className="h-10 w-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
+                <button onClick={() => window.open(footer.socials.youtube, '_blank')} className="h-10 w-10 rounded-full border border-white/25 bg-white/10 text-white flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
                   <Youtube className="h-4 w-4" />
                 </button>
               )}
@@ -226,7 +233,7 @@ export function Footer() {
                 <div className="space-y-5">
                   {settings?.whatsapp && (
                     <button onClick={handleOpenWhatsApp} className="flex items-center gap-3 group text-left">
-                      <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center transition-all group-hover:bg-white" style={{ color: accentColor }}>
+                      <div className="h-8 w-8 rounded-full bg-white/10 border border-white/15 flex items-center justify-center transition-all group-hover:bg-white" style={{ color: accentColor }}>
                         <MessageCircle className="h-3.5 w-3.5" />
                       </div>
                       <div>
@@ -237,12 +244,12 @@ export function Footer() {
                   )}
                   {settings?.contactEmail && (
                     <button onClick={() => window.location.href = `mailto:${settings.contactEmail}`} className="flex items-center gap-3 group text-left">
-                      <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center transition-all group-hover:bg-white" style={{ color: accentColor }}>
+                      <div className="h-8 w-8 rounded-full bg-white/10 border border-white/15 flex items-center justify-center transition-all group-hover:bg-white" style={{ color: accentColor }}>
                         <Mail className="h-3.5 w-3.5" />
                       </div>
                       <div>
                         <p className="text-[8px] text-white/30 uppercase font-black tracking-widest">E-mail</p>
-                        <p className="text-[10px] text-white/60 font-bold uppercase tracking-tight truncate max-w-[150px]">{settings.contactEmail}</p>
+                        <p className="text-[11px] text-white/70 font-bold whitespace-nowrap">{settings.contactEmail}</p>
                       </div>
                     </button>
                   )}
@@ -254,18 +261,49 @@ export function Footer() {
 
         {/* Selos de Pagamento */}
         <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-10">
-          <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700">
-             {footer?.payments?.pix !== false && <svg viewBox="0 0 540 180" className="h-4 w-auto" fill="currentColor"><path d="M136.4 136.4c-4.1 4.1-10.7 4.1-14.8 0L62.5 77.3l59.1-59.1c4.1-4.1 10.7-4.1 14.8 0l25.8 25.8c4.1 4.1 4.1 10.7 0 14.8L129.1 92.1l33.3 33.3c4.1 4.1 4.1 10.7 0 14.8l-26 26.2zM12.7 77.3c-4.1 4.1-4.1 10.7 0 14.8l59.1 59.1c4.1 4.1 10.7 4.1 14.8 0l25.8-25.8c4.1-4.1 4.1-10.7 0-14.8L79.1 78.4 112.4 45c4.1-4.1 4.1-10.7 0-14.8l-26-26.2c-4.1-4.1-10.7-4.1-14.8 0L12.7 77.3zM228.6 136.3h-34.9V43.7h34.9v92.6zM228.6 30.1h-34.9V13.7h34.9v16.4zM327.9 43.7l-29.5 44.8 30.9 47.8h-39.7l-15.5-26.6-15.5 26.6h-39.7l30.9-47.8-29.5-44.8h39.7l14.1 23.6 14.1-23.6h39.7z"/></svg>}
-             {footer?.payments?.visa !== false && <svg viewBox="0 0 128 40" className="h-3 w-auto" fill="currentColor"><path d="M50.2 2.6l-6.8 26.8h-6.7L43.5 2.6h6.7zM18.8 2.6l-10.7 18.5L3.8 2.6H0l9 26.8h6.5l14.5-26.8h-11.2zm64.8 0l-5.3 26.8h-6.4l5.3-26.8h6.4zm34.3 0h-5.2c-1.6 0-2.8.5-3.5 2.1l-10.1 24.7h6.7l2-5.5h8.2l.8 5.5h6.6L117.9 2.6zm-5.1 18.2l3.4-9.3 1.9 9.3h-5.3z" /></svg>}
-             {footer?.payments?.mastercard !== false && <svg viewBox="0 0 32 24" className="h-6 w-auto" fill="currentColor"><circle cx="11" cy="12" r="11" fill="currentColor" opacity="0.8" /><circle cx="21" cy="12" r="11" fill="currentColor" opacity="0.8" /></svg>}
-             {footer?.payments?.elo !== false && <div className="font-black text-[12px] italic tracking-tighter text-white">ELO</div>}
-             {footer?.payments?.amex !== false && <div className="font-black text-[11px] border border-white/40 px-1.5 py-0.5 rounded-sm text-white">AMEX</div>}
-             {footer?.payments?.securitySeal !== false && (
-               <>
-                 <div className="h-5 w-px bg-white/20 mx-2 hidden md:block" />
-                 <ShieldCheck className="h-5 w-5 text-white" />
-               </>
-             )}
+          {/* Bandeiras em "cartõezinhos" com as cores de cada marca, legíveis sobre o fundo escuro */}
+          <div className="flex flex-col items-center md:items-start gap-3">
+            <p className="text-[8px] text-white/40 uppercase font-black tracking-[0.3em]">Formas de pagamento</p>
+            <div className="flex flex-wrap justify-center md:justify-start items-center gap-2">
+              {footer?.payments?.pix !== false && (
+                <span className={paymentChip} aria-label="Pix" title="Pix">
+                  <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true">
+                    <rect x="3.2" y="3.2" width="9.6" height="9.6" rx="2" transform="rotate(45 8 8)" fill="none" stroke="#32BCAD" strokeWidth="2" />
+                  </svg>
+                  <span className="text-[11px] font-black lowercase text-[#32BCAD] leading-none">pix</span>
+                </span>
+              )}
+              {footer?.payments?.visa !== false && (
+                <span className={paymentChip} aria-label="Visa" title="Visa">
+                  <span className="text-[12px] font-black italic tracking-tight text-[#1A1F71] leading-none">VISA</span>
+                </span>
+              )}
+              {footer?.payments?.mastercard !== false && (
+                <span className={paymentChip} aria-label="Mastercard" title="Mastercard">
+                  <svg viewBox="0 0 32 20" className="h-4 w-auto" aria-hidden="true">
+                    <circle cx="12" cy="10" r="8" fill="#EB001B" />
+                    <circle cx="20" cy="10" r="8" fill="#F79E1B" />
+                    <path d="M16 3.07a8 8 0 0 1 0 13.86 8 8 0 0 1 0-13.86z" fill="#FF5F00" />
+                  </svg>
+                </span>
+              )}
+              {footer?.payments?.elo !== false && (
+                <span className={cn(paymentChip, "bg-black")} aria-label="Elo" title="Elo">
+                  <span className="text-[12px] font-black lowercase text-white leading-none">elo</span>
+                </span>
+              )}
+              {footer?.payments?.amex !== false && (
+                <span className={cn(paymentChip, "bg-[#016FD0]")} aria-label="American Express" title="American Express">
+                  <span className="text-[9px] font-black tracking-tight text-white leading-none">AMEX</span>
+                </span>
+              )}
+              {footer?.payments?.securitySeal !== false && (
+                <span className="flex items-center gap-1.5 ml-2 text-white/70">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span className="text-[9px] uppercase font-bold tracking-widest">Compra segura</span>
+                </span>
+              )}
+            </div>
           </div>
           
           <div className="text-center md:text-right">
