@@ -19,6 +19,11 @@ function getResendClient() {
   return new Resend(apiKey);
 }
 
+// Remetente dos e-mails. "onboarding@resend.dev" é o endereço de teste do Resend e só
+// entrega para o dono da conta; depois de verificar o domínio da loja no Resend,
+// defina RESEND_FROM (ex.: "Toda Bela <pedidos@todabelaoficial.com.br>").
+const EMAIL_FROM = process.env.RESEND_FROM || "Toda Bela <onboarding@resend.dev>";
+
 /**
  * Função disparada quando o status do pedido muda para 'paid'
  */
@@ -62,7 +67,7 @@ export const enviarEmailPedidoPago = onDocumentUpdated(
 
       // O Resend não lança exceção para erros de envio; verificamos o campo error da resposta
       const { data, error } = await resend.emails.send({
-        from: "Toda Bela <onboarding@resend.dev>",
+        from: EMAIL_FROM,
         to: email,
         subject: `✨ Pedido confirmado! Obrigada, ${(name || 'cliente').split(" ")[0]} 💛`,
         html,
@@ -97,8 +102,9 @@ export const enviarEmailRastreio = onDocumentUpdated(
     const after = event.data?.after.data();
     if (!after) return;
 
-    // Só processa se o status for 'shipped' (Enviado)
-    if (after.status !== 'shipped' && after.status !== 'Enviado') return;
+    // Processa a partir do momento em que alguma peça ganha rastreio: pedido comprado
+    // (envio parcial), enviado ou entregue. Cada código novo gera um e-mail.
+    if (!['ordered', 'shipped', 'Enviado', 'delivered'].includes(after.status)) return;
 
     // Filtra itens que possuem código de rastreio
     const itemsWithTracking = (after.items || []).filter((item: any) => item.trackingCode && String(item.trackingCode).trim() !== "");
@@ -125,12 +131,17 @@ export const enviarEmailRastreio = onDocumentUpdated(
     });
 
     try {
-      await resend.emails.send({
-        from: "Toda Bela <onboarding@resend.dev>",
+      // O Resend não lança exceção para erros de envio; verificamos o campo error da resposta
+      const { error } = await resend.emails.send({
+        from: EMAIL_FROM,
         to: email,
         subject: `📦 Seu pedido da Toda Bela está a caminho!`,
         html,
       });
+      if (error) {
+        console.error("Erro ao enviar e-mail de rastreio via Resend:", error);
+        return;
+      }
       
       // Registra o envio no Firestore usando a referência do snapshot
       await event.data?.after.ref.update({

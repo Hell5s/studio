@@ -49,6 +49,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Compra no fornecedor (nº do pedido, valor pago), historico e notas internas
+    // de cada pedido. O pedido em /orders e lido pela cliente, entao isso fica aqui.
+    match /ordersPrivate/{orderId} {
+      allow read, write: if isAdmin();
+    }
+
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if isAdmin();
