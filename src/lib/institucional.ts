@@ -94,8 +94,8 @@ Conforme o Código de Defesa do Consumidor, você pode desistir da compra feita 
 - O envio da devolução não gera custo para você.
 - A peça deve ser devolvida sem sinais de uso, lavagem ou alteração, com etiquetas e, sempre que possível, na embalagem original.
 
-## Troca por tamanho ou modelo (até 30 dias)
-Se o tamanho ou o modelo não ficou como esperado, você pode solicitar a troca em até 30 dias corridos após o recebimento, sujeita à disponibilidade em estoque. A peça precisa estar sem uso, sem lavagem, sem odores e com etiquetas. Se a peça desejada estiver indisponível, oferecemos outra peça ou o reembolso. O frete da nova remessa, quando houver, é informado pelo atendimento antes de você confirmar a troca.
+## Troca por tamanho ou modelo (até 7 dias)
+Se o tamanho ou o modelo não ficou como esperado, você pode solicitar a troca em até 7 dias corridos após o recebimento, sujeita à disponibilidade em estoque. A peça precisa estar sem uso, sem lavagem, sem odores e com etiquetas. Se a peça desejada estiver indisponível, oferecemos outra peça ou o reembolso. O frete da nova remessa, quando houver, é informado pelo atendimento antes de você confirmar a troca.
 
 ## Produto com defeito ou enviado errado
 Se você recebeu uma peça com defeito de fabricação, danificada ou diferente da que comprou, fale com a gente em até 30 dias corridos após o recebimento, conforme o Código de Defesa do Consumidor. Nesses casos, todos os custos de envio e devolução são por nossa conta, e você escolhe entre a troca por outra peça, o reembolso ou o abatimento proporcional do preço.
@@ -169,7 +169,7 @@ Use a tabela de medidas na página do produto e compare com as suas medidas. Se 
 ### As cores são iguais às das fotos?
 Trabalhamos para que as fotos representem fielmente as peças, mas a cor pode variar um pouco conforme a tela do seu dispositivo.
 ### Posso trocar se não servir?
-Sim. Você tem 7 dias para desistir da compra e até 30 dias para pedir troca de tamanho ou modelo, nas condições da página Trocas e Devoluções.
+Sim. Você tem até 7 dias após o recebimento para desistir da compra ou pedir troca de tamanho ou modelo, nas condições da página Trocas e Devoluções.
 ### Como cuido das minhas peças?
 Siga as instruções da etiqueta de cada peça. Em geral, recomendamos lavar à mão ou em ciclo delicado, com água fria, evitar alvejante e secar à sombra.
 

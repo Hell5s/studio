@@ -63,7 +63,7 @@ export function Footer() {
   const showBenefitsBar = footer?.showBenefitsBar !== false;
   const benefits = footer?.benefits || [
     { icon: 'Truck', title: 'Frete Grátis', desc: 'Acima de R$ 250' },
-    { icon: 'RefreshCcw', title: 'Troca Fácil', desc: 'Até 30 dias' },
+    { icon: 'RefreshCcw', title: 'Troca Fácil', desc: 'Até 7 dias' },
     { icon: 'CreditCard', title: 'Até 10x', desc: 'No cartão' },
     { icon: 'ShieldCheck', title: 'Compra Segura', desc: 'SSL Certificado' },
   ];
