@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { AddProductDialog } from './AddProductDialog';
+import { useMigratePrivateProductFields, useProductsWithPrivate } from '@/lib/product-private';
 import {
   Select,
   SelectContent,
@@ -41,7 +42,13 @@ export function ProductManagement() {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
   }, [db]);
-  const { data: products, isLoading } = useCollection(productsQuery);
+  const { data: publicProducts, isLoading } = useCollection(productsQuery);
+
+  // Custo e fornecedor ficam em productsPrivate (só admin lê); junta para lucro e edição.
+  const { products } = useProductsWithPrivate(db, publicProducts);
+  useMigratePrivateProductFields(db, publicProducts, (count) => {
+    toast({ title: "Dados internos protegidos", description: `Custo e fornecedor de ${count} produto(s) agora ficam visíveis só no painel.` });
+  });
 
   // Consulta de Categorias para o Filtro e Resolução de Nomes
   const categoriesQuery = useMemoFirebase(() => {

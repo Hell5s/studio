@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { ProductForm } from '@/components/admin/ProductForm';
+import { useProductsWithPrivate } from '@/lib/product-private';
 import { cn } from '@/lib/utils';
 
 export default function AdminProductsPage() {
@@ -49,7 +50,9 @@ export default function AdminProductsPage() {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
   }, [db]);
-  const { data: products, isLoading } = useCollection(productsQuery);
+  const { data: publicProducts, isLoading } = useCollection(productsQuery);
+  // Custo e fornecedor ficam em productsPrivate (só admin lê).
+  const { products } = useProductsWithPrivate(db, publicProducts, isAdmin);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];

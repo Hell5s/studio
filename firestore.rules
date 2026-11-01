@@ -44,6 +44,11 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Custo, fornecedor e observacoes internas dos produtos: so o admin.
+    match /productsPrivate/{productId} {
+      allow read, write: if isAdmin();
+    }
+
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -77,19 +82,23 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.userId == null
             && resource.data.customer.email == request.auth.token.email);
 
-      // Criar: qualquer pessoa (checkout de visitante), mas sempre como 'pending'
-      // e sem apontar o pedido para o uid de outra pessoa.
+      // Criar: so cliente logada (o checkout exige login), sempre como 'pending'
+      // e com o proprio uid como dono.
       allow create: if isAdmin() || (
-        request.resource.data.status == 'pending'
-        && (request.resource.data.userId == null
-            || (isSignedIn() && request.resource.data.userId == request.auth.uid))
+        isSignedIn()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.userId == request.auth.uid
       );
 
-      // Atualizar: admin faz tudo. Cliente so edita enquanto 'pending' (voltar uma etapa
-      // do checkout) e nao pode mudar status nem o dono. A cliente logada tambem pode
-      // "puxar" pedido antigo sem dono para o proprio uid, se o e-mail for o dela.
+      // Atualizar: admin faz tudo. A dona do pedido so edita enquanto 'pending' (voltar
+      // uma etapa do checkout) e nao pode mudar status nem o dono. Antes qualquer pessoa,
+      // mesmo sem login, podia alterar um pedido pendente sabendo o numero.
+      // A cliente logada tambem pode "puxar" pedido antigo sem dono para o proprio uid,
+      // se o e-mail for o dela.
       allow update: if isAdmin()
-        || (resource.data.status == 'pending'
+        || (isSignedIn()
+            && resource.data.userId == request.auth.uid
+            && resource.data.status == 'pending'
             && request.resource.data.status == 'pending'
             && request.resource.data.userId == resource.data.userId)
         || (isSignedIn()

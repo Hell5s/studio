@@ -4,8 +4,9 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Link as LinkIcon, Loader2, Search, AlertCircle, Image as ImageIcon, Sparkles, Package, DollarSign, Layers } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
-import { collection, serverTimestamp } from 'firebase/firestore';
-import { useFirebase, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { useFirebase, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { privateProductRef, splitProductPayload } from '@/lib/product-private';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -173,7 +174,11 @@ export function AdminShopeeImport() {
       featured: false
     };
 
-    addDocumentNonBlocking(productsRef, newProduct);
+    // O link do fornecedor vai para productsPrivate; o doc público não leva esse campo.
+    const productRef = doc(productsRef);
+    const { publicData, privateData } = splitProductPayload(newProduct);
+    setDocumentNonBlocking(productRef, publicData, { merge: true });
+    setDocumentNonBlocking(privateProductRef(db, productRef.id), privateData, { merge: true });
     
     toast({
       title: published ? "Produto Publicado!" : "Salvo como Rascunho",

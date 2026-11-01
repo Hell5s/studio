@@ -2,16 +2,19 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Regras gerais para o bucket
+    // Admin = mesmo criterio do firestore.rules (colecao roles_admin ou o uid da dona).
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.uid == 'LXaJZDm6tNUQLh3ooghcg6EQgJ43'
+        || firestore.exists(/databases/(default)/documents/roles_admin/$(request.auth.uid))
+      );
+    }
+
+    // Regras gerais para o bucket (logos, banners, etc.): leitura publica, escrita so admin.
+    // Antes qualquer conta criada no site podia sobrescrever esses arquivos.
     match /{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // Regras específicas para banners, aceitando imagens e vídeos
-    match /banners/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // Regras para imagens de avaliações
