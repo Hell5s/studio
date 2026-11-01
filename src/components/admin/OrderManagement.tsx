@@ -55,6 +55,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, getItemImageUrl } from '@/lib/utils';
+import { PRIVATE_PRODUCTS_COLLECTION } from '@/lib/product-private';
 
 const statusColors: Record<string, string> = {
   'pending': 'bg-amber-50 text-amber-700 border-amber-100',
@@ -98,6 +99,22 @@ export function OrderManagement() {
 
   const ordersQuery = useMemoFirebase(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100)), [db]);
   const { data: orders, isLoading } = useCollection(ordersQuery);
+
+  // Fornecedor e custo de cada produto (ficam em productsPrivate, só o admin lê).
+  const privateProductsQuery = useMemoFirebase(() => collection(db, PRIVATE_PRODUCTS_COLLECTION), [db]);
+  const { data: privateProducts } = useCollection(privateProductsQuery);
+  const privateById = useMemo(
+    () => new Map((privateProducts || []).map((p: any) => [p.id, p])),
+    [privateProducts]
+  );
+  const supplierInfo = (item: any) => {
+    const priv: any = privateById.get(item.productId || item.id) || {};
+    return {
+      name: item.supplierName || priv.supplierName || priv.vendorName,
+      url: item.supplierUrl || priv.supplierUrl || priv.sourceUrl,
+      cost: item.supplierCost || priv.cost,
+    };
+  };
 
   const pendingPurchaseCount = useMemo(() => {
     return orders?.filter(o => o.status === 'paid' && !o.isOrderedSupplier).length || 0;
@@ -368,16 +385,16 @@ export function OrderManagement() {
                              
                              <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between">
                                 <div className="space-y-1">
-                                   <p className="text-[10px] font-bold uppercase text-accent tracking-widest">Fornecedor: {item.supplierName || 'Manual'}</p>
-                                   <p className="text-xs text-muted-foreground italic">Custo estimado: R$ {item.supplierCost || '0.00'}</p>
+                                   <p className="text-[10px] font-bold uppercase text-accent tracking-widest">Fornecedor: {supplierInfo(item).name || 'Manual'}</p>
+                                   <p className="text-xs text-muted-foreground italic">Custo estimado: R$ {supplierInfo(item).cost || '0.00'}</p>
                                 </div>
                                 <div className="flex gap-2">
-                                   {item.supplierUrl && (
-                                     <Button size="sm" onClick={() => window.open(item.supplierUrl, '_blank')} className="h-8 bg-primary text-white text-[9px] uppercase font-bold rounded-lg px-4">
+                                   {supplierInfo(item).url && (
+                                     <Button size="sm" onClick={() => window.open(supplierInfo(item).url, '_blank')} className="h-8 bg-primary text-white text-[9px] uppercase font-bold rounded-lg px-4">
                                        <LinkIcon className="h-3 w-3 mr-2" /> Abrir Site
                                      </Button>
                                    )}
-                                   <Button variant="outline" size="sm" onClick={() => copyToClipboard(item.supplierUrl, "Link copiado!")} className="h-8 text-[9px] font-bold uppercase rounded-lg border-gray-200"><Copy className="h-3 w-3" /></Button>
+                                   <Button variant="outline" size="sm" onClick={() => copyToClipboard(supplierInfo(item).url, "Link copiado!")} className="h-8 text-[9px] font-bold uppercase rounded-lg border-gray-200"><Copy className="h-3 w-3" /></Button>
                                 </div>
                              </div>
 

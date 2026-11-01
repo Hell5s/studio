@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { toNumber } from '@/lib/pricing';
 import {
   Dialog,
   DialogContent,
@@ -27,8 +28,10 @@ export function AdminShipping() {
   const shippingRef = useMemoFirebase(() => doc(db, 'settings', 'shipping'), [db]);
   const { data: shippingSettings, isLoading } = useDoc(shippingRef);
 
+  // Limites de frete grátis por região. 0 = sem frete grátis naquela região.
   const [formData, setFormData] = useState({
-    freeShippingThreshold: 250,
+    freeShippingThreshold: 0,
+    freeShippingThresholdOthers: 0,
     options: [] as any[]
   });
 
@@ -43,8 +46,13 @@ export function AdminShipping() {
   useEffect(() => {
     if (shippingSettings) {
       setFormData({
-        freeShippingThreshold: shippingSettings.freeShippingThreshold ?? 250,
-        options: shippingSettings.options ?? []
+        freeShippingThreshold: toNumber(shippingSettings.freeShippingThreshold),
+        freeShippingThresholdOthers: toNumber(shippingSettings.freeShippingThresholdOthers),
+        options: (shippingSettings.options ?? []).map((o: any) => ({
+          ...o,
+          priceSoutheastSouth: toNumber(o.priceSoutheastSouth),
+          priceOtherRegions: toNumber(o.priceOtherRegions),
+        }))
       });
     }
   }, [shippingSettings]);
@@ -116,7 +124,7 @@ export function AdminShipping() {
         </div>
         <div className="grid md:grid-cols-2 gap-8 items-end">
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-2">Valor Mínimo para Frete Grátis (R$)</Label>
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-2">Frete Grátis Sul e Sudeste a partir de (R$)</Label>
             <Input 
               type="number" 
               value={formData.freeShippingThreshold} 
@@ -124,8 +132,17 @@ export function AdminShipping() {
               className="h-14 rounded-2xl bg-secondary/10 border-none px-6 text-lg font-bold text-primary" 
             />
           </div>
-          <div className="pb-1 text-xs text-muted-foreground italic leading-relaxed">
-            * Acima deste valor, todas as opções de frete aparecerão como "GRÁTIS" para a cliente no checkout.
+          <div className="space-y-2">
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-2">Frete Grátis Demais Regiões a partir de (R$)</Label>
+            <Input 
+              type="number" 
+              value={formData.freeShippingThresholdOthers} 
+              onChange={e => setFormData({ ...formData, freeShippingThresholdOthers: Number(e.target.value) })}
+              className="h-14 rounded-2xl bg-secondary/10 border-none px-6 text-lg font-bold text-primary" 
+            />
+          </div>
+          <div className="md:col-span-2 pb-1 text-xs text-muted-foreground italic leading-relaxed">
+            * Com o subtotal acima do valor da região da cliente, o frete aparece como "GRÁTIS" no checkout. Deixe 0 para não oferecer frete grátis naquela região.
           </div>
         </div>
       </Card>
@@ -166,11 +183,11 @@ export function AdminShipping() {
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-primary/5">
                 <div>
                   <p className="text-[8px] font-black uppercase text-accent tracking-widest mb-1">Sul / Sudeste</p>
-                  <p className="text-lg font-bold text-primary">R$ {opt.priceSoutheastSouth.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-primary">R$ {toNumber(opt.priceSoutheastSouth).toFixed(2)}</p>
                 </div>
                 <div>
                   <p className="text-[8px] font-black uppercase text-primary/40 tracking-widest mb-1">Outras Regiões</p>
-                  <p className="text-lg font-bold text-primary">R$ {opt.priceOtherRegions.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-primary">R$ {toNumber(opt.priceOtherRegions).toFixed(2)}</p>
                 </div>
               </div>
             </div>

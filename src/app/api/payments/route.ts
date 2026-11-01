@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getAdminDb } from '@/lib/server/firebase-admin';
+import { computeOrderTotal } from '@/lib/server/order-total';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.todabelaoficial.com.br';
 
@@ -7,6 +9,42 @@ export async function POST(request: Request) {
     const { formData } = await request.json();
 
     if (!formData) throw new Error('Dados do formulário são obrigatórios');
+
+    // O valor cobrado vem sempre do pedido salvo no banco, recalculado aqui no servidor.
+    const orderId = String(formData.external_reference || '');
+    if (!orderId) {
+      return NextResponse.json({ message: 'Pedido não informado.' }, { status: 400 });
+    }
+
+    const db = await getAdminDb();
+    const orderRef = db.collection('orders').doc(orderId);
+    const orderSnap = await orderRef.get();
+    if (!orderSnap.exists) {
+      return NextResponse.json({ message: 'Pedido não encontrado.' }, { status: 404 });
+    }
+    const order = orderSnap.data();
+    if (order.status !== 'pending') {
+      return NextResponse.json({ message: 'Este pedido não está mais aguardando pagamento.' }, { status: 409 });
+    }
+
+    const computed = await computeOrderTotal(db, order);
+    if (computed.problems.length || computed.total <= 0) {
+      return NextResponse.json({ message: computed.problems[0] || 'Valor do pedido inválido.' }, { status: 400 });
+    }
+    if (Math.abs(Number(formData.transaction_amount) - computed.total) > 0.01) {
+      return NextResponse.json({
+        message: 'O valor do pedido foi atualizado. Volte para a etapa de entrega e confira o total.',
+        expectedTotal: computed.total,
+      }, { status: 409 });
+    }
+
+    await orderRef.update({
+      subtotal: computed.subtotal,
+      couponDiscount: computed.discount,
+      'shipping.price': computed.shipping,
+      total: computed.total,
+      updatedAt: new Date(),
+    });
 
     const isPix = formData.payment_method_id === 'pix';
     const isBoleto = formData.payment_method_id === 'bolbradesco' || formData.payment_method_id === 'pec' || formData.payment_method_id === 'ticket';
@@ -19,7 +57,7 @@ export async function POST(request: Request) {
     const identificationNumber = (formData.payer?.identification?.number || '').replace(/\D/g, '');
 
     const paymentPayload: any = {
-      transaction_amount: Number(formData.transaction_amount),
+      transaction_amount: computed.total,
       description: formData.description || 'Compra na Toda Bela',
       payment_method_id: formData.payment_method_id,
       payer: {
@@ -31,7 +69,7 @@ export async function POST(request: Request) {
           number: identificationNumber,
         },
       },
-      external_reference: String(formData.external_reference || `PED-${Date.now()}`),
+      external_reference: orderId,
       notification_url: `${SITE_URL}/api/webhook/mercadopago`,
     };
 

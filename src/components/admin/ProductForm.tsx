@@ -27,6 +27,7 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { privateProductRef, splitProductPayload } from '@/lib/product-private';
 import { useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp, getDocs, query, collection, orderBy, onSnapshot } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
@@ -233,7 +234,10 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         updatedAt: serverTimestamp()
       };
 
-      await setDoc(productRef, payload, { merge: true });
+      // Custo e fornecedor vão para productsPrivate; o doc público não leva esses campos.
+      const { publicData, privateData } = splitProductPayload(payload);
+      await setDoc(productRef, publicData, { merge: true });
+      await setDoc(privateProductRef(db, id), privateData, { merge: true });
       toast({ title: "Produto salvo!" });
       onSuccess();
     } catch (e: any) {

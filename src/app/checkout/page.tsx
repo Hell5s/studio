@@ -32,6 +32,8 @@ import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, si
 import Link from 'next/link';
 import { LogoMark } from '@/components/store/LogoMark';
 import { cn, getItemImageUrl } from '@/lib/utils';
+import { calcOrderTotal, calcShippingPrice, findShippingOption, generateOrderId, isValidUf } from '@/lib/pricing';
+import { PRIVATE_PRODUCT_FIELDS } from '@/lib/product-private';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
 type Step = 'identificacao' | 'entrega' | 'pagamento';
@@ -46,7 +48,7 @@ function CheckoutContent() {
   
   const [currentStep, setCurrentStep] = useState<Step>('identificacao');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [shippingPrice, setShippingPrice] = useState(0);
+  const [shippingPrice, setShippingPrice] = useState<number | null>(null);
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(null);
   const [sessionItems, setSessionItems] = useState<any[]>([]);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
@@ -97,21 +99,13 @@ function CheckoutContent() {
 
   const discount = appliedCoupon?.discount || 0;
 
-  // Atualização dinâmica do preço de frete baseado na seleção e estado
+  // Atualização dinâmica do preço de frete baseado na seleção e estado.
+  // Sem UF válida o frete fica "a calcular" (null), nunca grátis por engano.
   useEffect(() => {
-    if (shippingSettings?.options && entrega.state) {
-      const isSouthSoutheast = ['SP', 'RJ', 'MG', 'ES', 'PR', 'SC', 'RS'].includes(entrega.state.toUpperCase());
-      const activeId = selectedShippingId || shippingSettings.options[0]?.id;
-      const opt = shippingSettings.options.find((o: any) => o.id === activeId) || shippingSettings.options[0];
-      
-      if (opt) {
-        setSelectedShippingId(opt.id);
-        const basePrice = isSouthSoutheast ? opt.priceSoutheastSouth : opt.priceOtherRegions;
-        // Limite de frete grátis continua comparando com o SUBTOTAL (antes do desconto)
-        const finalPrice = subtotal >= (shippingSettings.freeShippingThreshold || 250) ? 0 : basePrice;
-        setShippingPrice(finalPrice);
-      }
-    }
+    const opt = findShippingOption(shippingSettings, selectedShippingId);
+    if (opt && opt.id !== selectedShippingId) setSelectedShippingId(opt.id);
+    // Limite de frete grátis continua comparando com o SUBTOTAL (antes do desconto)
+    setShippingPrice(calcShippingPrice(shippingSettings, opt, entrega.state, subtotal));
   }, [entrega.state, shippingSettings, subtotal, selectedShippingId]);
 
   // Re-validar cupom se o subtotal mudar
@@ -237,9 +231,7 @@ function CheckoutContent() {
     }
   };
 
-  const totalGeral = Number((subtotal - discount + shippingPrice).toFixed(2)) > 0 
-    ? Number((subtotal - discount + shippingPrice).toFixed(2)) 
-    : 0;
+  const totalGeral = calcOrderTotal(subtotal, discount, shippingPrice ?? 0);
 
   const handleGoogleAuth = async () => {
     if (authLoading) return;
@@ -257,7 +249,7 @@ function CheckoutContent() {
         errorMsg = "Este domínio não está autorizado. Adicione a URL atual em: Console do Firebase > Auth > Settings > Authorized Domains.";
       } else if (e.code === 'auth/popup-closed-by-user') {
         errorMsg = "A janela de login foi fechada antes de concluir. Tente novamente.";
-      } else if (error.code === 'auth/popup-blocked') {
+      } else if (e.code === 'auth/popup-blocked') {
         errorMsg = "O navegador bloqueou o pop-up de login. Por favor, autorize pop-ups para este site.";
       } else if (e.code === 'auth/operation-not-allowed') {
         errorMsg = "O login com Google não está habilitado no seu Console do Firebase.";
@@ -371,18 +363,30 @@ function CheckoutContent() {
         toast({ title: "Dados de entrega", description: "Informe o CEP, número e endereço completo.", variant: "destructive" });
         return;
       }
+      if (!isValidUf(entrega.state)) {
+        toast({ title: "Estado (UF)", description: "Informe a sigla do seu estado, por exemplo SP ou BA.", variant: "destructive" });
+        return;
+      }
+      if (shippingPrice === null) {
+        toast({ title: "Frete", description: "Escolha uma opção de envio para continuar.", variant: "destructive" });
+        return;
+      }
       
       setIsProcessing(true);
-      const finalId = currentOrderId || `PED-${Date.now().toString().slice(-6)}`;
+      const finalId = currentOrderId || generateOrderId();
       setCurrentOrderId(finalId);
       const orderRef = doc(db, 'orders', finalId);
 
-      const selectedOpt = shippingSettings?.options?.find((o: any) => o.id === selectedShippingId);
+      const selectedOpt = findShippingOption(shippingSettings, selectedShippingId);
 
       const orderData = {
         orderNumber: finalId,
         userId: user?.uid || null,
-        items: sessionItems,
+        // Sem custo/fornecedor: o pedido é lido pela cliente em "Meus pedidos".
+        items: sessionItems.map(({ ...item }) => {
+          PRIVATE_PRODUCT_FIELDS.forEach(f => delete item[f]);
+          return { ...item, productId: item.productId || item.id };
+        }),
         customer: {
           name: identificacao.nome,
           email: identificacao.email,
@@ -390,13 +394,14 @@ function CheckoutContent() {
           phone: identificacao.telefone,
           address: `${entrega.endereco}, ${entrega.numero} ${entrega.complemento}`,
           city: entrega.city,
-          state: entrega.state,
+          state: entrega.state.trim().toUpperCase(),
           zip: entrega.cep
         },
         subtotal: subtotal,
         total: totalGeral,
         status: 'pending',
         shipping: {
+          optionId: selectedOpt?.id || null,
           method: selectedOpt?.name || 'Entrega Padrão',
           price: shippingPrice,
           days: selectedOpt?.days || ''
@@ -825,9 +830,7 @@ function CheckoutContent() {
                     <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Opção de Envio</Label>
                     <div className="grid gap-3">
                       {shippingSettings?.options?.map((opt: any) => {
-                        const isSouthSoutheast = ['SP', 'RJ', 'MG', 'ES', 'PR', 'SC', 'RS'].includes(entrega.state.toUpperCase());
-                        const basePrice = isSouthSoutheast ? opt.priceSoutheastSouth : opt.priceOtherRegions;
-                        const finalPrice = subtotal >= (shippingSettings.freeShippingThreshold || 250) ? 0 : basePrice;
+                        const finalPrice = calcShippingPrice(shippingSettings, opt, entrega.state, subtotal);
                         const isSelected = selectedShippingId === opt.id;
 
                         return (
@@ -854,7 +857,7 @@ function CheckoutContent() {
                               </div>
                             </div>
                             <span className={cn("text-xs font-bold", finalPrice === 0 ? "text-emerald-600" : "text-primary")}>
-                              {finalPrice === 0 ? 'GRÁTIS' : formatPrice(finalPrice)}
+                              {finalPrice === null ? 'Informe a UF' : finalPrice === 0 ? 'GRÁTIS' : formatPrice(finalPrice)}
                             </span>
                           </button>
                         );
@@ -1112,7 +1115,7 @@ function CheckoutContent() {
                     </div>
                   )}
 
-                  <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Envio Especial</span><span>{shippingPrice === 0 ? 'Grátis' : formatPrice(shippingPrice)}</span></div>
+                  <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Envio Especial</span><span>{shippingPrice === null ? 'A calcular' : shippingPrice === 0 ? 'Grátis' : formatPrice(shippingPrice)}</span></div>
                   
                   <div className="flex justify-between items-end pt-4">
                     <span className="text-xs font-black uppercase text-primary tracking-tighter shrink-0">Total</span>

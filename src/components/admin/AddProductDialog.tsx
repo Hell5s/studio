@@ -43,6 +43,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { privateProductRef, splitProductPayload } from '@/lib/product-private';
 import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc, Timestamp, onSnapshot } from 'firebase/firestore';
 import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
@@ -471,11 +472,15 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
       ...(isEdit ? {} : { createdAt: serverTimestamp() })
     };
 
+    // Custo e fornecedor vão para productsPrivate; o doc público não leva esses campos.
+    const { publicData, privateData } = splitProductPayload(payload);
+
     try {
+      await setDoc(privateProductRef(db, productId), privateData, { merge: true });
       if (isEdit) {
-        await setDoc(productRef, payload, { merge: true });
+        await setDoc(productRef, publicData, { merge: true });
       } else {
-        await setDoc(productRef, { ...payload, createdAt: serverTimestamp() }, { merge: true });
+        await setDoc(productRef, { ...publicData, createdAt: serverTimestamp() }, { merge: true });
         const displayImg = typeof finalMainImage === 'string' ? finalMainImage : finalMainImage?.url;
         await generateDemoReviews(productId, formData.name, displayImg || '');
       }

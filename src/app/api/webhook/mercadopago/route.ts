@@ -1,26 +1,28 @@
 import { NextResponse } from 'next/server';
+import { getAdminDb } from '@/lib/server/firebase-admin';
+import { computeOrderTotal } from '@/lib/server/order-total';
 
-let adminDb: any = null;
+async function sendTelegram(text: string) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) return false;
 
-async function getAdminDb() {
-  if (adminDb) return adminDb;
-
-  const { initializeApp, getApps, cert } = await import('firebase-admin/app');
-  const { getFirestore } = await import('firebase-admin/firestore');
-
-  if (!getApps().length) {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID!,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')!,
-      })
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  try {
+    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text }),
+      signal: controller.signal
     });
+    return true;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  adminDb = getFirestore();
-  return adminDb;
 }
+
+const formatBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 export async function POST(request: Request) {
   try {
@@ -60,7 +62,11 @@ export async function POST(request: Request) {
 
         // 1. Leia o pedido antes da atualização para verificar notificações prévias
         const orderSnap = await orderRef.get();
-        const prev = orderSnap.exists ? orderSnap.data() : null;
+        if (!orderSnap.exists) {
+          console.error('Webhook: pedido não encontrado', { orderId, paymentId: dataId });
+          return NextResponse.json({ status: 'ok' });
+        }
+        const prev = orderSnap.data();
 
         let newStatus = 'pending';
         if (status === 'approved') newStatus = 'paid';
@@ -68,59 +74,67 @@ export async function POST(request: Request) {
         if (status === 'in_process') newStatus = 'pending';
         if (status === 'refunded') newStatus = 'refunded';
 
+        // Pagamento aprovado só vira "pago" se o valor pago cobrir o valor real do pedido,
+        // recalculado aqui com os preços do banco (não com o que veio do navegador).
+        let amountMismatch: { paid: number; expected: number } | null = null;
+        if (newStatus === 'paid') {
+          const computed = await computeOrderTotal(db, prev);
+          const paid = Number(payment.transaction_amount) || 0;
+          if (computed.problems.length || paid + 0.01 < computed.total) {
+            amountMismatch = { paid, expected: computed.total };
+            newStatus = 'pending';
+          }
+        }
+
         await orderRef.update({
           status: newStatus,
           paymentId: String(dataId),
-          paymentStatus: status,
+          paymentStatus: amountMismatch ? 'amount_mismatch' : status,
+          paymentAmountMismatch: amountMismatch,
           updatedAt: new Date(),
         });
 
-        console.log('Pedido atualizado no Firestore:', { orderId, newStatus });
+        console.log('Pedido atualizado no Firestore:', { orderId, newStatus, amountMismatch });
 
-        // 2. Enviar aviso pelo Telegram se for PAGO e não notificado ainda
-        if (newStatus === 'paid' && prev && prev.paidNotified !== true) {
-          const botToken = process.env.TELEGRAM_BOT_TOKEN;
-          const chatId = process.env.TELEGRAM_CHAT_ID;
+        // 2. Alerta no Telegram se o valor pago não bater com o pedido
+        if (amountMismatch && prev.mismatchNotified !== true) {
+          try {
+            const sent = await sendTelegram(
+              `⚠️ Pagamento com valor errado!\n` +
+              `Pedido #${orderId}\n` +
+              `Pago: ${formatBRL(amountMismatch.paid)} — Valor do pedido: ${formatBRL(amountMismatch.expected)}\n` +
+              `O pedido NÃO foi marcado como pago. Confira antes de enviar.`
+            );
+            if (sent) await orderRef.update({ mismatchNotified: true });
+          } catch (telErr) {
+            console.error('Erro ao enviar alerta para o Telegram:', telErr);
+          }
+        }
 
-          if (botToken && chatId) {
-            try {
-              const shortId = orderId.substring(0, 6).toUpperCase();
-              const customerName = prev.customer?.name || 'Cliente';
-              const totalFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prev.total || 0);
-              
-              let msg = `💰 Nova venda!\n`;
-              msg += `Pedido #${shortId}\n`;
-              msg += `${customerName} — ${totalFormatted}\n`;
-              
-              prev.items?.forEach((item: any) => {
-                const specs = [item.selectedSize, item.selectedColor].filter(Boolean).join(', ');
-                msg += `${item.quantity}x ${item.name}${specs ? ` (${specs})` : ''}\n`;
-              });
+        // 3. Enviar aviso pelo Telegram se for PAGO e não notificado ainda
+        if (newStatus === 'paid' && prev.paidNotified !== true) {
+          try {
+            const customerName = prev.customer?.name || 'Cliente';
 
-              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.todabelaoficial.com.br';
-              msg += `\nVer no painel: ${siteUrl}/?admin=true`;
+            let msg = `💰 Nova venda!\n`;
+            msg += `Pedido #${orderId}\n`;
+            msg += `${customerName} — ${formatBRL(prev.total || 0)}\n`;
 
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 5000);
+            prev.items?.forEach((item: any) => {
+              const specs = [item.selectedSize, item.selectedColor].filter(Boolean).join(', ');
+              msg += `${item.quantity}x ${item.name}${specs ? ` (${specs})` : ''}\n`;
+            });
 
-              await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  chat_id: chatId,
-                  text: msg
-                }),
-                signal: controller.signal
-              });
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.todabelaoficial.com.br';
+            msg += `\nVer no painel: ${siteUrl}/?admin=true`;
 
-              clearTimeout(timeoutId);
-              
-              // Marca como notificado para evitar duplicidade
+            // Marca como notificado para evitar duplicidade
+            if (await sendTelegram(msg)) {
               await orderRef.update({ paidNotified: true });
               console.log('Notificação Telegram enviada com sucesso');
-            } catch (telErr) {
-              console.error('Erro ao enviar notificação para o Telegram:', telErr);
             }
+          } catch (telErr) {
+            console.error('Erro ao enviar notificação para o Telegram:', telErr);
           }
         }
       }
