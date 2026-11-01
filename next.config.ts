@@ -9,6 +9,20 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Login do Google pelo domínio da loja: repassa as páginas de login do Firebase
+  // (ver authDomain em src/firebase/config.ts).
+  async rewrites() {
+    return [
+      {
+        source: '/__/auth/:path*',
+        destination: 'https://studio-6696860128-c7a6f.firebaseapp.com/__/auth/:path*',
+      },
+      {
+        source: '/__/firebase/:path*',
+        destination: 'https://studio-6696860128-c7a6f.firebaseapp.com/__/firebase/:path*',
+      },
+    ];
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
