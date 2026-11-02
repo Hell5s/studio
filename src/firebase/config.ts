@@ -1,9 +1,11 @@
-// No site oficial o login do Google passa pelo próprio domínio da loja (o next.config.ts
-// repassa /__/auth para o Firebase), então a tela do Google mostra "todabelaoficial.com.br"
-// em vez de "studio-6696860128-c7a6f.firebaseapp.com". Fora dele (localhost) usa o padrão.
+// Login do Google pelo domínio da loja (a tela do Google mostra "todabelaoficial.com.br").
+// Desligado: o Google recusa com redirect_uri_mismatch enquanto
+// https://www.todabelaoficial.com.br/__/auth/handler não estiver nas URIs de redirecionamento
+// do client OAuth "Web client" do projeto. Depois de cadastrar, troque para true.
+const USE_STORE_AUTH_DOMAIN = false;
 const STORE_DOMAIN = 'todabelaoficial.com.br';
 const authDomain =
-  typeof window !== 'undefined' && window.location.hostname.endsWith(STORE_DOMAIN)
+  USE_STORE_AUTH_DOMAIN && typeof window !== 'undefined' && window.location.hostname.endsWith(STORE_DOMAIN)
     ? window.location.host
     : "studio-6696860128-c7a6f.firebaseapp.com";
 
