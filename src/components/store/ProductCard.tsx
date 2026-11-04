@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, Camera, ShoppingBag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
@@ -25,6 +24,7 @@ interface ProductCardProps {
   colors?: string[];
   variations?: any[];
   createdAt?: any;
+  images?: any[];
 }
 
 // A etiqueta "Novo" só vale para produtos cadastrados nos últimos 30 dias.
@@ -48,7 +48,8 @@ export const ProductCard = React.memo(function ProductCard({
   sizes,
   colors,
   variations,
-  createdAt
+  createdAt,
+  images
 }: ProductCardProps) {
   const visibleBadge = badge?.trim().toLowerCase() === 'novo' && !isRecent(createdAt) ? undefined : badge;
   const { user } = useUser();
@@ -127,107 +128,117 @@ export const ProductCard = React.memo(function ProductCard({
 
   const url = getItemImageUrl(image);
   const isValidUrl = url && typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
+  const discount = oldPrice && oldPrice > price ? Math.round((1 - price / oldPrice) * 100) : 0;
+
+  // Fotos do produto passando no card: no hover (computador) ou quando o card está na tela (celular).
+  const gallery = useMemo(() => {
+    const all = [url, ...(images || []).map(getItemImageUrl)].filter((u): u is string => typeof u === 'string' && /^(https?:)?\//.test(u));
+    return Array.from(new Set(all)).slice(0, 5);
+  }, [url, images]);
+  const SLIDE_MS = 2200;
+  const [slide, setSlide] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!playing || gallery.length < 2) return;
+    setSlide(1);
+    const t = setInterval(() => setSlide(s => (s + 1) % gallery.length), SLIDE_MS);
+    return () => { clearInterval(t); setSlide(0); };
+  }, [playing, gallery.length]);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || gallery.length < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches || !matchMedia('(hover: none)').matches) return;
+    const io = new IntersectionObserver(([e]) => setPlaying(e.intersectionRatio > 0.6), { threshold: [0, 0.6] });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [gallery.length]);
+
+  const canHover = () => matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const addButton = (
+    <button className="tb-add" title="Adicionar à sacola" onClick={hasVariations ? undefined : handleQuickAdd}>
+      Adicionar à sacola
+    </button>
+  );
 
   return (
-    <article className="group flex flex-col h-full bg-white transition-all duration-700 relative overflow-hidden border border-primary/5">
-      <div className="relative w-full aspect-[3/5] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
+    <article
+      ref={cardRef}
+      className={cn("tb-card group flex flex-col h-full", playing && "tb-play")}
+      style={{ ['--tb-dur' as any]: `${SLIDE_MS}ms` }}
+      onMouseEnter={() => canHover() && setPlaying(true)}
+      onMouseLeave={() => canHover() && setPlaying(false)}
+    >
+      <div className="tb-media relative w-full aspect-[3/5] overflow-hidden bg-[#F3EFF0] flex-shrink-0">
         <Link href={`/products/${id}`} className="absolute inset-0 z-10">
           <span className="sr-only">Ver detalhes de {name}</span>
-          
           {isValidUrl && !hasError ? (
-            <Image
-              loader={cloudinaryLoader}
-              src={url}
-              alt={name}
-              fill
-              loading="lazy"
-              className="object-cover transition-transform duration-1500 group-hover:scale-105"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              onError={() => setHasError(true)}
-            />
+            gallery.map((src, i) => (playing || i === 0) && (
+              <Image
+                key={src}
+                loader={cloudinaryLoader}
+                src={src}
+                alt={i === 0 ? name : ''}
+                fill
+                loading="lazy"
+                className={cn("tb-img object-cover", i === slide && "tb-on")}
+                style={{ objectPosition: '50% 15%' }}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                onError={i === 0 ? () => setHasError(true) : undefined}
+              />
+            ))
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-300">
               <Camera className="h-8 w-8 mb-2 opacity-20" />
               <span className="text-[8px] font-bold uppercase tracking-widest opacity-40">Imagem Indisponível</span>
             </div>
           )}
-
-          <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center pointer-events-none">
-            <Button className="rounded-full bg-white text-primary font-bold uppercase text-[8px] md:text-[9px] tracking-widest px-6 md:px-8 py-4 md:py-6 shadow-2xl hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-700 hidden md:flex">
-              Ver Detalhes
-            </Button>
-          </div>
         </Link>
-        
-        {visibleBadge && (
-          <Badge className="absolute top-2 md:top-4 left-2 md:left-4 bg-primary text-white border-none px-2 md:px-3 py-0.5 md:py-1 font-bold uppercase text-[7px] md:text-[9px] rounded-full tracking-widest z-20">
-            {visibleBadge}
-          </Badge>
-        )}
-        
-        <div className="absolute right-2 md:right-4 top-2 md:top-4 flex flex-col gap-2 z-20">
-          <button 
-            onClick={handleToggleFavorite}
-            className={cn(
-              "h-8 md:h-10 w-8 md:w-10 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-sm border border-black/5",
-              isFavorited 
-                ? "bg-primary text-white" 
-                : "bg-white/90 text-primary hover:bg-primary hover:text-white"
-            )}
-          >
-            <Heart className={cn("h-4 md:h-5 w-4 md:w-5", isFavorited && "fill-current")} />
-          </button>
 
+        {gallery.length > 1 && (
+          <div className="tb-bars" aria-hidden="true" key={playing ? 'on' : 'off'}>
+            {gallery.map((_, i) => <i key={i} className={i < slide ? 'tb-done' : i === slide && playing ? 'tb-run' : ''}><b /></i>)}
+          </div>
+        )}
+
+        <div className="absolute top-3 md:top-4 left-3 md:left-4 z-20 flex flex-col items-start gap-1.5">
+          {discount > 0 && <span className="tb-off">-{discount}%</span>}
+          {visibleBadge && (
+            <Badge className="bg-primary text-white border-none px-2 md:px-3 py-0.5 md:py-1 font-bold uppercase text-[7px] md:text-[9px] rounded-full tracking-widest">
+              {visibleBadge}
+            </Badge>
+          )}
+        </div>
+
+        <button
+          onClick={handleToggleFavorite}
+          aria-label={isFavorited ? 'Remover dos favoritos' : 'Favoritar'}
+          className={cn("tb-glass absolute z-20 right-2.5 top-2.5 h-9 md:h-10 w-9 md:w-10 rounded-full flex items-center justify-center transition-transform hover:scale-110", isFavorited && "text-white !bg-primary")}
+        >
+          <Heart className={cn("h-4 md:h-5 w-4 md:w-5", isFavorited ? "fill-current" : "text-[#2A1F22]")} />
+        </button>
+
+        <div className="absolute z-20 left-2.5 right-2.5 bottom-2.5">
           {hasVariations ? (
-            <QuickAddPopover 
+            <QuickAddPopover
               product={{ id, name, price, oldPrice, badge, image, sizes, colors, variations }}
               onConfirm={(p) => onAddToCart?.(p)}
-              trigger={
-                <button 
-                  className="h-8 md:h-10 w-8 md:w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all shadow-sm border border-black/5 text-primary hover:bg-primary hover:text-white focus:outline-none"
-                  title="Adicionar ao carrinho"
-                >
-                  <ShoppingBag className="h-4 md:h-5 w-4 md:w-5" />
-                </button>
-              }
+              trigger={addButton}
             />
-          ) : (
-            <button 
-              onClick={handleQuickAdd}
-              className="h-8 md:h-10 w-8 md:w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all shadow-sm border border-black/5 text-primary hover:bg-primary hover:text-white"
-              title="Adicionar ao carrinho"
-            >
-              <ShoppingBag className="h-4 md:h-5 w-4 md:w-5" />
-            </button>
-          )}
+          ) : addButton}
         </div>
       </div>
 
-      <div className="p-3 md:p-6 text-center flex flex-col flex-1 gap-2 md:gap-4">
-        <h3 className="line-clamp-2 text-sm md:text-lg font-headline font-bold leading-tight tracking-tight text-primary/80 min-h-[2.5em]">
+      <div className="pt-4 px-1 text-center flex flex-col flex-1">
+        <h3 className="![font-family:var(--font-inter),sans-serif] line-clamp-2 text-[13px] md:text-sm font-medium leading-snug text-[#2A1F22] min-h-[2.8em]">
           {name}
         </h3>
-        
-        <div className="mt-auto space-y-1 md:space-y-2">
-          <p className="text-lg md:text-3xl font-headline font-bold text-primary leading-none">
-            {formatCurrency(price)}
-          </p>
-          {oldPrice && (
-            <p className="text-[9px] md:sm text-muted-foreground line-through font-light italic">
-              {formatCurrency(oldPrice)}
-            </p>
-          )}
-          <p className="text-[9px] md:text-xs text-accent font-medium uppercase tracking-widest">
-            Em até 10x no cartão
-          </p>
-
-          <Link href={`/products/${id}`} className="block mt-2 md:mt-4">
-            <button
-              className="w-full rounded-full border border-primary/10 bg-transparent px-3 py-2.5 md:py-4 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-primary transition-all hover:bg-primary hover:text-white active:scale-95"
-            >
-              Comprar
-            </button>
-          </Link>
+        <div className="tb-price mt-auto">
+          <span className="tb-now">{formatCurrency(price)}</span>
+          {discount > 0 && <span className="tb-old">{formatCurrency(oldPrice!)}</span>}
+          <span className="tb-inst">Até 10x no cartão</span>
         </div>
       </div>
     </article>
