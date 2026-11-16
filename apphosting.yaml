@@ -5,3 +5,14 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+env:
+  - variable: NEXT_PUBLIC_META_PIXEL_ID
+    value: "1661738188666430"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: META_PIXEL_ID
+    value: "1661738188666430"
+    availability:
+      - RUNTIME
