@@ -25,7 +25,7 @@ export function ProductTabs({ product }: ProductTabsProps) {
   return (
     <Accordion type="single" collapsible className="w-full border-t border-primary/5">
       <AccordionItem value="item-1" className="border-b border-primary/5">
-        <AccordionTrigger className="hover:no-underline py-5 group text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80 [&>svg]:hidden flex justify-between">
+        <AccordionTrigger className="hover:no-underline py-5 group text-xs font-bold uppercase tracking-[0.3em] text-primary/80 [&>svg]:hidden flex justify-between">
           <span>Descrição Editorial</span>
           <Plus className="h-4 w-4 shrink-0 text-accent transition-transform duration-200 data-[state=open]:rotate-45" />
         </AccordionTrigger>
@@ -35,7 +35,7 @@ export function ProductTabs({ product }: ProductTabsProps) {
       </AccordionItem>
 
       <AccordionItem value="item-2" className="border-b border-primary/5">
-        <AccordionTrigger className="hover:no-underline py-5 group text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80 [&>svg]:hidden flex justify-between">
+        <AccordionTrigger className="hover:no-underline py-5 group text-xs font-bold uppercase tracking-[0.3em] text-primary/80 [&>svg]:hidden flex justify-between">
           <span>Guia de Cuidados & Tecido</span>
           <Plus className="h-4 w-4 shrink-0 text-accent transition-transform duration-200 data-[state=open]:rotate-45" />
         </AccordionTrigger>
@@ -52,10 +52,9 @@ export function ProductTabs({ product }: ProductTabsProps) {
       <AccordionItem value="item-3" className="border-b border-primary/5">
         <button 
           onClick={scrollToReviews}
-          className="flex flex-1 items-center justify-between py-5 font-medium transition-all text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80 w-full text-left"
+          className="flex flex-1 items-center justify-between py-5 font-medium transition-all text-xs font-bold uppercase tracking-[0.3em] text-primary/80 w-full text-left"
         >
           Avaliações das Clientes
-          <span className="text-accent text-[8px] font-black px-2 py-0.5 bg-accent/10 rounded-full">★ 4.9</span>
         </button>
       </AccordionItem>
     </Accordion>

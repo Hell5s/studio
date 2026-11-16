@@ -48,7 +48,7 @@ export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, product
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <div className="h-px w-12 bg-accent" />
-            <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.6em] text-accent">
+            <span className="text-xs font-bold uppercase tracking-[0.4em] text-accent">
               {eyebrow}
             </span>
           </div>
@@ -60,7 +60,7 @@ export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, product
         {linkText && (
           <Link 
             href={linkUrl || `/vitrine/${id}`} 
-            className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary/60 underline underline-offset-8 hover:text-accent transition-colors"
+            className="text-xs font-bold uppercase tracking-widest text-primary/80 underline underline-offset-8 hover:text-accent transition-colors"
           >
             {linkText}
           </Link>
@@ -94,7 +94,7 @@ export function ShowcaseSection({ id, eyebrow, title, linkText, linkUrl, product
             <div className="mt-8 md:mt-16 flex justify-center">
               <Link
                 href={linkUrl || `/vitrine/${id}`}
-                className="w-full md:w-auto md:min-w-[320px] rounded-full border border-primary bg-transparent px-10 py-4 text-center text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-primary transition-all hover:bg-primary hover:text-white active:scale-95"
+                className="w-full md:w-auto md:min-w-[320px] rounded-full border border-primary bg-transparent px-10 py-4 text-center text-xs font-bold uppercase tracking-[0.2em] text-primary transition-all hover:bg-primary hover:text-white active:scale-95"
               >
                 {linkText || "Ver todas as peças"}
               </Link>

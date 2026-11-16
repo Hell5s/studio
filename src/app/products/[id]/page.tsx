@@ -9,6 +9,7 @@ import { Navbar } from '@/components/store/Navbar';
 import { Newsletter } from '@/components/store/Newsletter';
 import { Footer } from '@/components/store/Footer';
 import { ProductGallery } from '@/components/store/product-detail/ProductGallery';
+import { ProductHeading } from '@/components/store/product-detail/ProductHeading';
 import { ProductInfo } from '@/components/store/product-detail/ProductInfo';
 import { ProductReviews } from '@/components/store/product-detail/ProductReviews';
 import { LoginDialog } from '@/components/auth/LoginDialog';
@@ -95,26 +96,29 @@ export default function ProductDetailPage() {
         cartCount={cartCount}
       />
       
-      <main className="pt-24 md:pt-40 pb-20">
+      <main className="pt-24 md:pt-40 pb-28 lg:pb-20">
         <div className="container mx-auto px-4 lg:px-6 max-w-[1300px]">
           {/* Breadcrumb - Kaisan Pattern */}
-          <nav className="mb-10 md:mb-16 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+          <nav className="mb-6 md:mb-16 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-600">
             <Link href="/" className="hover:text-black transition-colors">Início</Link>
             <ChevronRight className="h-3 w-3" />
             <Link href={`/categoria/${resolvedCategoryName.toLowerCase().trim().replace(/\s+/g, '-')}`} className="hover:text-black transition-colors">{resolvedCategoryName}</Link>
             <ChevronRight className="h-3 w-3" />
             <span className="text-black truncate">{product.name}</span>
-            <span className="ml-2 text-gray-200">| REF: {product.sku || product.id.slice(-6).toUpperCase()}</span>
+            <span className="ml-2 text-gray-500">| REF: {product.sku || product.id.slice(-6).toUpperCase()}</span>
           </nav>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-20 items-start">
             {/* Left: Editorial Gallery */}
             <div className="lg:col-span-8">
+              {/* Celular: nome e preço no alto, antes das fotos */}
+              <ProductHeading product={product} as="h1" className="lg:hidden mb-5" />
               <ProductGallery 
                 images={product.images || [product.image]} 
                 name={product.name} 
                 productId={product.id}
                 activeVariation={selectedVariation}
+                video={product.video || product.videoUrl}
               />
             </div>
 
@@ -123,7 +127,7 @@ export default function ProductDetailPage() {
               <ProductInfo 
                 product={product} 
                 onAddToCart={addToCart} 
-                relatedProducts={relatedProducts} 
+                relatedProducts={relatedProducts ?? undefined} 
                 onColorSelect={setSelectedVariation}
               />
             </div>

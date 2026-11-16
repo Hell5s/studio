@@ -213,10 +213,13 @@ export function ProductReviews({ product }: { product: any }) {
   const ratingLabels: Record<number, string> = { 1: "Precisa melhorar", 2: "Poderia ser melhor", 3: "Boa", 4: "Muito boa", 5: "Perfeita" };
   const currentRating = hoverRating || newReview.rating;
 
+  // Sem avaliações reais: esconde a área vazia e deixa só o convite discreto para avaliar.
+  const empty = !isLoading && (allReviews?.length ?? 0) === 0;
+
   return (
-    <section id="avaliacoes" className="pt-20 md:pt-32 border-t border-gray-100 bg-white">
+    <section id="avaliacoes" className={cn("border-t border-gray-100 bg-white", empty ? "pt-8" : "pt-20 md:pt-32")}>
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 md:mb-20 gap-8">
+      <div className={cn("flex flex-col md:flex-row justify-between items-start md:items-center mb-12 md:mb-20 gap-8", empty && "hidden")}>
         <div className="space-y-3">
           <div className="flex items-center gap-4">
              <div className="h-px w-12 bg-primary/20" />
@@ -224,14 +227,14 @@ export function ProductReviews({ product }: { product: any }) {
           </div>
           <h3 className="text-3xl md:text-5xl font-headline font-bold text-primary">Experiências <span className="italic font-light text-accent">Toda Bela</span></h3>
         </div>
-        <div className="flex items-center gap-3 text-[10px] md:text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-6 py-3 rounded-full border border-emerald-100 shadow-sm">
+        <div className="flex items-center gap-3 text-xs md:text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-6 py-3 rounded-full border border-emerald-100 shadow-sm">
           <CheckCircle2 className="h-4 w-4" /> Ambiente 100% verificado
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
+      <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24", empty && "max-w-md mx-auto")}>
         {/* Stats Column */}
-        <div className="lg:col-span-4 space-y-12">
+        <div className={cn("space-y-12", empty ? "lg:col-span-12" : "lg:col-span-4")}>
           {stats && (
             <div className="p-10 bg-[#FFF9F7] rounded-[3rem] border border-primary/5 space-y-8 shadow-sm">
               <div className="flex items-center gap-6">
@@ -240,7 +243,7 @@ export function ProductReviews({ product }: { product: any }) {
                 </div>
                 <div className="space-y-1">
                   <StarRating rating={Math.round(stats.avg)} size="h-5 w-5" />
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
                     {stats.total} {stats.total === 1 ? 'Avaliação real' : 'Avaliações reais'}
                   </p>
                 </div>
@@ -249,11 +252,11 @@ export function ProductReviews({ product }: { product: any }) {
               <div className="space-y-4">
                 {stats.distribution.map(d => (
                   <div key={d.star} className="flex items-center gap-4">
-                    <span className="text-[10px] font-bold w-4 text-primary/40">{d.star}</span>
+                    <span className="text-xs font-bold w-4 text-primary/70">{d.star}</span>
                     <div className="flex-1 h-1.5 bg-secondary/50 rounded-full overflow-hidden">
                       <div className="h-full bg-accent transition-all duration-1000" style={{ width: `${d.percent}%` }} />
                     </div>
-                    <span className="text-[10px] font-bold text-primary/20 w-8">{d.percent}%</span>
+                    <span className="text-xs font-bold text-primary/60 w-8">{d.percent}%</span>
                   </div>
                 ))}
               </div>
@@ -265,7 +268,7 @@ export function ProductReviews({ product }: { product: any }) {
                   { label: 'Fidelidade à Cor', val: stats.color }
                 ].map(m => (
                   <div key={m.label} className="space-y-2">
-                    <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest">
+                    <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest">
                       <span className="text-primary/60">{m.label}</span>
                       <span className="text-accent">{m.val > 0 ? `${m.val} / 5.0` : '—'}</span>
                     </div>
@@ -280,18 +283,18 @@ export function ProductReviews({ product }: { product: any }) {
 
           <button 
             onClick={() => { setIsDialogOpen(true); setSuccess(false); }} 
-            className="w-full py-6 bg-primary text-white text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-accent transition-all duration-700 shadow-2xl flex items-center justify-center gap-4 group rounded-none"
+            className="w-full py-6 bg-primary text-white text-xs font-bold uppercase tracking-[0.4em] hover:bg-accent transition-all duration-700 shadow-2xl flex items-center justify-center gap-4 group rounded-none"
           >
-            <MessageSquare className="h-4 w-4 group-hover:scale-110 transition-transform" /> Escrever Avaliação
+            <MessageSquare className="h-4 w-4 group-hover:scale-110 transition-transform" /> {empty ? 'Seja a primeira a avaliar' : 'Escrever Avaliação'}
           </button>
         </div>
 
         {/* Content Column */}
-        <div className="lg:col-span-8 space-y-12">
+        <div className={cn("lg:col-span-8 space-y-12", empty && "hidden")}>
           {/* Photo Strip */}
           {allCustomerPhotos.length > 0 && (
             <div className="space-y-6">
-              <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40">Fotos das Clientes</h5>
+              <h5 className="text-xs font-bold uppercase tracking-[0.4em] text-primary/70">Fotos das Clientes</h5>
               <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
                  {allCustomerPhotos.map((img, i) => (
                    <button 
@@ -311,23 +314,23 @@ export function ProductReviews({ product }: { product: any }) {
              <div className="flex gap-2">
                 <button 
                   onClick={() => setFilterType('all')}
-                  className={cn("px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all", filterType === 'all' ? "bg-primary text-white border-primary" : "bg-white text-primary/40 border-primary/5 hover:border-primary/20")}
+                  className={cn("px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest border transition-all", filterType === 'all' ? "bg-primary text-white border-primary" : "bg-white text-primary/70 border-primary/5 hover:border-primary/20")}
                 >
                   Todas
                 </button>
                 {allCustomerPhotos.length > 0 && (
                   <button 
                     onClick={() => setFilterType('images')}
-                    className={cn("px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all", filterType === 'images' ? "bg-primary text-white border-primary" : "bg-white text-primary/40 border-primary/5 hover:border-primary/20")}
+                    className={cn("px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest border transition-all", filterType === 'images' ? "bg-primary text-white border-primary" : "bg-white text-primary/70 border-primary/5 hover:border-primary/20")}
                   >
                     Com Fotos
                   </button>
                 )}
              </div>
              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <ArrowUpDown className="h-3 w-3 text-primary/20" />
+                <ArrowUpDown className="h-3 w-3 text-primary/60" />
                 <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-                  <SelectTrigger className="w-full sm:w-48 h-10 border-none bg-secondary/20 rounded-full text-[10px] font-bold uppercase tracking-widest focus:ring-0">
+                  <SelectTrigger className="w-full sm:w-48 h-10 border-none bg-secondary/20 rounded-full text-xs font-bold uppercase tracking-widest focus:ring-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -342,7 +345,7 @@ export function ProductReviews({ product }: { product: any }) {
           {isLoading ? (
             <div className="py-24 flex flex-col items-center justify-center space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-accent/30" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary/20">Sincronizando experiências...</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-primary/60">Sincronizando experiências...</p>
             </div>
           ) : displayedReviews.length > 0 ? (
             <div className="space-y-8">
@@ -355,10 +358,10 @@ export function ProductReviews({ product }: { product: any }) {
                        </div>
                        <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                             <p className="text-[11px] font-bold uppercase tracking-widest text-primary">{review.user}</p>
-                             {review.isDemo && <Badge className="bg-accent/10 text-accent border-none text-[7px] font-black px-1.5 h-3.5">PREVIEW</Badge>}
+                             <p className="text-xs font-bold uppercase tracking-widest text-primary">{review.user}</p>
+                             {review.isDemo && <Badge className="bg-accent/10 text-accent border-none text-xs font-black px-1.5 h-3.5">PREVIEW</Badge>}
                           </div>
-                          <p className="text-[9px] text-muted-foreground uppercase font-medium">
+                          <p className="text-xs text-muted-foreground uppercase font-medium">
                             {review.createdAt?.toMillis ? new Date(review.createdAt.toMillis()).toLocaleDateString('pt-BR') : 'Recentemente'}
                           </p>
                        </div>
@@ -387,13 +390,13 @@ export function ProductReviews({ product }: { product: any }) {
 
                   <div className="flex flex-wrap items-center gap-8 pt-6 border-t border-primary/5">
                      {review.recommended && (
-                        <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-emerald-600/60">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600/60">
                            <Check className="h-3.5 w-3.5" /> Recomenda esta peça
                         </div>
                      )}
                      <div className="flex gap-4 opacity-40">
-                        {review.qualityRating && <span className="text-[8px] font-bold uppercase tracking-tighter">Qualidade: {review.qualityRating}</span>}
-                        {review.fitRating && <span className="text-[8px] font-bold uppercase tracking-tighter">Caimento: {review.fitRating}</span>}
+                        {review.qualityRating && <span className="text-xs font-bold uppercase tracking-tighter">Qualidade: {review.qualityRating}</span>}
+                        {review.fitRating && <span className="text-xs font-bold uppercase tracking-tighter">Caimento: {review.fitRating}</span>}
                      </div>
                   </div>
                 </article>
@@ -404,7 +407,7 @@ export function ProductReviews({ product }: { product: any }) {
                   <Button 
                     variant="outline" 
                     onClick={() => setVisibleCount(prev => prev + 5)}
-                    className="rounded-full px-12 h-14 uppercase text-[10px] font-bold tracking-widest border-primary/10 text-primary/60 hover:text-primary transition-all"
+                    className="rounded-full px-12 h-14 uppercase text-xs font-bold tracking-widest border-primary/10 text-primary/60 hover:text-primary transition-all"
                   >
                     Ver mais avaliações
                   </Button>
@@ -432,7 +435,7 @@ export function ProductReviews({ product }: { product: any }) {
                   <h3 className="text-3xl font-headline font-bold text-primary">Obrigada por compartilhar!</h3>
                   <p className="text-muted-foreground italic font-light leading-relaxed">Sua avaliação foi enviada com sucesso e será publicada em nossa boutique após a moderação do curador.</p>
                </div>
-               <Button onClick={() => setIsDialogOpen(false)} className="rounded-full h-14 px-12 bg-primary text-white font-bold uppercase tracking-widest text-[11px] shadow-xl">
+               <Button onClick={() => setIsDialogOpen(false)} className="rounded-full h-14 px-12 bg-primary text-white font-bold uppercase tracking-widest text-xs shadow-xl">
                  Fechar Galeria
                </Button>
             </div>
@@ -443,7 +446,7 @@ export function ProductReviews({ product }: { product: any }) {
                   <Sparkles className="h-16 w-16" />
                 </div>
                 <DialogHeader className="relative z-10 text-left space-y-1">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-accent/80">Compartilhe sua Escolha</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.4em] text-accent/80">Compartilhe sua Escolha</p>
                   <DialogTitle className="text-2xl font-headline font-bold uppercase tracking-widest leading-none">Minha Experiência</DialogTitle>
                   <DialogDescription className="text-white/60 italic text-sm mt-1">Sua voz ajuda outras mulheres a escolherem com confiança.</DialogDescription>
                 </DialogHeader>
@@ -452,7 +455,7 @@ export function ProductReviews({ product }: { product: any }) {
               <div className="p-8 space-y-8 overflow-y-auto no-scrollbar flex-1 bg-[#FDFCFD]">
                  {/* Rating Section */}
                  <div className="space-y-4 text-center">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/40">O que achou da peça?</Label>
+                    <Label className="text-xs font-bold uppercase tracking-widest text-primary/70">O que achou da peça?</Label>
                     <div className="flex flex-col items-center gap-3">
                        <div className="flex gap-2">
                           {[1,2,3,4,5].map(s => (
@@ -468,13 +471,13 @@ export function ProductReviews({ product }: { product: any }) {
                             </button>
                           ))}
                        </div>
-                       <p className="text-[11px] font-bold uppercase text-accent tracking-[0.2em] h-4">{ratingLabels[currentRating]}</p>
+                       <p className="text-xs font-bold uppercase text-accent tracking-[0.2em] h-4">{ratingLabels[currentRating]}</p>
                     </div>
                  </div>
 
                  {/* Metrics Section */}
                  <div className="space-y-6 p-6 bg-white rounded-3xl border border-primary/5 shadow-sm">
-                    <h6 className="text-[9px] font-black uppercase tracking-widest text-primary/30 border-b border-primary/5 pb-3">Detalhes da Peça</h6>
+                    <h6 className="text-xs font-black uppercase tracking-widest text-primary/30 border-b border-primary/5 pb-3">Detalhes da Peça</h6>
                     <div className="grid gap-5">
                        {[
                          { label: 'Qualidade do Tecido', key: 'qualityRating' },
@@ -482,7 +485,7 @@ export function ProductReviews({ product }: { product: any }) {
                          { label: 'Fidelidade à Cor', key: 'colorRating' }
                        ].map(m => (
                          <div key={m.key} className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-primary/60">{m.label}</span>
+                            <span className="text-xs font-bold text-primary/60">{m.label}</span>
                             <StarRating 
                               rating={(newReview as any)[m.key]} 
                               interactive 
@@ -492,7 +495,7 @@ export function ProductReviews({ product }: { product: any }) {
                          </div>
                        ))}
                        <div className="flex items-center justify-between pt-2">
-                          <span className="text-[10px] font-bold text-primary/60">Eu recomendo esta peça</span>
+                          <span className="text-xs font-bold text-primary/60">Eu recomendo esta peça</span>
                           <Switch 
                             checked={newReview.recommended} 
                             onCheckedChange={v => setNewReview({...newReview, recommended: v})} 
@@ -504,7 +507,7 @@ export function ProductReviews({ product }: { product: any }) {
                  {/* Text Fields */}
                  <div className="space-y-5">
                     <div className="grid gap-2">
-                       <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Seu Nome*</Label>
+                       <Label className="text-xs font-bold uppercase text-primary/70 ml-1">Seu Nome*</Label>
                        <Input 
                         value={newReview.user} 
                         onChange={e => setNewReview({...newReview, user: e.target.value.toUpperCase()})}
@@ -513,7 +516,7 @@ export function ProductReviews({ product }: { product: any }) {
                        />
                     </div>
                     <div className="grid gap-2">
-                       <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Título</Label>
+                       <Label className="text-xs font-bold uppercase text-primary/70 ml-1">Título</Label>
                        <Input 
                         value={newReview.headline} 
                         maxLength={60}
@@ -524,8 +527,8 @@ export function ProductReviews({ product }: { product: any }) {
                     </div>
                     <div className="grid gap-2">
                        <div className="flex justify-between items-center px-1">
-                          <Label className="text-[10px] font-bold uppercase text-primary/40">Depoimento*</Label>
-                          <span className="text-[8px] font-bold text-primary/20">{newReview.comment.length}/1000</span>
+                          <Label className="text-xs font-bold uppercase text-primary/70">Depoimento*</Label>
+                          <span className="text-xs font-bold text-primary/60">{newReview.comment.length}/1000</span>
                        </div>
                        <Textarea 
                         value={newReview.comment} 
@@ -542,7 +545,7 @@ export function ProductReviews({ product }: { product: any }) {
                  <Button 
                   onClick={handleSubmit} 
                   disabled={isSubmitting || !newReview.user.trim() || !newReview.comment.trim()}
-                  className="w-full h-14 bg-primary text-white font-bold uppercase tracking-[0.4em] text-[11px] rounded-full shadow-2xl disabled:opacity-50"
+                  className="w-full h-14 bg-primary text-white font-bold uppercase tracking-[0.4em] text-xs rounded-full shadow-2xl disabled:opacity-50"
                  >
                     {isSubmitting ? (
                       <div className="flex items-center gap-3">
@@ -551,7 +554,7 @@ export function ProductReviews({ product }: { product: any }) {
                       </div>
                     ) : 'PUBLICAR MINHA EXPERIÊNCIA'}
                  </Button>
-                 <p className="text-[9px] text-center text-primary/40 font-medium tracking-tight mt-4">Sua avaliação será publicada após moderação.</p>
+                 <p className="text-xs text-center text-primary/70 font-medium tracking-tight mt-4">Sua avaliação será publicada após moderação.</p>
               </div>
             </>
           )}

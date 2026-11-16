@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Share2, Star, Minus, Plus, ShoppingBag, Camera, Check } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Minus, Plus, ShoppingBag, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn, getItemImageUrl } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProductDescription } from './ProductDescription';
 import { SizeGuide } from './SizeGuide';
+import { ProductHeading } from './ProductHeading';
+import { ShippingCalculator } from './ShippingCalculator';
+import { formatBRL, sizeLabel } from './utils';
+import { newEventId, trackEvent } from '@/lib/metaPixel';
 
 interface ProductInfoProps {
   product: any;
@@ -32,6 +36,15 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const botoesRef = useRef<HTMLDivElement>(null);
+  const [botoesVisiveis, setBotoesVisiveis] = useState(true);
+  useEffect(() => {
+    const el = botoesRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => setBotoesVisiveis(e.isIntersecting));
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
   
@@ -48,6 +61,13 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
     }
     return [];
   }, [product]);
+
+  useEffect(() => {
+    trackEvent('ViewContent', {
+      content_ids: [product.id], content_type: 'product', content_name: product.name,
+      value: Number(product.price) || 0, currency: 'BRL',
+    });
+  }, [product.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync mixing mode with quantity
   useEffect(() => {
@@ -93,9 +113,12 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
 
   const remainingToDistribute = quantity - distributedCount;
 
+  const goToOptions = () => document.getElementById('opcoes')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
   const validateSelection = () => {
     if (product.sizes?.length && !selectedSize) {
       toast({ title: "Escolha o tamanho", description: "Selecione um tamanho antes de prosseguir.", variant: "destructive" });
+      goToOptions();
       return false;
     }
 
@@ -111,6 +134,7 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
     } else {
       if (colorVariations.length > 0 && selectedColorIndex === null) {
         toast({ title: "Escolha a cor", description: "Selecione uma cor antes de prosseguir.", variant: "destructive" });
+        goToOptions();
         return false;
       }
     }
@@ -118,6 +142,10 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
   };
 
   const performAddToCart = (openCart: boolean) => {
+    trackEvent('AddToCart', {
+      content_ids: [product.id], content_type: 'product', content_name: product.name,
+      value: (Number(product.price) || 0) * quantity, currency: 'BRL', num_items: quantity,
+    }, newEventId());
     if (isMixingColors) {
       const activeColorIndices = Object.keys(colorCounts).map(Number).filter(idx => colorCounts[idx] > 0);
       
@@ -175,54 +203,16 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
     setColorCounts(prev => ({ ...prev, [idx]: newVal }));
   };
 
-  const scrollToReviews = () => {
-    const el = document.getElementById('avaliacoes');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
   const isValidUrl = (url: any) => typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
 
   return (
-    <div className="space-y-10">
-      <div className="space-y-4">
-        <div className="flex items-start justify-between gap-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-primary leading-tight uppercase tracking-tight">
-            {product.name}
-          </h1>
-          <button className="text-gray-400 hover:text-primary transition-colors pt-2 shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Share2 className="h-6 w-6 stroke-[1.5]" />
-          </button>
-        </div>
-        <button onClick={scrollToReviews} className="flex items-center gap-3 pt-2 group min-h-[44px]">
-          {/* Sem estrelas fixas: a nota aparece na seção de avaliações, calculada só com avaliações reais */}
-          <Star className="h-4 w-4 text-accent" />
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-primary transition-colors underline underline-offset-4">Avaliações de clientes</span>
-        </button>
-      </div>
-
-      <div className="space-y-2 border-y border-primary/5 py-8">
-        <div className="flex items-baseline gap-4">
-          <p className="text-3xl md:text-4xl font-bold text-primary leading-none">
-            {formatCurrency(product.price)}
-          </p>
-          {product.oldPrice && (
-            <p className="text-sm md:text-lg text-muted-foreground line-through italic font-light">
-              {formatCurrency(product.oldPrice)}
-            </p>
-          )}
-        </div>
-        <p className="text-xs md:text-sm text-accent font-bold uppercase tracking-widest">
-          Em até 10x no cartão
-        </p>
-      </div>
+    <div className="space-y-8">
+      <ProductHeading product={product} as="h1" className="hidden lg:block" />
 
       {colorVariations.length > 0 && (
-        <div className="space-y-6">
+        <div id="opcoes" className="space-y-6">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+            <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">
               Cor: <span className="text-primary font-black ml-2">
                 {isMixingColors ? 'MIX DE CORES' : (selectedColor || 'SELECIONE')}
               </span>
@@ -234,13 +224,13 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
                   onCheckedChange={(v) => setIsMixingColors(!!v)}
                   className="rounded-sm border-primary/20 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                 />
-                <span className="text-[9px] font-bold uppercase tracking-widest text-primary/40 group-hover:text-primary transition-colors">Quero cores diferentes</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-primary/70 group-hover:text-primary transition-colors">Quero cores diferentes</span>
               </label>
             )}
           </div>
 
           {isMixingColors && (
-            <p className="text-[10px] font-bold text-accent uppercase tracking-widest animate-in fade-in slide-in-from-left-2">
+            <p className="text-xs font-bold text-accent uppercase tracking-widest animate-in fade-in slide-in-from-left-2">
               Distribua {quantity} peças entre as cores {remainingToDistribute > 0 && `(faltam ${remainingToDistribute})`}
             </p>
           )}
@@ -296,7 +286,7 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
                       )}
                     </div>
                     <span className={cn(
-                      "text-[9px] font-bold uppercase tracking-widest",
+                      "text-xs font-bold uppercase tracking-widest",
                       (!isMixingColors && isSelected) || (isMixingColors && mixCount > 0) ? "text-primary" : "text-muted-foreground"
                     )}>
                       {displayName}
@@ -309,7 +299,7 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
                         onClick={() => updateColorCount(idx, -1)}
                         className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-secondary transition-colors text-xs"
                       >−</button>
-                      <span className="text-[10px] font-bold w-4 text-center">{mixCount}</span>
+                      <span className="text-xs font-bold w-4 text-center">{mixCount}</span>
                       <button 
                         onClick={() => updateColorCount(idx, 1)}
                         className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-secondary transition-colors text-xs"
@@ -325,7 +315,7 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
 
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Tamanho</p>
+          <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Tamanho</p>
           <SizeGuide description={product.description} sizes={product.sizes} />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-6">
@@ -335,13 +325,13 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
                 key={size}
                 onClick={() => setSelectedSize(size)}
                 className={cn(
-                  "min-w-[54px] md:min-w-[60px] h-11 md:h-12 px-4 flex items-center justify-center text-[12px] md:text-[13px] font-bold transition-all border min-h-[44px]",
+                  "min-w-[54px] md:min-w-[60px] h-11 md:h-12 px-4 flex items-center justify-center text-xs md:text-[13px] font-bold transition-all border min-h-[44px]",
                   selectedSize === size
                     ? "border-primary bg-primary text-white shadow-xl"
-                    : "border-gray-200 text-gray-400 hover:border-primary/40"
+                    : "border-gray-300 text-gray-700 hover:border-primary/60"
                 )}
               >
-                {size}
+                {sizeLabel(size)}
               </button>
             ))}
           </div>
@@ -351,40 +341,56 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               className="h-11 md:h-12 w-11 md:w-12 flex items-center justify-center hover:bg-secondary transition-colors border-r border-gray-200 min-h-[44px] min-w-[44px]"
             >
-              <Minus className="h-4 w-4 text-gray-400" />
+              <Minus className="h-4 w-4 text-gray-600" />
             </button>
             <span className="w-11 md:w-12 text-center text-sm md:text-base font-bold text-primary">{quantity}</span>
             <button
               onClick={() => setQuantity(quantity + 1)}
               className="h-11 md:h-12 w-11 md:w-12 flex items-center justify-center hover:bg-secondary transition-colors border-l border-gray-200 min-h-[44px] min-w-[44px]"
             >
-              <Plus className="h-4 w-4 text-gray-400" />
+              <Plus className="h-4 w-4 text-gray-600" />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="space-y-4 pt-4">
+      <div ref={botoesRef} className="space-y-4 pt-4">
         <button
           onClick={handleBuyNowClick}
-          className="w-full h-14 md:h-16 text-[12px] md:text-[14px] font-bold uppercase tracking-[0.3em] bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-500 rounded-none shadow-2xl min-h-[54px]"
+          className="w-full h-14 md:h-16 text-xs md:text-[14px] font-bold uppercase tracking-[0.3em] bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-500 rounded-none shadow-2xl min-h-[54px]"
         >
           COMPRAR AGORA
         </button>
         
         <button
           onClick={handleAddToCartClick}
-          className="w-full h-12 md:h-14 flex items-center justify-center text-[10px] md:text-[12px] font-bold uppercase tracking-[0.2em] border border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-3 min-h-[44px]"
+          className="w-full h-12 md:h-14 flex items-center justify-center text-xs md:text-xs font-bold uppercase tracking-[0.2em] border border-primary text-primary hover:bg-primary hover:text-white transition-all duration-500 rounded-none gap-3 min-h-[44px]"
         >
           <ShoppingBag className="h-4 w-4" />
           ADICIONAR AO MEU CARRINHO
         </button>
       </div>
 
+      <ShippingCalculator subtotal={(Number(product.price) || 0) * quantity} />
+
+      {/* Barra fixa no rodapé (celular e tablet) */}
+      <div className={`lg:hidden fixed inset-x-0 bottom-0 z-40 ${botoesVisiveis ? "hidden" : "flex"} items-center gap-3 border-t border-primary/10 bg-white px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]`}>
+        <div className="min-w-0">
+          <p className="text-lg font-bold leading-tight text-primary">{formatBRL((Number(product.price) || 0) * quantity)}</p>
+          <p className="truncate text-xs text-gray-700">{quantity > 1 ? `${quantity} peças` : 'à vista'}</p>
+        </div>
+        <button onClick={handleAddToCartClick} aria-label="Adicionar à sacola" className="h-12 w-12 shrink-0 border border-primary text-primary flex items-center justify-center">
+          <ShoppingBag className="h-5 w-5" />
+        </button>
+        <button onClick={handleBuyNowClick} className="h-12 flex-1 bg-primary text-primary-foreground text-sm font-bold uppercase tracking-widest">
+          Comprar
+        </button>
+      </div>
+
       <div className="border-t border-primary/5 pt-4">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="description" className="border-b border-primary/5">
-            <AccordionTrigger className="px-0 py-6 hover:no-underline text-[12px] font-bold uppercase tracking-[0.3em] text-primary/80 [&>svg]:hidden flex justify-between">
+            <AccordionTrigger className="px-0 py-6 hover:no-underline text-xs font-bold uppercase tracking-[0.3em] text-primary/80 [&>svg]:hidden flex justify-between">
               <span>DESCRIÇÃO EDITORIAL</span>
               <Plus className="h-5 w-5 shrink-0 text-accent transition-transform duration-200 data-[state=open]:rotate-45" />
             </AccordionTrigger>
@@ -395,15 +401,6 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="shipping" className="border-b border-primary/5">
-             <AccordionTrigger className="px-0 py-6 hover:no-underline text-[12px] font-bold uppercase tracking-[0.3em] text-primary/80 [&>svg]:hidden flex justify-between">
-              <span>ENTREGA & PRAZOS</span>
-              <Plus className="h-5 w-5 shrink-0 text-accent transition-transform duration-200 data-[state=open]:rotate-45" />
-            </AccordionTrigger>
-            <AccordionContent className="pb-10 text-[13px] md:text-[14px] text-muted-foreground leading-relaxed italic font-light">
-              Nossas peças são enviadas com seguro e embalagem premium. O prazo estimado de entrega é de 10 a 20 dias úteis, garantindo que sua escolha chegue em perfeitas condições.
-            </AccordionContent>
-          </AccordionItem>
         </Accordion>
       </div>
     </div>

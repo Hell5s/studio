@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { ShoppingBag, X, ArrowRight, Loader2, ChevronLeft } from 'lucide-react';
+import { ShoppingBag, X, ArrowRight, Loader2, ChevronLeft, Truck, Lock, ShieldCheck, Tag, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useAuth } from '@/firebase';
+import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { toNumber } from '@/lib/pricing';
 import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +39,52 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false);
   const [authForm, setAuthForm] = useState({ email: '', password: '', name: '' });
+  const db = useFirestore();
+  const shippingRef = useMemoFirebase(() => doc(db, 'settings', 'shipping'), [db]);
+  const { data: shippingSettings } = useDoc(shippingRef);
+  const [couponInput, setCouponInput] = useState('');
+  const [coupon, setCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+
+  // Frete grátis em todo o Brasil: nenhuma opção cobra valor em nenhuma região.
+  const opts: any[] = shippingSettings?.options || [];
+  const freeEverywhere = opts.length > 0 && opts.every(o => toNumber(o.priceSoutheastSouth) === 0 && toNumber(o.priceOtherRegions) === 0);
+
+  const applyCoupon = async () => {
+    if (!couponInput.trim() || total <= 0) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await fetch('/api/cupons/validar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponInput, subtotal: total }),
+      });
+      const data = await res.json();
+      if (data.valid) { setCoupon(data); setCouponInput(''); }
+      else setCouponError(data.message || 'Cupom inválido.');
+    } catch {
+      setCouponError('Erro ao validar cupom.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // Recalcula o desconto quando o subtotal muda; o checkout revalida no servidor de novo.
+  useEffect(() => {
+    if (!coupon) return;
+    if (total <= 0) { setCoupon(null); return; }
+    fetch('/api/cupons/validar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: coupon.code, subtotal: total }),
+    }).then(r => r.json()).then(d => setCoupon(d.valid ? d : null)).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
+
+  const discount = coupon?.discount || 0;
+  const payable = Math.max(0, total - discount);
 
   useEffect(() => {
     if (!open) {
@@ -63,6 +111,8 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
 
   const goToCheckout = () => {
     sessionStorage.setItem('checkout_items', JSON.stringify(cartItems));
+    if (coupon) sessionStorage.setItem('checkout_coupon', JSON.stringify(coupon));
+    else sessionStorage.removeItem('checkout_coupon');
     onOpenChange(false);
     router.push('/checkout');
   };
@@ -129,7 +179,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
             {view === 'auth' && (
               <button 
                 onClick={() => setView('cart')}
-                className="flex items-center gap-2 text-[9px] font-bold text-primary/40 uppercase tracking-widest hover:text-primary transition-colors mb-1"
+                className="flex items-center gap-2 text-xs font-bold text-primary/70 uppercase tracking-widest hover:text-primary transition-colors mb-1"
               >
                 <ChevronLeft className="h-3 w-3" /> Voltar para o carrinho
               </button>
@@ -149,7 +199,7 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Seu carrinho está vazio</h3>
-                  <p className="text-[12px] text-muted-foreground italic font-light">Inicie sua jornada editorial escolhendo peças exclusivas.</p>
+                  <p className="text-sm text-primary/70 italic font-light">Inicie sua jornada editorial escolhendo peças exclusivas.</p>
                 </div>
               </div>
             ) : (
@@ -173,18 +223,23 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
                             )}
                           </div>
                           <div className="flex-1 min-w-0 space-y-2">
-                            <p className="text-[11px] font-bold text-primary leading-tight uppercase tracking-tight truncate w-full">{item.name}</p>
-                            <div className="flex flex-wrap gap-4 text-[9px] text-muted-foreground font-black uppercase tracking-widest">
+                            <p className="text-[13px] font-bold text-primary leading-tight uppercase tracking-tight truncate w-full">{item.name}</p>
+                            <div className="flex flex-wrap gap-4 text-xs text-primary/70 font-black uppercase tracking-widest">
                               {item.selectedSize && <span>TAM: {item.selectedSize}</span>}
                               {item.selectedColor && <span className="text-accent">COR: {item.selectedColor}</span>}
                             </div>
                             <div className="flex items-center gap-3 pt-3">
-                                <button onClick={() => onUpdateQuantity(item.cartItemId || item.id, -1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">−</button>
-                                <span className="text-[11px] font-bold w-4 text-center">{item.quantity}</span>
-                                <button onClick={() => onUpdateQuantity(item.cartItemId || item.id, 1)} className="h-7 w-7 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-xs">+</button>
+                                <button aria-label="Diminuir quantidade" onClick={() => onUpdateQuantity(item.cartItemId || item.id, -1)} className="h-10 w-10 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-sm">−</button>
+                                <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
+                                <button aria-label="Aumentar quantidade" onClick={() => onUpdateQuantity(item.cartItemId || item.id, 1)} className="h-10 w-10 border border-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors text-sm">+</button>
                             </div>
                           </div>
-                          <button onClick={() => onRemoveItem(item.cartItemId || item.id)} className="text-primary/10 hover:text-destructive self-start p-2 shrink-0"><X className="h-4 w-4" /></button>
+                          <button
+                            onClick={() => onRemoveItem(item.cartItemId || item.id)}
+                            aria-label={`Remover ${item.name} do carrinho`}
+                            title="Remover item"
+                            className="text-primary/60 hover:text-destructive hover:bg-destructive/10 rounded-full self-start h-10 w-10 flex items-center justify-center shrink-0 transition-colors"
+                          ><Trash2 className="h-5 w-5" /></button>
                         </div>
                         {idx < cartItems.length - 1 && <div className="h-px bg-primary/5" />}
                       </div>
@@ -268,19 +323,61 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
         </div>
 
         {cartItems.length > 0 && view === 'cart' && (
-          <div className="shrink-0 border-t border-primary/5 bg-white p-6 w-full">
-            <div className="flex justify-between items-center mb-6">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">SUBTOTAL</span>
-                <span className="text-2xl font-bold text-primary">{formatCurrency(total)}</span>
+          <div className="shrink-0 border-t border-primary/5 bg-white p-6 w-full space-y-4">
+            {coupon ? (
+              <div className="flex items-center justify-between bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                <span className="text-xs font-black text-emerald-800 uppercase">Cupom {coupon.code}</span>
+                <button onClick={() => setCoupon(null)} aria-label="Remover cupom" className="text-xs font-bold uppercase text-primary/70 hover:text-primary min-h-10 px-2">Remover</button>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <div className="flex gap-2">
+                  <Input
+                    value={couponInput}
+                    onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                    onKeyDown={e => e.key === 'Enter' && applyCoupon()}
+                    placeholder="Cupom de desconto"
+                    aria-label="Cupom de desconto"
+                    className="h-10 text-[13px] font-bold uppercase border-primary/20 rounded-xl"
+                  />
+                  <Button onClick={applyCoupon} disabled={couponLoading || !couponInput.trim()} variant="outline" className="h-10 px-4 rounded-xl border-primary text-primary font-bold uppercase text-xs">
+                    {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Tag className="h-3.5 w-3.5 mr-1" />Aplicar</>}
+                  </Button>
+                </div>
+                {couponError && <p role="alert" className="text-xs text-red-700 font-bold">{couponError}</p>}
+              </div>
+            )}
+
+            <div className="space-y-1.5 text-[13px] text-primary/80">
+              <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(total)}</span></div>
+              {discount > 0 && <div className="flex justify-between text-emerald-700 font-bold"><span>Desconto</span><span>- {formatCurrency(discount)}</span></div>}
+              <div className="flex justify-between items-center">
+                <span className="flex items-center gap-1.5"><Truck className="h-4 w-4" />Frete</span>
+                <span className={freeEverywhere ? 'text-emerald-700 font-bold' : ''}>{freeEverywhere ? 'GRÁTIS para todo o Brasil' : 'Calculado no checkout'}</span>
+              </div>
             </div>
+
+            <div className="flex justify-between items-end">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Total</span>
+              <div className="text-right">
+                <span className="text-2xl font-bold text-primary block leading-none">{formatCurrency(payable)}</span>
+                <span className="text-xs text-primary/70">ou 10x de {formatCurrency(payable / 10)} no cartão</span>
+              </div>
+            </div>
+
             <button
               onClick={handleFinalize}
-              className="w-full h-16 bg-primary text-white text-[11px] font-bold uppercase tracking-[0.4em] hover:bg-accent transition-all duration-700 flex items-center justify-center gap-4 shadow-2xl"
+              className="w-full h-16 bg-primary text-white text-[12px] font-bold uppercase tracking-[0.3em] hover:bg-accent transition-all duration-700 flex items-center justify-center gap-4 shadow-2xl"
             >
               FINALIZAR COMPRA
               <ArrowRight className="h-4 w-4" />
             </button>
-            <p className="text-[8px] text-center text-muted-foreground uppercase mt-4 tracking-widest opacity-60">Frete e descontos calculados no checkout</p>
+
+            <div className="flex items-center justify-center gap-4 text-xs text-primary/70">
+              <span className="flex items-center gap-1"><Lock className="h-3.5 w-3.5" />Compra segura</span>
+              <span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" />Mercado Pago</span>
+            </div>
+            <p className="text-xs text-center text-primary/70">Aceitamos Pix, cartão de crédito em até 10x e boleto.</p>
           </div>
         )}
       </SheetContent>

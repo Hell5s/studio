@@ -108,6 +108,11 @@ export function Footer() {
     }
   };
 
+  const whatsappPhone = (settings?.whatsapp || '').replace(/\D/g, '');
+  const exchangeHref = whatsappPhone
+    ? `https://wa.me/${whatsappPhone.length <= 11 ? '55' + whatsappPhone : whatsappPhone}?text=${encodeURIComponent('Olá! Quero solicitar troca do pedido nº ')}`
+    : null;
+
   const handleLinkClick = (link: FooterLink) => {
     // Lógica para Páginas Institucionais Reais
     if (link.type !== 'track') {
@@ -154,8 +159,8 @@ export function Footer() {
                       <Icon className="h-5 w-5" strokeWidth={1.75} />
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">{item.title}</p>
-                      <p className="text-[10px] text-white/60 mt-1 uppercase font-medium">{item.desc}</p>
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-white">{item.title}</p>
+                      <p className="text-xs text-white/80 mt-1 uppercase font-medium">{item.desc}</p>
                     </div>
                   </div>
                 );
@@ -179,7 +184,7 @@ export function Footer() {
                 <LogoMark className="[&_#logo-ball]:opacity-0 [&_#logo-ball]:w-0" />
               </div>
             )}
-            <p className="text-[12px] text-white/50 font-light italic leading-relaxed max-w-xs">
+            <p className="text-sm text-white/80 font-light italic leading-relaxed max-w-xs">
               {settings?.tagline || 'Celebrando a potência e a sofisticação da mulher moderna através de peças atemporais.'}
             </p>
             <div className="flex gap-4">
@@ -189,7 +194,7 @@ export function Footer() {
                 </button>
               )}
               {settings?.instagram && (
-                <span className="self-center text-[11px] font-bold text-white/70">{settings.instagram}</span>
+                <span className="self-center text-xs font-bold text-white/90">{settings.instagram}</span>
               )}
               {footer?.socials?.facebook && (
                 <button onClick={() => window.open(footer.socials.facebook, '_blank')} className="h-10 w-10 rounded-full border border-white/25 bg-white/10 text-white flex items-center justify-center hover:bg-white hover:text-primary transition-all duration-500">
@@ -209,13 +214,13 @@ export function Footer() {
             {columns.map((col, idx) => (
               col.links.length > 0 && (
                 <div key={idx} className="space-y-6">
-                  <h5 className="text-[10px] font-black uppercase tracking-[0.4em]" style={{ color: accentColor }}>{col.title}</h5>
+                  <h5 className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: accentColor }}>{col.title}</h5>
                   <ul className="space-y-4">
                     {col.links.map((link, lIdx) => (
                       <li key={lIdx}>
                         <button 
                           onClick={() => handleLinkClick(link)} 
-                          className="text-[11px] text-white/40 hover:text-white transition-all uppercase tracking-widest text-left"
+                          className="text-xs text-white/80 hover:text-white transition-all uppercase tracking-widest text-left"
                         >
                           {link.label}
                         </button>
@@ -229,7 +234,7 @@ export function Footer() {
             {/* Coluna Contato */}
             {footer?.showContactColumn !== false && (
               <div className="space-y-6">
-                <h5 className="text-[10px] font-black uppercase tracking-[0.4em]" style={{ color: accentColor }}>{footer?.contactTitle || 'Contato'}</h5>
+                <h5 className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: accentColor }}>{footer?.contactTitle || 'Contato'}</h5>
                 <div className="space-y-5">
                   {settings?.whatsapp && (
                     <button onClick={handleOpenWhatsApp} className="flex items-center gap-3 group text-left">
@@ -237,10 +242,15 @@ export function Footer() {
                         <MessageCircle className="h-3.5 w-3.5" />
                       </div>
                       <div>
-                        <p className="text-[8px] text-white/30 uppercase font-black tracking-widest">WhatsApp</p>
-                        <p className="text-[10px] text-white/60 font-bold uppercase tracking-tight">{settings.whatsapp}</p>
+                        <p className="text-xs text-white/70 uppercase font-black tracking-widest">WhatsApp</p>
+                        <p className="text-sm text-white font-bold">{settings.whatsapp}</p>
                       </div>
                     </button>
+                  )}
+                  {exchangeHref && (
+                    <a href={exchangeHref} target="_blank" rel="noopener noreferrer" className="inline-block rounded-full border border-white/40 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-white hover:text-primary transition-colors">
+                      Solicitar troca/devolução
+                    </a>
                   )}
                   {settings?.contactEmail && (
                     <button onClick={() => window.location.href = `mailto:${settings.contactEmail}`} className="flex items-center gap-3 group text-left">
@@ -248,8 +258,8 @@ export function Footer() {
                         <Mail className="h-3.5 w-3.5" />
                       </div>
                       <div>
-                        <p className="text-[8px] text-white/30 uppercase font-black tracking-widest">E-mail</p>
-                        <p className="text-[11px] text-white/70 font-bold whitespace-nowrap">{settings.contactEmail}</p>
+                        <p className="text-xs text-white/70 uppercase font-black tracking-widest">E-mail</p>
+                        <p className="text-sm text-white font-bold">{settings.contactEmail}</p>
                       </div>
                     </button>
                   )}
@@ -263,7 +273,7 @@ export function Footer() {
         <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-10">
           {/* Bandeiras em "cartõezinhos" com as cores de cada marca, legíveis sobre o fundo escuro */}
           <div className="flex flex-col items-center md:items-start gap-3">
-            <p className="text-[8px] text-white/40 uppercase font-black tracking-[0.3em]">Formas de pagamento</p>
+            <p className="text-xs text-white/70 uppercase font-black tracking-[0.3em]">Formas de pagamento</p>
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-2">
               {footer?.payments?.pix !== false && (
                 <span className={paymentChip} aria-label="Pix" title="Pix">
@@ -292,23 +302,23 @@ export function Footer() {
                   <span className="text-[12px] font-black lowercase text-white leading-none">elo</span>
                 </span>
               )}
-              {footer?.payments?.amex !== false && (
-                <span className={cn(paymentChip, "bg-[#016FD0]")} aria-label="American Express" title="American Express">
-                  <span className="text-[9px] font-black tracking-tight text-white leading-none">AMEX</span>
+              {footer?.payments?.boleto !== false && (
+                <span className={paymentChip} aria-label="Boleto" title="Boleto bancário">
+                  <span className="text-[11px] font-black uppercase text-[#333] leading-none">Boleto</span>
                 </span>
               )}
               {footer?.payments?.securitySeal !== false && (
                 <span className="flex items-center gap-1.5 ml-2 text-white/70">
                   <ShieldCheck className="h-4 w-4" />
-                  <span className="text-[9px] uppercase font-bold tracking-widest">Compra segura</span>
+                  <span className="text-xs uppercase font-bold tracking-widest">Compra segura</span>
                 </span>
               )}
             </div>
           </div>
           
           <div className="text-center md:text-right">
-             <p className="text-[9px] text-white/30 uppercase tracking-[0.4em]">© {currentYear} {settings?.storeName || 'Toda Bela'} • {footer?.copyrightSuffix || 'Moda Feminina'}</p>
-             {settings?.cnpj && footer?.showCnpj !== false && <p className="text-[8px] text-white/40 uppercase tracking-widest mt-1">{settings.legalName ? `${settings.legalName} • ` : ''}CNPJ: {settings.cnpj}</p>}
+             <p className="text-xs text-white/70 uppercase tracking-[0.4em]">© {currentYear} {settings?.storeName || 'Toda Bela'} • {footer?.copyrightSuffix || 'Moda Feminina'}</p>
+             {settings?.cnpj && footer?.showCnpj !== false && <p className="text-xs text-white/70 uppercase tracking-widest mt-1">{settings.legalName ? `${settings.legalName} • ` : ''}CNPJ: {settings.cnpj}</p>}
           </div>
         </div>
       </div>

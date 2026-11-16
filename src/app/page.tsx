@@ -5,12 +5,14 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@
 import { collection, query, doc, limit, where, orderBy } from 'firebase/firestore';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
+import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import { Navbar } from '@/components/store/Navbar';
 import { Hero } from '@/components/store/Hero';
 import { ShowcaseSection } from '@/components/store/ShowcaseSection';
 import { Footer } from '@/components/store/Footer';
 import { LoginDialog } from '@/components/auth/LoginDialog';
-import { Loader2, Sparkles, ArrowLeft } from 'lucide-react';
+import { Loader2, Sparkles, ArrowLeft, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/contexts/CartContext';
 
@@ -25,6 +27,42 @@ function getCategoryImageUrl(image: any): string {
   if (typeof image === 'string') return image;
   if (typeof image === 'object' && typeof image.url === 'string') return image.url;
   return '';
+}
+
+function Testimonials() {
+  const db = useFirestore();
+  const q = useMemoFirebase(() => query(collection(db, 'reviews'), where('status', '==', 'published'), limit(30)), [db]);
+  const { data } = useCollection(q);
+  const items = useMemo(
+    () => (data || [])
+      .filter((r: any) => !r.isDemo && r.rating >= 4 && (r.comment || '').trim().length > 10)
+      .sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+      .slice(0, 3),
+    [data]
+  );
+  if (items.length === 0) return null;
+  return (
+    <section key="testimonials" className="py-16 md:py-24 bg-secondary/5">
+      <div className="container mx-auto px-4 md:px-6">
+        <h2 className="text-3xl md:text-5xl font-headline font-bold text-primary uppercase text-center mb-10">Quem comprou, aprova</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {items.map((r: any) => (
+            <figure key={r.id} className="rounded-2xl bg-white p-6 shadow-editorial space-y-3">
+              <div className="flex gap-0.5" aria-label={`${r.rating} de 5 estrelas`}>
+                {[1, 2, 3, 4, 5].map(n => (
+                  <Star key={n} className={cn("h-4 w-4", n <= r.rating ? "fill-accent text-accent" : "text-muted-foreground/30")} />
+                ))}
+              </div>
+              <blockquote className="text-sm md:text-base text-foreground/80 leading-relaxed line-clamp-6">“{r.comment}”</blockquote>
+              <figcaption className="text-xs font-bold uppercase tracking-widest text-primary">
+                {r.user}{r.productName ? <span className="block font-normal normal-case tracking-normal text-muted-foreground mt-1">sobre {r.productName}</span> : null}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function StorefrontContent() {
@@ -119,7 +157,7 @@ function StorefrontContent() {
         <div className="text-center mb-12 md:mb-24 space-y-4">
           <div className="flex items-center justify-center gap-4">
               <div className="h-px w-8 md:w-12 bg-accent/40" />
-              <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.6em] text-accent">Navegue por Estilo</span>
+              <span className="text-xs font-bold uppercase tracking-[0.4em] text-accent">Navegue por Estilo</span>
               <div className="h-px w-8 md:w-12 bg-accent/40" />
           </div>
           <h2 className="text-3xl md:text-7xl font-headline font-bold text-primary uppercase">Categorias</h2>
@@ -139,10 +177,14 @@ function StorefrontContent() {
                     "border-transparent opacity-90 hover:opacity-100 hover:scale-[1.03]"
                   )}
                 >
-                  <img 
-                    src={catImageUrl || 'https://picsum.photos/seed/placeholder/400/500'} 
-                    className="w-full h-full object-cover transition-transform duration-2000 group-hover:scale-110" 
-                    alt={col.name} 
+                  <Image
+                    loader={cloudinaryLoader}
+                    src={catImageUrl || 'https://picsum.photos/seed/placeholder/400/500'}
+                    alt={col.name}
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 25vw"
+                    loading="lazy"
+                    className="object-cover transition-transform duration-2000 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/20 to-transparent" />
                   <div className="absolute bottom-6 left-6 right-6 md:bottom-12 md:left-12 md:right-12">
@@ -167,7 +209,9 @@ function StorefrontContent() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-32 items-center">
           <div className="relative aspect-[4/5] rounded-[2rem] md:rounded-[6rem] overflow-hidden shadow-premium group">
-            {movement?.mediaType === 'video' ? (
+            {!movement?.mediaUrl ? (
+              <div className="w-full h-full bg-secondary" />
+            ) : movement?.mediaType === 'video' ? (
               <video 
                 src={movement?.mediaUrl} 
                 autoPlay 
@@ -181,10 +225,14 @@ function StorefrontContent() {
                 }}
               />
             ) : (
-              <img 
-                src={movement?.mediaUrl || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80"} 
-                className="object-cover w-full h-full transition-transform duration-2500 group-hover:scale-110" 
-                alt={movement?.title || "Essência Toda Bela"} 
+              <Image
+                loader={cloudinaryLoader}
+                src={movement.mediaUrl}
+                alt={movement?.title || "Essência Toda Bela"}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                loading="lazy"
+                className="object-cover transition-transform duration-2500 group-hover:scale-110"
                 style={{
                   transform: `scale(${movement?.mediaZoom ? movement.mediaZoom / 100 : 1})`,
                   transformOrigin: movement?.mediaPosition ? `${movement.mediaPosition.x}% ${movement.mediaPosition.y}%` : 'center center'
@@ -195,18 +243,18 @@ function StorefrontContent() {
           </div>
           <div className="space-y-8 md:space-y-12">
             <div className="space-y-4 md:space-y-8">
-              <span className="text-accent text-[10px] md:text-sm font-bold uppercase tracking-[0.8em]">
+              <span className="text-accent text-xs md:text-sm font-bold uppercase tracking-[0.4em]">
                 {movement?.eyebrow || 'MOVIMENTO TODA BELA'}
               </span>
               <h3 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-[0.9] tracking-tighter">
                 {movement?.title || 'Moda com Propósito'}
               </h3>
-              <p className="text-base md:text-2xl text-muted-foreground/80 font-light italic leading-relaxed max-w-xl">
+              <p className="text-base md:text-2xl text-muted-foreground font-normal italic leading-relaxed max-w-xl">
                 {movement?.description || 'Cada peça em nossa loja é selecionada pela nossa equipe para elevar sua confiança e refletir sua autenticidade em cada movimento.'}
               </p>
             </div>
             <Link href={movement?.buttonLink || "/#colecoes"}>
-              <button className="w-full sm:w-auto rounded-full border-2 border-primary px-10 md:px-16 py-5 md:py-8 text-[10px] md:text-sm font-bold uppercase tracking-[0.5em] hover:bg-primary hover:text-white transition-all shadow-xl">
+              <button className="w-full sm:w-auto rounded-full border-2 border-primary px-10 md:px-16 py-5 md:py-8 text-xs md:text-sm font-bold uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all shadow-xl">
                 {movement?.buttonText || 'CONHEÇA A COLEÇÃO'}
               </button>
             </Link>
@@ -272,6 +320,7 @@ function StorefrontContent() {
         case 'banner': return renderBanner();
         case 'categories': return renderCategories();
         case 'movement': return renderMovement();
+        case 'testimonials': return <Testimonials key="testimonials" />;
         case 'showcase': return renderShowcase(block.refId);
         default: return null;
       }
@@ -308,6 +357,7 @@ function StorefrontContent() {
 
       <main>
         {renderBlocks()}
+        {!(layoutData?.blocks || []).some((b: any) => b.type === 'testimonials') && <Testimonials />}
       </main>
 
       <Footer />

@@ -272,6 +272,8 @@ Não vendemos seus dados pessoais. Alguns fornecedores podem armazenar dados for
 ## 6. Cookies
 Usamos cookies e armazenamento local essenciais ao funcionamento do site, como manter você conectada e guardar o carrinho e os favoritos, além de recursos de medição para entender o uso do site e melhorá-lo. Você pode gerenciar ou bloquear cookies nas configurações do navegador, mas algumas funções podem deixar de funcionar.
 
+Meta Pixel e API de Conversões: se você aceitar os cookies no aviso exibido ao entrar no site, usamos o Meta Pixel e a API de Conversões da Meta (Facebook e Instagram). Eles registram páginas visitadas e ações como visualizar produto, adicionar ao carrinho e comprar, e podem enviar à Meta, em formato criptografado (hash), dados como e-mail e telefone, além de IP, navegador e identificadores de cookies. A finalidade é medir o desempenho dos anúncios, criar públicos e mostrar anúncios mais relevantes. Você pode recusar no próprio aviso de cookies: nesse caso, o Pixel não é carregado e nenhum evento é enviado. Para mudar de ideia depois, limpe os dados do site no navegador e o aviso aparecerá novamente.
+
 ## 7. Por quanto tempo guardamos seus dados
 Mantemos os dados pelo tempo necessário para cumprir as finalidades acima, as obrigações legais e fiscais e o exercício regular de direitos. Depois disso, eliminamos ou anonimizamos os dados.
 

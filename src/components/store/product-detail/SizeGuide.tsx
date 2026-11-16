@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { Ruler } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { sizeLabel } from './utils';
 import { extractMeasureLines, isCompleteChart, parseSizeChart } from '@/lib/size-guide';
 
 // Guia de medidas da página do produto: tabela montada a partir da descrição quando ela
@@ -17,7 +18,7 @@ export function SizeGuide({ description, sizes }: { description?: string; sizes?
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-primary/70 hover:text-primary underline underline-offset-4 min-h-[44px]"
+        className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary underline underline-offset-4 min-h-[44px]"
       >
         <Ruler className="h-4 w-4" /> Guia de medidas
       </button>
@@ -25,7 +26,7 @@ export function SizeGuide({ description, sizes }: { description?: string; sizes?
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto rounded-[1.5rem] p-6 md:p-8">
           <DialogTitle className="font-headline text-2xl text-primary">Guia de medidas</DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
+          <DialogDescription className="text-sm text-gray-700">
             Medidas da peça. Compare com uma roupa sua que veste bem.
           </DialogDescription>
 
@@ -33,7 +34,7 @@ export function SizeGuide({ description, sizes }: { description?: string; sizes?
             <div className="overflow-x-auto -mx-2">
               <table className="w-full text-xs text-left">
                 <thead>
-                  <tr className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <tr className="text-xs uppercase tracking-widest text-muted-foreground">
                     <th className="px-2 py-2">Tamanho</th>
                     {chart.measures.map(m => <th key={m} className="px-2 py-2">{m}</th>)}
                   </tr>
@@ -41,19 +42,19 @@ export function SizeGuide({ description, sizes }: { description?: string; sizes?
                 <tbody className="divide-y divide-primary/5">
                   {chart.sizes.map(size => (
                     <tr key={size}>
-                      <td className="px-2 py-2 font-bold text-primary">{size}</td>
+                      <td className="px-2 py-2 font-bold text-primary">{sizeLabel(size)}</td>
                       {chart.measures.map(m => <td key={m} className="px-2 py-2 whitespace-nowrap">{chart.values[size][m]}</td>)}
                     </tr>
                   ))}
                 </tbody>
               </table>
               {chart.sizes.some(s => Object.values(chart.values[s]).some(v => v.includes(' a '))) && (
-                <p className="px-2 pt-2 text-[10px] text-muted-foreground italic">Quando aparecem dois números, o primeiro é a medida da peça sem esticar e o segundo, esticada.</p>
+                <p className="px-2 pt-2 text-sm text-gray-700 italic">Quando aparecem dois números, o primeiro é a medida da peça sem esticar e o segundo, esticada.</p>
               )}
             </div>
           ) : excerpt.length > 0 ? (
             <div className="rounded-xl bg-secondary/20 p-4 space-y-1 text-xs text-primary/80">
-              {excerpt.map((line, i) => <p key={i}>{line.replace(/^[✔✅•*\-\s]+/, '')}</p>)}
+              {excerpt.map((line, i) => <p key={i}>{line.replace(/\*\*/g, '').replace(/^[✔✅•*\-\s]+/, '')}</p>)}
             </div>
           ) : (
             <p className="rounded-xl bg-secondary/20 p-4 text-xs text-primary/80">
@@ -62,7 +63,7 @@ export function SizeGuide({ description, sizes }: { description?: string; sizes?
           )}
 
           <div className="space-y-2 pt-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-accent">Como se medir</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-accent">Como se medir</p>
             <ul className="text-xs text-primary/80 space-y-1.5 list-disc pl-4">
               <li><b>Busto:</b> passe a fita na parte mais cheia do busto, sem apertar.</li>
               <li><b>Cintura:</b> na parte mais fina do tronco, um pouco acima do umbigo.</li>

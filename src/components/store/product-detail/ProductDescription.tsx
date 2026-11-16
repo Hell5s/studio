@@ -3,6 +3,13 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
+// **texto** vira negrito; asteriscos soltos são removidos.
+function inline(text: string): React.ReactNode {
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+    i % 2 ? <strong key={i} className="font-bold text-primary">{part}</strong> : part.replace(/\*\*/g, '')
+  );
+}
+
 interface ProductDescriptionProps {
   text: string;
   productName?: string;
@@ -26,7 +33,7 @@ export function ProductDescription({ text, productName }: ProductDescriptionProp
       const regex = new RegExp(`(${header})`, 'gi');
       processedText = processedText.replace(regex, '\n$1');
     });
-    processedText = processedText.replace(/([*•])/g, '\n$1');
+    processedText = processedText.replace(/((?<!\*)\*(?!\*)|•)/g, '\n$1');
   }
 
   const lines = processedText.split('\n').map(l => l.trim()).filter(Boolean);
@@ -57,13 +64,13 @@ export function ProductDescription({ text, productName }: ProductDescriptionProp
     if (rows.length === 0) return null;
     return (
       <div key={`table-${Math.random()}`} className="my-6 overflow-x-auto border border-primary/5 rounded-lg bg-white shadow-sm">
-        <table className="w-full text-left text-[12px] border-collapse">
+        <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="bg-secondary/20 border-b border-primary/10">
-              <th className="px-4 py-2 font-bold uppercase tracking-widest text-primary/60">Tamanho</th>
-              <th className="px-4 py-2 font-bold uppercase tracking-widest text-primary/60">Busto</th>
-              <th className="px-4 py-2 font-bold uppercase tracking-widest text-primary/60">Cintura</th>
-              <th className="px-4 py-2 font-bold uppercase tracking-widest text-primary/60">Comprimento</th>
+              <th className="px-4 py-2 font-bold uppercase tracking-widest text-primary/80">Tamanho</th>
+              <th className="px-4 py-2 font-bold uppercase tracking-widest text-primary/80">Busto</th>
+              <th className="px-4 py-2 font-bold uppercase tracking-widest text-primary/80">Cintura</th>
+              <th className="px-4 py-2 font-bold uppercase tracking-widest text-primary/80">Comprimento</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-primary/5">
@@ -90,7 +97,7 @@ export function ProductDescription({ text, productName }: ProductDescriptionProp
     }
 
     // Detectar Títulos (Caixa Alta)
-    const isTitle = sectionHeaders.some(h => line.toUpperCase().startsWith(h)) || (line === line.toUpperCase() && line.length > 3 && !line.startsWith('*') && !line.startsWith('•'));
+    const isTitle = sectionHeaders.some(h => line.toUpperCase().startsWith(h)) || (line === line.toUpperCase() && line.length > 3 && !/^(\*(?!\*)|•)/.test(line));
     
     if (isTitle) {
       if (isInsideTable) {
@@ -111,10 +118,10 @@ export function ProductDescription({ text, productName }: ProductDescriptionProp
 
       blocks.push(
         <h4 key={index} className={cn(
-          "text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-2",
+          "text-xs font-bold uppercase tracking-[0.2em] text-accent mb-2",
           blocks.length > 0 ? "mt-8" : "mt-0"
         )}>
-          {displayTitle.replace(/:$/, '')}
+          {displayTitle.replace(/\*\*/g, '').replace(/:$/, '')}
         </h4>
       );
 
@@ -123,13 +130,13 @@ export function ProductDescription({ text, productName }: ProductDescriptionProp
       }
 
       if (extraText) {
-        blocks.push(<p key={`${index}-extra`} className="text-[14px] leading-7 text-foreground/70 font-normal mb-3">{extraText}</p>);
+        blocks.push(<p key={`${index}-extra`} className="text-[14px] leading-7 text-foreground/85 font-normal mb-3">{inline(extraText)}</p>);
       }
       return;
     }
 
     // Detectar Listas
-    if (line.startsWith('*') || line.startsWith('•') || line.startsWith('- ')) {
+    if (/^(\*(?!\*)|•|- )/.test(line)) {
       if (isInsideTable) {
         blocks.push(renderTable([...tableRows]));
         tableRows.length = 0;
@@ -138,8 +145,8 @@ export function ProductDescription({ text, productName }: ProductDescriptionProp
       blocks.push(
         <div key={index} className="flex items-start gap-3 mb-3 pl-1">
           <div className="h-1.5 w-1.5 bg-accent rotate-45 shrink-0 mt-[10px]" />
-          <span className="text-[14px] leading-7 text-foreground/70 font-normal">
-            {line.replace(/^[*•-]\s?/, '')}
+          <span className="text-[14px] leading-7 text-foreground/85 font-normal">
+            {inline(line.replace(/^(\*(?!\*)|•|-)\s?/, ''))}
           </span>
         </div>
       );
@@ -157,8 +164,8 @@ export function ProductDescription({ text, productName }: ProductDescriptionProp
 
     // Parágrafo Padrão
     blocks.push(
-      <p key={index} className="text-[14px] leading-7 text-foreground/70 font-normal mb-4">
-        {line}
+      <p key={index} className="text-[14px] leading-7 text-foreground/85 font-normal mb-4">
+        {inline(line)}
       </p>
     );
   });

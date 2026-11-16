@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { preload } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, limit, doc } from 'firebase/firestore';
@@ -10,6 +9,13 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+
+// f_auto (AVIF/WebP) + q_auto + largura sob medida; evita baixar 2800px no celular.
+const bannerLoader = ({ src, width }: { src: string; width: number }) =>
+  src.includes('res.cloudinary.com') && src.includes('/upload/')
+    ? src.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`)
+    : src;
 
 // Helper function to build optimized Cloudinary URLs for banners
 const buildBannerUrl = (url: string, isMobile: boolean, zoom: number, type: 'image' | 'video' = 'image', isPoster = false) => {
@@ -87,7 +93,6 @@ const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onSho
     }
   };
 
-  const optimizedUrl = buildBannerUrl(banner.imageUrl, isMobile, banner.imageZoom || 100, 'image');
   const optimizedVideoUrl = buildBannerUrl(banner.imageUrl, isMobile, 100, 'video');
   const posterUrl = buildBannerUrl(banner.imageUrl, isMobile, banner.imageZoom || 100, 'image', true);
 
@@ -121,16 +126,20 @@ const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onSho
               <source src={optimizedVideoUrl} type="video/mp4" />
             </video>
           ) : (
-            <div
-              className="absolute inset-0 w-full h-full"
+            <Image
+              loader={bannerLoader}
+              src={banner.imageUrl}
+              alt={banner.title || "Banner Toda Bela"}
+              fill
+              priority={idx === 0}
+              loading={idx === 0 ? undefined : 'lazy'}
+              sizes="100vw"
+              className="object-cover"
               style={{
-                backgroundImage: `url(${optimizedUrl})`,
-                backgroundSize: activeZoom === 100 ? 'cover' : `${activeZoom}%`,
-                backgroundPosition: `${activePosition.x}% ${activePosition.y}%`,
-                backgroundRepeat: 'no-repeat',
-              }} 
-              role="img"
-              aria-label={banner.title || "Banner Toda Bela"}
+                objectPosition: `${activePosition.x}% ${activePosition.y}%`,
+                transform: activeZoom === 100 ? undefined : `scale(${activeZoom / 100})`,
+                transformOrigin: `${activePosition.x}% ${activePosition.y}%`,
+              }}
             />
           )}
         </>
@@ -150,14 +159,14 @@ const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onSho
             <h1 className="text-base md:text-3xl font-headline font-semibold text-white uppercase tracking-[0.08em] leading-[0.9]">
               {banner.title || ''}
             </h1>
-            <p className="text-xs md:text-sm text-white/90 font-light italic max-w-lg leading-relaxed">
+            <p className="text-sm text-white font-light italic max-w-lg leading-relaxed">
               {banner.subtitle || ''}
             </p>
           </div>
           {(banner.ctaText || settings?.heroCta) && (
             <Button 
               onClick={handleAction}
-              className="rounded-full bg-white text-black px-6 py-2 md:px-8 md:py-3 text-[10px] md:text-xs tracking-[0.2em] font-bold uppercase w-fit h-auto hover:bg-accent hover:text-white transition-all shadow-2xl"
+              className="rounded-full bg-white text-black px-6 py-2 md:px-8 md:py-3 text-xs tracking-[0.2em] font-bold uppercase w-fit h-auto hover:bg-accent hover:text-white transition-all shadow-2xl"
             >
               {banner.ctaText || settings?.heroCta || 'Conferir'}
             </Button>
@@ -255,34 +264,8 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
         newSet.add(nextIndex);
         return newSet;
       });
-
-      // Warm up liberated images with EXACT same URL
-      [selectedIndex, nextIndex].forEach(idx => {
-        const banner = displayBanners[idx];
-        if (banner && banner.mediaType !== 'video') {
-          const url = buildBannerUrl(banner.imageUrl, isMobile, banner.imageZoom || 100, 'image');
-          const img = new window.Image();
-          img.src = url;
-          img.decode().catch(() => {});
-        }
-      });
     }
   }, [selectedIndex, displayBanners, isMobile]);
-
-  // Preload critical first image with EXACT same URL
-  useEffect(() => {
-    if (displayBanners.length > 0) {
-      const first = displayBanners[0];
-      if (first.mediaType !== 'video') {
-        const url = buildBannerUrl(first.imageUrl, isMobile, first.imageZoom || 100, 'image');
-        if (url && url.includes('cloudinary.com')) {
-          try {
-            preload(url, { as: 'image', fetchPriority: 'high' } as any);
-          } catch (e) {}
-        }
-      }
-    }
-  }, [displayBanners, isMobile]);
 
   useEffect(() => {
     if (!emblaApi || !displayBanners.length) return;
@@ -306,7 +289,7 @@ export function Hero({ onShopNow }: { onShopNow?: () => void }) {
            <h1 className="font-headline text-4xl md:text-7xl text-white tracking-[0.1em] uppercase leading-none">
              Toda <span className="italic font-light text-accent">Bela</span>
            </h1>
-           <p className="text-[10px] tracking-[0.5em] text-white/40 uppercase font-bold">
+           <p className="text-xs tracking-[0.5em] text-white/70 uppercase font-bold">
              MODA FEMININA
            </p>
         </div>

@@ -14,7 +14,7 @@ export function RelatedProducts({ products, onAddToCart }: RelatedProductsProps)
       <div className="flex flex-col items-center text-center space-y-6">
         <div className="flex items-center gap-4">
           <div className="h-[1px] w-12 bg-accent/30" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-accent">Personal Stylist</span>
+          <span className="text-xs font-bold uppercase tracking-[0.6em] text-accent">Personal Stylist</span>
           <div className="h-[1px] w-12 bg-accent/30" />
         </div>
         <h3 className="text-4xl md:text-6xl font-headline font-bold text-primary">Complete seu <span className="italic font-light">Universo</span></h3>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useMemo } from 'react';
+import React, { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   ShieldCheck, 
@@ -19,7 +19,9 @@ import {
   Clock,
   X,
   Tag,
-  Ticket
+  Ticket,
+  Phone,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +34,8 @@ import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, si
 import Link from 'next/link';
 import { LogoMark } from '@/components/store/LogoMark';
 import { cn, getItemImageUrl } from '@/lib/utils';
-import { calcOrderTotal, calcShippingPrice, findShippingOption, generateOrderId, isValidUf } from '@/lib/pricing';
+import { calcOrderTotal, calcShippingPrice, findShippingOption, generateOrderId, isValidUf, toNumber } from '@/lib/pricing';
+import { trackEvent } from '@/lib/metaPixel';
 import { PRIVATE_PRODUCT_FIELDS } from '@/lib/product-private';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
@@ -63,6 +66,12 @@ function CheckoutContent() {
 
   const shippingSettingsRef = useMemoFirebase(() => doc(db, 'settings', 'shipping'), [db]);
   const { data: shippingSettings } = useDoc(shippingSettingsRef);
+  const storeSettingsRef = useMemoFirebase(() => doc(db, 'settings', 'store'), [db]);
+  const { data: storeSettings } = useDoc(storeSettingsRef);
+  const supportPhone = (storeSettings?.whatsapp || '').replace(/\D/g, '');
+  const initiatedRef = useRef(false);
+  const shipOpts: any[] = shippingSettings?.options || [];
+  const freeEverywhere = shipOpts.length > 0 && shipOpts.every(o => toNumber(o.priceSoutheastSouth) === 0 && toNumber(o.priceOtherRegions) === 0);
 
   // Auth States
   const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null);
@@ -70,7 +79,7 @@ function CheckoutContent() {
   const [authLoading, setAuthLoading] = useState(false);
 
   // Novos estados para o fluxo de pagamento personalizado
-  const [paymentMethod, setPaymentMethod] = useState<'cartao' | 'pix' | 'boleto'>('cartao');
+  const [paymentMethod, setPaymentMethod] = useState<'cartao' | 'pix' | 'boleto'>('pix');
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [isPaymentConfirmed, setIsPaymentConfirmed] = useState(false);
@@ -152,11 +161,12 @@ function CheckoutContent() {
           setIsPaymentConfirmed(true);
           toast({ title: "Pagamento confirmado! 🎉" });
           
+          savePurchase(currentOrderId, totalGeral);
           sessionStorage.removeItem('checkout_items');
           sessionStorage.removeItem('pix_data');
           
           setTimeout(() => {
-            router.push('/meus-pedidos');
+            router.push(`/pedido-confirmado?pedido=${currentOrderId}`);
           }, 3000);
         }
       } catch (error) {
@@ -166,6 +176,30 @@ function CheckoutContent() {
 
     return () => clearInterval(interval);
   }, [currentOrderId, paymentMethod, toast, isPaymentConfirmed, router]);
+
+  const contentIds = () => sessionItems.map(it => String(it.productId || it.id));
+  const numItems = () => sessionItems.reduce((n, it) => n + (it.quantity || 1), 0);
+
+  // InitiateCheckout: uma vez, quando o checkout abre com itens e a cliente logada.
+  useEffect(() => {
+    if (initiatedRef.current || !user || sessionItems.length === 0) return;
+    initiatedRef.current = true;
+    trackEvent('InitiateCheckout', { value: subtotal, currency: 'BRL', content_ids: contentIds(), content_type: 'product', num_items: numItems() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, sessionItems]);
+
+  // AddPaymentInfo: ao entrar no pagamento e a cada troca de método.
+  useEffect(() => {
+    if (currentStep !== 'pagamento') return;
+    trackEvent('AddPaymentInfo', { value: totalGeral, currency: 'BRL', content_ids: contentIds(), content_type: 'product', num_items: numItems(), payment_method: paymentMethod });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, paymentMethod]);
+
+  // Guarda os dados da compra para a página de confirmação disparar o Purchase (1x por pedido).
+  const savePurchase = (orderId: string | null, value: number) => {
+    if (!orderId) return;
+    sessionStorage.setItem('purchase_data', JSON.stringify({ orderId, value, content_ids: contentIds(), num_items: numItems() }));
+  };
 
   // Inicializa o SDK do Mercado Pago apenas quando necessário
   useEffect(() => {
@@ -185,6 +219,8 @@ function CheckoutContent() {
         if (Array.isArray(items) && items.length > 0) {
           setSessionItems(items);
         }
+        const rawCoupon = sessionStorage.getItem('checkout_coupon');
+        if (rawCoupon) setAppliedCoupon(JSON.parse(rawCoupon)); // revalidado no servidor pelo efeito do subtotal
       } catch (e) {
         console.error("Erro ao processar itens da sessão:", e);
       }
@@ -467,8 +503,10 @@ function CheckoutContent() {
       if (!response.ok) throw new Error(paymentResult.message || 'Erro ao processar pagamento');
 
       if (paymentResult.status === 'approved') {
+        savePurchase(currentOrderId, totalGeral);
         sessionStorage.removeItem('checkout_items');
-        router.push('/pedido-confirmado');
+        sessionStorage.removeItem('checkout_coupon');
+        router.push(`/pedido-confirmado?pedido=${currentOrderId}`);
       } else if (paymentResult.status === 'in_process' || paymentResult.status === 'pending') {
         sessionStorage.removeItem('checkout_items');
         
@@ -554,8 +592,9 @@ function CheckoutContent() {
               setIsPaymentConfirmed(true);
               toast({ title: "Pagamento confirmado! 🎉" });
               
+              savePurchase(pollOrderId, totalGeral);
               setTimeout(() => {
-                router.push('/meus-pedidos');
+                router.push(`/pedido-confirmado?pedido=${pollOrderId}`);
               }, 3000);
             }
           } catch (e) {}
@@ -600,7 +639,7 @@ function CheckoutContent() {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-white space-y-6">
         <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40 animate-pulse text-center px-6">Sincronizando sua sacola...</p>
+        <p className="text-[12px] font-bold uppercase tracking-[0.4em] text-primary/70 animate-pulse text-center px-6">Sincronizando sua sacola...</p>
       </div>
     );
   }
@@ -608,7 +647,7 @@ function CheckoutContent() {
   if (sessionItems.length === 0) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-white p-10 text-center space-y-8">
-        <Package className="h-16 w-16 text-primary/10" />
+        <Package className="h-16 w-16 text-primary/70" />
         <div className="space-y-2">
             <h1 className="text-2xl font-headline font-bold text-primary">Sua sacola está vazia</h1>
             <p className="text-muted-foreground italic font-light">Selecione peças extraordinárias antes de finalizar sua compra.</p>
@@ -624,7 +663,7 @@ function CheckoutContent() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center space-y-3">
             <div className="flex justify-center mb-4"><LogoMark /></div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/40">Para finalizar sua compra</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.4em] text-primary/70">Para finalizar sua compra</p>
             <h1 className="text-3xl font-headline font-bold text-primary">Acesse sua conta</h1>
             <p className="text-sm text-muted-foreground italic font-light">Entre ou crie sua conta Toda Bela para continuar</p>
           </div>
@@ -643,23 +682,23 @@ function CheckoutContent() {
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-primary">Continuar com Google</span>
+                  <span className="text-[12px] font-bold uppercase tracking-widest text-primary">Continuar com Google</span>
                 </>
               )}
             </button>
 
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-primary/5" />
-              <span className="text-[9px] text-primary/30 uppercase font-bold">ou</span>
+              <span className="text-[12px] text-primary/70 uppercase font-bold">ou</span>
               <div className="h-px flex-1 bg-primary/5" />
             </div>
 
             {!authMode && (
               <div className="grid grid-cols-2 gap-3 w-full">
-                <button onClick={() => setAuthMode('login')} className="h-12 rounded-full border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all">
+                <button onClick={() => setAuthMode('login')} className="h-12 rounded-full border border-primary/10 text-[12px] font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all">
                   Entrar
                 </button>
-                <button onClick={() => setAuthMode('register')} className="h-12 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all">
+                <button onClick={() => setAuthMode('register')} className="h-12 rounded-full bg-primary text-white text-[12px] font-bold uppercase tracking-widest hover:bg-accent transition-all">
                   Criar Conta
                 </button>
               </div>
@@ -669,29 +708,29 @@ function CheckoutContent() {
               <form onSubmit={handleEmailAuth} className="space-y-4 w-full">
                 {authMode === 'register' && (
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
+                    <Label className="text-[12px] font-bold uppercase text-primary/70 ml-1">Nome Completo</Label>
                     <Input value={authForm.nome} onChange={e => setAuthForm({...authForm, nome: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4" required />
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
+                  <Label className="text-[12px] font-bold uppercase text-primary/70 ml-1">E-mail</Label>
                   <Input type="email" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4" required />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold uppercase text-primary/40 ml-1">Senha</Label>
+                  <Label className="text-[12px] font-bold uppercase text-primary/70 ml-1">Senha</Label>
                   <Input type="password" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="h-12 rounded-xl bg-secondary/20 border-none px-4" required />
                 </div>
-                <Button disabled={authLoading} className="w-full h-12 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg">
+                <Button disabled={authLoading} className="w-full h-12 rounded-full bg-primary text-white font-bold uppercase tracking-widest text-[12px] shadow-lg">
                   {authLoading ? <Loader2 className="animate-spin h-4 w-4" /> : authMode === 'register' ? 'Criar Minha Conta' : 'Entrar na Conta'}
                 </Button>
-                <button type="button" onClick={() => setAuthMode(null)} className="w-full text-center text-[9px] font-bold uppercase text-primary/30 hover:text-primary py-2">
+                <button type="button" onClick={() => setAuthMode(null)} className="w-full text-center text-[12px] font-bold uppercase text-primary/70 hover:text-primary py-2">
                   Voltar para opções
                 </button>
               </form>
             )}
           </div>
 
-          <button onClick={() => router.back()} className="w-full text-center text-[9px] font-bold uppercase tracking-widest text-primary/30 hover:text-primary flex items-center justify-center gap-2 py-4">
+          <button onClick={() => router.back()} className="w-full text-center text-[12px] font-bold uppercase tracking-widest text-primary/70 hover:text-primary flex items-center justify-center gap-2 py-4">
             <ChevronLeft className="h-3 w-3" /> Voltar para a loja
           </button>
         </div>
@@ -704,7 +743,7 @@ function CheckoutContent() {
       <header className="bg-white border-b border-primary/5 sticky top-0 z-50 w-full shrink-0">
         <div className="w-full px-4 md:px-6 h-16 md:h-24 flex items-center justify-between gap-4">
           <div className="flex-1 flex items-center">
-             <button onClick={() => router.back()} className="text-primary/40 hover:text-primary transition-colors flex items-center gap-1 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest">
+             <button onClick={() => router.back()} className="text-primary/70 hover:text-primary transition-colors flex items-center gap-1 md:gap-2 text-[12px] md:text-[12px] font-bold uppercase tracking-widest">
                 <ChevronLeft className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Voltar</span>
              </button>
           </div>
@@ -714,7 +753,7 @@ function CheckoutContent() {
           <div className="flex-1 flex justify-end">
             <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                 <ShieldCheck className="h-4 w-4 md:h-5 md:w-5" />
-                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest hidden xs:inline">Seguro</span>
+                <span className="text-[12px] md:text-[12px] font-black uppercase tracking-widest hidden xs:inline">Seguro</span>
             </div>
           </div>
         </div>
@@ -733,19 +772,19 @@ function CheckoutContent() {
                                 onClick={() => isClickable && setCurrentStep(s.id as Step)}
                                 disabled={!isClickable && currentStep !== s.id}
                                 className={cn(
-                                    "flex items-center gap-1.5 md:gap-2 text-[7px] md:text-[9px] font-bold uppercase tracking-widest transition-all focus:outline-none",
-                                    currentStep === s.id ? "text-primary" : (isClickable ? "text-primary/60 hover:text-primary" : "text-primary/30"),
+                                    "flex items-center gap-1.5 md:gap-2 text-[12px] md:text-[12px] font-bold uppercase tracking-widest transition-all focus:outline-none",
+                                    currentStep === s.id ? "text-primary" : (isClickable ? "text-primary/70 hover:text-primary" : "text-primary/70"),
                                     !isClickable && currentStep !== s.id && "cursor-default"
                                 )}
                             >
                                 <span className={cn(
-                                    "h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center text-[8px] md:text-[10px] transition-colors",
+                                    "h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center text-[12px] md:text-[12px] transition-colors",
                                     currentStep === s.id ? "bg-primary text-white" : (isClickable ? "bg-primary/20 text-primary" : "bg-primary/5")
                                 )}>{idx + 1}</span>
                                 <span className="hidden sm:inline">{s.label === 'Pague' ? 'Pagamento' : s.label}</span>
                                 <span className="sm:hidden">{s.label}</span>
                             </button>
-                            {idx < 2 && <ChevronRight className="h-3 w-3 text-primary/10" />}
+                            {idx < 2 && <ChevronRight className="h-3 w-3 text-primary/70" />}
                         </React.Fragment>
                     );
                 })}
@@ -770,23 +809,23 @@ function CheckoutContent() {
               {currentStep === 'identificacao' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2">
                   <div className="md:col-span-2 space-y-1.5">
-                    <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Nome Completo</Label>
+                    <Label className="text-[12px] md:text-[12px] font-bold uppercase text-primary/70 ml-1">Nome Completo</Label>
                     <Input value={identificacao.nome} onChange={e => setIdentificacao({...identificacao, nome: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">E-mail</Label>
+                    <Label className="text-[12px] md:text-[12px] font-bold uppercase text-primary/70 ml-1">E-mail</Label>
                     <Input type="email" value={identificacao.email} onChange={e => setIdentificacao({...identificacao, email: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" required />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">CPF</Label>
+                    <Label className="text-[12px] md:text-[12px] font-bold uppercase text-primary/70 ml-1">CPF</Label>
                     <Input value={identificacao.cpf} onChange={e => setIdentificacao({...identificacao, cpf: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" placeholder="000.000.000-00" required />
                   </div>
                   <div className="md:col-span-2 space-y-1.5">
-                    <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Telefone / WhatsApp</Label>
+                    <Label className="text-[12px] md:text-[12px] font-bold uppercase text-primary/70 ml-1">Telefone / WhatsApp</Label>
                     <Input value={identificacao.telefone} onChange={e => setIdentificacao({...identificacao, telefone: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" placeholder="(00) 00000-0000" required />
                   </div>
                   <div className="md:col-span-2 pt-2 md:pt-4">
-                    <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase whitespace-normal tracking-normal md:tracking-widest text-[10px] shadow-lg">Continuar para Entrega</Button>
+                    <Button onClick={handleNextStep} className="w-full h-14 rounded-full bg-primary text-white font-bold uppercase whitespace-normal tracking-normal md:tracking-widest text-[12px] shadow-lg">Continuar para Entrega</Button>
                   </div>
                 </div>
               )}
@@ -805,29 +844,29 @@ function CheckoutContent() {
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                     <div className="space-y-1.5">
-                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">CEP</Label>
+                      <Label className="text-[12px] md:text-[12px] font-bold uppercase text-primary/70 ml-1">CEP</Label>
                       <Input value={entrega.cep} onChange={e => handleCepSearch(e.target.value)} maxLength={9} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                     <div className="md:col-span-2 space-y-1.5">
-                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Endereço</Label>
+                      <Label className="text-[12px] md:text-[12px] font-bold uppercase text-primary/70 ml-1">Endereço</Label>
                       <Input value={entrega.endereco} onChange={e => setEntrega({...entrega, endereco: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Número</Label>
+                      <Label className="text-[12px] md:text-[12px] font-bold uppercase text-primary/70 ml-1">Número</Label>
                       <Input value={entrega.numero} onChange={e => setEntrega({...entrega, numero: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">Cidade</Label>
+                      <Label className="text-[12px] md:text-[12px] font-bold uppercase text-primary/70 ml-1">Cidade</Label>
                       <Input value={entrega.city} onChange={e => setEntrega({...entrega, city: e.target.value})} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[9px] md:text-[10px] font-bold uppercase text-primary/40 ml-1">UF</Label>
+                      <Label className="text-[12px] md:text-[12px] font-bold uppercase text-primary/70 ml-1">UF</Label>
                       <Input value={entrega.state} onChange={e => setEntrega({...entrega, state: e.target.value.toUpperCase()})} maxLength={2} className="h-12 md:h-14 rounded-xl bg-secondary/20 border-none px-4 w-full" />
                     </div>
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <Label className="text-[10px] font-bold uppercase text-accent tracking-widest ml-1">Opção de Envio</Label>
+                    <Label className="text-[12px] font-bold uppercase text-accent tracking-widest ml-1">Opção de Envio</Label>
                     <div className="grid gap-3">
                       {shippingSettings?.options?.map((opt: any) => {
                         const finalPrice = calcShippingPrice(shippingSettings, opt, entrega.state, subtotal);
@@ -847,13 +886,13 @@ function CheckoutContent() {
                             <div className="flex items-center gap-3">
                               <div className={cn(
                                 "h-10 w-10 rounded-lg flex items-center justify-center transition-colors",
-                                isSelected ? "bg-primary text-white" : "bg-secondary text-primary/40"
+                                isSelected ? "bg-primary text-white" : "bg-secondary text-primary/70"
                               )}>
                                 <Truck className="h-5 w-5" />
                               </div>
                               <div className="text-left">
-                                <p className={cn("text-xs font-bold", isSelected ? "text-primary" : "text-primary/60")}>{opt.name}</p>
-                                <p className="text-[9px] text-muted-foreground italic">{opt.days}</p>
+                                <p className={cn("text-xs font-bold", isSelected ? "text-primary" : "text-primary/70")}>{opt.name}</p>
+                                <p className="text-[12px] text-muted-foreground italic">{opt.days}</p>
                               </div>
                             </div>
                             <span className={cn("text-xs font-bold", finalPrice === 0 ? "text-emerald-600" : "text-primary")}>
@@ -864,15 +903,15 @@ function CheckoutContent() {
                       })}
                       {!shippingSettings?.options?.length && (
                         <div className="p-4 text-center border-2 border-dashed border-primary/10 rounded-xl">
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Configure opções de frete no Admin</p>
+                          <p className="text-[12px] text-muted-foreground uppercase font-bold tracking-widest">Configure opções de frete no Admin</p>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div className="pt-2 md:pt-4 flex flex-col sm:flex-row gap-3">
-                    <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[10px] font-bold order-2 sm:order-1 w-full sm:w-auto">Voltar</Button>
-                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase whitespace-normal tracking-normal md:tracking-widest text-[10px] order-1 sm:order-2 shadow-lg w-full">
+                    <Button variant="outline" onClick={() => setCurrentStep('identificacao')} className="h-14 px-8 rounded-full border-primary/10 text-primary uppercase text-[12px] font-bold order-2 sm:order-1 w-full sm:w-auto">Voltar</Button>
+                    <Button onClick={handleNextStep} disabled={isProcessing} className="flex-1 h-14 rounded-full bg-primary text-white font-bold uppercase whitespace-normal tracking-normal md:tracking-widest text-[12px] order-1 sm:order-2 shadow-lg w-full">
                       {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Confirmar Entrega'}
                     </Button>
                   </div>
@@ -892,7 +931,7 @@ function CheckoutContent() {
               {sessionItems.length >= 2 && (
                 <div className="flex items-start gap-3 bg-accent/5 border border-accent/15 rounded-2xl p-4 mb-6">
                   <Package className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-primary/70 leading-relaxed">
+                  <p className="text-[12px] text-primary/70 leading-relaxed">
                     Seu pedido tem mais de um produto. Como trabalhamos com fornecedores parceiros, cada peça pode ser enviada separadamente e chegar em dias diferentes — fique tranquila, é normal!
                   </p>
                 </div>
@@ -903,16 +942,17 @@ function CheckoutContent() {
 
                   {!pixData && (
                     <>
-                      <div className="grid grid-cols-3 gap-2 md:gap-3 px-1">
-                        <button onClick={() => setPaymentMethod('cartao')} className={cn("flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full", paymentMethod === 'cartao' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40")}>
+                      <div className="grid grid-cols-3 gap-2 md:gap-3 px-1 items-stretch">
+                        <button onClick={() => setPaymentMethod('pix')} className={cn("flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[12px] md:text-[12px] font-bold uppercase tracking-widest w-full", paymentMethod === 'pix' ? "border-accent bg-accent/5 text-accent shadow-sm" : "border-primary/10 text-primary/70")}>
+                          <QrCode className="h-5 w-5" />
+                          <span className="text-center">PIX</span>
+                          <span className="text-[12px] normal-case tracking-normal font-semibold text-emerald-700">Recomendado • aprovação na hora</span>
+                        </button>
+                        <button onClick={() => setPaymentMethod('cartao')} className={cn("flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[12px] md:text-[12px] font-bold uppercase tracking-widest w-full", paymentMethod === 'cartao' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/70")}>
                           <CreditCard className="h-5 w-5" />
                           <span className="text-center">Cartão</span>
                         </button>
-                        <button onClick={() => setPaymentMethod('pix')} className={cn("flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full", paymentMethod === 'pix' ? "border-accent bg-accent/5 text-accent shadow-sm" : "border-primary/10 text-primary/40")}>
-                          <QrCode className="h-5 w-5" />
-                          <span className="text-center">PIX</span>
-                        </button>
-                        <button onClick={() => setPaymentMethod('boleto')} className={cn("flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[8px] md:text-[10px] font-bold uppercase tracking-widest w-full", paymentMethod === 'boleto' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/40")}>
+                        <button onClick={() => setPaymentMethod('boleto')} className={cn("flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl border transition-all text-[12px] md:text-[12px] font-bold uppercase tracking-widest w-full", paymentMethod === 'boleto' ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-primary/10 text-primary/70")}>
                           <Package className="h-5 w-5" />
                           <span className="text-center">Boleto</span>
                         </button>
@@ -925,9 +965,9 @@ function CheckoutContent() {
                           </div>
                           <div className="text-center space-y-2 px-4">
                             <p className="text-sm font-bold text-primary">Pague com PIX</p>
-                            <p className="text-[11px] text-muted-foreground italic leading-relaxed">Clique abaixo para gerar o QR Code. O pagamento é confirmado em segundos e seu pedido entra em produção imediatamente.</p>
+                            <p className="text-[12px] text-muted-foreground italic leading-relaxed">Clique abaixo para gerar o QR Code. O pagamento é confirmado em segundos e seu pedido entra em produção imediatamente.</p>
                           </div>
-                          <Button onClick={handlePixPayment} disabled={isProcessing} className="h-14 px-12 rounded-full bg-accent text-white font-bold uppercase tracking-widest text-[10px] shadow-lg w-full max-w-xs">
+                          <Button onClick={handlePixPayment} disabled={isProcessing} className="h-14 px-12 rounded-full bg-accent text-white font-bold uppercase tracking-widest text-[12px] shadow-lg w-full max-w-xs">
                             {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'Gerar QR Code PIX'}
                           </Button>
                         </div>
@@ -938,7 +978,7 @@ function CheckoutContent() {
                           {!isBrickReady && (
                             <div className="flex flex-col items-center justify-center py-20 space-y-4">
                               <Loader2 className="h-8 w-8 animate-spin text-accent/40" />
-                              <p className="text-[9px] font-bold uppercase tracking-widest text-primary/20">Criptografando ambiente seguro...</p>
+                              <p className="text-[12px] font-bold uppercase tracking-widest text-primary/70">Criptografando ambiente seguro...</p>
                             </div>
                           )}
                           <Payment
@@ -988,20 +1028,20 @@ function CheckoutContent() {
                             <img src={`data:image/png;base64,${pixData.qr_code_base64}`} alt="QR Code PIX" className="w-52 h-56 md:w-64 md:h-64 max-w-full" />
                           </div>
                           <div className="w-full max-w-md space-y-4 px-4">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 text-center">PIX Copia e Cola</p>
+                            <p className="text-[12px] font-bold uppercase tracking-widest text-primary/70 text-center">PIX Copia e Cola</p>
                             <div className="flex flex-col sm:flex-row gap-3">
-                              <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[10px] text-primary/60 font-mono truncate border border-primary/5">
+                              <div className="flex-1 bg-secondary/20 rounded-xl px-4 py-3.5 text-[12px] text-primary/70 font-mono truncate border border-primary/5">
                                 {pixData.qr_code}
                               </div>
-                              <button onClick={handleCopyPix} className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto">
+                              <button onClick={handleCopyPix} className="shrink-0 h-12 px-6 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-[12px] font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-md w-full sm:w-auto">
                                 {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                                 {copied ? 'Copiado!' : 'Copiar Código'}
                               </button>
                             </div>
-                            <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest opacity-60">
+                            <p className="text-[12px] text-center text-muted-foreground uppercase tracking-widest opacity-60">
                               QR Code válido por 30 minutos • Pagamento instantâneo
                             </p>
-                            <p className="text-[9px] text-center text-accent font-bold uppercase tracking-widest animate-pulse">
+                            <p className="text-[12px] text-center text-accent font-bold uppercase tracking-widest animate-pulse">
                               Aguardando confirmação do pagamento...
                             </p>
                           </div>
@@ -1012,7 +1052,7 @@ function CheckoutContent() {
 
                   {/* Alterado para permitir trocar dados livremente no mobile */}
                   <div className="pt-4 border-t border-primary/5 w-full">
-                    <button onClick={() => setCurrentStep('entrega')} className="text-[10px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary flex items-center gap-2 py-2">
+                    <button onClick={() => setCurrentStep('entrega')} className="text-[12px] font-bold uppercase tracking-widest text-primary/70 hover:text-primary flex items-center gap-2 py-2">
                       <ChevronLeft className="h-3 w-3" /> Alterar Dados de Entrega
                     </button>
                   </div>
@@ -1025,7 +1065,7 @@ function CheckoutContent() {
             <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none bg-white shadow-premium p-6 md:p-8 space-y-6">
                <div className="flex items-center gap-3 text-accent border-b border-primary/5 pb-4">
                   <Package className="h-4 w-4" />
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]">Sua Escolha</h3>
+                  <h3 className="text-[12px] font-bold uppercase tracking-[0.4em]">Sua Escolha</h3>
                </div>
                <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar pr-1">
                   {sessionItems.map((item: any, i: number) => {
@@ -1036,23 +1076,24 @@ function CheckoutContent() {
                             {imageUrl ? (
                               <img src={imageUrl} className="h-full w-full object-cover" alt={item.name} />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-primary/10">
+                              <div className="w-full h-full flex items-center justify-center text-primary/70">
                                 <Package className="h-6 w-6" />
                               </div>
                             )}
                          </div>
                          <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-bold text-primary uppercase truncate pr-4">{item.name}</p>
-                            <p className="text-[9px] text-muted-foreground italic truncate">{item.quantity}un • {formatPrice(item.price)}</p>
+                            <p className="text-[12px] font-bold text-primary uppercase truncate pr-4">{item.name}</p>
+                            <p className="text-[12px] text-muted-foreground italic truncate">{item.quantity}un • {formatPrice(item.price)}</p>
                          </div>
                          <div className="flex flex-col items-end gap-1 shrink-0">
-                           <p className="text-[11px] font-bold text-primary whitespace-nowrap">{formatPrice(item.price * item.quantity)}</p>
+                           <p className="text-[12px] font-bold text-primary whitespace-nowrap">{formatPrice(item.price * item.quantity)}</p>
                            <button 
                              onClick={() => handleRemoveItem(i)}
-                             className="md:opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition-all p-1"
+                             aria-label={`Remover ${item.name}`}
                              title="Remover item"
+                             className="text-primary/70 hover:text-red-600 hover:bg-red-50 rounded-full h-10 w-10 flex items-center justify-center transition-colors"
                            >
-                             <X className="h-3.5 w-3.5" />
+                             <Trash2 className="h-4 w-4" />
                            </button>
                          </div>
                       </div>
@@ -1064,18 +1105,18 @@ function CheckoutContent() {
                <div className="pt-4 border-t border-primary/5 space-y-3">
                   <div className="flex items-center gap-2 text-accent">
                      <Tag className="h-3 w-3" />
-                     <span className="text-[10px] font-bold uppercase tracking-widest">Cupom de Desconto</span>
+                     <span className="text-[12px] font-bold uppercase tracking-widest">Cupom de Desconto</span>
                   </div>
                   
                   {appliedCoupon ? (
                     <div className="flex items-center justify-between bg-emerald-50 p-3 rounded-xl border border-emerald-100 animate-in zoom-in-95">
                        <div className="flex items-center gap-2">
                           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tight">CUPOM {appliedCoupon.code}</span>
+                          <span className="text-[12px] font-black text-emerald-700 uppercase tracking-tight">CUPOM {appliedCoupon.code}</span>
                        </div>
                        <button 
                         onClick={() => setAppliedCoupon(null)}
-                        className="text-[9px] font-bold uppercase text-primary/40 hover:text-primary transition-colors flex items-center gap-1"
+                        className="text-[12px] font-bold uppercase text-primary/70 hover:text-primary transition-colors flex items-center gap-1"
                        >
                          Remover <X className="h-3 w-3" />
                        </button>
@@ -1087,52 +1128,59 @@ function CheckoutContent() {
                           value={couponInput}
                           onChange={e => setCouponInput(e.target.value.toUpperCase())}
                           placeholder="CÓDIGO"
-                          className="h-10 text-[11px] font-bold uppercase tracking-widest border-primary/10 rounded-xl bg-secondary/10"
+                          className="h-10 text-[12px] font-bold uppercase tracking-widest border-primary/10 rounded-xl bg-secondary/10"
                         />
                         <Button 
                           onClick={handleApplyCoupon}
                           disabled={couponLoading || !couponInput.trim()}
                           variant="outline"
-                          className="h-10 px-4 rounded-xl border-primary text-primary font-bold uppercase text-[9px] tracking-widest hover:bg-primary hover:text-white transition-all"
+                          className="h-10 px-4 rounded-xl border-primary text-primary font-bold uppercase text-[12px] tracking-widest hover:bg-primary hover:text-white transition-all"
                         >
                           {couponLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'APLICAR'}
                         </Button>
                       </div>
                       {couponError && (
-                        <p className="text-[9px] text-red-500 font-bold uppercase tracking-tighter ml-1">{couponError}</p>
+                        <p className="text-[12px] text-red-500 font-bold uppercase tracking-tighter ml-1">{couponError}</p>
                       )}
                     </div>
                   )}
                </div>
 
                <div className="space-y-2.5 pt-4 border-t border-primary/5 w-full">
-                  <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+                  <div className="flex justify-between text-[12px] text-primary/70 uppercase font-bold tracking-tight"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
                   
                   {appliedCoupon && (
-                    <div className="flex justify-between text-[11px] text-emerald-600 uppercase font-black tracking-tight animate-in slide-in-from-top-2">
+                    <div className="flex justify-between text-[12px] text-emerald-600 uppercase font-black tracking-tight animate-in slide-in-from-top-2">
                       <span>Desconto ({appliedCoupon.code})</span>
                       <span>- {formatPrice(discount)}</span>
                     </div>
                   )}
 
-                  <div className="flex justify-between text-[11px] text-primary/40 uppercase font-bold tracking-tight"><span>Envio Especial</span><span>{shippingPrice === null ? 'A calcular' : shippingPrice === 0 ? 'Grátis' : formatPrice(shippingPrice)}</span></div>
+                  <div className="flex justify-between text-[12px] text-primary/70 uppercase font-bold tracking-tight"><span>Envio Especial</span><span className={freeEverywhere || shippingPrice === 0 ? 'text-emerald-700' : ''}>{shippingPrice === null ? (freeEverywhere ? 'Grátis para todo o Brasil' : 'A calcular') : shippingPrice === 0 ? 'Grátis' : formatPrice(shippingPrice)}</span></div>
                   
                   <div className="flex justify-between items-end pt-4">
                     <span className="text-xs font-black uppercase text-primary tracking-tighter shrink-0">Total</span>
                     <div className="text-right min-w-0">
                        <span className="text-2xl md:text-3xl font-headline font-bold text-primary leading-none block truncate">{formatPrice(totalGeral)}</span>
-                       <span className="text-[9px] text-accent uppercase font-bold tracking-widest mt-1">Em até 10x no cartão</span>
+                       <span className="text-[12px] text-primary/80 font-semibold block mt-1">ou 10x de {formatPrice(totalGeral / 10)} no cartão</span>
                     </div>
                   </div>
                </div>
             </Card>
 
+            {supportPhone && (
+              <a href={`https://wa.me/${supportPhone.startsWith('55') ? supportPhone : '55' + supportPhone}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-primary/10 text-primary hover:bg-secondary/20 min-h-12">
+                <Phone className="h-5 w-5 text-emerald-600 shrink-0" />
+                <span className="text-[13px]">Dúvidas? Fale conosco no WhatsApp <strong>{storeSettings.whatsapp}</strong></span>
+              </a>
+            )}
+
             <div className="p-5 md:p-6 bg-secondary/20 rounded-[1.5rem] md:rounded-[2rem] space-y-3 border border-primary/5">
                <div className="flex items-center gap-2 text-primary">
                   <Lock className="h-4 w-4 text-accent" />
-                  <h4 className="text-[9px] font-bold uppercase tracking-widest">Tecnologia de Segurança</h4>
+                  <h4 className="text-[12px] font-bold uppercase tracking-widest">Tecnologia de Segurança</h4>
                </div>
-               <p className="text-[10px] text-muted-foreground leading-relaxed italic font-light">
+               <p className="text-[12px] text-muted-foreground leading-relaxed italic font-light">
                  Sua compra é protegida por criptografia de nível bancário e processada com exclusividade pelo Mercado Pago.
                </p>
             </div>
@@ -1144,7 +1192,7 @@ function CheckoutContent() {
       <footer className="py-12 border-t border-primary/5 bg-white/40 w-full shrink-0">
         <div className="container mx-auto px-6 text-center space-y-4">
            <div className="flex justify-center mb-6 opacity-30"><LogoMark className="max-w-none" /></div>
-           <p className="text-[9px] text-primary/30 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
+           <p className="text-[12px] text-primary/70 uppercase tracking-[0.4em]">© {new Date().getFullYear()} Toda Bela • Checkout Protegido</p>
         </div>
       </footer>
     </div>
@@ -1153,7 +1201,7 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="h-screen flex flex-col items-center justify-center bg-white space-y-4"><Loader2 className="animate-spin text-accent h-10 w-10" /><p className="text-[10px] font-bold uppercase tracking-widest text-primary/20">Preparando ambiente...</p></div>}>
+    <Suspense fallback={<div className="h-screen flex flex-col items-center justify-center bg-white space-y-4"><Loader2 className="animate-spin text-accent h-10 w-10" /><p className="text-[12px] font-bold uppercase tracking-widest text-primary/70">Preparando ambiente...</p></div>}>
       <CheckoutContent />
     </Suspense>
   );

@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Camera, ShoppingBag } from 'lucide-react';
+import { Heart, Camera, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { cn, getItemImageUrl } from '@/lib/utils';
 import { QuickAddPopover } from './QuickAddPopover';
 import cloudinaryLoader from '@/lib/cloudinaryLoader';
+import { useRatingStat } from './product-detail/useReviewStats';
+import { installmentText } from './product-detail/utils';
 
 interface ProductCardProps {
   id: string | number;
@@ -56,6 +58,7 @@ export const ProductCard = React.memo(function ProductCard({
   const db = useFirestore();
   const { toast } = useToast();
   const stringId = String(id);
+  const rating = useRatingStat(id);
 
   const [hasError, setHasError] = useState(false);
 
@@ -158,7 +161,7 @@ export const ProductCard = React.memo(function ProductCard({
   const canHover = () => matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const addButton = (
-    <button className="tb-add" title="Adicionar à sacola" onClick={hasVariations ? undefined : handleQuickAdd}>
+    <button className="tb-add !text-xs" title="Adicionar à sacola" onClick={hasVariations ? undefined : handleQuickAdd}>
       Adicionar à sacola
     </button>
   );
@@ -192,7 +195,7 @@ export const ProductCard = React.memo(function ProductCard({
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-300">
               <Camera className="h-8 w-8 mb-2 opacity-20" />
-              <span className="text-[8px] font-bold uppercase tracking-widest opacity-40">Imagem Indisponível</span>
+              <span className="text-xs font-bold uppercase tracking-widest opacity-40">Imagem Indisponível</span>
             </div>
           )}
         </Link>
@@ -206,7 +209,7 @@ export const ProductCard = React.memo(function ProductCard({
         <div className="absolute top-3 md:top-4 left-3 md:left-4 z-20 flex flex-col items-start gap-1.5">
           {discount > 0 && <span className="tb-off">-{discount}%</span>}
           {visibleBadge && (
-            <Badge className="bg-primary text-white border-none px-2 md:px-3 py-0.5 md:py-1 font-bold uppercase text-[7px] md:text-[9px] rounded-full tracking-widest">
+            <Badge className="bg-primary text-white border-none px-2 md:px-3 py-0.5 md:py-1 font-bold uppercase text-xs rounded-full tracking-widest">
               {visibleBadge}
             </Badge>
           )}
@@ -235,10 +238,15 @@ export const ProductCard = React.memo(function ProductCard({
         <h3 className="![font-family:var(--font-inter),sans-serif] line-clamp-2 text-[13px] md:text-sm font-medium leading-snug text-[#2A1F22] min-h-[2.8em]">
           {name}
         </h3>
+        {rating && (
+          <p className="mt-1 flex items-center justify-center gap-1 text-xs text-[#5A4A4F]" aria-label={`Nota ${rating.avg} de 5, ${rating.count} avaliações`}>
+            <Star className="h-3.5 w-3.5 fill-accent text-accent" /> <b>{rating.avg}</b> ({rating.count})
+          </p>
+        )}
         <div className="tb-price mt-auto">
           <span className="tb-now">{formatCurrency(price)}</span>
           {discount > 0 && <span className="tb-old">{formatCurrency(oldPrice!)}</span>}
-          <span className="tb-inst">Até 10x no cartão</span>
+          <span className="tb-inst !text-xs !normal-case !tracking-normal !text-[#6b5b5f]">{installmentText(price) || 'Até 10x no cartão'}</span>
         </div>
       </div>
     </article>

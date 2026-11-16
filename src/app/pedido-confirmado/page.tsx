@@ -1,7 +1,8 @@
 
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { trackEvent } from '@/lib/metaPixel';
 import { CheckCircle2, ShoppingBag, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/store/Navbar';
@@ -9,6 +10,20 @@ import { Footer } from '@/components/store/Footer';
 import Link from 'next/link';
 
 export default function OrderSuccessPage() {
+  // Purchase uma vez por pedido: eventId = id do pedido (dedup com CAPI) e marca em localStorage contra recarga.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('purchase_data');
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      const key = `tb_purchase_sent_${d.orderId}`;
+      if (!d.orderId || localStorage.getItem(key)) return;
+      localStorage.setItem(key, '1');
+      trackEvent('Purchase', { value: d.value, currency: 'BRL', content_ids: d.content_ids, content_type: 'product', num_items: d.num_items }, d.orderId);
+      sessionStorage.removeItem('purchase_data');
+    } catch {}
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FFF9F7] selection:bg-accent/30 selection:text-primary overflow-x-hidden">
       <Navbar onOpenLogin={() => {}} onOpenCart={() => {}} onOpenFavorites={() => {}} cartCount={0} />
@@ -28,7 +43,7 @@ export default function OrderSuccessPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-center gap-4">
                 <div className="h-px w-12 bg-accent" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-accent">Reserva Confirmada</span>
+                <span className="text-xs font-bold uppercase tracking-[0.6em] text-accent">Reserva Confirmada</span>
                 <div className="h-px w-12 bg-accent" />
               </div>
               <h1 className="text-4xl md:text-8xl font-headline font-bold text-primary leading-[0.95] tracking-tighter">
@@ -54,7 +69,7 @@ export default function OrderSuccessPage() {
             </div>
 
             <div className="pt-12 border-t border-primary/5">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/30">
+              <p className="text-xs font-black uppercase tracking-[0.4em] text-primary/70">
                 Você receberá atualizações via WhatsApp e E-mail.
               </p>
             </div>

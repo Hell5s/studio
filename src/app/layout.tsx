@@ -4,6 +4,9 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/contexts/CartContext';
+import { MetaPixel } from '@/components/store/MetaPixel';
+import { CookieBanner } from '@/components/store/CookieBanner';
+import { WhatsAppFloat } from '@/components/store/WhatsAppFloat';
 
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'], display: 'swap', variable: '--font-inter' });
 
@@ -36,6 +39,9 @@ export default function RootLayout({
           <CartProvider>
             {children}
             <Toaster />
+            <MetaPixel />
+            <CookieBanner />
+            <WhatsAppFloat />
           </CartProvider>
         </FirebaseClientProvider>
       </body>
