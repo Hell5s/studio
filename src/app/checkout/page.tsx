@@ -21,7 +21,9 @@ import {
   Tag,
   Ticket,
   Phone,
-  Trash2
+  Trash2,
+  RefreshCw,
+  BadgeCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -792,6 +794,13 @@ function CheckoutContent() {
         </div>
       </header>
 
+      <div className="w-full border-b border-primary/10">
+        <p className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-center gap-1.5 text-[11px] tracking-wide text-muted-foreground">
+          <Lock className="h-3 w-3 text-primary/70" />
+          <span>Compra segura <span className="hidden sm:inline">· pagamento Mercado Pago · troca em 7 dias</span></span>
+        </p>
+      </div>
+
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 md:py-16 overflow-x-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
@@ -1050,6 +1059,15 @@ function CheckoutContent() {
                     </div>
                   )}
 
+                  {!pixData && (
+                    <div className="flex items-start gap-3 rounded-2xl bg-secondary/20 border border-primary/5 p-4">
+                      <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <p className="text-[12px] text-primary/80 leading-relaxed">
+                        Seus dados de pagamento vão direto e criptografados para o <strong>Mercado Pago</strong>. A Toda Bela não vê nem guarda o número do seu cartão.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Alterado para permitir trocar dados livremente no mobile */}
                   <div className="pt-4 border-t border-primary/5 w-full">
                     <button onClick={() => setCurrentStep('entrega')} className="text-[12px] font-bold uppercase tracking-widest text-primary/70 hover:text-primary flex items-center gap-2 py-2">
@@ -1175,14 +1193,19 @@ function CheckoutContent() {
               </a>
             )}
 
-            <div className="p-5 md:p-6 bg-secondary/20 rounded-[1.5rem] md:rounded-[2rem] space-y-3 border border-primary/5">
-               <div className="flex items-center gap-2 text-primary">
-                  <Lock className="h-4 w-4 text-accent" />
-                  <h4 className="text-[12px] font-bold uppercase tracking-widest">Tecnologia de Segurança</h4>
+            <div className="p-5 md:p-6 bg-white rounded-[1.5rem] md:rounded-[2rem] space-y-4 border border-primary/10">
+               <h4 className="text-[12px] font-bold uppercase tracking-widest text-primary">Compra 100% segura</h4>
+               <ul className="space-y-3 text-[13px] text-primary/80">
+                  <li className="flex gap-3"><Lock className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" /><span><strong>Dados protegidos</strong> por criptografia SSL de ponta a ponta.</span></li>
+                  <li className="flex gap-3"><BadgeCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" /><span><strong>Pagamento pelo Mercado Pago</strong>: Pix, cartão em até 10x ou boleto.</span></li>
+                  <li className="flex gap-3"><RefreshCw className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" /><span><strong>Troca ou devolução</strong> em até 7 dias após receber, como garante o Código do Consumidor.</span></li>
+                  <li className="flex gap-3"><Truck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" /><span><strong>Acompanhe a entrega</strong> com código de rastreio na sua área de pedidos.</span></li>
+               </ul>
+               <div className="flex flex-wrap gap-2 pt-3 border-t border-primary/5">
+                  {['PIX', 'VISA', 'MASTERCARD', 'ELO', 'BOLETO'].map(m => (
+                    <span key={m} className="px-2.5 py-1 rounded-md border border-primary/10 bg-secondary/10 text-[11px] font-black tracking-wider text-primary/70">{m}</span>
+                  ))}
                </div>
-               <p className="text-[12px] text-muted-foreground leading-relaxed italic font-light">
-                 Sua compra é protegida por criptografia de nível bancário e processada com exclusividade pelo Mercado Pago.
-               </p>
             </div>
           </aside>
 
