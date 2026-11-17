@@ -180,13 +180,14 @@ function CheckoutContent() {
   }, [currentOrderId, paymentMethod, toast, isPaymentConfirmed, router]);
 
   const contentIds = () => sessionItems.map(it => String(it.productId || it.id));
+  const contents = () => sessionItems.map(it => ({ id: String(it.productId || it.id), quantity: it.quantity || 1, item_price: Number(it.price) || 0 }));
   const numItems = () => sessionItems.reduce((n, it) => n + (it.quantity || 1), 0);
 
   // InitiateCheckout: uma vez, quando o checkout abre com itens e a cliente logada.
   useEffect(() => {
     if (initiatedRef.current || !user || sessionItems.length === 0) return;
     initiatedRef.current = true;
-    trackEvent('InitiateCheckout', { value: subtotal, currency: 'BRL', content_ids: contentIds(), content_type: 'product', num_items: numItems() });
+    trackEvent('InitiateCheckout', { value: subtotal, currency: 'BRL', content_ids: contentIds(), contents: contents(), content_type: 'product', num_items: numItems() });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, sessionItems]);
 
@@ -200,7 +201,7 @@ function CheckoutContent() {
   // Guarda os dados da compra para a página de confirmação disparar o Purchase (1x por pedido).
   const savePurchase = (orderId: string | null, value: number) => {
     if (!orderId) return;
-    sessionStorage.setItem('purchase_data', JSON.stringify({ orderId, value, content_ids: contentIds(), num_items: numItems() }));
+    sessionStorage.setItem('purchase_data', JSON.stringify({ orderId, value, content_ids: contentIds(), contents: contents(), num_items: numItems() }));
   };
 
   // Inicializa o SDK do Mercado Pago apenas quando necessário

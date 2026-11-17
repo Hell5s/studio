@@ -20,7 +20,7 @@ import { SizeGuide } from './SizeGuide';
 import { ProductHeading } from './ProductHeading';
 import { ShippingCalculator } from './ShippingCalculator';
 import { formatBRL, sizeLabel } from './utils';
-import { newEventId, trackEvent } from '@/lib/metaPixel';
+import { trackEvent } from '@/lib/metaPixel';
 
 interface ProductInfoProps {
   product: any;
@@ -64,7 +64,8 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
 
   useEffect(() => {
     trackEvent('ViewContent', {
-      content_ids: [product.id], content_type: 'product', content_name: product.name,
+      content_ids: [product.id], contents: [{ id: String(product.id), quantity: 1, item_price: Number(product.price) || 0 }],
+      content_type: 'product', content_name: product.name,
       value: Number(product.price) || 0, currency: 'BRL',
     });
   }, [product.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -142,10 +143,6 @@ export function ProductInfo({ product, onAddToCart, onColorSelect }: ProductInfo
   };
 
   const performAddToCart = (openCart: boolean) => {
-    trackEvent('AddToCart', {
-      content_ids: [product.id], content_type: 'product', content_name: product.name,
-      value: (Number(product.price) || 0) * quantity, currency: 'BRL', num_items: quantity,
-    }, newEventId());
     if (isMixingColors) {
       const activeColorIndices = Object.keys(colorCounts).map(Number).filter(idx => colorCounts[idx] > 0);
       

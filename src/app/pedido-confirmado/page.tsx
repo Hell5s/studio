@@ -19,7 +19,7 @@ export default function OrderSuccessPage() {
       const key = `tb_purchase_sent_${d.orderId}`;
       if (!d.orderId || localStorage.getItem(key)) return;
       localStorage.setItem(key, '1');
-      trackEvent('Purchase', { value: d.value, currency: 'BRL', content_ids: d.content_ids, content_type: 'product', num_items: d.num_items }, d.orderId);
+      trackEvent('Purchase', { value: d.value, currency: 'BRL', content_ids: d.content_ids, contents: d.contents, content_type: 'product', num_items: d.num_items }, d.orderId);
       sessionStorage.removeItem('purchase_data');
     } catch {}
   }, []);

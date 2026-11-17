@@ -1,5 +1,6 @@
 'use client';
 
+import { trackEvent } from '@/lib/metaPixel';
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 interface CartContextType {
@@ -51,6 +52,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart, isInitialized]);
 
   const addToCart = useCallback((prod: any) => {
+    // AddToCart do Pixel: toda entrada no carrinho passa aqui (página de produto e compra rápida das vitrines).
+    const qty = prod.quantity || 1;
+    const price = Number(prod.price) || 0;
+    const pid = String(prod.id || prod.productId);
+    trackEvent('AddToCart', {
+      content_ids: [pid], contents: [{ id: pid, quantity: qty, item_price: price }],
+      content_type: 'product', content_name: prod.name, value: price * qty, currency: 'BRL', num_items: qty,
+    });
     setCart(prev => {
       const cartItemId = getCartItemId(prod);
       const existing = prev.find(item => item.cartItemId === cartItemId);
