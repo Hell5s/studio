@@ -8,7 +8,6 @@ import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getItemImageUrl } from '@/lib/utils';
 import { Heart, Camera, ZoomIn } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import cloudinaryLoader from '@/lib/cloudinaryLoader';
 
@@ -28,7 +27,7 @@ const MobileSlide = memo(function MobileSlide({ url, idx, name, failed, onZoom, 
   onZoom: (i: number) => void; onError: (i: number) => void;
 }) {
   return (
-    <CarouselItem className="pl-0 [contain:layout_paint]">
+    <div className="shrink-0 basis-full w-full snap-center snap-always">
       <button
         type="button"
         aria-label="Ampliar foto"
@@ -55,7 +54,7 @@ const MobileSlide = memo(function MobileSlide({ url, idx, name, failed, onZoom, 
           />
         )}
       </button>
-    </CarouselItem>
+    </div>
   );
 });
 
@@ -65,7 +64,8 @@ export function ProductGallery({ images, name, productId, activeVariation, video
   const { toast } = useToast();
   const galleryRef = useRef<HTMLDivElement>(null);
 
-  const [api, setApi] = useState<CarouselApi>();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef(0);
   const [current, setCurrent] = useState(0);
   const [zoomIdx, setZoomIdx] = useState<number | null>(null);
   const [hoverZoom, setHoverZoom] = useState<{ idx: number; x: number; y: number } | null>(null);
@@ -122,13 +122,23 @@ export function ProductGallery({ images, name, productId, activeVariation, video
     }
   }, [activeVariation]);
 
+  // Scroll nativo com snap (compositor); current atualizado via rAF.
+  const handleScroll = useCallback(() => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = 0;
+      const el = scrollRef.current;
+      if (!el || !el.clientWidth) return;
+      setCurrent(Math.round(el.scrollLeft / el.clientWidth));
+    });
+  }, []);
+
   useEffect(() => {
-    if (!api) return;
-    const on = () => setCurrent(api.selectedScrollSnap());
-    on();
-    api.on('select', on);
-    return () => { api.off('select', on); };
-  }, [api]);
+    if (scrollRef.current) scrollRef.current.scrollLeft = 0;
+    setCurrent(0);
+  }, [activeVariation]);
+
+  useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -228,8 +238,11 @@ export function ProductGallery({ images, name, productId, activeVariation, video
 
         {/* Mobile: carrossel com toque para ampliar */}
         <div className="md:hidden relative">
-          <Carousel setApi={setApi} opts={{ loop: false, duration: 25 }}>
-            <CarouselContent className="-ml-0 will-change-transform">
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex overflow-x-auto snap-x snap-mandatory overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
               {displayImages.map((img, idx) => (
                 <MobileSlide
                   key={idx}
@@ -242,12 +255,11 @@ export function ProductGallery({ images, name, productId, activeVariation, video
                 />
               ))}
               {hasVideo && (
-                <CarouselItem className="pl-0">
+                <div className="shrink-0 basis-full w-full snap-center snap-always">
                   <div className="relative aspect-[3/5] w-full overflow-hidden bg-black">{videoEl}</div>
-                </CarouselItem>
+                </div>
               )}
-            </CarouselContent>
-          </Carousel>
+          </div>
           {total > 1 && (
             <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 pointer-events-none">
               {Array.from({ length: total }).map((_, i) => (
