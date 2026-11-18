@@ -126,7 +126,7 @@ export function ProductGallery({ images, name, productId, activeVariation, video
   const hasVideo = isValidUrl(video);
   const total = displayImages.length + (hasVideo ? 1 : 0);
 
-  const renderImage = (img: any, idx: number, isPriority = false) => {
+  const renderImage = (img: any, idx: number, isPriority = false, eager = false) => {
     const url = getItemImageUrl(img);
     if (errorImages[idx] || !isValidUrl(url)) {
       return (
@@ -138,6 +138,8 @@ export function ProductGallery({ images, name, productId, activeVariation, video
     }
 
     return (
+      <>
+      <div className="absolute inset-0 animate-pulse bg-gray-200" />
       <Image
         loader={cloudinaryLoader}
         src={url}
@@ -145,9 +147,11 @@ export function ProductGallery({ images, name, productId, activeVariation, video
         fill
         className="object-cover"
         priority={isPriority}
-        sizes="(max-width: 768px) 100vw, 800px"
+        loading={isPriority || eager ? 'eager' : 'lazy'}
+        sizes="(max-width: 768px) 100vw, 450px"
         onError={() => handleImageError(idx)}
       />
+      </>
     );
   };
 
@@ -187,7 +191,7 @@ export function ProductGallery({ images, name, productId, activeVariation, video
 
         {/* Mobile: carrossel com toque para ampliar */}
         <div className="md:hidden relative">
-          <Carousel setApi={setApi} opts={{ loop: false }}>
+          <Carousel setApi={setApi} opts={{ loop: false, duration: 20, skipSnaps: true }}>
             <CarouselContent className="-ml-0">
               {displayImages.map((img, idx) => (
                 <CarouselItem key={idx} className="pl-0">
@@ -197,7 +201,8 @@ export function ProductGallery({ images, name, productId, activeVariation, video
                     onClick={() => setZoomIdx(idx)}
                     className="relative block aspect-[3/5] w-full overflow-hidden bg-[#F5F5F5]"
                   >
-                    {renderImage(img, idx, idx === 0)}
+                    {/* pré-carrega as 3 primeiras e as vizinhas da foto atual */}
+                    {renderImage(img, idx, idx === 0, idx < 3 || Math.abs(idx - current) <= 1)}
                   </button>
                 </CarouselItem>
               ))}
@@ -209,14 +214,14 @@ export function ProductGallery({ images, name, productId, activeVariation, video
             </CarouselContent>
           </Carousel>
           {total > 1 && (
-            <>
-              <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-bold text-white">
-                {current + 1}/{total}
-              </span>
-            </>
+            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 pointer-events-none">
+              {Array.from({ length: total }).map((_, i) => (
+                <span key={i} className={cn("h-1.5 rounded-full bg-white shadow transition-all", i === current ? "w-4" : "w-1.5 opacity-60")} />
+              ))}
+            </div>
           )}
-          <span className="absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs text-white pointer-events-none">
-            <ZoomIn className="h-3.5 w-3.5" /> Toque para ampliar
+          <span className="absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-black/35 px-2 py-0.5 text-[10px] text-white/90 pointer-events-none">
+            <ZoomIn className="h-3 w-3" /> Ampliar
           </span>
         </div>
 
