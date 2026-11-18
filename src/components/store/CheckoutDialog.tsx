@@ -7,7 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { toNumber } from '@/lib/pricing';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { trackEvent } from '@/lib/metaPixel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -102,6 +103,17 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
       return;
     }
 
+    // InitiateCheckout no clique; a flag evita que /checkout dispare de novo.
+    trackEvent('InitiateCheckout', {
+      value: payable,
+      currency: 'BRL',
+      content_ids: cartItems.map(it => String(it.productId || it.id)),
+      contents: cartItems.map(it => ({ id: String(it.productId || it.id), quantity: it.quantity || 1, item_price: Number(it.price) || 0 })),
+      content_type: 'product',
+      num_items: cartItems.reduce((n, it) => n + (it.quantity || 1), 0),
+    });
+    sessionStorage.setItem('ic_tracked', '1');
+
     if (user) {
       goToCheckout();
     } else {
@@ -115,6 +127,22 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
     else sessionStorage.removeItem('checkout_coupon');
     onOpenChange(false);
     router.push('/checkout');
+  };
+
+  // Compra como convidada: sessão anônima do Firebase; o pedido fica com o uid anônimo
+  // e o recibo vai para o e-mail informado na identificação.
+  const handleGuest = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      if (!auth.currentUser) await signInAnonymously(auth);
+      goToCheckout();
+    } catch (error: any) {
+      console.error("Guest Checkout Error:", error);
+      toast({ title: "Não foi possível continuar", description: "Tente novamente ou entre com sua conta.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -251,13 +279,33 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
           ) : (
             <div className="p-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full">
               <div className="space-y-2">
-                <h4 className="text-xl font-headline font-bold text-primary">Bem-vinda de volta</h4>
+                <h4 className="text-xl font-headline font-bold text-primary">Como prefere continuar?</h4>
                 <p className="text-xs text-muted-foreground italic font-light leading-relaxed">
-                  Para garantir sua reserva e segurança, acesse sua conta antes de finalizar.
+                  Compre sem cadastro ou entre na sua conta para acompanhar seus pedidos.
                 </p>
               </div>
 
               <div className="space-y-4">
+                <button
+                  onClick={handleGuest}
+                  disabled={loading}
+                  className="w-full h-14 flex items-center justify-center gap-3 bg-primary text-white rounded-full hover:bg-accent transition-all shadow-lg disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="animate-spin h-4 w-4" /> : (
+                    <>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Comprar sem criar conta</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+                <p className="text-[11px] text-center text-primary/70 -mt-1">Só precisamos do seu e-mail para enviar o recibo.</p>
+
+                <div className="flex items-center gap-4 py-2">
+                  <div className="h-px flex-1 bg-primary/5" />
+                  <span className="text-[9px] text-primary/30 uppercase font-black">OU ENTRE NA SUA CONTA</span>
+                  <div className="h-px flex-1 bg-primary/5" />
+                </div>
+
                 <button
                   onClick={handleGoogleLogin}
                   disabled={loading}

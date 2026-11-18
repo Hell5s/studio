@@ -70,7 +70,7 @@ export function FavoritesDialog({ open, onOpenChange }: FavoritesDialogProps) {
         </div>
 
         <div className="p-8 md:p-10">
-          {!user ? (
+          {!user || user.isAnonymous ? (
             <div className="py-20 text-center space-y-6 bg-white rounded-[2.5rem] border-2 border-dashed border-primary/5">
               <div className="h-20 w-20 rounded-full bg-secondary flex items-center justify-center mx-auto">
                 <Heart className="h-10 w-10 text-primary/20" />

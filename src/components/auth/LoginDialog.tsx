@@ -198,7 +198,7 @@ export function LoginDialog({
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[280px] rounded-[12px] shadow-xl p-0 border-none bg-white overflow-hidden z-[70] animate-in fade-in zoom-in-95 duration-200">
-        {!user && !showLoginForm ? (
+        {(!user || user.isAnonymous) && !showLoginForm ? (
           <div className="p-6 space-y-6">
             <div className="space-y-1">
               <h4 className="text-sm font-bold text-primary">Já possui uma conta?</h4>
@@ -246,7 +246,7 @@ export function LoginDialog({
               ))}
             </div>
           </div>
-        ) : !user && showLoginForm ? (
+        ) : (!user || user.isAnonymous) && showLoginForm ? (
           <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">{isRegistering ? 'Nova Conta' : 'Acesso'}</h4>

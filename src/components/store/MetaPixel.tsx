@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { CONSENT_EVENT, hasConsent, trackEvent } from '@/lib/metaPixel';
+import { CONSENT_EVENT, isDenied, trackEvent } from '@/lib/metaPixel';
 
 const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
@@ -26,20 +26,29 @@ function loadPixel(id: string) {
 
 export function MetaPixel() {
   const pathname = usePathname();
-  const [granted, setGranted] = useState(false);
+
+  // PageView por navegação (não depende do consent, então não duplica ao aceitar)
+  useEffect(() => {
+    if (!PIXEL_ID || isDenied()) return;
+    loadPixel(PIXEL_ID);
+    trackEvent('PageView');
+  }, [pathname]);
 
   useEffect(() => {
-    const sync = () => setGranted(hasConsent());
-    sync();
+    const sync = () => {
+      const w = window as any;
+      if (isDenied()) {
+        if (typeof w.fbq === 'function') w.fbq('consent', 'revoke');
+      } else if (typeof w.fbq === 'function') {
+        w.fbq('consent', 'grant');
+      } else if (PIXEL_ID) {
+        loadPixel(PIXEL_ID);
+        trackEvent('PageView');
+      }
+    };
     window.addEventListener(CONSENT_EVENT, sync);
     return () => window.removeEventListener(CONSENT_EVENT, sync);
   }, []);
-
-  useEffect(() => {
-    if (!PIXEL_ID || !granted) return;
-    loadPixel(PIXEL_ID);
-    trackEvent('PageView');
-  }, [pathname, granted]);
 
   return null;
 }

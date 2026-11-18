@@ -47,7 +47,8 @@ const MobileSlide = memo(function MobileSlide({ url, idx, name, failed, onZoom, 
             fill
             className="object-cover"
             priority={idx === 0}
-            loading="eager"
+            fetchPriority={idx === 0 ? 'high' : 'auto'}
+            loading={idx === 0 ? 'eager' : 'lazy'}
             decoding="async"
             sizes="100vw"
             onError={() => onError(idx)}
@@ -175,6 +176,7 @@ export function ProductGallery({ images, name, productId, activeVariation, video
   const hasVideo = isValidUrl(video);
   const total = displayImages.length + (hasVideo ? 1 : 0);
 
+  // Só desktop: priority fica no slide mobile (evita baixar a 1ª foto duas vezes no celular).
   const renderImage = (img: any, idx: number, isPriority = false, eager = false) => {
     const url = getItemImageUrl(img);
     if (errorImages[idx] || !isValidUrl(url)) {
@@ -211,7 +213,7 @@ export function ProductGallery({ images, name, productId, activeVariation, video
   return (
     <div ref={galleryRef} className="relative">
       {/* Container principal com chave p/ resetar animações ao trocar variação */}
-      <div key={activeVariation?.color || 'default'} className="animate-in fade-in duration-500 space-y-4">
+      <div key={activeVariation?.color || 'default'} className="space-y-4">
         {/* Desktop: grade com zoom ao passar o mouse; clique abre a foto grande */}
         <div className={cn("hidden md:grid gap-4", total === 1 ? "grid-cols-1 max-w-[55%] mx-auto" : "grid-cols-2")}>
           {displayImages.map((img, idx) => (
@@ -229,7 +231,7 @@ export function ProductGallery({ images, name, productId, activeVariation, video
                 className="absolute inset-0 transition-transform duration-200"
                 style={hoverZoom && hoverZoom.idx === idx ? { transform: "scale(2)", transformOrigin: `${hoverZoom.x}% ${hoverZoom.y}%` } : undefined}
               >
-                {renderImage(img, idx, idx === 0)}
+                {renderImage(img, idx)}
               </div>
             </div>
           ))}

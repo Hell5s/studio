@@ -89,7 +89,7 @@ export const ProductCard = React.memo(function ProductCard({
     e.preventDefault();
     e.stopPropagation();
 
-    if (!user) {
+    if (!user || user.isAnonymous) {
       toast({
         title: "Acesso necessário",
         description: "Faça login para salvar suas peças favoritas.",

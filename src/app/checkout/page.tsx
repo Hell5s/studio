@@ -32,7 +32,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useMemoFirebase, useAuth, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import Link from 'next/link';
 import { LogoMark } from '@/components/store/LogoMark';
 import { cn, getItemImageUrl } from '@/lib/utils';
@@ -183,13 +183,16 @@ function CheckoutContent() {
   const contents = () => sessionItems.map(it => ({ id: String(it.productId || it.id), quantity: it.quantity || 1, item_price: Number(it.price) || 0 }));
   const numItems = () => sessionItems.reduce((n, it) => n + (it.quantity || 1), 0);
 
-  // InitiateCheckout: uma vez, quando o checkout abre com itens e a cliente logada.
+  // InitiateCheckout: o carrinho já dispara ao tocar FINALIZAR COMPRA (flag ic_tracked);
+  // aqui só cobre quem chega direto em /checkout, uma vez por sessão.
   useEffect(() => {
-    if (initiatedRef.current || !user || sessionItems.length === 0) return;
+    if (initiatedRef.current || sessionItems.length === 0) return;
     initiatedRef.current = true;
+    if (sessionStorage.getItem('ic_tracked')) return;
+    sessionStorage.setItem('ic_tracked', '1');
     trackEvent('InitiateCheckout', { value: subtotal, currency: 'BRL', content_ids: contentIds(), contents: contents(), content_type: 'product', num_items: numItems() });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, sessionItems]);
+  }, [sessionItems]);
 
   // AddPaymentInfo: ao entrar no pagamento e a cada troca de método.
   useEffect(() => {
@@ -304,6 +307,20 @@ function CheckoutContent() {
     }
   };
 
+  // Compra sem conta: sessão anônima; e-mail/CPF/telefone continuam obrigatórios na identificação.
+  const handleGuest = async () => {
+    if (authLoading) return;
+    setAuthLoading(true);
+    try {
+      await signInAnonymously(auth);
+    } catch (e: any) {
+      console.error("Guest Auth Error:", e);
+      toast({ title: "Não foi possível continuar", description: "Tente novamente ou entre com sua conta.", variant: "destructive" });
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     const email = authForm.email.trim();
@@ -388,10 +405,11 @@ function CheckoutContent() {
       const cleanCpf = identificacao.cpf.replace(/\D/g, '');
       const cleanTelefone = identificacao.telefone.replace(/\D/g, '');
       
-      if (!identificacao.nome || !identificacao.email || cleanCpf.length < 11 || cleanTelefone.length < 10) {
+      const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identificacao.email.trim());
+      if (!identificacao.nome.trim() || !validEmail || cleanCpf.length !== 11 || cleanTelefone.length < 10) {
         toast({ 
           title: "Campos obrigatórios", 
-          description: "Preencha seu nome completo, e-mail, CPF e um telefone válido para continuar.", 
+          description: "Preencha seu nome completo, um e-mail válido (para o recibo), CPF e telefone para continuar.", 
           variant: "destructive" 
         });
         return;
@@ -428,7 +446,7 @@ function CheckoutContent() {
         }),
         customer: {
           name: identificacao.nome,
-          email: identificacao.email,
+          email: identificacao.email.trim().toLowerCase(),
           cpf: identificacao.cpf,
           phone: identificacao.telefone,
           address: `${entrega.endereco}, ${entrega.numero} ${entrega.complemento}`,
@@ -667,11 +685,31 @@ function CheckoutContent() {
           <div className="text-center space-y-3">
             <div className="flex justify-center mb-4"><LogoMark /></div>
             <p className="text-[12px] font-bold uppercase tracking-[0.4em] text-primary/70">Para finalizar sua compra</p>
-            <h1 className="text-3xl font-headline font-bold text-primary">Acesse sua conta</h1>
-            <p className="text-sm text-muted-foreground italic font-light">Entre ou crie sua conta Toda Bela para continuar</p>
+            <h1 className="text-3xl font-headline font-bold text-primary">Como prefere continuar?</h1>
+            <p className="text-sm text-muted-foreground italic font-light">Compre sem cadastro ou entre na sua conta Toda Bela</p>
           </div>
 
           <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm space-y-6 w-full">
+            <button
+              onClick={handleGuest}
+              disabled={authLoading}
+              className="w-full h-14 flex items-center justify-center gap-3 bg-primary text-white rounded-full hover:bg-accent transition-all shadow-lg disabled:opacity-50"
+            >
+              {authLoading ? <Loader2 className="animate-spin h-4 w-4" /> : (
+                <>
+                  <span className="text-[12px] font-bold uppercase tracking-widest">Comprar sem criar conta</span>
+                  <ChevronRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+            <p className="text-[12px] text-center text-primary/70 -mt-3">Só precisamos do seu e-mail para enviar o recibo.</p>
+
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-primary/5" />
+              <span className="text-[12px] text-primary/70 uppercase font-bold">ou entre na sua conta</span>
+              <div className="h-px flex-1 bg-primary/5" />
+            </div>
+
             <button
               onClick={handleGoogleAuth}
               disabled={authLoading}

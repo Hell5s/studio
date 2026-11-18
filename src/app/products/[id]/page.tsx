@@ -70,8 +70,29 @@ export default function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-12 w-12 animate-spin text-accent" />
+      // Mesmo esqueleto da página (container + aspect-[3/5]) para não haver pulo ao carregar.
+      <div className="min-h-screen bg-white overflow-x-hidden">
+        <Navbar
+          onOpenLogin={() => setIsLoginOpen(true)}
+          onOpenCart={() => setIsCheckoutOpen(true)}
+          onOpenFavorites={() => setIsFavoritesOpen(true)}
+          cartCount={cartCount}
+        />
+        <main className="pt-24 md:pt-40 pb-28 lg:pb-20">
+          <div className="container mx-auto px-4 lg:px-6 max-w-[1300px]">
+            <div className="mb-6 md:mb-16 h-4" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-20 items-start">
+              <div className="lg:col-span-8">
+                <div className="lg:hidden mb-5 h-[76px]" />
+                <div className="aspect-[3/5] w-full bg-[#F5F5F5] md:hidden" />
+                <div className="hidden md:grid grid-cols-2 gap-4">
+                  <div className="aspect-[3/5] bg-[#F5F5F5] rounded-sm" />
+                  <div className="aspect-[3/5] bg-[#F5F5F5] rounded-sm" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

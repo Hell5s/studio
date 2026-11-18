@@ -364,7 +364,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                 className="w-full flex items-center gap-4 py-5 border-b border-gray-50 text-[13px] font-bold uppercase tracking-[0.2em] text-primary/70 hover:text-accent transition-colors text-left"
               >
                 <User className="h-4 w-4" />
-                {user ? "Minha Conta" : "Entrar / Cadastrar"}
+                {user && !user.isAnonymous ? "Minha Conta" : "Entrar / Cadastrar"}
               </button>
             </nav>
             <div className="p-8 border-t border-gray-100 bg-secondary/10">

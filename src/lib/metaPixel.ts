@@ -1,9 +1,10 @@
 export const CONSENT_KEY = 'tb_cookie_consent';
 export const CONSENT_EVENT = 'tb-consent-change';
 
-export function hasConsent(): boolean {
+// Opt-out: rastreia desde a 1a visita (consent null/'granted'); só para se a cliente recusou.
+export function isDenied(): boolean {
   try {
-    return typeof window !== 'undefined' && localStorage.getItem(CONSENT_KEY) === 'granted';
+    return typeof window !== 'undefined' && localStorage.getItem(CONSENT_KEY) === 'denied';
   } catch {
     return false;
   }
@@ -20,7 +21,7 @@ export function newEventId(): string {
  * params.user_data ({ email, phone }) vai só para o servidor, nunca para o Pixel.
  */
 export function trackEvent(name: string, params?: Record<string, unknown>, eventId?: string): void {
-  if (typeof window === 'undefined' || !hasConsent()) return;
+  if (typeof window === 'undefined' || isDenied()) return;
   const id = eventId || newEventId();
   const { user_data, ...custom } = (params || {}) as Record<string, unknown>;
   const w = window as unknown as { fbq?: (...a: unknown[]) => void };
