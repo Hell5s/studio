@@ -201,7 +201,10 @@ export function CheckoutDialog({ open, onOpenChange, cartItems, onUpdateQuantity
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full md:w-[420px] md:max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100">
+      <SheetContent
+        onInteractOutside={(e) => { if ((e.target as HTMLElement)?.closest?.('[data-cookie-banner]')) e.preventDefault(); }}
+        onFocusOutside={(e) => { if ((e.target as HTMLElement)?.closest?.('[data-cookie-banner]')) e.preventDefault(); }}
+        className="w-full md:w-[420px] md:max-w-[420px] p-0 flex flex-col bg-white border-l border-gray-100">
         <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 shrink-0">
           <div className="flex flex-col items-start space-y-0">
             {view === 'auth' && (

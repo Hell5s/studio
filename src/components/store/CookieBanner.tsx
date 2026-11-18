@@ -26,7 +26,7 @@ export function CookieBanner() {
   if (!open) return null;
   // Portal + pointer-events-auto: Radix (Sheet/Dialog) deixa o body com pointer-events:none
   return createPortal(
-    <div role="dialog" aria-label="Cookies" className="fixed bottom-24 sm:bottom-4 left-3 right-3 sm:right-auto sm:max-w-sm z-[200] pointer-events-auto rounded-xl bg-white border border-primary/10 shadow-2xl p-3">
+    <div role="dialog" aria-label="Cookies" data-cookie-banner className="fixed top-3 sm:top-auto sm:bottom-4 left-3 right-3 sm:right-auto sm:max-w-sm z-[200] pointer-events-auto rounded-xl bg-white border border-primary/10 shadow-2xl p-3">
       <p className="text-[11px] text-[#2A1F22]/80 leading-snug">
         Usamos cookies e o Meta Pixel para medir o uso do site e melhorar anúncios. Você pode recusar sem perder o acesso à loja.{' '}
         <Link href="/institucional/politica-de-privacidade" className="underline font-bold">Política de Privacidade</Link>
