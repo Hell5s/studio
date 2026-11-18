@@ -19,7 +19,7 @@ export const r2Url = (src: string, width?: number) => {
 export default function cloudinaryLoader({ src, width }: { src: string; width: number }) {
   if (isR2Url(src)) return r2Url(src, width);
   if (src.includes('res.cloudinary.com') && src.includes('/upload/')) {
-    return src.replace('/upload/', `/upload/f_auto,q_auto:eco,w_${bucketWidth(width)},c_limit/`);
+    return src.replace('/upload/', `/upload/f_auto,q_auto:best,w_${bucketWidth(width)},c_limit,e_sharpen:40/`);
   }
   return src;
 }

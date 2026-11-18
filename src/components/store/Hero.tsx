@@ -26,7 +26,7 @@ const buildBannerUrl = (url: string, isMobile: boolean, zoom: number, type: 'ima
     // Image logic: calculate width based on device and zoom
     const width = bucketWidth(isMobile ? 1080 : Math.round(1600 * (zoom ? zoom / 100 : 1)));
 
-    params = `f_auto,q_auto:eco,w_${width},c_limit`;
+    params = `f_auto,q_auto:best,w_${width},c_limit,e_sharpen:30`;
     
     if (isPoster) {
       params = `so_0,${params}`;
