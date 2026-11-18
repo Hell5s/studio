@@ -46,9 +46,9 @@ const MobileSlide = memo(function MobileSlide({ url, idx, name, failed, onZoom, 
             alt={`${name} - Imagem ${idx + 1}`}
             fill
             className="object-cover"
-            priority={idx === 0}
+            priority={idx < 2}
             fetchPriority={idx === 0 ? 'high' : 'auto'}
-            loading={idx === 0 ? 'eager' : 'lazy'}
+            loading={idx < 2 ? 'eager' : 'lazy'}
             decoding="async"
             sizes="100vw"
             onError={() => onError(idx)}

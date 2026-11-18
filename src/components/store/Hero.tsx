@@ -10,12 +10,10 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import cloudinaryLoader, { bucketWidth } from '@/lib/cloudinaryLoader';
 
-// f_auto (AVIF/WebP) + q_auto + largura sob medida; evita baixar 2800px no celular.
-const bannerLoader = ({ src, width }: { src: string; width: number }) =>
-  src.includes('res.cloudinary.com') && src.includes('/upload/')
-    ? src.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`)
-    : src;
+// Mesmo loader com baldes fixos da loja.
+const bannerLoader = cloudinaryLoader;
 
 // Helper function to build optimized Cloudinary URLs for banners
 const buildBannerUrl = (url: string, isMobile: boolean, zoom: number, type: 'image' | 'video' = 'image', isPoster = false) => {
@@ -25,11 +23,9 @@ const buildBannerUrl = (url: string, isMobile: boolean, zoom: number, type: 'ima
 
   if (type === 'image' || isPoster) {
     // Image logic: calculate width based on device and zoom
-    const width = isMobile 
-      ? 2800 
-      : Math.min(4096, Math.round(2880 * (zoom ? zoom / 100 : 1)));
-    
-    params = `f_auto,q_auto:best,w_${width},c_limit,e_sharpen:30`;
+    const width = bucketWidth(isMobile ? 1080 : Math.round(1600 * (zoom ? zoom / 100 : 1)));
+
+    params = `f_auto,q_auto:eco,w_${width},c_limit`;
     
     if (isPoster) {
       params = `so_0,${params}`;

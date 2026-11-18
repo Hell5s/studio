@@ -29,6 +29,8 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    deviceSizes: [320, 480, 640, 828, 1080, 1600],
+    imageSizes: [320, 480],
     remotePatterns: [
       {
         protocol: 'https',
