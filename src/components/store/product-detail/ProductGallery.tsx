@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
@@ -19,6 +19,45 @@ interface ProductGalleryProps {
   activeVariation?: any;
   video?: string; // URL de vídeo curto (mp4), opcional
 }
+
+const isValidSrc = (url: any) => typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
+
+// Memoizado: trocar de slide (setCurrent) não re-renderiza as <Image>.
+const MobileSlide = memo(function MobileSlide({ url, idx, name, failed, onZoom, onError }: {
+  url: string; idx: number; name: string; failed: boolean;
+  onZoom: (i: number) => void; onError: (i: number) => void;
+}) {
+  return (
+    <CarouselItem className="pl-0 [contain:layout_paint]">
+      <button
+        type="button"
+        aria-label="Ampliar foto"
+        onClick={() => onZoom(idx)}
+        className="relative block aspect-[3/5] w-full overflow-hidden bg-[#F5F5F5]"
+      >
+        {failed || !isValidSrc(url) ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-500">
+            <Camera className="h-12 w-12 mb-3 opacity-40" />
+            <span className="text-xs font-bold uppercase tracking-[0.2em]">Foto indisponível</span>
+          </div>
+        ) : (
+          <Image
+            loader={cloudinaryLoader}
+            src={url}
+            alt={`${name} - Imagem ${idx + 1}`}
+            fill
+            className="object-cover"
+            priority={idx === 0}
+            loading="eager"
+            decoding="async"
+            sizes="100vw"
+            onError={() => onError(idx)}
+          />
+        )}
+      </button>
+    </CarouselItem>
+  );
+});
 
 export function ProductGallery({ images, name, productId, activeVariation, video }: ProductGalleryProps) {
   const { user } = useUser();
@@ -117,9 +156,9 @@ export function ProductGallery({ images, name, productId, activeVariation, video
     }
   };
 
-  const handleImageError = (idx: number) => {
+  const handleImageError = useCallback((idx: number) => {
     setErrorImages(prev => ({ ...prev, [idx]: true }));
-  };
+  }, []);
 
   const isValidUrl = (url: any) => typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
 
@@ -138,8 +177,6 @@ export function ProductGallery({ images, name, productId, activeVariation, video
     }
 
     return (
-      <>
-      <div className="absolute inset-0 animate-pulse bg-gray-200" />
       <Image
         loader={cloudinaryLoader}
         src={url}
@@ -148,10 +185,10 @@ export function ProductGallery({ images, name, productId, activeVariation, video
         className="object-cover"
         priority={isPriority}
         loading={isPriority || eager ? 'eager' : 'lazy'}
+        decoding="async"
         sizes="(max-width: 768px) 100vw, 450px"
         onError={() => handleImageError(idx)}
       />
-      </>
     );
   };
 
@@ -191,20 +228,18 @@ export function ProductGallery({ images, name, productId, activeVariation, video
 
         {/* Mobile: carrossel com toque para ampliar */}
         <div className="md:hidden relative">
-          <Carousel setApi={setApi} opts={{ loop: false, duration: 20, skipSnaps: true }}>
-            <CarouselContent className="-ml-0">
+          <Carousel setApi={setApi} opts={{ loop: false, duration: 25 }}>
+            <CarouselContent className="-ml-0 will-change-transform">
               {displayImages.map((img, idx) => (
-                <CarouselItem key={idx} className="pl-0">
-                  <button
-                    type="button"
-                    aria-label="Ampliar foto"
-                    onClick={() => setZoomIdx(idx)}
-                    className="relative block aspect-[3/5] w-full overflow-hidden bg-[#F5F5F5]"
-                  >
-                    {/* pré-carrega as 3 primeiras e as vizinhas da foto atual */}
-                    {renderImage(img, idx, idx === 0, idx < 3 || Math.abs(idx - current) <= 1)}
-                  </button>
-                </CarouselItem>
+                <MobileSlide
+                  key={idx}
+                  url={getItemImageUrl(img)}
+                  idx={idx}
+                  name={name}
+                  failed={!!errorImages[idx]}
+                  onZoom={setZoomIdx}
+                  onError={handleImageError}
+                />
               ))}
               {hasVideo && (
                 <CarouselItem className="pl-0">
@@ -256,7 +291,7 @@ export function ProductGallery({ images, name, productId, activeVariation, video
           <DialogTitle className="sr-only">{name}</DialogTitle>
           <div className="h-full w-full overflow-auto" style={{ touchAction: 'pan-x pan-y pinch-zoom' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {zoomUrl && <img src={zoomUrl} alt={name} className="mx-auto h-full w-auto max-w-none object-contain md:h-auto md:max-h-none md:w-[min(100%,900px)]" />}
+            {zoomUrl && <img src={cloudinaryLoader({ src: zoomUrl, width: 1600 })} alt={name} className="mx-auto h-full w-auto max-w-none object-contain md:h-auto md:max-h-none md:w-[min(100%,900px)]" />}
           </div>
         </DialogContent>
       </Dialog>
