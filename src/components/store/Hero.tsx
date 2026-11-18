@@ -10,13 +10,14 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import cloudinaryLoader, { bucketWidth } from '@/lib/cloudinaryLoader';
+import cloudinaryLoader, { bucketWidth, isR2Url, r2Url } from '@/lib/cloudinaryLoader';
 
 // Mesmo loader com baldes fixos da loja.
 const bannerLoader = cloudinaryLoader;
 
 // Helper function to build optimized Cloudinary URLs for banners
 const buildBannerUrl = (url: string, isMobile: boolean, zoom: number, type: 'image' | 'video' = 'image', isPoster = false) => {
+  if (isR2Url(url)) return r2Url(url, isMobile ? 1080 : Math.round(1600 * (zoom ? zoom / 100 : 1)));
   if (!url || !url.includes('cloudinary.com')) return url;
 
   let params = '';

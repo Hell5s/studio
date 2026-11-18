@@ -21,6 +21,18 @@ const nextConfig: NextConfig = {
         source: '/__/firebase/:path*',
         destination: 'https://studio-6696860128-c7a6f.firebaseapp.com/__/firebase/:path*',
       },
+      {
+        source: '/fotos/:path*',
+        destination: 'https://pub-537c513e694c430d98df40c79ed7e7c6.r2.dev/:path*',
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: '/fotos/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
     ];
   },
   experimental: {
@@ -70,6 +82,11 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pub-537c513e694c430d98df40c79ed7e7c6.r2.dev',
         pathname: '/**',
       },
     ],

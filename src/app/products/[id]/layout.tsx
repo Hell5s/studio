@@ -19,7 +19,8 @@ async function load(id: string) {
   }
 }
 
-const imageOf = (v: any): string => (typeof v === 'string' ? v : v?.url || '');
+const abs = (u: string) => u.replace('https://pub-537c513e694c430d98df40c79ed7e7c6.r2.dev', `${SITE_URL}/fotos`);
+const imageOf = (v: any): string => abs(typeof v === 'string' ? v : v?.url || '');
 const plain = (t: string) => t.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -47,6 +47,7 @@ import { privateProductRef, splitProductPayload } from '@/lib/product-private';
 import { doc, serverTimestamp, collection, getDocs, query, orderBy, where, arrayUnion, arrayRemove, getDoc, addDoc, setDoc, Timestamp, onSnapshot } from 'firebase/firestore';
 import { useFirestore, updateDocumentNonBlocking, useMemoFirebase, useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
+import { uploadImage } from '@/lib/uploadImage';
 import { cn, getItemImageUrl } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
 import { Badge } from '@/components/ui/badge';
@@ -129,20 +130,10 @@ function ImageCropEditorContent({
       const blob = await getCroppedImgBlob(sourceUrl, croppedAreaPixels);
       const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
       
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', 'todabela_upload');
-      
-      const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const url = await uploadImage(file, { kind: 'image' });
 
-      if (!response.ok) throw new Error('Falha no upload Cloudinary');
-      const result = await response.json();
-      
       await onSave({
-        url: result.secure_url,
+        url,
         originalUrl: sourceUrl,
         crop,
         zoom
@@ -336,19 +327,7 @@ export function AddProductDialog({ open, onOpenChange, product }: AddProductDial
   }, [open, product?.id, showcases]); 
 
   const uploadToCloudinary = async (file: File, signal?: AbortSignal) => {
-    const data = new FormData();
-    data.append('file', file);
-    data.append('upload_preset', 'todabela_upload');
-    
-    const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
-      method: 'POST',
-      body: data,
-      signal
-    });
-
-    if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
-    const result = await response.json();
-    return result.secure_url;
+    return uploadImage(file, { kind: 'image', signal });
   };
 
   const generateDemoReviews = async (productId: string, productName: string, productImage: string) => {

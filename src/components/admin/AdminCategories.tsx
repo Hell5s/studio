@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { uploadImage } from '@/lib/uploadImage';
 import { cn } from '@/lib/utils';
 import Cropper from 'react-easy-crop';
 import {
@@ -91,21 +92,7 @@ export function AdminCategories() {
   const { data: categories, isLoading } = useCollection(q);
 
   const uploadToCloudinary = async (file: File) => {
-    const data = new FormData();
-    data.append('file', file);
-    data.append('upload_preset', 'todabela_upload');
-    
-    const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
-      body: data
-    });
-
-    if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
-    const result = await response.json();
-    return result.secure_url;
+    return uploadImage(file, { kind: 'image' });
   };
 
   const uploadBlobToCloudinary = async (blob: Blob) => {

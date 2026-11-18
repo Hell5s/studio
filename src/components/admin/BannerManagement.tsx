@@ -48,6 +48,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, useFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, serverTimestamp, addDoc, where } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
+import { uploadImage } from '@/lib/uploadImage';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -233,25 +234,8 @@ export function BannerManagement() {
     if (!isReplace) setPreviewImage('');
     
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', 'todabela_upload');
-
       const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
-      const uploadUrl = `https://api.cloudinary.com/v1_1/djtuzexfd/${resourceType}/upload`;
-
-      const response = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Falha no upload para o Cloudinary');
-      }
-
-      const data = await response.json();
-      const url = data.secure_url;
+      const url = await uploadImage(file, { kind: resourceType });
       
       if (isReplace) {
         setEditData(prev => ({ ...prev, imageUrl: url }));
@@ -293,18 +277,7 @@ export function BannerManagement() {
       let finalUrl = previewImage;
 
       if (previewImage.startsWith('data:')) {
-        const formData = new FormData();
-        formData.append('file', previewImage);
-        formData.append('upload_preset', 'todabela_upload');
-
-        const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) throw new Error('Falha ao salvar imagem da IA no Cloudinary');
-        const data = await response.json();
-        finalUrl = data.secure_url;
+        finalUrl = await uploadImage(previewImage, { kind: 'image' });
       }
 
       await addDoc(collection(db, 'banners'), {

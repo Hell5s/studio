@@ -48,9 +48,8 @@ interface Item {
 
   function getItemImageUrl(image: any): string {
     if (!image) return '';
-    if (typeof image === 'string') return image;
-    if (typeof image === 'object' && typeof image.url === 'string') return image.url;
-    return '';
+    const u = typeof image === 'string' ? image : typeof image === 'object' && typeof image.url === 'string' ? image.url : '';
+    return u.replace('https://pub-537c513e694c430d98df40c79ed7e7c6.r2.dev', 'https://www.todabelaoficial.com.br/fotos');
   }
   
   export function gerarEmailPosCompra({ orderId, customerName, items, total, address }: EmailProps): string {

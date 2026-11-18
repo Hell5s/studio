@@ -30,6 +30,7 @@ import { useToast } from '@/hooks/use-toast';
 import { privateProductRef, splitProductPayload } from '@/lib/product-private';
 import { useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp, getDocs, query, collection, orderBy, onSnapshot } from 'firebase/firestore';
+import { uploadImage } from '@/lib/uploadImage';
 import { cn } from '@/lib/utils';
 import { adminGenerateProductDescription } from '@/ai/flows/admin-generate-product-description-flow';
 import { Badge } from '@/components/ui/badge';
@@ -129,18 +130,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   }, [initialData]);
 
   const uploadToCloudinary = async (file: File) => {
-    const data = new FormData();
-    data.append('file', file);
-    data.append('upload_preset', 'todabela_upload');
-    
-    const response = await fetch('https://api.cloudinary.com/v1_1/djtuzexfd/image/upload', {
-      method: 'POST',
-      body: data
-    });
-
-    if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
-    const result = await response.json();
-    return result.secure_url;
+    return uploadImage(file, { kind: 'image' });
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {

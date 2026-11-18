@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { uploadImage } from '@/lib/uploadImage';
 import { cn } from '@/lib/utils';
 
 export function AdminMovementSection() {
@@ -58,19 +59,7 @@ export function AdminMovementSection() {
   };
 
   const uploadToCloudinary = async (file: File) => {
-    const data = new FormData();
-    data.append('file', file);
-    data.append('upload_preset', 'todabela_upload');
-    
-    const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
-    const response = await fetch(`https://api.cloudinary.com/v1_1/djtuzexfd/${resourceType}/upload`, {
-      method: 'POST',
-      body: data
-    });
-
-    if (!response.ok) throw new Error('Falha no upload para o Cloudinary');
-    const result = await response.json();
-    return result.secure_url;
+    return uploadImage(file, { kind: file.type.startsWith('video/') ? 'video' : 'image' });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
