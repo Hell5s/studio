@@ -7,8 +7,7 @@ import { useFirestore, useUser, useDoc, setDocumentNonBlocking, deleteDocumentNo
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getItemImageUrl } from '@/lib/utils';
-import { Heart, Camera, ZoomIn } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Heart, Camera } from 'lucide-react';
 import cloudinaryLoader from '@/lib/cloudinaryLoader';
 
 interface ProductGalleryProps {
@@ -22,18 +21,13 @@ interface ProductGalleryProps {
 const isValidSrc = (url: any) => typeof url === 'string' && url.length > 0 && (url.startsWith('http') || url.startsWith('/'));
 
 // Memoizado: trocar de slide (setCurrent) não re-renderiza as <Image>.
-const MobileSlide = memo(function MobileSlide({ url, idx, name, failed, onZoom, onError }: {
+const MobileSlide = memo(function MobileSlide({ url, idx, name, failed, onError }: {
   url: string; idx: number; name: string; failed: boolean;
-  onZoom: (i: number) => void; onError: (i: number) => void;
+  onError: (i: number) => void;
 }) {
   return (
     <div className="shrink-0 basis-full w-full snap-center snap-always">
-      <button
-        type="button"
-        aria-label="Ampliar foto"
-        onClick={() => onZoom(idx)}
-        className="relative block aspect-[3/5] w-full overflow-hidden bg-[#F5F5F5]"
-      >
+      <div className="relative block aspect-[3/5] w-full overflow-hidden bg-[#F5F5F5]">
         {failed || !isValidSrc(url) ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-500">
             <Camera className="h-12 w-12 mb-3 opacity-40" />
@@ -54,7 +48,7 @@ const MobileSlide = memo(function MobileSlide({ url, idx, name, failed, onZoom, 
             onError={() => onError(idx)}
           />
         )}
-      </button>
+      </div>
     </div>
   );
 });
@@ -68,8 +62,6 @@ export function ProductGallery({ images, name, productId, activeVariation, video
   const scrollRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef(0);
   const [current, setCurrent] = useState(0);
-  const [zoomIdx, setZoomIdx] = useState<number | null>(null);
-  const [hoverZoom, setHoverZoom] = useState<{ idx: number; x: number; y: number } | null>(null);
   const [errorImages, setErrorImages] = useState<Record<number, boolean>>({});
 
   const favoriteRef = useMemo(() => {
@@ -208,31 +200,18 @@ export function ProductGallery({ images, name, productId, activeVariation, video
     <video src={video} controls playsInline muted preload="metadata" className="absolute inset-0 h-full w-full object-cover bg-black" />
   );
 
-  const zoomUrl = zoomIdx !== null ? getItemImageUrl(displayImages[zoomIdx]) : '';
-
   return (
     <div ref={galleryRef} className="relative">
       {/* Container principal com chave p/ resetar animações ao trocar variação */}
       <div key={activeVariation?.color || 'default'} className="space-y-4">
-        {/* Desktop: grade com zoom ao passar o mouse; clique abre a foto grande */}
+        {/* Desktop: grade de fotos */}
         <div className={cn("hidden md:grid gap-4", total === 1 ? "grid-cols-1 max-w-[55%] mx-auto" : "grid-cols-2")}>
           {displayImages.map((img, idx) => (
             <div
               key={idx}
-              className="relative aspect-[3/5] overflow-hidden bg-[#F5F5F5] rounded-sm cursor-zoom-in"
-              onClick={() => setZoomIdx(idx)}
-              onMouseMove={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                setHoverZoom({ idx, x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
-              }}
-              onMouseLeave={() => setHoverZoom(null)}
+              className="relative aspect-[3/5] overflow-hidden bg-[#F5F5F5] rounded-sm"
             >
-              <div
-                className="absolute inset-0 transition-transform duration-200"
-                style={hoverZoom && hoverZoom.idx === idx ? { transform: "scale(2)", transformOrigin: `${hoverZoom.x}% ${hoverZoom.y}%` } : undefined}
-              >
-                {renderImage(img, idx)}
-              </div>
+              {renderImage(img, idx)}
             </div>
           ))}
           {hasVideo && <div className="relative aspect-[3/5] overflow-hidden bg-black rounded-sm">{videoEl}</div>}
@@ -252,7 +231,6 @@ export function ProductGallery({ images, name, productId, activeVariation, video
                   idx={idx}
                   name={name}
                   failed={!!errorImages[idx]}
-                  onZoom={setZoomIdx}
                   onError={handleImageError}
                 />
               ))}
@@ -269,9 +247,6 @@ export function ProductGallery({ images, name, productId, activeVariation, video
               ))}
             </div>
           )}
-          <span className="absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-black/35 px-2 py-0.5 text-[10px] text-white/90 pointer-events-none">
-            <ZoomIn className="h-3 w-3" /> Ampliar
-          </span>
         </div>
 
         {isFiltered && (
@@ -299,16 +274,6 @@ export function ProductGallery({ images, name, productId, activeVariation, video
         <Heart className={cn("h-6 w-6", isFavorited && "fill-current")} />
       </button>
 
-      {/* Foto ampliada: no celular dá para arrastar e dar pinça; no computador, rolar */}
-      <Dialog open={zoomIdx !== null} onOpenChange={(o) => !o && setZoomIdx(null)}>
-        <DialogContent className="max-w-none w-screen h-[100dvh] p-0 border-none rounded-none bg-black/95 sm:max-w-none">
-          <DialogTitle className="sr-only">{name}</DialogTitle>
-          <div className="h-full w-full overflow-auto" style={{ touchAction: 'pan-x pan-y pinch-zoom' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {zoomUrl && <img src={cloudinaryLoader({ src: zoomUrl, width: 1600 })} alt={name} className="mx-auto h-full w-auto max-w-none object-contain md:h-auto md:max-h-none md:w-[min(100%,900px)]" />}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
