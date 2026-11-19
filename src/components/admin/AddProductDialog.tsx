@@ -107,7 +107,9 @@ function ImageCropEditorContent({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [isSavingInternal, setIsSavingInternal] = useState(false);
 
-  const sourceUrl = typeof image === 'string' ? image : (image?.originalUrl || image?.url);
+  const rawSource = typeof image === 'string' ? image : (image?.originalUrl || image?.url);
+  // Usa a original em resolução total (não a variante 1080) para o recorte não perder qualidade
+  const sourceUrl = typeof rawSource === 'string' ? rawSource.replace(/(\/img\/[^/]+)\/\d+\.webp$/, '$1/orig.webp') : rawSource;
 
   const calculatedMinZoom = useMemo(() => {
     if (!mediaSize || !cropSize.width || !cropSize.height) return 1.0;

@@ -4,7 +4,7 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     image.crossOrigin = 'anonymous';
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (err) => reject(err));
-    image.src = url.replace(/^https:\/\/pub-[a-z0-9]+\.r2\.dev/, '/fotos'); // mesma origem: r2.dev não tem CORS
+    image.src = url.replace(/^https:\/\/pub-[a-z0-9]+\.r2\.dev/, '/fotos').replace(/(\/img\/[^/]+)\/\d+\.webp$/, '$1/orig.webp'); // recorta a partir da original, não da variante reduzida // mesma origem: r2.dev não tem CORS
   });
 
 export interface PixelCrop {
