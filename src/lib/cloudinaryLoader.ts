@@ -13,7 +13,7 @@ export const isR2Url = (src?: string) => !!src && (src.includes(R2_HOST) || src.
 export const r2Url = (src: string, width?: number) => {
   const m = src.match(R2_IMG);
   if (!m) return src.replace(`https://${R2_HOST}`, '/fotos');
-  return `/fotos${m[1]}${width ? bucketWidth(width) : 1080}.webp`;
+  return `/fotos${m[1]}${width ? bucketWidth(Math.round(width * 1.4)) : 1080}.webp`;
 };
 
 export default function cloudinaryLoader({ src, width }: { src: string; width: number }) {

@@ -39,7 +39,7 @@ async function getCroppedImageBlob(imageSrc: string, pixelCrop: any): Promise<Bl
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error('Não foi possível carregar a imagem para recorte'));
-    img.src = imageSrc;
+    img.src = imageSrc.replace(/^https:\/\/pub-[a-z0-9]+\.r2\.dev/, '/fotos'); // mesma origem: r2.dev não tem CORS
   });
 
   const canvas = document.createElement('canvas');

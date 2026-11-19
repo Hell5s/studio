@@ -4,7 +4,7 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     image.crossOrigin = 'anonymous';
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (err) => reject(err));
-    image.src = url;
+    image.src = url.replace(/^https:\/\/pub-[a-z0-9]+\.r2\.dev/, '/fotos'); // mesma origem: r2.dev não tem CORS
   });
 
 export interface PixelCrop {
