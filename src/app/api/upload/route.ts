@@ -41,6 +41,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'R2 não configurado' }, { status: 500 });
   }
 
+  // Vídeo: devolve URL pré-assinada e o navegador envia direto ao R2 (a Vercel limita o corpo a ~4,5MB)
+  if (req.headers.get('content-type')?.includes('application/json')) {
+    const { contentType, name } = await req.json().catch(() => ({}));
+    const ext = VIDEO_EXT[contentType];
+    if (!ext) return NextResponse.json({ error: 'Tipo de vídeo inválido (use mp4, webm ou mov)' }, { status: 400 });
+    const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
+    const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
+    const s3 = new S3Client({
+      region: 'auto',
+      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: { accessKeyId: R2_ACCESS_KEY_ID, secretAccessKey: R2_SECRET_ACCESS_KEY },
+    });
+    const slug = String(name || 'video').replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'video';
+    const Key = `vid/${slug}-${randomBytes(4).toString('hex')}.${ext}`;
+    const uploadUrl = await getSignedUrl(s3, new PutObjectCommand({ Bucket: R2_BUCKET, Key, ContentType: contentType, CacheControl: 'public, max-age=31536000, immutable' }), { expiresIn: 600 });
+    return NextResponse.json({ uploadUrl, url: `${R2_PUBLIC_URL.replace(/\/$/, '')}/${Key}` });
+  }
+
   const form = await req.formData();
   const file = form.get('file');
   const kind = form.get('kind') === 'video' ? 'video' : 'image';

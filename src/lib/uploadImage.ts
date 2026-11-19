@@ -24,6 +24,25 @@ export async function uploadImage(
   const token = await getAuth().currentUser?.getIdToken();
   if (!token) throw new Error('Faça login como admin para enviar arquivos');
 
+  if (kind === 'video') {
+    const sign = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentType: blob.type, name: (blob as File).name }),
+      signal: opts.signal,
+    });
+    const s = await sign.json().catch(() => ({}));
+    if (!sign.ok || !s.uploadUrl) throw new Error(s.error || 'Falha ao preparar o envio do vídeo');
+    const put = await fetch(s.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': blob.type, 'Cache-Control': 'public, max-age=31536000, immutable' },
+      body: blob,
+      signal: opts.signal,
+    });
+    if (!put.ok) throw new Error('Falha ao enviar o vídeo');
+    return s.url;
+  }
+
   const form = new FormData();
   form.append('file', blob, (blob as File).name || 'upload');
   form.append('kind', kind);
