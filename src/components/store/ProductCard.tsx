@@ -158,6 +158,16 @@ export const ProductCard = React.memo(function ProductCard({
     return () => io.disconnect();
   }, [gallery.length]);
 
+  // Pré-carrega as demais fotos quando o card chega perto da tela, para o efeito não esperar download.
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || gallery.length < 2) return;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setArmed(true); io.disconnect(); } }, { rootMargin: '600px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [gallery.length]);
+
   const canHover = () => matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const addButton = (
@@ -178,7 +188,7 @@ export const ProductCard = React.memo(function ProductCard({
         <Link href={`/products/${id}`} className="absolute inset-0 z-10">
           <span className="sr-only">Ver detalhes de {name}</span>
           {isValidUrl && !hasError ? (
-            gallery.map((src, i) => (playing || i === 0) && (
+            gallery.map((src, i) => (armed || playing || i === 0) && (
               <Image
                 key={src}
                 loader={cloudinaryLoader}
