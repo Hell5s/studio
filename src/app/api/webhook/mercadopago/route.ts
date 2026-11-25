@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/server/firebase-admin';
 import { computeOrderTotal } from '@/lib/server/order-total';
+import { sendPurchaseCapi } from '@/lib/server/metaCapi';
 
 async function sendTelegram(text: string) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -135,6 +136,15 @@ export async function POST(request: Request) {
             }
           } catch (telErr) {
             console.error('Erro ao enviar notificação para o Telegram:', telErr);
+          }
+        }
+
+        // 4. Purchase na API de Conversões da Meta (1x por pedido pago)
+        if (newStatus === 'paid' && prev.metaPurchaseSent !== true) {
+          try {
+            if (await sendPurchaseCapi(orderId, prev)) await orderRef.update({ metaPurchaseSent: true });
+          } catch (capiErr) {
+            console.error('Erro ao enviar Purchase para a Meta:', capiErr);
           }
         }
       }
