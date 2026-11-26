@@ -160,7 +160,7 @@ export function Navbar({ onOpenLogin, onOpenCart, onOpenFavorites, cartCount, on
                   key={link.label}
                   href={link.href}
                   className={cn(
-                    "text-[11px] font-semibold tracking-[0.15em] transition-all duration-200 relative group pb-0.5",
+                    "text-[11px] font-medium font-[family-name:var(--font-montserrat)] tracking-[0.24em] whitespace-nowrap transition-all duration-200 relative group pb-0.5",
                     link.highlight && "text-accent"
                   )}
                   style={{ 

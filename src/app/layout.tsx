@@ -1,5 +1,5 @@
 import type {Metadata} from 'next';
-import { Inter, Playfair_Display, Montserrat } from 'next/font/google';
+import { Inter, Cormorant_Garamond, Montserrat } from 'next/font/google';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '
 
 const montserrat = Montserrat({ subsets: ['latin'], weight: ['500', '600'], display: 'swap', variable: '--font-montserrat' });
 
-const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '700'], style: ['normal', 'italic'], display: 'swap', variable: '--font-playfair' });
+const playfair = Cormorant_Garamond({ subsets: ['latin'], weight: ['400', '500', '600', '700'], style: ['normal', 'italic'], display: 'swap', variable: '--font-playfair' });
 
 export const metadata: Metadata = {
   title: 'Toda Bela | Moda Feminina Moderna',

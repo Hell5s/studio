@@ -153,17 +153,17 @@ const HeroSlide = React.memo(({ banner, idx, isActive, isLoaded, isMobile, onSho
           isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
         )}>
           <div className="space-y-2 md:space-y-4">
-            <h1 className="text-base md:text-3xl font-headline font-semibold text-white uppercase tracking-[0.08em] leading-[0.9]">
+            <h1 className="text-xl md:text-5xl font-headline font-medium text-white uppercase tracking-[0.14em] leading-[1.05]">
               {banner.title || ''}
             </h1>
-            <p className="text-sm text-white font-light italic max-w-lg leading-relaxed">
+            <p className="text-base md:text-xl font-headline text-white/95 font-medium italic max-w-lg leading-relaxed tracking-wide">
               {banner.subtitle || ''}
             </p>
           </div>
           {(banner.ctaText || settings?.heroCta) && (
             <Button 
               onClick={handleAction}
-              className="rounded-full bg-white text-black px-6 py-2 md:px-8 md:py-3 text-xs tracking-[0.2em] font-bold uppercase w-fit h-auto hover:bg-accent hover:text-white transition-all shadow-2xl"
+              className="rounded-full bg-white text-black px-7 py-2.5 md:px-9 md:py-3.5 text-[11px] tracking-[0.24em] font-semibold font-[family-name:var(--font-montserrat)] uppercase w-fit h-auto hover:bg-accent hover:text-white transition-all shadow-2xl"
             >
               {banner.ctaText || settings?.heroCta || 'Conferir'}
             </Button>
